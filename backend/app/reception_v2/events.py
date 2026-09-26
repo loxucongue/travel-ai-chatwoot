@@ -1,6 +1,7 @@
 """Evidence-backed customer events, isolated from V1's inferred profile."""
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
+from app.contact_channels import refusal_scope
 
 EVENT_TYPES = {
     'question', 'material_requested', 'considering', 'contact_agreed',
@@ -34,9 +35,10 @@ def validate_events(raw, context: dict) -> list[dict]:
                 raise ValueError('v2_event_material_kind_required')
             event['material_kind'] = kind
         if item['type'] == 'contact_refused':
-            if item.get('scope') not in {'all', 'LINE', '微信', '电话', 'Email'}:
+            scope = refusal_scope(item.get('scope'))
+            if scope is None:
                 raise ValueError('v2_contact_refusal_scope_required')
-            event['scope'] = item['scope']
+            event['scope'] = scope
         if item['type'] == 'contact_agreed':
             try:
                 when = datetime.fromisoformat(str(item.get('contact_at') or '').replace('Z', '+00:00'))
@@ -57,6 +59,7 @@ def validate_events(raw, context: dict) -> list[dict]:
 def merge_events(slots: dict, events: list[dict]) -> dict:
     """Store customer requests only; an answer draft never becomes a receipt."""
     state = deepcopy(slots.get('_v2_state') or {'schema_version': 1, 'events': []})
+    state.setdefault('events', [])
     if any(e['type'] in {'question', 'material_requested', 'route_selected', 'profile_updated'} for e in events) and not any(
         e['type'] == 'considering' for e in events
     ):
@@ -87,7 +90,9 @@ def merge_events(slots: dict, events: list[dict]) -> dict:
 
 
 def answer_receipt(decision: dict, content: str) -> dict | None:
-    if decision.get('action') != 'reply' or not content.strip():
+    if decision.get('action') not in {'reply', 'handoff'} or not content.strip():
+        return None
+    if decision.get('action') == 'handoff' and not decision.get('evidence_refs'):
         return None
     if decision.get('v2_delivery_sections'):
         section = next((item for item in decision['v2_delivery_sections']

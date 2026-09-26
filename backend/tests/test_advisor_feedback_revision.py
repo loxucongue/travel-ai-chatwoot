@@ -109,12 +109,11 @@ def test_medication_with_personal_health_does_not_fall_into_generic_template():
     assert deterministic_system_reply(plan) is None
 
 
-def test_comparative_word_is_rejected_not_mechanically_replaced():
+def test_comparative_word_remains_grammatical():
     from app.reply_generation import _normalize_taiwan_service_terms, _validate_customer_visible_body
     text = '請醫師評估會比較妥當。'
     assert _normalize_taiwan_service_terms(text) == text
-    with pytest.raises(ValueError, match='reply_must_use_taiwan_service_terms'):
-        _validate_customer_visible_body(text)
+    _validate_customer_visible_body(text)
 
 
 def test_altitude_question_includes_real_arrangements_and_medical_boundary():

@@ -32,6 +32,9 @@ interface PlaygroundReply {
   outbound: false;
   engine_version: 'v1' | 'v2';
   engine_release_id?: string | null;
+  environment?: string;
+  knowledge_versions?: Record<string, string>;
+  model_http_request_count?: number;
   loaded_skills?: string[];
   tool_calls?: { name: string; status: string }[];
 }
@@ -193,7 +196,7 @@ export default function AiPlayground() {
           <section><h3>缺失信息</h3><div className="diagnostic-tags missing">{latest.missing_slots.length ? latest.missing_slots.map((item) => <span key={item}>{slotNames[item] ?? item}</span>) : <em><CheckCircle2 size={13} />无必填缺失</em>}</div></section>
           {(latest.handoff_reason || latest.safety_flags.length) ? <section className="safety-diagnostic"><h3>安全拦截</h3>{latest.handoff_reason ? <p>{reasonNames[latest.handoff_reason] ?? latest.handoff_reason}</p> : null}<div className="diagnostic-tags warning">{latest.safety_flags.map((item) => <span key={item}>{reasonNames[item] ?? item}</span>)}</div></section> : null}
           {latest.loaded_skills?.length ? <section><h3>已加载 Skills</h3><div className="diagnostic-tags">{latest.loaded_skills.map((item) => <span key={item}>{item}</span>)}</div></section> : null}
-          <section className="model-meta"><h3>模型信息</h3><dl><div><dt>引擎</dt><dd>{latest.engine_version.toUpperCase()}</dd></div><div><dt>模型</dt><dd>{latest.model}</dd></div><div><dt>Token</dt><dd>{latest.input_tokens ?? '--'} / {latest.output_tokens ?? '--'}</dd></div><div><dt>版本</dt><dd>{latest.prompt_version}</dd></div></dl></section>
+          <section className="model-meta"><h3>演练模型信息</h3><dl><div><dt>环境</dt><dd>{latest.environment ?? 'playground'}</dd></div><div><dt>实际模型请求</dt><dd>{latest.model_http_request_count ?? '未记录'}</dd></div><div><dt>知识版本</dt><dd>{Object.values(latest.knowledge_versions ?? {}).join(' / ') || '未记录'}</dd></div><div><dt>引擎</dt><dd>{latest.engine_version.toUpperCase()}</dd></div><div><dt>发布版本</dt><dd>{latest.engine_release_id ?? '未记录'}</dd></div><div><dt>模型</dt><dd>{latest.model}</dd></div><div><dt>Token</dt><dd>{latest.input_tokens ?? '--'} / {latest.output_tokens ?? '--'}</dd></div><div><dt>提示版本</dt><dd>{latest.prompt_version}</dd></div></dl></section>
         </div>}
       </aside>
     </section>

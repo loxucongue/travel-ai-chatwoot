@@ -6,8 +6,9 @@ import pytest
 
 
 def load_writer(monkeypatch):
-    monkeypatch.syspath_prepend(str(Path.cwd()/'scripts'))
-    path=os.environ.get('V2_EVALUATOR_TEST_SOURCE','scripts/evaluate_v2_release.py')
+    script_dir = Path(__file__).resolve().parents[1] / 'scripts'
+    monkeypatch.syspath_prepend(str(script_dir))
+    path=os.environ.get('V2_EVALUATOR_TEST_SOURCE', str(script_dir / 'evaluate_v2_release.py'))
     spec=importlib.util.spec_from_file_location('acceptance_writer_test',path)
     module=importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

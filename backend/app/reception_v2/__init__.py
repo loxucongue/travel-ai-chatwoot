@@ -19,6 +19,7 @@ def _release_digest() -> str:
         "reception_policy_views.py", "advisor_voice.py", "customer_contact_policy.py",
         "automation_api.py", "lead_capture.py", "operations.py", "reply_generation.py",
         "web_knowledge.py", "service_knowledge.py", "fact_conditions.py",
+        "contact_channels.py", "reply_failures.py", "turn_context.py", "model_metering.py",
     )]]
     for path in sorted(files):
         digest.update(path.relative_to(root.parent).as_posix().encode())

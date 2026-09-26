@@ -8,6 +8,7 @@ def test_explicit_stop_is_normalized_to_durable_stop_and_acknowledgement():
         return EvaluationDecision(
             action="no_action", branch="unclassified", intent="other",
             reply=None, safety_flags=["opt_out_request"], confidence=.9,
+            v2_events=[{'type': 'contact_refused', 'scope': 'all', 'quote': '请不要再联系我'}],
         ), [{"attempt": 1}], "digest"
 
     decision, _logs, _digest, _trace = generate_decision({

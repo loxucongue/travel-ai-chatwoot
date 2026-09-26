@@ -641,6 +641,7 @@ def enrich_context_with_web_knowledge(
         "global_knowledge_facts": facts,
         "global_knowledge_version": version,
         "global_knowledge_candidates": candidates,
+        "environment": environment,
     }
 
 

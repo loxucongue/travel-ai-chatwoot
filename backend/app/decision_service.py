@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import time
+import re
 from copy import deepcopy
 
 from app.decision_knowledge import FACTS, KNOWLEDGE_KEY, evidence_packet
-from app.deepseek_evaluation import ALLOWED_MEMORY_SLOTS
+from app.deepseek_evaluation import ALLOWED_MEMORY_SLOTS, EvaluationCallError
 from app.realtime_reply_pipeline import REALTIME_REPLY_PROMPT_VERSION, run_realtime_reply_pipeline
 from app.reply_planning import SALES_HANDOFF_REASONS
 from app.route_packages import ensure_route_packages_current
@@ -14,6 +15,7 @@ from app.route_reply import (ROUTE_SNAPSHOTS_KEY, journey_context_from_values,
                              make_route_snapshot, playbook_prompt)
 from app.silence_touch_pipeline import SILENCE_TOUCH_PROMPT_VERSION, run_silence_touch_pipeline
 from app.reception_v2.runtime import PROMPT_VERSION as V2_PROMPT_VERSION, run_v2_agent
+from app.model_metering import measure_turn
 
 
 VALIDATOR_VERSION = "split-reply-contract-v49"
@@ -24,17 +26,18 @@ def _current_customer_text(context: dict) -> str:
 
 
 def _explicit_stop_request(text: str) -> bool:
+    """Only unambiguous standalone imperatives; semantic events handle the rest.
+
+    This is never permission to disable reactive service. Quoted, negated and
+    channel-specific sentences must not become global opt-outs.
+    """
     normalized = "".join(text.lower().split())
-    return any(term in normalized for term in (
-        "\u4e0d\u8981\u518d\u8054\u7cfb",  # do not contact again
-        "\u4e0d\u8981\u8054\u7cfb",      # do not contact
-        "\u522b\u518d\u8054\u7cfb",      # stop contacting
-        "\u4e0d\u8981\u518d\u6253\u6270",  # do not disturb again
-        "\u522b\u518d\u6253\u6270",      # stop disturbing
-        "不要再聯繫", "不要聯繫", "別再聯繫",
-        "不要再打擾", "別再打擾",
-        "不要再聯絡", "不要聯絡", "別再聯絡",
-    ))
+    if any(mark in normalized for mark in ('「', '」', '“', '”', '"', "'")):
+        return False
+    clauses = re.split(r'[，,。；;！!\n]', normalized)
+    return any(re.fullmatch(
+        r'(?:請|请)?(?:不要|別|别)(?:再)?(?:主動|主动)?'
+        r'(?:聯繫|聯絡|联系|打擾|打扰)(?:我|我們|我们)?(?:了)?', clause) for clause in clauses)
 
 
 def _validated_slots(decision, customer_text: str) -> tuple[dict, dict, list[str]]:
@@ -126,8 +129,10 @@ def _validated_reply_options(decision) -> tuple[list[str], list[str]]:
     return options, flags
 
 
+@measure_turn
 def generate_decision(context: dict, model_call=None):
     """Pin all planning, generation, verification and validation to one catalog."""
+    context = deepcopy(context)
     ensure_route_packages_current()
     journey = context.get("journey") or {}
     slots = journey.get("slots") if "slots" in journey else context.get("slots")
@@ -146,7 +151,13 @@ def generate_decision(context: dict, model_call=None):
         result = _generate_decision({**context, "route_playbook": playbook_prompt()}, model_call)
         decision = result[0]
         decision.bound_route_snapshot = deepcopy(snapshots.get(decision.route_variant))
-        return result
+        from app.config import settings
+        trace = {**result[3], 'environment': context.get('environment') or settings.app_profile,
+                 'effective_model': settings.deepseek_model,
+                 'route_knowledge_versions': {key: ROUTES[key].get('knowledge_version') for key in snapshots},
+                 'source_message_ids': context.get('source_message_ids') or [context.get('source_message_id')],
+                 'trigger_customer_at': context.get('trigger_customer_at')}
+        return decision, result[1], result[2], trace
 
 
 def _generate_decision(context: dict, model_call=None):
@@ -198,7 +209,9 @@ def _generate_decision(context: dict, model_call=None):
     model_ms = int((time.monotonic() - start) * 1000) - evidence_ms
 
     customer_text = _current_customer_text(context)
-    if _explicit_stop_request(customer_text):
+    from app.customer_contact_policy import current_contact_refusals
+    refusals = current_contact_refusals({**context, 'v2_events': decision.v2_events})
+    if {'scope': 'all'} in refusals or (engine_version == 'v1' and _explicit_stop_request(customer_text)):
         decision.safety_flags = sorted(set([*(decision.safety_flags or []), "stop_automation"]))
         decision.wakeup_action = "skip"
         if module == "reply" and decision.action == "no_action":
@@ -213,6 +226,10 @@ def _generate_decision(context: dict, model_call=None):
     )
     decision.evidence_refs = refs
     decision.material_keys = materials
+    if engine_version == 'v2' and decision.v2_delivery_sections:
+        reviewed = {key for section in decision.v2_delivery_sections for key in section.get('asset_keys', [])}
+        if reviewed != set(materials):
+            raise EvaluationCallError('reviewed_delivery_plan_changed', logs, digest)
     decision.content_group_key = group_key
     allowed_groups = set(ROUTES.get(decision.route_variant, {}).get("groups", {}))
     decision.covered_content_groups = list(dict.fromkeys(
@@ -235,7 +252,7 @@ def _generate_decision(context: dict, model_call=None):
         decision.covered_content_groups = []
     elif decision.action == "handoff":
         decision.reply_options = []
-        if decision.handoff_reason not in SALES_HANDOFF_REASONS:
+        if engine_version != 'v2' and decision.handoff_reason not in SALES_HANDOFF_REASONS:
             decision.material_keys = []
             decision.covered_content_groups = []
 

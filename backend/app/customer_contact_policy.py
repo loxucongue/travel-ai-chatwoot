@@ -1,6 +1,7 @@
 """Customer-owned contact constraints survive engine switches."""
 from datetime import datetime, timezone
 import math
+from app.contact_channels import refusal_scope
 
 
 def contact_constraint(context: dict) -> tuple[str, int]:
@@ -47,6 +48,6 @@ def current_contact_refusals(context: dict) -> list[dict]:
     if context.get('module') in {'silence_touch','wakeup'}:
         return []
     current=str(context.get('customer_text') or '')
-    return [{'scope':event['scope']} for event in context.get('v2_events',[])
-            if event.get('type')=='contact_refused' and event.get('scope') in {'all','LINE','微信','电话','Email'}
+    return [{'scope':refusal_scope(event.get('scope'))} for event in context.get('v2_events',[])
+            if event.get('type')=='contact_refused' and refusal_scope(event.get('scope')) is not None
             and event.get('quote') and event['quote'] in current]

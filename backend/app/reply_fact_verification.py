@@ -1,5 +1,6 @@
 """Narrow semantic verifier for generated customer-facing factual claims."""
 from __future__ import annotations
+from app.turn_context import conversation_snapshot
 
 from dataclasses import dataclass, field, replace
 from collections import OrderedDict
@@ -217,10 +218,9 @@ def call_reply_fact_verifier(context: dict, plan: ReplyPlan, generated: Generate
                                'content_groups':(context.get('journey') or {}).get('sent_content_groups',[])},
         'proactive_contract':{'candidate_fact_ids':context.get('v2_proactive_candidate_fact_ids',[]),
                               'delivered_fact_ids':context.get('v2_delivered_fact_ids',[])},
-        'recent_conversation': [
-            {'role':m.get('role') or m.get('direction'), 'content':str(m.get('content') or '')[:1000]}
-            for m in (context.get('context_messages') or [])[-8:]
-        ] if context.get('engine_version') == 'v2' else [],
+        'recent_conversation': conversation_snapshot(context) if context.get('engine_version') == 'v2' else [],
+        'source_message_ids': context.get('source_message_ids') or [context.get('source_message_id')],
+        'trigger_customer_at': context.get('trigger_customer_at'),
         "operator_lead_policy": (context.get('reception_policy_views') or {}).get('decision_policy', {}).get('lead_capture', {})
             or (context.get('reception_policy') or {}).get('operator_configuration', {}).get('lead_capture', {}),
         "customer_contact_preferences": ((context.get('journey') or {}).get('slots') or {}).get('_v2_state', {}),

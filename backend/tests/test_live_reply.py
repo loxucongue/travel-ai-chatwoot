@@ -392,7 +392,7 @@ def test_opening_group_only_last_message_has_options(session_factory, monkeypatc
         assert len(fake.sent) == 3
 
 
-def test_customer_stop_decision_disables_future_automation_without_sending(session_factory, monkeypatch):
+def test_customer_stop_decision_only_disables_proactive_automation(session_factory, monkeypatch):
     fake = setup(session_factory, monkeypatch)
     monkeypatch.setattr(live, "generate_decision", lambda _: (
         EvaluationDecision(
@@ -409,13 +409,12 @@ def test_customer_stop_decision_disables_future_automation_without_sending(sessi
     assert fake.sent == []
     with session_factory() as db:
         conversation = db.get(ConversationState, 1)
-        assert conversation.ai_mode == "disabled"
-        assert conversation.ai_mode_source == "customer_stop"
-        assert conversation.effective_ai_state == "AI_PAUSED_CONVERSATION"
-        assert conversation.effective_state_reason == "customer_requested_stop"
+        assert conversation.ai_mode == "enabled"
+        journey = db.scalar(select(ConversationJourney).where(ConversationJourney.conversation_state_id == 1))
+        assert journey.slots['_v2_state']['proactive_opt_out'] is True
 
 
-def test_explicit_opt_out_stops_queued_reply_before_model(session_factory, monkeypatch):
+def test_opt_out_candidate_queues_current_reply_for_event_validation(session_factory, monkeypatch):
     fake = setup(session_factory, monkeypatch, labels=["ai"])
     with session_factory() as db:
         state = db.get(ConversationState, 1)
@@ -439,9 +438,10 @@ def test_explicit_opt_out_stops_queued_reply_before_model(session_factory, monke
         db.flush()
         event = db.scalar(select(WebhookEvent).where(WebhookEvent.idempotency_key == "explicit-opt-out"))
         live.mirror_event(db, event)
-        assert db.get(ConversationState, 1).ai_mode_source == "customer_stop"
+        assert db.get(ConversationState, 1).ai_mode == "enabled"
+        assert not (live.journey_for(db, db.get(ConversationState, 1)).slots or {}).get('_v2_state', {}).get('proactive_opt_out')
         assert db.get(LiveReplyJob, 1).status == "cancelled"
-        assert db.scalar(select(func.count()).select_from(LiveReplyJob)) == 1
+        assert db.scalar(select(func.count()).select_from(LiveReplyJob)) == 2
     live.process_job(1)
     assert fake.sent == []
 
@@ -871,8 +871,9 @@ def add_itinerary_progress(db):
 
 
 @pytest.mark.parametrize('interrupt', [False, True])
+@pytest.mark.parametrize('terminal', ['reply', 'handoff', 'capture', 'pending_capture'])
 def test_v2_full_introduction_uses_worker_and_stops_on_new_customer_message(
-    session_factory, monkeypatch, tmp_path, interrupt
+    session_factory, monkeypatch, tmp_path, interrupt, terminal
 ):
     import hashlib
     from app.models import MaterialAsset, StoredMedia
@@ -908,6 +909,20 @@ def test_v2_full_introduction_uses_worker_and_stops_on_new_customer_message(
         route_variant=route, content_group_key='brand_positioning',
         covered_content_groups=[s['group_key'] for s in sections],
         material_keys=list(keys), v2_delivery_sections=sections)
+    if terminal != 'reply':
+        decision.action = 'handoff'
+        decision.handoff_reason = 'knowledge_confirmation_required'
+        decision.v2_delivery_sections = [s for s in sections if s['group_key'] != 'party_question']
+    if terminal in {'capture', 'pending_capture'}:
+        fake.messages[0]['content'] = '請給我資料，微信abc12345請顧問聯絡我'
+        decision.lead_action = 'captured'
+        decision.contact_values = {'wechat': 'abc12345'}
+        decision.handoff_reason = 'lead_captured'
+        if terminal == 'pending_capture':
+            with session_factory() as db:
+                db.add(LeadCaptureState(conversation_state_id=1, status='asked'))
+                db.get(ConversationState, 1).effective_ai_state = 'HUMAN_HANDOFF'
+                db.commit()
     monkeypatch.setattr(live, 'generate_decision', lambda _: (decision, [], 'hash', {}))
     if interrupt:
         monkeypatch.setattr(live.time, 'sleep', lambda _: fake.messages.append({
@@ -916,7 +931,7 @@ def test_v2_full_introduction_uses_worker_and_stops_on_new_customer_message(
     live.process_job(1)
     with session_factory() as db:
         job = db.get(LiveReplyJob, 1)
-        assert job.status == ('blocked' if interrupt else 'submitted'), (job.error_code, job.trace)
+        assert job.status == ('blocked' if interrupt else 'submitted' if terminal == 'reply' else 'handoff'), (job.error_code, job.trace)
         if interrupt:
             assert len(fake.sent) == 1
         else:
@@ -924,7 +939,11 @@ def test_v2_full_introduction_uses_worker_and_stops_on_new_customer_message(
             attempts = db.scalars(select(OutboundMessage)).all()
             assert all(len(row.content_attributes['_delivery_item']['group_keys']) == 1 for row in attempts)
             assert fake.sent[0][1] == ROUTES[route]['groups']['brand_positioning']['text']
-            assert fake.sent[-1][1] == ROUTES[route]['groups']['party_question']['text']
+            if terminal == 'reply':
+                assert fake.sent[-1][1] == ROUTES[route]['groups']['party_question']['text']
+            else:
+                assert job.trace['terminal_handoff_plan']
+                assert db.scalar(select(HandoffTask)) is not None
 
 
 def test_checked_initial_visual_uses_the_route_configured_gap(
@@ -1310,7 +1329,7 @@ def test_latest_reply_api_exposes_only_operational_fields(authenticated, session
     result = response.json()["latest_ai_reply"]
     assert result["status"] == "failed" and result["failure_kind"] == "model_timeout"
     assert result["model_ms"] == 30000
-    assert set(result) == {"status", "failure_kind", "created_at", "completed_at", "model_ms", "request_count"}
+    assert set(result) == {"status", "failure_kind", "created_at", "completed_at", "model_ms", "request_count", "model_http_request_count", "engine_version", "engine_release_id"}
     from app.models import User
     with session_factory() as db:
         user = db.scalar(select(User))

@@ -1073,6 +1073,18 @@ def call_deepseek(case: dict) -> tuple[EvaluationDecision, list[dict], str]:
 
 
 def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
+    from app.model_metering import begin_request, end_request
+    handle = begin_request(payload)
+    try:
+        response = _post_unmetered(payload, timeout)
+        end_request(handle, response.json())
+        return response
+    except Exception as exc:
+        end_request(handle, error=exc)
+        raise
+
+
+def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
     # Each calling thread owns its loop and connection pool; API threads never share an asyncio client.
     if not hasattr(_transport, "runner"):
         _transport.runner = asyncio.Runner()

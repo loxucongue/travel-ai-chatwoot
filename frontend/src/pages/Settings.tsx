@@ -170,6 +170,7 @@ function NotificationSettings({ notify }: { notify: (value: string) => void }) {
     <article className="setting-card"><div className="form-stack">
       <div className="global-toggle-row"><strong>启用顾问通知</strong><Toggle checked={enabled} onChange={setEnabled} label="启用顾问通知" /></div>
       <label>提醒方式<select value={channel} onChange={(e) => setChannel(e.target.value as Config['channel'])}><option value="chatwoot">Chatwoot 手机提醒</option><option value="webhook">外部通知 Webhook</option></select></label>
+      <p>通知成功表示接口已接受；手机和手表是否实际收到，仍需在对应设备上确认。</p>
       {channel === 'chatwoot' ? <>
         <div className="info-box"><Bell size={16} /><span>系统会在会话中发一条仅团队可见的备注并提及顾问。请在 Chatwoot 手机端开启提及通知；Apple Watch 接收情况取决于手机和手表的通知设置。</span></div>
         <label>接收顾问<select value={agentId} onChange={(e) => setAgentId(e.target.value)}><option value="">请选择顾问</option>{agents.data?.agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label>

@@ -44,7 +44,7 @@ def test_customer_voice_prefers_direct_answers_over_defensive_disclaimers():
     from app.advisor_voice import v2_advisor_voice_contract
     contract = v2_advisor_voice_contract()
     assert '不像法務審查稿' in contract
-    assert '同一答案最多保留一個真正必要的限制' in contract
+    assert '保留所有影響本輪答案的適用條件，刪除重複免責' in contract
     assert '已知產品價格與適用條件完整時直接報價' in contract
 
 

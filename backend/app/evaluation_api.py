@@ -313,7 +313,7 @@ def _playground_decision(payload: PlaygroundReplyRequest) -> dict:
     try:
         from app.decision_service import generate_decision
         decision, logs, _digest, trace = generate_decision({
-            "module": "reply", "engine_version": payload.engine_version, **case,
+            "module": "reply", "environment": "playground", "engine_version": payload.engine_version, **case,
         })
     except ValueError as exc:
         code = str(exc)[:120]
@@ -341,11 +341,14 @@ def _playground_decision(payload: PlaygroundReplyRequest) -> dict:
         "prompt_version": trace["prompt_version"],
         "engine_version": trace.get("engine_version", payload.engine_version),
         "engine_release_id": trace.get("engine_release_id"),
+        "environment": trace.get("environment", "playground"),
+        "knowledge_versions": trace.get("route_knowledge_versions", {}),
+        "model_http_request_count": trace.get("model_http_request_count"),
         "loaded_skills": trace.get("loaded_skills", []),
         "tool_calls": trace.get("tools", []),
         "attempts": len(logs),
-        "input_tokens": last_log.get("input_tokens"),
-        "output_tokens": last_log.get("output_tokens"),
+        "input_tokens": trace.get("model_input_tokens", last_log.get("input_tokens")),
+        "output_tokens": trace.get("model_output_tokens", last_log.get("output_tokens")),
         "outbound": False,
     }
 

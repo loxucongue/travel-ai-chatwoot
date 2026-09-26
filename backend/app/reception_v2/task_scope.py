@@ -27,6 +27,7 @@ Return JSON {"checks":[{"index":0,"reason":"Identify actual requested unknown an
 
 
 TASK_SCOPE_PROMPT += "\n" + CUSTOM_TRIP_REQUEST_RULE
+TASK_SCOPE_PROMPT += '\nA standard per-person price question is not a discount inquiry. Use the selected route price fact: the 9-day published six-person price and the 11-day published per-person double-room price both directly answer 六人多少錢 for their respective routes. Do not infer a six-person re-quotation requirement for the 11-day route from vehicle capacity or the 9-day other-party-size rule. A task 核對6人實際價格及多人優惠 adds unrequested work when no unpublished discount or special arrangement was requested: needed=false, answer_complete_without_task=true.'
 
 def verify_task_scope(data, tasks):
     def parse(value):

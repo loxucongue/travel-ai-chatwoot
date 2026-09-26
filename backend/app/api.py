@@ -501,6 +501,8 @@ def conversation_detail(conversation_id: int, user: User = Depends(current_user)
         "failure_kind": "model_timeout" if "timeout" in (latest.error_code or "").lower() else "reply_failed",
         "created_at": latest.created_at, "completed_at": latest.completed_at,
         "model_ms": latest.trace.get("model_ms"), "request_count": latest.trace.get("request_count"),
+        "model_http_request_count": latest.trace.get("model_http_request_count"),
+        "engine_version": latest.engine_version, "engine_release_id": latest.engine_release_id,
     }
     lead_capture = db.scalar(select(LeadCaptureState).where(
         LeadCaptureState.conversation_state_id == row.id

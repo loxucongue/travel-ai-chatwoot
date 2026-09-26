@@ -486,7 +486,7 @@ function RehearsalRunner(props: {
     <header className="ai-chat-topbar">
       <div className="ai-chat-title">
         <button className="ai-chat-mobile-menu" onClick={props.onOpenHistory} aria-label="打开会话列表"><Menu size={20} /></button>
-        <div><strong>模拟客户 #{session.id}</strong><small>{session.engine_version.toUpperCase()} · {routeName(session.controls.route_variant)} · {props.processing ? 'AI 正在回复' : '等待客户'}</small></div>
+        <div><strong>模拟客户 #{session.id}</strong><small>{session.engine_version.toUpperCase()} · {routeName(session.controls.route_variant)} · {props.processing ? 'AI 正在回复' : '等待客户'}</small><small>演练 · {session.engine_release_id}</small></div>
       </div>
       <div className="ai-chat-topbar-actions">
         <span className="ai-chat-safe"><ShieldCheck size={13} />沙盒</span>

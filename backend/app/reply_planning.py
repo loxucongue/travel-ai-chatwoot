@@ -19,13 +19,8 @@ from app.service_knowledge import SERVICE_FIXED_ANSWERS
 
 
 PLANNER_VERSION = "deterministic-reply-planner-v35"
-CONTACT_CHANNEL_KEYS = {
-    "LINE": "line",
-    "微信": "wechat",
-    "电话": "phone",
-    "Email": "email",
-    "WhatsApp": "whatsapp",
-}
+from app.contact_channels import CHANNEL_LABELS
+CONTACT_CHANNEL_KEYS = {label: code for code, label in CHANNEL_LABELS.items()}
 
 
 @dataclass(frozen=True)

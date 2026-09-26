@@ -4,8 +4,9 @@ import hashlib
 import json
 import re
 import time
+from copy import deepcopy
 from typing import Any
-from dataclasses import replace
+from dataclasses import replace, asdict
 from datetime import datetime, timezone, timedelta
 
 import httpx
@@ -32,7 +33,7 @@ from app.reception_v2.budget import bounded_turn, remaining
 from app.advisor_voice import v2_advisor_voice_contract, taiwan_copy_violation, v2_internal_copy_violation
 
 
-PROMPT_VERSION = "reception-v2-agent-business-feedback-20260922-followup"
+PROMPT_VERSION = "reception-v2-agent-consistency-20260926"
 MAX_TOOL_ROUNDS = 4
 
 
@@ -99,13 +100,14 @@ SYSTEM_PROMPT = """你是 China2Go 的旅游接待顾问。你的任务是先解
 - 连续追问只补充缺少的信息，不复述完整答案。客户的问题解决后可以直接结束。
 - 客户指定一种联系渠道时只承接该渠道。问题未解决时不索取联系方式。
 - 人数达到转人工门槛不代表客户要求包团或客制；只承接其实际报价/安排问题，不把8人自动称为包团。4–10人是小团定位，6人是已公布价格的适用人数，不能说8人超过小团范围或小团配置；自然说明8人的实际报价需要核对。健康证明只按已知条件说明，不引入适航评估等未知标准。
+- 两条路线的报价条件分别读取本路线批准事实，不能把9日的其他人数另报价规则套到11日。11日事实已公布每人价格及双人房条件，没有要求6人另核价；客户问6人价格并同时问年龄时，两问都直接回答，不擅自增加优惠金额核对。用车4至6人配置不是报价限制。
 - 实时余位、即时路况、未批准优惠或特殊安排先回答已知部分，再交给顾问核对。
 - 团型人数范围、最低成团人数和某日期是否已经成团是三个不同问题。「這個幾人成行」「湊幾位才出發」询问最低成行门槛，question.topic=minimum_departure；仅答「4至10人小團」是答非所问，不允许。范围下限不能证明成团门槛。客户问最低几人成行而线路尚无明确门槛时，简短说「我請顧問確認這條路線最低幾位成行」，action=handoff、handoff_reason=knowledge_confirmation_required，创建这一个具体核对任务；不抄「依產品及預付資源、以報價單與合約為準」的通用条款，不额外追问联系方式或重报团期。客户只问小团几个人时直接给已公布范围，不创建成团核对任务。
 - 资料已经实际交付后，不以「我可以再整理完整行程給您」作为新的主动价值，也不以重新传同一份资料为理由索取联系方式。客户主动要求重发时才重新交付。
 - 已知安排与适用条件要一起保留，不能把带条件的供应变成无条件承诺，也不能只说待核对而删掉已知部分。例如客户追问下车活动是否要自备氧气，若批准资料说明5000公尺以上景点每人一支随身氧气瓶，就先说明这项安排和海拔条件，再说明所问区段实际供应及自备需求交顾问核对；不能用车载氧气替代随身氧气。
 - 上条只适用于客户实际询问的未知事项。知识中的内部边界不是主动延伸话题：客户只问年龄是否可参加，就回答该年龄资格，不追加未问的文件豁免/模板；问全程希尔顿就回答品牌例外，不核对例外酒店名称；报出日期只保存偏好，不查余位。问已选产品改到某月是否可行，保存新的departure_window并回答已发布的日期适用性；只有明确要求另外定制/预订才转人工。
 - 明确要求真人、投诉退款、附件必须查看、达到运营配置大团人数的定制报价、已经提供有效联系方式时转人工。
-- 默认繁体中文，像台湾顾问私讯，短句、自然、具体；正文不超过200字，每轮最多一个问题。已知就明确回答，不用免责话术稀释答案；只有真实未知或安全上必要时才保留一句限制。
+- 默认繁体中文，像台湾顾问私讯，短句、自然、具体；正文遵守已发布reply_limits的字数上限，每轮最多一个问题。已知就明确回答，不用免责话术稀释答案；保留全部影响本轮答案的适用条件，删除重复免责。
 - silence_due 事件中：值得发送时 action=reply、wakeup_action=generate；当前不适合打扰时 action=no_action、wakeup_action=defer 并给出分钟数；无需继续时 action=no_action、wakeup_action=skip。
 
 工具完成后输出一个 JSON 对象，不要 Markdown。字段：
@@ -133,7 +135,7 @@ Additional strict behavior:
 - 区分“能否先咨询”与“请交付资料”：客户日期未定，问能先问行程/能先了解吗，只简短确认可以咨询，保存未定日期，question与profile_updated按实际证据记录；不自动发图、不生成material_requested、不把询问许可改写成索要行程。客户明确问能先给我看行程图吗，则是资料请求，必须交付对应图。
 - 必须遵守运营的启用线路、允许切线、留资开关及允许渠道；客户已拒绝的渠道不要再次索取。留资问题必须单独放在follow_up_question，不得混入reply_body。
 - 必须输出 v2_events 数组，描述本轮客户真实事件；每项有type、quote(本轮原文逐字证据)、topic。type可为question/material_requested/considering/contact_agreed/contact_refused/human_requested/route_selected/route_comparison/profile_updated。没有事件填[]。沉默事件必须[]。问集合等事实不是considering；提到或拒绝LINE不等于请求真人。约定联系附带时区的ISO contact_at，时间不明确时先问清，不编造时间。material_requested表示客户请求实际文件/完整介绍，额外输出material_kind(itinerary/full_introduction/hotel/vehicle/altitude/other)，普通行程相关问题用question。客户要求完整介绍并包含行程、住宿、用车等多个部分时，必须是full_introduction而不能缩减为itinerary；服务端会编排完整多段图文，不受模型一次最多选择两图的字段限制。仅索要完整行程图不等于完整介绍。
-- contact_refused仅表示拒绝主动联系，必须给scope(all/LINE/微信/电话/Email)；“暂不留LINE”仅拒绝留资，不能当作拒绝所有主动联系。时间根据服务端now，客户所在地不明时按Asia/Shanghai解释并自然确认。
+- contact_refused仅表示拒绝主动联系，必须给scope(all/LINE/微信/电话/Email/WhatsApp)；“暂不留LINE”仅拒绝留资，不能当作拒绝所有主动联系。时间根据服务端now，客户所在地不明时按Asia/Shanghai解释并自然确认。
 - If the customer says they will think or discuss with family, acknowledge in one short sentence. Do not repeat product facts, ask a question, or request contact unless they explicitly ask for a recap.
 - If a contact channel was not specified, never choose LINE, WeChat, phone, or email for the customer. Ask which contact method they prefer only when handoff is necessary.
 - Keep a direct fact answer focused on the asked fact. Do not append a full package summary unless the customer asks for the full details.
@@ -151,7 +153,7 @@ Additional strict behavior:
 - 资料没有明确的收费/资格问题，不用“是/不是”代替未知。比如小费是否司导各30，应说分开还是合计需核对，而不是先说“不是”。用车只说批准的配置，不推导优于一般车辆、保证不挤或可以随时停车休息。
 - 事实中的内部说明不要照抄给客户。仅当客户实际问优惠金额且金额未知时，才说“具體金額請顧問幫您核對”；只问有无优惠，回答有多人同行优惠即可。问具体折扣只承接其实际人数的优惠金额核对，不展开基础团费、单房差或通用门槛表。不要说“文件沒有寫明”“我不先幫您算”。不拼内宾不能改写为不拼其他外宾或承诺独立包团。导游可协助联系医疗资源，不替医生判断是否需要吸氧或开药。
 - 提供行程图时用一两句介绍，不把图中每日安排全部抄出来，除非客户明确要求逐日文字版。不例行追加“要不要讲价格/住宿”等推销式问题。能完整回答就直接结束。
-- 不写法务式回复。不要在已经明确的答案后连续补「可能」「以實際為準」「請顧問核對」「請醫師評估」等多层退让。同一则只保留一个确实影响决定的必要边界；普通产品问答没有真实未知时，不主动加入责任说明。健康问题先说行程里的实际安排，只有客户问个人适宜性或用药时才用一句话建议专业评估。
+- 不写法务式回复。不要在已经明确的答案后连续补「可能」「以實際為準」「請顧問核對」「請醫師評估」等多层退让。保留全部确实影响本轮答案的适用条件，不重复免责；普通产品问答没有真实未知时，不主动加入责任说明。健康问题先说行程里的实际安排，只有客户问个人适宜性或用药时才用一句话建议专业评估。
 - 医疗回复也要面向解决问题：用药剂量可说「沒有適合所有人的統一用法，帶著行程和現有用藥詢問醫師或藥師」；不要再叠加「我不幫您判斷」「我不能代替醫師」「無法保證」三种同义推责。客户只问供氧能否保证时，说明供氧配置与一个必要边界即可；未问就医流程时不主动展开整套处置说明。
 - 年龄65–75岁可报名不代表最低年龄65岁。问65或75岁时直接回答该年龄可报名及台湾旅客健康证明，不主动讲其他年龄段。只有客户实际询问超过75岁旅客时，才明确“不建议报名”及个案核对；不能因事实来源还列出该规则，就在64/65/75岁回答中追加超过75岁的段落或核对任务。香港等非台湾旅客只问其健康证明时，仅说明按证件核对该证明要求，不扩展未问的其他年龄段资格。证明要求资料未明确，必须说需要按证件核对，不能说“不在要求内”“不用提交”。
 - 比较两条线路必须分别读取两条的行程事实（topic="itinerary"）。比较新增景点时核对两边，不把共有的扎什伦布寺、拉日铁路等说成11日独有；不能因为9日总览没列出某景点就断言9日不去。
@@ -160,18 +162,23 @@ Additional strict behavior:
 
 def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
     history = []
-    for item in (context.get("context_messages") or [])[-30:]:
+    from app.turn_context import conversation_snapshot
+    for item in conversation_snapshot(context):
         role = item.get("role")
+        if role == "outgoing":
+            role = "assistant"
         if role not in {"customer", "assistant", "user"}:
             role = "assistant" if item.get("direction") == "outgoing" else "user"
         history.append({"role": "assistant" if role == "assistant" else "user", "content": str(item.get("content") or "")[:4000]})
-    customer_text = str(context.get("customer_text") or "")[:4000]
+    customer_text = str(context.get("customer_text") or "")
     if context.get('module') not in {'silence_touch', 'wakeup'} and (not history or history[-1]["role"] != "user" or history[-1]["content"].strip() != customer_text.strip()):
         history.append({"role": "user", "content": customer_text})
     bound_route = context.get("route_variant") or (context.get("journey") or {}).get("route_variant") or ""
     hinted_route = infer_route_variant(customer_text) if not bound_route else ""
     effective_route = bound_route or hinted_route
     state = {
+        'source_message_ids': context.get('source_message_ids') or [context.get('source_message_id')],
+        'trigger_customer_at': context.get('trigger_customer_at'),
         'now': context.get('now') or context.get('virtual_now'),
         "event": "silence_due" if context.get("module") in {"silence_touch", "wakeup"} else "customer_message",
         "bound_route": effective_route,
@@ -611,6 +618,99 @@ def _missing_material_handoff(decision, reason):
 
 
 def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> None:
+    """Combine explicit material requests before the final independent audit."""
+    _apply_contact_window(context, decision)
+    kinds = {e.get('material_kind') for e in decision.v2_events if e.get('type') == 'material_requested'}
+    if (context.get('module') in {'silence_touch', 'wakeup'} or not decision.route_variant
+            or not kinds or decision.action not in {'reply', 'handoff'}
+            or (len(kinds) == 1 and decision.lead_action != 'captured'
+                and (decision.action == 'reply' or decision.handoff_reason == 'requested_material_unavailable'))):
+        _compile_single_delivery_contract(context, decision)
+        return
+    from app.reception_v2.material_delivery import introduction_sections, sections_for_groups
+    spec = ROUTES[decision.route_variant]
+    available = {m.get('key') for m in context.get('available_materials', [])}
+    slots = {**((context.get('journey') or {}).get('slots') or {}), **decision.slots}
+    keys = []
+    if 'full_introduction' in kinds:
+        keys = ['brand_positioning', 'itinerary_overview', 'hotel_reference']
+        if 'rongbuk_reference' in spec['groups']:
+            keys.append('rongbuk_reference')
+        keys.append('vehicle_reference')
+    else:
+        keys = [key for kind, key in [('itinerary', 'itinerary_overview'),
+                 ('hotel', 'hotel_reference'), ('vehicle', 'vehicle_reference')] if kind in kinds]
+    if 'altitude' in kinds or decision.lead_action == 'captured':
+        keys.append(spec.get('policies', {}).get('post_capture_material_group') or 'altitude_guide')
+    sections, missing = [], []
+    for key in dict.fromkeys(keys):
+        group = spec['groups'].get(key)
+        if not group or not set(group.get('assets', [])) <= available:
+            missing.append(key)
+        else:
+            sections.extend(sections_for_groups(spec, [key], available))
+    if 'other' in kinds:
+        missing.append('requested_other_material')
+    answer = decision.reply_body or decision.reply or ''
+    for receipt in ('聯絡方式已收到，我會請顧問接續協助。', '缺少的資料我會請顧問補給您。'):
+        answer = answer.replace(receipt, '').strip()
+    has_question = any(e.get('type') == 'question' for e in decision.v2_events)
+    if not has_question and decision.action != 'handoff' and decision.lead_action != 'captured':
+        answer = ''
+    if decision.lead_action == 'captured':
+        decision.action, decision.handoff_reason = 'handoff', 'lead_captured'
+        answer = (answer + ' 聯絡方式已收到，我會請顧問接續協助。').strip()
+    if missing:
+        decision.action = 'handoff'
+        decision.handoff_reason = decision.handoff_reason or 'knowledge_confirmation_required'
+        decision.safety_flags = sorted(set([*decision.safety_flags, *['pending_material:' + k for k in missing]]))
+        answer = (answer + ' 缺少的資料我會請顧問補給您。').strip()
+    if answer:
+        sections.insert(0, {'group_key': keys[0] if keys else '', 'text': answer,
+            'asset_keys': [], 'evidence_refs': list(decision.evidence_refs),
+            'delivery_mode': 'text_only', 'answers_customer_question': has_question})
+    if not sections:
+        raise ValueError('v2_requested_material_unavailable')
+    if 'full_introduction' in kinds and not slots.get('party_size') and decision.action == 'reply':
+        sections.extend(sections_for_groups(spec, ['party_question'], available))
+    seen = set()
+    for section in sections:
+        section['asset_keys'] = [k for k in section['asset_keys'] if k not in seen and not seen.add(k)]
+    limits = views_for_context(context)['runtime_policy']['reply_limits']
+    if any(len(s['text']) > limits['max_characters'] or len(s['asset_keys']) > limits['max_images_per_turn'] for s in sections):
+        raise ValueError('v2_introduction_exceeds_published_section_limits')
+    decision.v2_delivery_sections = sections
+    decision.material_keys = [k for s in sections for k in s['asset_keys']]
+    decision.covered_content_groups = list(dict.fromkeys(s['group_key'] for s in sections if s['group_key']))
+    decision.content_group_key = sections[0]['group_key']
+    decision.evidence_refs = list(dict.fromkeys(ref for s in sections for ref in s['evidence_refs']))
+    decision.reply = decision.reply_body = sections[0]['text']
+    decision.reply_segments, decision.follow_up_question = [], ''
+
+
+def _apply_contact_window(context, decision):
+    contact = next((e for e in decision.v2_events if e.get('type') == 'contact_agreed'), None)
+    if not contact:
+        return False
+    raw = context.get('trigger_customer_at') if 'trigger_customer_at' in context else context.get('now') or context.get('virtual_now')
+    if not raw:
+        raise ValueError('v2_current_customer_time_missing')
+    anchor = datetime.fromisoformat(str(raw).replace('Z', '+00:00'))
+    when = datetime.fromisoformat(contact['contact_at'].replace('Z', '+00:00'))
+    if anchor.tzinfo is None or when.tzinfo is None:
+        raise ValueError('v2_current_customer_timezone_required')
+    if when < anchor + timedelta(hours=23, minutes=55):
+        return False
+    decision.action, decision.journey_stage = 'handoff', 'handoff'
+    decision.handoff_reason = 'customer_contact_outside_window'
+    receipt = '我會把您希望的聯繫時間交給顧問安排，這段時間先不打擾您。'
+    decision.reply = decision.reply_body = _reply_with_service_receipt(decision, receipt)
+    decision.follow_up_question = ''
+    decision.lead_action, decision.wakeup_action = 'none', 'skip'
+    return True
+
+
+def _compile_single_delivery_contract(context: dict, decision: EvaluationDecision) -> None:
     """Turn semantic material intent into a concrete, route-scoped deliverable."""
     if context.get('module') in {'silence_touch', 'wakeup'}:
         # A proactive topic is not a new customer request to resend its itinerary.
@@ -687,8 +787,12 @@ def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> N
             return
     contact = next((e for e in decision.v2_events if e['type'] == 'contact_agreed'), None)
     if contact:
-        anchor = datetime.fromisoformat(str(context.get('last_customer_at') or context.get('now')
-            or datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))
+        raw_anchor = context.get('trigger_customer_at') if 'trigger_customer_at' in context else context.get('now') or context.get('virtual_now')
+        if not raw_anchor:
+            raise ValueError('v2_current_customer_time_missing')
+        anchor = datetime.fromisoformat(str(raw_anchor).replace('Z', '+00:00'))
+        if anchor.tzinfo is None:
+            raise ValueError('v2_current_customer_timezone_required')
         when = datetime.fromisoformat(contact['contact_at'])
         if when >= anchor + timedelta(hours=23, minutes=55):
             decision.action, decision.journey_stage = 'handoff', 'handoff'
@@ -969,7 +1073,7 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
             final_message, repair_log = _call(_request([
                 *messages, {"role": "assistant", "content": final_message.get("content")},
                 {"role":"system", "content": "Valid evidence_refs and material_keys only: " + json.dumps({"evidence_refs":sorted(available_facts), "material_keys":sorted(available_materials)})},
-                {"role": "system", "content": "slots只允许party_size/departure_window/budget/destination；日期必须写departure_window，禁止departure_date/date/travel_date。当前客户消息必须用reply或handoff并提供简短承接，no_action仅用于沉默到期事件。格式校验失败：" + str(exc) + "。action为必填字段，只能reply/handoff/no_action，不可省略。contact_values只允许line/wechat/phone/email/whatsapp字符串，没有号码填{}；不能放日期。contact_agreed只用于约定未来时间并必须有ISO contact_at；只是提供联系方式请顾问联系应为human_requested，lead_action=captured。只输出完整修复JSON，不调用工具。quote必须逐字复制下面current_customer_text中的文字，不能包含历史消息或自行改写。仅保留本轮事件。journey_stage只允许route_selection/needs_discovery/value_building/objection_handling/contact_ready/contact_requested/considering/captured/handoff；不知道时用value_building，不使用route_detail等Flow名称。正文最多150字一个问题，content_group_key无匹配留空。current_customer_text=" + json.dumps(context.get('customer_text',''), ensure_ascii=False)},
+                {"role": "system", "content": "slots只允许party_size/departure_window/budget/destination；日期必须写departure_window，禁止departure_date/date/travel_date。当前客户消息必须用reply或handoff并提供简短承接，no_action仅用于沉默到期事件。格式校验失败：" + str(exc) + "。action为必填字段，只能reply/handoff/no_action，不可省略。contact_values只允许line/wechat/phone/email/whatsapp字符串，没有号码填{}；不能放日期。contact_agreed只用于约定未来时间并必须有ISO contact_at；只是提供联系方式请顾问联系应为human_requested，lead_action=captured。只输出完整修复JSON，不调用工具。quote必须逐字复制下面current_customer_text中的文字，不能包含历史消息或自行改写。仅保留本轮事件。journey_stage只允许route_selection/needs_discovery/value_building/objection_handling/contact_ready/contact_requested/considering/captured/handoff；不知道时用value_building，不使用route_detail等Flow名称。正文遵守已发布reply_limits的字数上限、最多一个问题，content_group_key无匹配留空。current_customer_text=" + json.dumps(context.get('customer_text',''), ensure_ascii=False)},
             ], tools=False), len(logs))
             logs.append(repair_log)
             schema_repair_ms = int(repair_log.get("duration_ms") or 0)
@@ -1006,6 +1110,8 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
                 decision=_validated_decision(final_message,available_facts,available_materials,context)
             except Exception as shape_exc:
                 raise EvaluationCallError(str(shape_exc)[:120],logs,'') from shape_exc
+    initial_draft = asdict(decision)
+    initial_draft['contact_values'] = {key: '[captured]' for key in initial_draft.get('contact_values', {})}
     try:
         _enforce_delivery_contract(context, decision)
         current_stage = str((context.get("journey") or {}).get("stage") or "route_selection")
@@ -1018,6 +1124,12 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
         branch=ROUTES[decision.route_variant]['branch']
         available_facts.update(f['id'] for f in FACTS if not f.get('branches') or branch in f['branches'])
     context = {**context, 'v2_available_fact_ids': sorted(available_facts)}
+    def review_snapshot(value):
+        snapshot = asdict(value)
+        snapshot['contact_values'] = {key: '[captured]' for key in snapshot.get('contact_values', {})}
+        return snapshot
+    decision_revisions = [{'stage': 'initial_draft', 'decision': initial_draft},
+                          {'stage': 'initial_review', 'decision': review_snapshot(decision)}]
     verification_started = time.monotonic()
     try:
         verification, verification_logs, verification_digest = _verify(context, decision)
@@ -1086,6 +1198,7 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
             transition_flag = guard_decision_stage(decision, current_stage)
         except Exception as exc:
             raise EvaluationCallError(str(exc)[:120], logs, "") from exc
+        decision_revisions.append({'stage': 'revision_' + str(repair_attempt + 1), 'decision': review_snapshot(decision)})
         verification_started = time.monotonic()
         try:
             verification, second_logs, verification_digest = _verify({**context,'v2_final_fact_recheck':repair_attempt >= 1}, decision)
@@ -1119,6 +1232,10 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
             raise EvaluationCallError('v2_proactive_material_evidence_mismatch', logs, digest)
     trace = {
         "engine_version": ENGINE_VERSION,
+        "decision_revisions": decision_revisions,
+        "reviewed_delivery_sections": deepcopy(decision.v2_delivery_sections),
+        "effective_model": settings.deepseek_model,
+        "environment": settings.app_profile,
         "engine_release_id": ENGINE_RELEASE_ID,
         "prompt_version": PROMPT_VERSION,
         "skill_release_digest": registry.release_digest(),

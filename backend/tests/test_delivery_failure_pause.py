@@ -223,9 +223,11 @@ def test_terminal_handoff_records_each_attempt_without_enabling_retry(
     with session_factory() as db:
         rows = db.scalars(select(OutboundMessage).order_by(OutboundMessage.id)).all()
         assert len(rows) == (1 if unknown else 2)
+        job = db.get(LiveReplyJob, 1)
         for out in rows:
             item = out.content_attributes["_delivery_item"]
-            assert item["item_id"] == out.idempotency_key
+            part = next(p for p in job.trace['delivery_plan'] if p['item_id'] == item['item_id'])
+            assert live._persisted_reply_key(job, part) == out.idempotency_key
             assert item["route"] == "peach_9d_2027"
             assert item["content_hash"]
             assert item["group_keys"] == ["itinerary_overview"]
@@ -238,8 +240,8 @@ def test_terminal_handoff_records_each_attempt_without_enabling_retry(
         job.status = "processing"
         db.commit()
         live.recover_jobs(db)
-        assert job.status == "submission_unknown"
-        assert not job.trace.get("resume_delivery_plan")
+        assert job.status == ("submission_unknown" if unknown else "queued")
+        assert bool(job.trace.get("resume_delivery_plan")) is (not unknown)
     before = list(fake.sent)
     live.process_job(1)
     assert fake.sent == before

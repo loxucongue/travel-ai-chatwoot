@@ -15,7 +15,7 @@ from app.chatwoot import ChatwootError, normalize_collection
 from app.config import settings
 from app.conversation_policy import compute_state, has_ai_label, observe_ai_label
 from app.db import SessionLocal
-from app.decision_service import _explicit_stop_request, generate_decision
+from app.decision_service import generate_decision
 from app.deepseek_evaluation import EvaluationCallError
 from app.delivery_status import apply_receipt, receipt_status, pause_failed_delivery
 from app.delivery_plan import delivery_mode_for, ordered_delivery_parts
@@ -43,6 +43,7 @@ from app.reception_config import effective_reception_policy
 from app.web_knowledge import enrich_context_with_web_knowledge
 from app.reception_rollout import reception_conversation_allowed
 from app.conversation_mirror import upsert_mirrors
+from app.model_metering import merge_metrics
 
 
 class ReplyBlocked(Exception):
@@ -194,18 +195,13 @@ def enroll_after_submitted_reply(
 
 
 def stop_customer_automation(db, state):
-    """Persist an explicit opt-out before any model or outbound work."""
+    """Stop proactive contact without disabling replies to customer questions."""
     from app.live_sop import cancel_live_sop_on_control_change
 
-    state.ai_mode = "disabled"
-    state.ai_mode_source = "customer_stop"
-    state.ai_mode_updated_at = utcnow()
-    state.effective_ai_state = "AI_PAUSED_CONVERSATION"
-    state.effective_state_reason = "customer_requested_stop"
-    db.execute(update(LiveReplyJob).where(
-        LiveReplyJob.conversation_state_id == state.id,
-        LiveReplyJob.status.in_(["queued", "processing"]),
-    ).values(status="cancelled", error_code="customer_requested_stop", completed_at=utcnow()))
+    journey = journey_for(db, state)
+    slots = deepcopy(journey.slots or {})
+    slots['_v2_state'] = {**slots.get('_v2_state', {}), 'proactive_opt_out': True}
+    journey.slots = slots
     cancel_live_sop_on_control_change(db, state, "customer_requested_stop")
     db.commit()
 
@@ -239,8 +235,15 @@ def mirror_event(db, event):
             if label_removed:
                 from app.live_sop import cancel_live_sop_on_control_change
                 cancel_live_sop_on_control_change(db, state, "ai_label_removed")
-    if state and message and incoming and _explicit_stop_request(message.content or ""):
+    if state and message and incoming and current and state.ai_mode_source == 'customer_stop':
         stop_customer_automation(db, state)
+        # Only the old customer-stop cause is migrated. Manual control and
+        # active handoffs remain authoritative in compute_state / queue gates.
+        state.ai_mode = 'enabled' if has_ai_label(state.labels or []) else 'disabled'
+        state.ai_mode_source = 'customer_stop_migrated'
+        state.effective_ai_state, state.effective_state_reason = compute_state(
+            db.get(Tenant, state.tenant_id), state.inbox, state.labels or [], state.contact.labels if state.contact else [],
+            state.can_reply, state.ai_mode, state.ai_sync_status, state.ai_label_present)
     if state and message and incoming and not current and policy.get("armed_at"):
         labels = (payload.get("conversation") or {}).get("labels", state.labels or [])
         handoff_stale_message(db, state, message, armed_at=policy["armed_at"], labels=labels)
@@ -857,8 +860,39 @@ def _persisted_reply_attempts(db, job):
     return {out.idempotency_key: out for out in attempts}
 
 
+def _freeze_terminal_reply(db, job, state, decision, materials):
+    """Persist the reviewed terminal delivery using the ordinary plan format."""
+    from app.reception_v2.material_delivery import introduction_parts
+    if decision.v2_delivery_sections:
+        planned = set(k for s in decision.v2_delivery_sections for k in s['asset_keys'])
+        if planned != set(decision.material_keys):
+            raise ReplyBlocked('reviewed_delivery_plan_mismatch')
+        parts = introduction_parts(decision.v2_delivery_sections, materials,
+            plan_id=f'live:{job.id}', interval_seconds=DEFAULT_INITIAL_DELIVERY_INTERVAL_SECONDS)
+    else:
+        parts = ordered_delivery_parts(decision.reply or '', materials, 'text_then_assets',
+            plan_id=f'live:{job.id}', content_group_key=decision.content_group_key or '',
+            interval_seconds=DEFAULT_INITIAL_DELIVERY_INTERVAL_SECONDS)
+    job.trace = {**job.trace, 'terminal_handoff_plan': True, 'delivery_plan': [
+        {'item_id': p.part_id, 'plan_version': p.plan_version, 'group_key': p.content_group_key,
+         'kind': p.kind, 'content': p.content, 'material': p.material,
+         'interval_seconds': p.interval_seconds, 'is_follow_up': p.is_follow_up, 'status': 'pending'}
+        for p in parts]}
+    db.commit()
+
+
+def _terminal_materials(db, state, decision, journey):
+    if decision.v2_delivery_sections:
+        bound = route_snapshot_from_values(journey.route_variant, journey.slots)
+        return [material for section in decision.v2_delivery_sections
+                for material in live_materials(db, section['asset_keys'], decision.route_variant,
+                                               state.tenant_id, snapshot=bound)]
+    return live_materials(db, decision.material_keys, decision.route_variant, state.tenant_id)
+
+
 def _execute_persisted_reply(db, client, job, state, run, fingerprint=None):
     """Execute the same immutable envelope for first submission and restart recovery."""
+    execution_started = time.monotonic()
     plan = job.trace.get("delivery_plan") or []
     groups = (job.decision or {}).get("covered_content_groups") or []
     attempts = _persisted_reply_attempts(db, job)
@@ -881,7 +915,10 @@ def _execute_persisted_reply(db, client, job, state, run, fingerprint=None):
         else:
             if index and item.get("interval_seconds"):
                 time.sleep(float(item["interval_seconds"]))
-            state, _ = guard(db, job, snapshot(client, state.chatwoot_conversation_id), fingerprint)
+            if job.trace.get('terminal_handoff_plan'):
+                state = terminal_handoff_guard(db, client, job, state)
+            else:
+                state, _ = guard(db, job, snapshot(client, state.chatwoot_conversation_id), fingerprint)
             if info and opening:
                 from app.opening_messages import opening_media_info
 
@@ -899,6 +936,7 @@ def _execute_persisted_reply(db, client, job, state, run, fingerprint=None):
                 db, client, job, state, run, key, item.get("content", ""), info=info,
                 delivery_groups=[item['group_key']] if (job.decision or {}).get('v2_delivery_sections') else groups,
                 delivery_item_id=item["item_id"],
+                terminal_handoff=bool(job.trace.get("terminal_handoff_plan")),
                 quick_replies=item.get("quick_replies") if opening else None,
                 opening_delivery={"plan_digest": job.trace["delivery_plan_digest"],
                                   "item_id": item["item_id"],
@@ -920,6 +958,35 @@ def _execute_persisted_reply(db, client, job, state, run, fingerprint=None):
         db.commit()
     if opening:
         job.trace = {**job.trace, "outbound": True}
+    job.trace = {**job.trace, 'delivery_execution_ms': int((time.monotonic()-execution_started)*1000)}
+
+
+def current_turn_time(inputs):
+    """UTC anchor from this turn only; never substitute historical timestamps."""
+    from datetime import datetime, timezone
+    times = []
+    for message in inputs:
+        raw = message.get('created_at')
+        if raw is None or raw == '':
+            raise ValueError('current_customer_time_missing')
+        value = datetime.fromisoformat(message_timestamp(raw).replace('Z', '+00:00'))
+        if value.tzinfo is None:
+            raise ValueError('current_customer_timezone_required')
+        times.append(value.astimezone(timezone.utc))
+    if not times:
+        raise ValueError('current_customer_time_missing')
+    return max(times).isoformat()
+
+
+def failure_superseded(db, job):
+    trigger = db.get(MessageEvent, job.trigger_message_id)
+    newer = trigger and db.scalar(select(MessageEvent.id).where(
+        MessageEvent.conversation_state_id == job.conversation_state_id,
+        MessageEvent.direction == 'incoming', MessageEvent.private.is_(False),
+        MessageEvent.chatwoot_message_id > trigger.chatwoot_message_id))
+    if newer:
+        complete(db, job, 'cancelled', 'new_customer_message')
+    return bool(newer)
 
 
 def process_job(job_id):
@@ -932,6 +999,7 @@ def process_job(job_id):
         db.commit()
         if not claimed.rowcount:
             return
+        queue_wait_ms = max(0, int((dt(utcnow())-dt(job.created_at)).total_seconds()*1000))
         try:
             assert_armed(db)
             state = db.get(ConversationState, job.conversation_state_id)
@@ -965,14 +1033,12 @@ def process_job(job_id):
                     complete(db, job, "no_action", "lead_capture_input_missing")
                     return
                 text, current_attachments = input_payload(inputs)
-                if _explicit_stop_request(text):
-                    stop_customer_automation(db, state)
-                    complete(db, job, "no_action", "customer_requested_stop")
-                    return
                 if not text:
                     complete(db, job, "no_action", "lead_capture_attachment_requires_human")
                     return
                 history, history_trace = fetch_customer_context(client, snap["remote"], job.input_ids)
+                journey = journey_for(db, state)
+                approved = {a.asset_key for a in catalog_assets(db, state.tenant_id) if a.metadata_json.get('live_approved') is True}
                 context = {
                     "module": "lead_capture",
                     "engine_version": job.engine_version,
@@ -981,24 +1047,30 @@ def process_job(job_id):
                     "customer_text": text,
                     "context_messages": history,
                     "context_complete": True,
-                    "route_variant": "",
-                    "memory": {},
+                    "now": utcnow(),
+                    "trigger_customer_at": current_turn_time(inputs),
+                    "route_variant": journey.route_variant,
+                    "journey": journey_context(journey),
+                    "memory": journey.slots or {},
                     "lead_capture": {
                         "status": capture.status,
                         "request_count": capture.request_count,
                         "captured_kinds": capture.captured_kinds or [],
                     },
                     "current_attachments": current_attachments,
-                    "available_materials": [],
+                    "available_materials": [m for m in candidate_materials(db, state.tenant_id) if m['key'] in approved],
                     "reception_policy": effective_reception_policy(db),
                 }
+                context = enrich_context_with_web_knowledge(db, state.tenant_id, context, environment='live')
                 job.trace = {**job.trace, **history_trace}
                 db.commit()
                 decision, calls, _, trace = generate_decision(context)
+                decision, journey = prepare_route_reply(db, state, decision, job.trigger_message_id)
                 decision, capture, _, pending_matches = apply_model_policy(
                     db, state, decision, history, text
                 )
                 prior_calls = job.trace.get("model_calls", [])
+                trace = {**trace, **merge_metrics(job.trace, trace)}
                 job.decision = safe_decision_json(decision)
                 job.trace = {
                     **job.trace,
@@ -1016,11 +1088,27 @@ def process_job(job_id):
                     complete(db, job, "no_action", "contact_not_provided")
                     return
                 capture = record_capture(db, state, pending_matches, job.trigger_message_id)
-                prepare_captured_handoff(db, state, capture, journey_for(db, state), text)
-                sync_captured_labels(db, client, state, capture, snap["labels"], finalize=True)
+                prepare_captured_handoff(db, state, capture, journey, text)
+                if job.engine_version == 'v2' and decision.reply:
+                    materials = _terminal_materials(db, state, decision, journey)
+                    materials = [m for m in materials if decision.allow_material_resend or not previously_sent(db, state, m)]
+                    if sync_captured_labels(db, client, state, capture, snap['labels']) != 'synced':
+                        raise ReplyBlocked('lead_capture_label_sync_failed')
+                    try:
+                        _freeze_terminal_reply(db, job, state, decision, materials)
+                        _execute_persisted_reply(db, client, job, state, run)
+                        job.trace = {**job.trace, 'outbound': True, 'image_count': len(materials)}
+                    finally:
+                        sync_captured_labels(db, client, state, capture, finalize=True)
+                else:
+                    sync_captured_labels(db, client, state, capture, snap["labels"], finalize=True)
                 complete(db, job, "handoff", "lead_captured")
                 return
-            state, fingerprint = guard(db, job, snap)
+            if job.trace.get('resume_delivery_plan') and job.trace.get('terminal_handoff_plan'):
+                state = terminal_handoff_guard(db, client, job, state)
+                fingerprint = None
+            else:
+                state, fingerprint = guard(db, job, snap)
             run = db.scalar(select(AiRun).where(AiRun.trigger_message_id == job.trigger_message_id))
             if not run:
                 run = AiRun(conversation_state_id=state.id, trigger_message_id=job.trigger_message_id)
@@ -1028,6 +1116,10 @@ def process_job(job_id):
                 db.flush()
             if job.trace.get("resume_delivery_plan") and job.trace.get("delivery_plan"):
                 _execute_persisted_reply(db, client, job, state, run, fingerprint)
+                if job.trace.get('terminal_handoff_plan'):
+                    sync_handoff_label(db, client, state, finalize=True)
+                    complete(db, job, "handoff", (job.decision or {}).get('handoff_reason'))
+                    return
                 complete(db, job, "submitted")
                 enroll_after_submitted_reply(
                     db, state, job, (job.decision or {}).get("route_variant", ""),
@@ -1041,10 +1133,6 @@ def process_job(job_id):
                 complete(db, job, "skipped", "input_missing")
                 return
             text, current_attachments = input_payload(inputs)
-            if _explicit_stop_request(text):
-                stop_customer_automation(db, state)
-                complete(db, job, "no_action", "customer_requested_stop")
-                return
             if not text and current_attachments:
                 ensure_handoff(db, state, "attachment_requires_human", "客户附件需要顾问查看")
                 complete(db, job, "handoff", "attachment_requires_human")
@@ -1053,7 +1141,10 @@ def process_job(job_id):
                 complete(db, job, "skipped", "empty_message")
                 return
             db.commit()
+            history_started = time.monotonic()
             history, history_trace = fetch_customer_context(client, snap["remote"], job.input_ids)
+            history_trace = {**history_trace, 'history_read_ms': int((time.monotonic()-history_started)*1000),
+                             'queue_wait_ms': queue_wait_ms}
             historical_capture = observe_history(db, state, history)
             if historical_capture.status == "captured":
                 job.decision = {
@@ -1088,7 +1179,9 @@ def process_job(job_id):
                        "source_message_id": job.trigger_message_id, "source_message_ids": list(job.input_ids),
                        "journey": journey_context(journey), "route_playbook": playbook_prompt(),
                        "now": utcnow(),
-                       "last_customer_at": next((item.get('created_at') for item in reversed(history) if item.get('direction') == 'incoming'), None),
+                       "trigger_customer_at": current_turn_time(inputs),
+                       "last_customer_at": current_turn_time(inputs),
+                       "history_last_customer_at": next((item.get('created_at') for item in reversed(history) if item.get('direction') == 'incoming'), None),
                        "reception_policy": effective_reception_policy(db),
                        "current_attachments": current_attachments,
                        "lead_capture": {"status": historical_capture.status, "request_count": historical_capture.request_count,
@@ -1106,23 +1199,24 @@ def process_job(job_id):
                 db, state, decision, history, text
             )
             prior_calls = job.trace.get("model_calls", [])
+            trace = {**trace, **merge_metrics(job.trace, trace)}
             job.decision, job.trace, run.action = safe_decision_json(decision), {**job.trace, **trace,
                 "model_cycles": int(job.trace.get("model_cycles", 0)) + 1,
                 "model_calls": prior_calls + calls, "request_count": len(prior_calls) + len(calls),
                 "model_ms": trace.get("model_ms", 0) + sum(item.get("duration_ms", 0) for item in prior_calls),
                 "lead_capture": "captured" if current_contacts else "planned" if contact_requested else capture.status}, decision.action
             db.commit()
+            if 'stop_automation' in decision.safety_flags:
+                stop_customer_automation(db, state)
             if current_contacts:
                 snap = snapshot(client, state.chatwoot_conversation_id)
                 state, _ = guard(db, job, snap, fingerprint)
-                materials = live_materials(
-                    db, decision.material_keys, decision.route_variant, state.tenant_id
-                )
+                materials = _terminal_materials(db, state, decision, journey)
                 skipped = [
                     item for item in materials
                     if not decision.allow_material_resend and previously_sent(db, state, item)
                 ]
-                materials = [item for item in materials if item not in skipped][:1]
+                materials = [item for item in materials if item not in skipped]
                 capture = record_capture(db, state, current_contacts, job.trigger_message_id)
                 run.action = "handoff"
                 prepare_captured_handoff(db, state, capture, journey, text,
@@ -1134,31 +1228,12 @@ def process_job(job_id):
                     raise ReplyBlocked("lead_capture_label_sync_failed")
                 finalize_status = "pending"
                 try:
-                    if decision.reply:
-                        submit_part(
-                            db,
-                            client,
-                            job,
-                            state,
-                            run,
-                            f"live:{job.id}:lead-captured",
-                            decision.reply,
-                            terminal_handoff=True,
-                        )
-                    for info in materials:
-                        material_info(db, info, decision.route_variant, state.tenant_id)
-                        submit_part(
-                            db, client, job, state, run,
-                            f"live:{job.id}:lead-captured:image:{info['media_hash']}",
-                            info=info,
-                            terminal_handoff=True,
-                        )
+                    _freeze_terminal_reply(db, job, state, decision, materials)
+                    _execute_persisted_reply(db, client, job, state, run)
                 finally:
                     finalize_status = sync_captured_labels(
                         db, client, state, capture, finalize=True
                     )
-                for group_key in decision.covered_content_groups:
-                    mark_group_delivered(journey, group_key)
                 job.trace = {
                     **job.trace,
                     "outbound": True,
@@ -1171,22 +1246,18 @@ def process_job(job_id):
                 return
             if "stop_automation" in (decision.safety_flags or []):
                 stop_customer_automation(db, state)
-                complete(db, job, "no_action", "customer_requested_stop")
-                return
             if decision.action == "no_action":
                 complete(db, job, "no_action")
                 return
             snap = snapshot(client, state.chatwoot_conversation_id)
             state, _ = guard(db, job, snap, fingerprint)
             if decision.action == "handoff":
-                materials = live_materials(
-                    db, decision.material_keys, decision.route_variant, state.tenant_id
-                )
+                materials = _terminal_materials(db, state, decision, journey)
                 skipped = [
                     item for item in materials
                     if not decision.allow_material_resend and previously_sent(db, state, item)
                 ]
-                materials = [item for item in materials if item not in skipped][:1]
+                materials = [item for item in materials if item not in skipped]
                 handoff_task = ensure_handoff(
                     db, state, decision.handoff_reason or "ai_handoff",
                     _handoff_summary(
@@ -1211,26 +1282,12 @@ def process_job(job_id):
                     raise ReplyBlocked("handoff_label_sync_failed")
                 finalize_status = "pending"
                 try:
-                    if decision.reply:
-                        submit_part(
-                            db, client, job, state, run,
-                            f"live:{job.id}:handoff", decision.reply,
-                            terminal_handoff=True,
-                        )
-                    for info in materials:
-                        material_info(db, info, decision.route_variant, state.tenant_id)
-                        submit_part(
-                            db, client, job, state, run,
-                            f"live:{job.id}:handoff:image:{info['media_hash']}",
-                            info=info,
-                            terminal_handoff=True,
-                        )
+                    _freeze_terminal_reply(db, job, state, decision, materials)
+                    _execute_persisted_reply(db, client, job, state, run)
                 finally:
                     finalize_status = sync_handoff_label(
                         db, client, state, finalize=True
                     )
-                for group_key in decision.covered_content_groups:
-                    mark_group_delivered(journey, group_key)
                 job.trace = {
                     **job.trace,
                     "outbound": True,
@@ -1315,6 +1372,11 @@ def process_job(job_id):
         except EvaluationCallError as exc:
             db.rollback()
             job = db.get(LiveReplyJob, job_id)
+            if not job or job.status != 'processing':
+                return
+            if failure_superseded(db, job):
+                return
+            job.trace = {**job.trace, **merge_metrics(job.trace, getattr(exc, 'model_metrics', {}))}
             cycles = int(job.trace.get("model_cycles", 0)) + 1
             calls = job.trace.get("model_calls", []) + exc.logs
             job.trace = {**job.trace, "outbound": False, "model_ms": sum(item.get("duration_ms", 0) for item in calls),
@@ -1333,17 +1395,9 @@ def process_job(job_id):
                 return
             if not transient or cycles >= 2 or not trigger or not fresh(trigger.created_at):
                 state = db.get(ConversationState, job.conversation_state_id)
-                factual_failure = "factual_verification_failed" in exc.code or exc.code == "reply_verification_failed"
-                ensure_handoff(
-                    db,
-                    state,
-                    "ai_factual_verification_failed" if factual_failure else "ai_service_unavailable",
-                    (
-                        "客户回复未通过事实或切题核验，已阻止发送，需要顾问检查并跟进"
-                        if factual_failure
-                        else "AI 服务连续调用失败，需要顾问跟进"
-                    ),
-                )
+                from app.reply_failures import classify_reply_failure
+                reason, summary = classify_reply_failure(exc.code)
+                ensure_handoff(db, state, reason, summary)
                 job.trace = {
                     **job.trace,
                     "manual_followup_created": True,
@@ -1355,6 +1409,16 @@ def process_job(job_id):
             db.rollback()
             job = db.get(LiveReplyJob, job_id)
             reason = str(exc)
+            if not job or job.status not in {'processing', 'queued'}:
+                return
+            if failure_superseded(db, job):
+                return
+            if any(term in reason for term in ('submission_unknown', 'material_not_approved', 'delivery_item_identity', 'reviewed_delivery', 'channel_send_failed')):
+                from app.reply_failures import classify_reply_failure
+                state = db.get(ConversationState, job.conversation_state_id)
+                code, summary = classify_reply_failure(reason)
+                ensure_handoff(db, state, code, summary)
+                job.trace = {**job.trace, 'manual_followup_created': True}
             if reason in {"historical_or_stale_trigger", "automatic_window_closed"}:
                 state = db.get(ConversationState, job.conversation_state_id)
                 trigger = db.get(MessageEvent, job.trigger_message_id)
@@ -1364,7 +1428,18 @@ def process_job(job_id):
         except Exception as exc:
             db.rollback()
             job = db.get(LiveReplyJob, job_id)
-            complete(db, job, "failed", getattr(exc, "code", type(exc).__name__))
+            if not job or job.status != 'processing':
+                return
+            if failure_superseded(db, job):
+                return
+            code = getattr(exc, "code", str(exc) if isinstance(exc, ValueError) else type(exc).__name__)
+            from app.reply_failures import classify_reply_failure
+            state = db.get(ConversationState, job.conversation_state_id)
+            if job.status == 'processing' and state:
+                reason, summary = classify_reply_failure(code)
+                ensure_handoff(db, state, reason, summary)
+                job.trace = {**job.trace, 'manual_followup_created': True, 'terminal_model_error': code}
+            complete(db, job, "failed", code)
         finally:
             if client:
                 client.close()
