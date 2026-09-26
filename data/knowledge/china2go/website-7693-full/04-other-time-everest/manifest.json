@@ -1,0 +1,282 @@
+{
+  "number": 4,
+  "kind": "business_branch",
+  "title": "其他時間・上珠峰",
+  "directory": "04-other-time-everest",
+  "content_chars": 11288,
+  "image_occurrences": 30,
+  "unique_images": 25,
+  "source_page": "https://china2go.com/7693-2/",
+  "images": [
+    {
+      "occurrence_id": 44,
+      "alt": "冬遊西藏地圖",
+      "sha256": "ddb804883a486fb5d358e88857b9619fd9ab06fe652ad84be62886021eb6ac4f",
+      "mime_type": "image/jpeg",
+      "bytes": 22155,
+      "source": "embedded:data-uri",
+      "local_path": "images/01-冬遊西藏地圖-ddb80488.jpg"
+    },
+    {
+      "occurrence_id": 45,
+      "alt": "占堆拿旗子照",
+      "sha256": "934c6b43f3c097fd53838ec8dbdd7cdb4c7acac5587f96b0c296272e4561f159",
+      "mime_type": "image/jpeg",
+      "bytes": 33842,
+      "source": "embedded:data-uri",
+      "local_path": "images/02-占堆拿旗子照-934c6b43.jpg"
+    },
+    {
+      "occurrence_id": 46,
+      "alt": "然烏湖無人",
+      "sha256": "0cac9807612af09c4cc9c8c354b299b5a794c7d9ae87366593cc5d9f2b655dd8",
+      "mime_type": "image/jpeg",
+      "bytes": 13774,
+      "source": "embedded:data-uri",
+      "local_path": "images/03-然烏湖無人-0cac9807.jpg"
+    },
+    {
+      "occurrence_id": 47,
+      "alt": "來古藍冰",
+      "sha256": "6c76a5e1669b5cf8e1e43a8aa0a0e7b8c7b97ac428959318f104fe7c97baa94d",
+      "mime_type": "image/jpeg",
+      "bytes": 18525,
+      "source": "embedded:data-uri",
+      "local_path": "images/04-來古藍冰-6c76a5e1.jpg"
+    },
+    {
+      "occurrence_id": 48,
+      "alt": "恰央措",
+      "sha256": "e35986fbc4427e7c794bdbaf2669068ebf435972e1af5452c43b45b6f04b53f0",
+      "mime_type": "image/jpeg",
+      "bytes": 39101,
+      "source": "embedded:data-uri",
+      "local_path": "images/05-恰央措-e35986fb.jpg"
+    },
+    {
+      "occurrence_id": 49,
+      "alt": "旅客上恰央措",
+      "sha256": "956456e64f4d8bf874208e6f804c13da6c63fc039890aceb4f3c0cf2b58fc59f",
+      "mime_type": "image/jpeg",
+      "bytes": 21431,
+      "source": "embedded:data-uri",
+      "local_path": "images/06-旅客上恰央措-956456e6.jpg"
+    },
+    {
+      "occurrence_id": 50,
+      "alt": "旅客上恰央措躺著",
+      "sha256": "04d54c7a11698f37a4133aef9b9df560efb64365105aa427efca129c4389d72f",
+      "mime_type": "image/jpeg",
+      "bytes": 30084,
+      "source": "embedded:data-uri",
+      "local_path": "images/07-旅客上恰央措躺著-04d54c7a.jpg"
+    },
+    {
+      "occurrence_id": 51,
+      "alt": "大VIP車",
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "source": "embedded:data-uri",
+      "local_path": "images/08-大VIP車-49024768.jpg"
+    },
+    {
+      "occurrence_id": 52,
+      "alt": "車上的彌散氧氣瓶",
+      "sha256": "da79d8c7c65adaf86bae96633c711af77a3a79324f6eed1043976a8b6be2a231",
+      "mime_type": "image/jpeg",
+      "bytes": 12126,
+      "source": "embedded:data-uri",
+      "local_path": "images/09-車上的彌散氧氣瓶-da79d8c7.jpg"
+    },
+    {
+      "occurrence_id": 53,
+      "alt": "希爾頓1",
+      "sha256": "88ed5c0a5c381cdfbdd59c0fc25a2bbac8f6de04eea54f881a0f479adb5a56bf",
+      "mime_type": "image/jpeg",
+      "bytes": 15314,
+      "source": "embedded:data-uri",
+      "local_path": "images/10-希爾頓1-88ed5c0a.jpg"
+    },
+    {
+      "occurrence_id": 54,
+      "alt": "希爾頓2",
+      "sha256": "8c2a234fe8c4e563878a36dda98f5a71b5bf95b64bceb91e41105b191e396f37",
+      "mime_type": "image/jpeg",
+      "bytes": 11917,
+      "source": "embedded:data-uri",
+      "local_path": "images/11-希爾頓2-8c2a234f.jpg"
+    },
+    {
+      "occurrence_id": 55,
+      "alt": "冬-布達拉宮",
+      "sha256": "365bc554443d2a5e1b3303ddc34fc74c4bd1f4b212caff3161d29d185a250674",
+      "mime_type": "image/jpeg",
+      "bytes": 35265,
+      "source": "embedded:data-uri",
+      "local_path": "images/12-冬-布達拉宮-365bc554.jpg"
+    },
+    {
+      "occurrence_id": 56,
+      "alt": "冬-八廓街",
+      "sha256": "ab00cc0bf4929b25ac2cad3aa019896b7025c762655dd224c8b14ef043a07268",
+      "mime_type": "image/jpeg",
+      "bytes": 19141,
+      "source": "embedded:data-uri",
+      "local_path": "images/13-冬-八廓街-ab00cc0b.jpg"
+    },
+    {
+      "occurrence_id": 57,
+      "alt": "冬-南迦巴瓦峰",
+      "sha256": "8b995a6fb155e4a02f261ab768cf83277299deea36a974eb80b434f15285349d",
+      "mime_type": "image/jpeg",
+      "bytes": 18007,
+      "source": "embedded:data-uri",
+      "local_path": "images/14-冬-南迦巴瓦峰-8b995a6f.jpg"
+    },
+    {
+      "occurrence_id": 58,
+      "alt": "冬-布達拉宮",
+      "sha256": "365bc554443d2a5e1b3303ddc34fc74c4bd1f4b212caff3161d29d185a250674",
+      "mime_type": "image/jpeg",
+      "bytes": 35265,
+      "source": "embedded:data-uri",
+      "local_path": "images/12-冬-布達拉宮-365bc554.jpg"
+    },
+    {
+      "occurrence_id": 59,
+      "alt": "冬-八廓街",
+      "sha256": "ab00cc0bf4929b25ac2cad3aa019896b7025c762655dd224c8b14ef043a07268",
+      "mime_type": "image/jpeg",
+      "bytes": 19141,
+      "source": "embedded:data-uri",
+      "local_path": "images/13-冬-八廓街-ab00cc0b.jpg"
+    },
+    {
+      "occurrence_id": 60,
+      "alt": "冬-南迦巴瓦峰",
+      "sha256": "8b995a6fb155e4a02f261ab768cf83277299deea36a974eb80b434f15285349d",
+      "mime_type": "image/jpeg",
+      "bytes": 18007,
+      "source": "embedded:data-uri",
+      "local_path": "images/14-冬-南迦巴瓦峰-8b995a6f.jpg"
+    },
+    {
+      "occurrence_id": 61,
+      "alt": "西藏8天精華地圖",
+      "sha256": "83bc515d19949d0c728132d17167cb6755937569f6d28d26fd4ec13ea9f579bd",
+      "mime_type": "image/jpeg",
+      "bytes": 20504,
+      "source": "embedded:data-uri",
+      "local_path": "images/15-西藏8天精華地圖-83bc515d.jpg"
+    },
+    {
+      "occurrence_id": 62,
+      "alt": "布達拉宮天氣好",
+      "sha256": "568da706f659839cef46a781e862655099ecf468017d7347e44c7d9f6e12b50b",
+      "mime_type": "image/jpeg",
+      "bytes": 33455,
+      "source": "embedded:data-uri",
+      "local_path": "images/16-布達拉宮天氣好-568da706.jpg"
+    },
+    {
+      "occurrence_id": 63,
+      "alt": "八廓街天氣好",
+      "sha256": "d9df4f33de9ae9a566b366bde5e3b0978c03cbc251a740b2107f44def46394f4",
+      "mime_type": "image/jpeg",
+      "bytes": 28142,
+      "source": "embedded:data-uri",
+      "local_path": "images/17-八廓街天氣好-d9df4f33.jpg"
+    },
+    {
+      "occurrence_id": 64,
+      "alt": "財神廟扎基寺",
+      "sha256": "f944124074da7ffb6f2c3f16cf2ca151eddd3c0a754c1f6d69dee53fd1f660e4",
+      "mime_type": "image/jpeg",
+      "bytes": 17897,
+      "source": "embedded:data-uri",
+      "local_path": "images/18-財神廟扎基寺-f9441240.jpg"
+    },
+    {
+      "occurrence_id": 65,
+      "alt": "色拉寺辯經",
+      "sha256": "8eea7cc59738c13f118a2a69043ece6b7ce7659826a4909a3209eeed047ae455",
+      "mime_type": "image/jpeg",
+      "bytes": 35684,
+      "source": "embedded:data-uri",
+      "local_path": "images/19-色拉寺辯經-8eea7cc5.jpg"
+    },
+    {
+      "occurrence_id": 66,
+      "alt": "珠峰大本營日落金山",
+      "sha256": "ab6793c59f14f93b8b421302a119a06524699cc9ddca350b6ce0daeb3ff5163b",
+      "mime_type": "image/jpeg",
+      "bytes": 18083,
+      "source": "embedded:data-uri",
+      "local_path": "images/20-珠峰大本營日落金山-ab6793c5.jpg"
+    },
+    {
+      "occurrence_id": 67,
+      "alt": "希爾頓1",
+      "sha256": "88ed5c0a5c381cdfbdd59c0fc25a2bbac8f6de04eea54f881a0f479adb5a56bf",
+      "mime_type": "image/jpeg",
+      "bytes": 15314,
+      "source": "embedded:data-uri",
+      "local_path": "images/10-希爾頓1-88ed5c0a.jpg"
+    },
+    {
+      "occurrence_id": 68,
+      "alt": "希爾頓2",
+      "sha256": "8c2a234fe8c4e563878a36dda98f5a71b5bf95b64bceb91e41105b191e396f37",
+      "mime_type": "image/jpeg",
+      "bytes": 11917,
+      "source": "embedded:data-uri",
+      "local_path": "images/11-希爾頓2-8c2a234f.jpg"
+    },
+    {
+      "occurrence_id": 69,
+      "alt": "車車照",
+      "sha256": "4184b614f8110aed10039264043d99a0045344f8ac9008675546f3ad2d7a52c4",
+      "mime_type": "image/jpeg",
+      "bytes": 20633,
+      "source": "embedded:data-uri",
+      "local_path": "images/21-車車照-4184b614.jpg"
+    },
+    {
+      "occurrence_id": 70,
+      "alt": "車子製氧機",
+      "sha256": "bb5dd0a91ce774324f751efc2805791b08ceda6adf3785d47fbbd5159eb0641e",
+      "mime_type": "image/jpeg",
+      "bytes": 12020,
+      "source": "embedded:data-uri",
+      "local_path": "images/22-車子製氧機-bb5dd0a9.jpg"
+    },
+    {
+      "occurrence_id": 71,
+      "alt": "我們的客人+牌子",
+      "sha256": "2cdb9baab8b7a4cb95ce866ccb2e648b3b50a4634297d3787fb818efebdad0cb",
+      "mime_type": "image/jpeg",
+      "bytes": 22636,
+      "source": "embedded:data-uri",
+      "local_path": "images/23-我們的客人+牌子-2cdb9baa.jpg"
+    },
+    {
+      "occurrence_id": 72,
+      "alt": "薩迦寺",
+      "sha256": "efc3ed2ace31d78df25fd3ec51b5571774ec486353dd3466401f2c0a1d24aeb8",
+      "mime_type": "image/jpeg",
+      "bytes": 31593,
+      "source": "embedded:data-uri",
+      "local_path": "images/24-薩迦寺-efc3ed2a.jpg"
+    },
+    {
+      "occurrence_id": 73,
+      "alt": "拉日鐵路",
+      "sha256": "a3ce7be3c30dc7f7884b989d68b14a6efde32d8842d951b6840639c9b0d2829e",
+      "mime_type": "image/jpeg",
+      "bytes": 16657,
+      "source": "embedded:data-uri",
+      "local_path": "images/25-拉日鐵路-a3ce7be3.jpg"
+    }
+  ]
+}

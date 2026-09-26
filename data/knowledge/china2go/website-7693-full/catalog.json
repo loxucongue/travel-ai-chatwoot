@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "first_level_branch_count": 6,
+  "named_route_product_count": 6,
+  "custom_intake_count": 1,
+  "route_products": [
+    {
+      "id": "peach_everest_11d",
+      "name": "桃花＋珠峰 11日",
+      "source_branches": [1, 3, 4]
+    },
+    {
+      "id": "peach_9d",
+      "name": "桃花 9日（不上珠峰）",
+      "source_branches": [2, 5]
+    },
+    {
+      "id": "tibet_overview_10d",
+      "name": "西藏全览 10日（林芝＋拉萨＋珠峰）",
+      "source_branches": [3]
+    },
+    {
+      "id": "winter_tibet",
+      "name": "冬游西藏",
+      "duration_days": null,
+      "source_branches": [3, 4, 5]
+    },
+    {
+      "id": "tibet_essence_8d_everest",
+      "name": "西藏 8日精华（上珠峰）",
+      "source_branches": [4]
+    },
+    {
+      "id": "linzhi_8d_no_everest",
+      "name": "林芝 8日（不上珠峰）",
+      "source_branches": [5]
+    }
+  ],
+  "custom_intake": {
+    "id": "private_group_or_other_destination",
+    "name": "自己包团或其他地点",
+    "source_branch": 6,
+    "is_fixed_route": false
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AI 接待 V2 当前架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "views": [
+      {"id": "reply", "label": "新客即时回复", "focus": ["chatwoot", "gateway", "state", "decision", "agent", "verifier", "delivery"], "note": "会话固定引擎；V2 只生成决策，发送仍受共用控制层约束。"},
+      {"id": "knowledge", "label": "Skill 与事实", "focus": ["agent", "skills", "facts", "verifier"], "note": "按需加载线路与通用 Skill；业务事实由只读工具提供。"},
+      {"id": "silence", "label": "沉默再评估", "focus": ["state", "sop", "agent", "delivery"], "note": "30 分钟和 24 小时为候选评估点，到期不代表必须发送。"}
+    ]
+  },
+  "components": [
+    {"id": "chatwoot", "type": "external", "label": "Chatwoot", "sublabel": "客户消息与回执", "pos": [40, 350], "size": [130, 70]},
+    {"id": "gateway", "type": "backend", "label": "Webhook / 实时任务", "sublabel": "去重、入队、会话门禁", "pos": [230, 350], "size": [160, 70]},
+    {"id": "state", "type": "database", "label": "会话与任务状态", "sublabel": "固定 V1 / V2 与发布号", "pos": [455, 130], "size": [165, 70]},
+    {"id": "decision", "type": "backend", "label": "统一决策入口", "sublabel": "按会话版本分派", "pos": [455, 350], "size": [160, 70]},
+    {"id": "agent", "type": "backend", "label": "V2 主 Agent", "sublabel": "理解、选 Skill、生成决策", "pos": [685, 350], "size": [180, 70]},
+    {"id": "skills", "type": "backend", "label": "线路与通用 Skills", "sublabel": "线路、顾虑、留资、沉默", "pos": [685, 130], "size": [180, 70]},
+    {"id": "facts", "type": "database", "label": "批准事实与素材", "sublabel": "受控只读工具", "pos": [915, 130], "size": [165, 70]},
+    {"id": "verifier", "type": "security", "label": "结果校验", "sublabel": "事实、引用、结构与边界", "pos": [930, 350], "size": [165, 70]},
+    {"id": "delivery", "type": "security", "label": "共用交付控制", "sublabel": "权限、人工、去重、回执", "pos": [1155, 350], "size": [170, 70]},
+    {"id": "sop", "type": "messagebus", "label": "沉默任务", "sublabel": "到期后重新评估", "pos": [930, 560], "size": [165, 70]}
+  ],
+  "connections": [
+    {"id": "incoming", "from": "chatwoot", "to": "gateway", "label": "新客消息"},
+    {"id": "enqueue", "from": "gateway", "to": "decision", "label": "固定版本的任务", "labelAt": [423, 434]},
+    {"id": "pin", "from": "gateway", "to": "state", "label": "读取会话绑定", "fromSide": "top", "toSide": "left"},
+    {"id": "route", "from": "decision", "to": "agent", "label": "V2 分支"},
+    {"id": "skill-read", "from": "skills", "to": "agent", "label": "按需加载", "labelAt": [768, 214]},
+    {"id": "fact-read", "from": "facts", "to": "agent", "label": "只读查询", "fromSide": "bottom", "toSide": "top"},
+    {"id": "verify", "from": "agent", "to": "verifier", "label": "结构化回复"},
+    {"id": "deliver", "from": "verifier", "to": "delivery", "label": "可交付结果"},
+    {"id": "silence-eval", "from": "sop", "to": "agent", "label": "到期再判断", "variant": "dashed", "fromSide": "left", "toSide": "bottom"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "已实现", "items": ["V1 与 V2 共存，生产会话仍全部绑定 V1", "V2 线路 Skill 与受控事实工具", "即时回复和沉默触达共用交付控制"]},
+    {"dot": "amber", "title": "上线前缺口", "items": ["拒绝联系的持久停止链路须修复", "切换与 worker 抢任务须原子化", "发布号与事实核验边界须补强"]}
+  ]
+}

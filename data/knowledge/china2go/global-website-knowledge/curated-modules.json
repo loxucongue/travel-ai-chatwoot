@@ -1,0 +1,402 @@
+{
+  "schema_version": "china2go-global-knowledge-v1",
+  "site_url": "https://china2go.com/",
+  "language": "zh-Hant",
+  "reviewed_at": "2026-09-21",
+  "modules": [
+    {
+      "kind": "knowledge_module",
+      "key": "brand_and_identity",
+      "title": "品牌與服務身份",
+      "summary": "回答 China2Go、CITS 與服務團隊的關係。",
+      "topics": [
+        "China2Go",
+        "CITS",
+        "中國國旅",
+        "公司",
+        "品牌",
+        "旅行社"
+      ],
+      "facts": [
+        {
+          "text": "官網聯絡頁列出的公司為國旅環球（北京）國際旅行社有限公司上海分公司，地址為上海市靜安區中興路1509號金融街一期A棟1202室；官網為 https://china2go.com/ ，聯絡頁為 https://china2go.com/contact-cits/ 。這份資料不能用來判定其他地區是否另設窗口。",
+          "source_url": "https://china2go.com/contact-cits/",
+          "source_quote": "上海市静安区中兴路1509号金融街一期A栋1202室",
+          "verified_at": "2026-09-15"
+        },
+        {
+          "text": "CITS 中國國旅成立於 1954 年；China2Go 是其入境服務體系中，面向外籍、港澳台及全球旅客的旅遊服務部門。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "CITS 中國國旅（China International Travel Service）自 1954 年成立以來",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "China2Go 以西藏高原旅行及全中國入境小團服務為主要方向，提供行程規劃與旅遊顧問服務。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "專注「以西藏為核心的高原探索與全中國入境小團旅遊」",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "traveler_and_service_scope",
+      "title": "旅客服務範圍",
+      "summary": "說明適用旅客、目的地與可承接的旅行方式。",
+      "topics": [
+        "台灣",
+        "香港",
+        "澳門",
+        "馬來西亞",
+        "新加坡",
+        "外籍",
+        "散客",
+        "包團",
+        "訂製"
+      ],
+      "facts": [
+        {
+          "text": "服務對象包含台灣、香港、澳門、馬來西亞、新加坡、其他海外華人與外籍旅客。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "接待台灣、香港、澳門、馬來西亞、新加坡 與全球華人與各國旅客",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "可承接散客小團、半自助行程、私人訂製、企業與會議獎勵旅遊；實際可行方案需依目的地、日期與人數確認。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "涵蓋散客拼團、小團半自助旅遊、精品私人訂製、高端深度遊、MICE",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "官網列出的主要服務目的地涵蓋西藏、新疆、雲南、四川、北京、上海、張家界、重慶等中國旅遊地區。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "經典路線與旅遊資源",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "advisor_and_trip_planning",
+      "title": "顧問與行程規劃",
+      "summary": "說明顧問可協助的規劃內容與服務方式。",
+      "topics": [
+        "顧問",
+        "規劃",
+        "訂製",
+        "一個人",
+        "單人",
+        "家庭",
+        "企業"
+      ],
+      "facts": [
+        {
+          "text": "旅遊顧問可協助行程規劃、玩法說明、交通銜接與需求整理。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "從行程規劃到玩法解析，貼心服務解決煩惱",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "單人旅客也可以提出需求；能否直接報名、協助併房或需補單房差，須以所選產品與當期團況確認。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "一人也可報名 可協助拚房或補單房差",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "多人、家庭或企業團體可以由顧問依人數與需求另行規劃。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "從自由行包車到半自助團，甚至企業包團，皆為您量身規劃",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "no_shopping_and_meals",
+      "title": "無購物與用餐方式",
+      "summary": "回答購物站、團餐、素食與忌口問題。",
+      "topics": [
+        "購物",
+        "購物站",
+        "團餐",
+        "午餐",
+        "晚餐",
+        "素食",
+        "忌口",
+        "清真"
+      ],
+      "facts": [
+        {
+          "text": "China2Go 官網主打不進購物店的純玩安排；景區自營商店不屬於旅行社安排的購物站，最終仍以各產品頁與合約為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "不進購物店」的行程（景區自營商店除外）",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "多數產品採不含午、晚餐的半自助方式，讓旅客依口味與預算自行選擇；是否含餐以個別行程說明為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "多採「不含午晚餐」的彈性半自助設計",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "素食、清真或其他忌口需求可在報名時提出，由顧問依目的地與餐廳條件協助確認。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "報名時註明素食或忌口食材，出團前會先與餐廳協調",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "transport_and_transfers",
+      "title": "機票、火車與接送",
+      "summary": "回答票務代訂、當地用車和機場車站接送。",
+      "topics": [
+        "機票",
+        "火車",
+        "高鐵",
+        "青藏鐵路",
+        "接機",
+        "接送",
+        "車輛",
+        "交通"
+      ],
+      "facts": [
+        {
+          "text": "顧問可依需求提供航班、火車與青藏鐵路建議，也可協助代訂；是否包含票款以個別報價或產品說明為準。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "依需求推薦航班或青藏火車與專列，都可選擇純推薦或代訂服務",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "行程中的當地交通會依人數與路線安排合規車輛。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "視人數配置合適車型",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "機場或車站接送是否包含，以產品頁和行程標示為準；未包含的區段可另行詢問顧問。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "以各產品頁說明為準",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "booking_payment_and_changes",
+      "title": "報名、付款與異動",
+      "summary": "回答付款方式、訂金、成團及取消異動的權威來源。",
+      "topics": [
+        "報名",
+        "訂金",
+        "付款",
+        "信用卡",
+        "匯款",
+        "退款",
+        "取消",
+        "改期",
+        "成團"
+      ],
+      "facts": [
+        {
+          "text": "可使用的付款方式可能包含信用卡、匯款或電子支付；幣別、手續費與實際方式以正式報價單或付款通知為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "可刷主流信用卡，亦支援匯款與部分電子支付",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "訂金金額、成團門檻、最晚通知日與退改規則會因產品及預付資源不同，必須以該次報價單與旅行合約為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "成團門檻與最晚通知日、退改條款皆於合約明載並事先溝通",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "即時團況、名額、價格與出發日期需要由顧問依當期資料確認，不能只用官網歷史內容直接承諾。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "以報價單/合約為準",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "tibet_permit",
+      "title": "入藏函與入藏方式",
+      "summary": "回答台灣及外籍旅客進藏所需安排。",
+      "topics": [
+        "入藏函",
+        "入藏證",
+        "TTP",
+        "台胞證",
+        "護照",
+        "簽證",
+        "自由行",
+        "跟團"
+      ],
+      "facts": [
+        {
+          "text": "台灣及外籍旅客前往西藏，需要透過具資格的旅行社安排行程並申辦入藏函，不能以一般自由行方式自行進藏。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "外籍可以自助入藏嗎？ 不行，需透過旅行社辦理入藏函並安排行程",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "申辦資料通常涉及護照或台胞證，以及適用情況下的中國簽證；邊境或特定地區可能需要其他批件，應由顧問依旅客身分與路線逐案確認。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "護照或台胞證＋有效中國簽證",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "入藏文件的辦理時間會受旅客身分、路線與當期審批影響，應提早準備並由顧問確認，不承諾固定天數或百分之百成功。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "建議提早 至少一個月預訂行程",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "accommodation_oxygen_and_health",
+      "title": "住宿、供氧與高原健康邊界",
+      "summary": "回答住宿條件、氧氣設備及個人健康問題，不做醫療效果承諾。",
+      "topics": [
+        "住宿",
+        "飯店",
+        "酒店",
+        "供氧",
+        "氧氣",
+        "高山症",
+        "高原反應",
+        "健康",
+        "醫生"
+      ],
+      "facts": [
+        {
+          "text": "官網針對前往5000公尺以上景點的供氧安排，說明車上備有氧氣鋼瓶，並提供每人一支隨身氧氣瓶；有額外需求可詢問租用便攜氧氣機。這項說明不代表所有路線與所有區段均適用，具體供應及租用費用需依行程確認，也不構成醫療效果保證。目前未確認各產品每個下車活動區段的隨身氧氣供應，因此不能判定旅客一律無需自備；需由顧問核對所問區段的實際供應與自備需求。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "並且提供每人一支隨身氧氣瓶",
+          "verified_at": "2026-09-15",
+          "review_note": "2026-09-21：明確保留原有5000公尺以上及依行程確認的條件，不新增供應承諾。",
+          "answer_requirements": [{"label": "5000公尺以上景點的適用條件", "any_of": ["5000公尺以上", "5000米以上", "五千公尺以上", "五千米以上"]}]
+        },
+        {
+          "text": "住宿等級與房型以個別線路及合約為準；偏遠地區的住宿條件通常比城市簡樸。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "偏遠地區以客棧或簡旅為主",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "部分西藏線路的飯店或車輛配置氧氣設備，但配置須看具體線路；有氧氣設備不代表可以避免高原反應，也不能延伸為醫療或安全保證。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "多數飯店/車輛備氧",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "是否適合前往高原需要依個人健康狀況由專業醫療人員評估；顧問不能替客戶作個人醫療判斷。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "建議諮詢您的醫生",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "travel_preparation",
+      "title": "中國旅遊行前準備",
+      "summary": "回答衣物、支付、網路、飲水和基本行前準備。",
+      "topics": [
+        "衣服",
+        "天氣",
+        "支付寶",
+        "微信支付",
+        "信用卡",
+        "網路",
+        "SIM",
+        "eSIM",
+        "飲水",
+        "行李"
+      ],
+      "facts": [
+        {
+          "text": "中國各地氣候差異大，建議依目的地與季節採分層穿著；高原地區需留意日夜溫差、防風與防曬。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "原則：分層穿",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "支付寶與微信支付在多數城市較普及，國際信用卡可依平台規則綁定；仍建議準備少量現金，以因應小店或偏遠地區。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "建議把卡片先綁定支付寶/微信",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "若需要使用 LINE、WhatsApp 或 Google 等服務，應自行準備適合的境外漫遊、eSIM 或實體網卡方案。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "建議自備可用於 LINE/WhatsApp/Google 的境外上網方案或 SIM 卡",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "一般不建議直接飲用自來水，可使用瓶裝水或煮沸後飲用。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "一般建議不直接飲用自來水",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "official_contact",
+      "title": "官方聯絡方式",
+      "summary": "回答如何聯絡 China2Go；聯絡資料需定期重新核對。",
+      "topics": [
+        "聯絡",
+        "聯繫",
+        "LINE",
+        "WhatsApp",
+        "Facebook",
+        "客服"
+      ],
+      "facts": [
+        {
+          "text": "可透過 Facebook 的 China2Go-CITS國旅環球、LINE 官方帳號 @315xvpvi 或官網表單聯絡旅遊顧問。",
+          "source_url": "https://china2go.com/contact-cits/",
+          "source_quote": "◆Line@： @315xvpvi",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "官網表單送出後會在上班時間處理；如需即時確認，應以官網聯絡頁當下顯示的方式為準。",
+          "source_url": "https://china2go.com/contact-cits/",
+          "source_quote": "我們收到後將於上班時間儘快處理您的諮詢",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    }
+  ],
+  "excluded_items": [
+    {
+      "category": "具時效性的產品資料",
+      "reason": "價格、團期、名額、成團門檻與飯店房型必須由線路包或顧問即時確認。"
+    },
+    {
+      "category": "保證性承諾",
+      "reason": "不採用百分之百出團、入藏函成功率、一定入場、一定升等或沒有風險等表述。"
+    },
+    {
+      "category": "醫療效果",
+      "reason": "不採用氧氣或交通工具可以預防、減少或治療高原反應的說法。"
+    },
+    {
+      "category": "固定退費與訂金數字",
+      "reason": "不同產品及合約可能不同，不能當作全部線路共同規則。"
+    },
+    {
+      "category": "具體行程內容",
+      "reason": "桃花、珠峰、酒店、車型和景點順序屬於各線路資料，不放入全局知識。"
+    },
+    {
+      "category": "圖片素材",
+      "reason": "全局知識庫只保存文字知識；線路圖片仍由各線路素材庫管理。"
+    }
+  ]
+}

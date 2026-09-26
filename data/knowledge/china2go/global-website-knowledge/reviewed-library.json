@@ -1,0 +1,1539 @@
+{
+  "schema_version": "china2go-global-knowledge-v1",
+  "site_url": "https://china2go.com/",
+  "language": "zh-Hant",
+  "reviewed_at": "2026-09-10",
+  "modules": [
+    {
+      "kind": "knowledge_module",
+      "key": "brand_and_identity",
+      "title": "品牌與服務身份",
+      "summary": "回答 China2Go、CITS 與服務團隊的關係。",
+      "topics": [
+        "China2Go",
+        "CITS",
+        "中國國旅",
+        "公司",
+        "品牌",
+        "旅行社"
+      ],
+      "facts": [
+        {
+          "text": "CITS 中國國旅成立於 1954 年；China2Go 是其入境服務體系中，面向外籍、港澳台及全球旅客的旅遊服務部門。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "CITS 中國國旅（China International Travel Service）自 1954 年成立以來",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "China2Go 以西藏高原旅行及全中國入境小團服務為主要方向，提供行程規劃與旅遊顧問服務。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "專注「以西藏為核心的高原探索與全中國入境小團旅遊」",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "traveler_and_service_scope",
+      "title": "旅客服務範圍",
+      "summary": "說明適用旅客、目的地與可承接的旅行方式。",
+      "topics": [
+        "台灣",
+        "香港",
+        "澳門",
+        "馬來西亞",
+        "新加坡",
+        "外籍",
+        "散客",
+        "包團",
+        "訂製"
+      ],
+      "facts": [
+        {
+          "text": "服務對象包含台灣、香港、澳門、馬來西亞、新加坡、其他海外華人與外籍旅客。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "接待台灣、香港、澳門、馬來西亞、新加坡 與全球華人與各國旅客",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "可承接散客小團、半自助行程、私人訂製、企業與會議獎勵旅遊；實際可行方案需依目的地、日期與人數確認。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "涵蓋散客拼團、小團半自助旅遊、精品私人訂製、高端深度遊、MICE",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "官網列出的主要服務目的地涵蓋西藏、新疆、雲南、四川、北京、上海、張家界、重慶等中國旅遊地區。",
+          "source_url": "https://china2go.com/cits-china2go/",
+          "source_quote": "經典路線與旅遊資源",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "advisor_and_trip_planning",
+      "title": "顧問與行程規劃",
+      "summary": "說明顧問可協助的規劃內容與服務方式。",
+      "topics": [
+        "顧問",
+        "規劃",
+        "訂製",
+        "一個人",
+        "單人",
+        "家庭",
+        "企業"
+      ],
+      "facts": [
+        {
+          "text": "旅遊顧問可協助行程規劃、玩法說明、交通銜接與需求整理。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "從行程規劃到玩法解析，貼心服務解決煩惱",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "單人旅客也可以提出需求；能否直接報名、協助併房或需補單房差，須以所選產品與當期團況確認。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "一人也可報名 可協助拚房或補單房差",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "多人、家庭或企業團體可以由顧問依人數與需求另行規劃。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "從自由行包車到半自助團，甚至企業包團，皆為您量身規劃",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "no_shopping_and_meals",
+      "title": "無購物與用餐方式",
+      "summary": "回答購物站、團餐、素食與忌口問題。",
+      "topics": [
+        "購物",
+        "購物站",
+        "團餐",
+        "午餐",
+        "晚餐",
+        "素食",
+        "忌口",
+        "清真"
+      ],
+      "facts": [
+        {
+          "text": "China2Go 官網主打不進購物店的純玩安排；景區自營商店不屬於旅行社安排的購物站，最終仍以各產品頁與合約為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "不進購物店」的行程（景區自營商店除外）",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "多數產品採不含午、晚餐的半自助方式，讓旅客依口味與預算自行選擇；是否含餐以個別行程說明為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "多採「不含午晚餐」的彈性半自助設計",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "素食、清真或其他忌口需求可在報名時提出，由顧問依目的地與餐廳條件協助確認。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "報名時註明素食或忌口食材，出團前會先與餐廳協調",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "transport_and_transfers",
+      "title": "機票、火車與接送",
+      "summary": "回答票務代訂、當地用車和機場車站接送。",
+      "topics": [
+        "機票",
+        "火車",
+        "高鐵",
+        "青藏鐵路",
+        "接機",
+        "接送",
+        "車輛",
+        "交通"
+      ],
+      "facts": [
+        {
+          "text": "顧問可依需求提供航班、火車與青藏鐵路建議，也可協助代訂；是否包含票款以個別報價或產品說明為準。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "依需求推薦航班或青藏火車與專列，都可選擇純推薦或代訂服務",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "行程中的當地交通會依人數與路線安排合規車輛；具體車型以當期確認為準。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "視人數配置合適車型",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "機場或車站接送是否包含，以產品頁和行程標示為準；未包含的區段可另行詢問顧問。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "以各產品頁說明為準",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "booking_payment_and_changes",
+      "title": "報名、付款與異動",
+      "summary": "回答付款方式、訂金、成團及取消異動的權威來源。",
+      "topics": [
+        "報名",
+        "訂金",
+        "付款",
+        "信用卡",
+        "匯款",
+        "退款",
+        "取消",
+        "改期",
+        "成團"
+      ],
+      "facts": [
+        {
+          "text": "可使用的付款方式可能包含信用卡、匯款或電子支付；幣別、手續費與實際方式以正式報價單或付款通知為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "可刷主流信用卡，亦支援匯款與部分電子支付",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "訂金金額、成團門檻、最晚通知日與退改規則會因產品及預付資源不同，必須以該次報價單與旅行合約為準。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "成團門檻與最晚通知日、退改條款皆於合約明載並事先溝通",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "即時團況、名額、價格與出發日期需要由顧問依當期資料確認，不能只用官網歷史內容直接承諾。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "以報價單/合約為準",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "tibet_permit",
+      "title": "入藏函與入藏方式",
+      "summary": "回答台灣及外籍旅客進藏所需安排。",
+      "topics": [
+        "入藏函",
+        "入藏證",
+        "TTP",
+        "台胞證",
+        "護照",
+        "簽證",
+        "自由行",
+        "跟團"
+      ],
+      "facts": [
+        {
+          "text": "台灣及外籍旅客前往西藏，需要透過具資格的旅行社安排行程並申辦入藏函，不能以一般自由行方式自行進藏。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "外籍可以自助入藏嗎？ 不行，需透過旅行社辦理入藏函並安排行程",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "申辦資料通常涉及護照或台胞證，以及適用情況下的中國簽證；邊境或特定地區可能需要其他批件，應由顧問依旅客身分與路線逐案確認。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "護照或台胞證＋有效中國簽證",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "入藏文件的辦理時間會受旅客身分、路線與當期審批影響，應提早準備並由顧問確認，不承諾固定天數或百分之百成功。",
+          "source_url": "https://china2go.com/",
+          "source_quote": "建議提早 至少一個月預訂行程",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "accommodation_oxygen_and_health",
+      "title": "住宿、供氧與高原健康邊界",
+      "summary": "回答住宿條件、氧氣設備及個人健康問題，不做醫療效果承諾。",
+      "topics": [
+        "住宿",
+        "飯店",
+        "酒店",
+        "供氧",
+        "氧氣",
+        "高山症",
+        "高原反應",
+        "健康",
+        "醫生"
+      ],
+      "facts": [
+        {
+          "text": "住宿等級與房型以個別線路及合約為準；偏遠地區的住宿條件通常比城市簡樸。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "偏遠地區以客棧或簡旅為主",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "部分西藏線路的飯店或車輛配置氧氣設備，但配置須看具體線路；有氧氣設備不代表可以避免高原反應，也不能延伸為醫療或安全保證。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "多數飯店/車輛備氧",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "是否適合前往高原需要依個人健康狀況由專業醫療人員評估；顧問不能替客戶作個人醫療判斷。",
+          "source_url": "https://china2go.com/faq-tibet/",
+          "source_quote": "建議諮詢您的醫生",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "travel_preparation",
+      "title": "中國旅遊行前準備",
+      "summary": "回答衣物、支付、網路、飲水和基本行前準備。",
+      "topics": [
+        "衣服",
+        "天氣",
+        "支付寶",
+        "微信支付",
+        "信用卡",
+        "網路",
+        "SIM",
+        "eSIM",
+        "飲水",
+        "行李"
+      ],
+      "facts": [
+        {
+          "text": "中國各地氣候差異大，建議依目的地與季節採分層穿著；高原地區需留意日夜溫差、防風與防曬。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "原則：分層穿",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "支付寶與微信支付在多數城市較普及，國際信用卡可依平台規則綁定；仍建議準備少量現金，以因應小店或偏遠地區。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "建議把卡片先綁定支付寶/微信",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "若需要使用 LINE、WhatsApp 或 Google 等服務，應自行準備適合的境外漫遊、eSIM 或實體網卡方案。",
+          "source_url": "https://china2go.com/faq-cits/",
+          "source_quote": "建議自備可用於 LINE/WhatsApp/Google 的境外上網方案或 SIM 卡",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "一般不建議直接飲用自來水，可使用瓶裝水或煮沸後飲用。",
+          "source_url": "https://china2go.com/faq-china/",
+          "source_quote": "一般建議不直接飲用自來水",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    },
+    {
+      "kind": "knowledge_module",
+      "key": "official_contact",
+      "title": "官方聯絡方式",
+      "summary": "回答如何聯絡 China2Go；聯絡資料需定期重新核對。",
+      "topics": [
+        "聯絡",
+        "聯繫",
+        "LINE",
+        "WhatsApp",
+        "Facebook",
+        "客服"
+      ],
+      "facts": [
+        {
+          "text": "可透過 Facebook 的 China2Go-CITS國旅環球、LINE 官方帳號 @315xvpvi 或官網表單聯絡旅遊顧問。",
+          "source_url": "https://china2go.com/contact-cits/",
+          "source_quote": "◆Line@： @315xvpvi",
+          "verified_at": "2026-09-10"
+        },
+        {
+          "text": "官網表單送出後會在上班時間處理；如需即時確認，應以官網聯絡頁當下顯示的方式為準。",
+          "source_url": "https://china2go.com/contact-cits/",
+          "source_quote": "我們收到後將於上班時間儘快處理您的諮詢",
+          "verified_at": "2026-09-10"
+        }
+      ]
+    }
+  ],
+  "excluded_items": [
+    {
+      "category": "具時效性的產品資料",
+      "reason": "價格、團期、名額、成團門檻與飯店房型必須由線路包或顧問即時確認。"
+    },
+    {
+      "category": "保證性承諾",
+      "reason": "不採用百分之百出團、入藏函成功率、一定入場、一定升等或沒有風險等表述。"
+    },
+    {
+      "category": "醫療效果",
+      "reason": "不採用氧氣或交通工具可以預防、減少或治療高原反應的說法。"
+    },
+    {
+      "category": "固定退費與訂金數字",
+      "reason": "不同產品及合約可能不同，不能當作全部線路共同規則。"
+    },
+    {
+      "category": "具體行程內容",
+      "reason": "桃花、珠峰、酒店、車型和景點順序屬於各線路資料，不放入全局知識。"
+    },
+    {
+      "category": "圖片素材",
+      "reason": "全局知識庫只保存文字知識；線路圖片仍由各線路素材庫管理。"
+    }
+  ],
+  "site_inventory": [
+    {
+      "url": "https://china2go.com/blog/",
+      "title": "中國旅遊各省攻略｜西藏跟團、北京觀光與高原反應預防指南 | CITS國旅環球",
+      "content_hash": "81e923bcde6908034b9ea5dc8929ebd3e0fc67e2f8270d2395b2d850f18db750",
+      "content_length": 1005,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibte-seramonastery/",
+      "title": "色拉寺 སེ་ར་དགོན་པ།｜拉薩．西藏景點介紹－辯經儀式",
+      "content_hash": "48bbfa89927247897aad0dd445f45ea922addf6fe1e175a0f0f9711ba5c9c5a3",
+      "content_length": 4425,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/ibet-travel-agency-reviews-2026-0506/",
+      "title": "西藏旅行社推薦｜China2Go國旅環球評論（2026年5-6月）",
+      "content_hash": "0cf1c486216b39d7ab1413b62c786b720c1d3a99a535c0e9e852f779fd0446b9",
+      "content_length": 3746,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/xizang-dixingtu-jiexi/",
+      "title": "西藏地形圖解析：西藏海拔與高原反應一次看懂-CITS國旅環球2026",
+      "content_hash": "1cccb6ee057f982894e64ece90b28bd5c2ec90d62d4de680adbc6c6a6ce1fde5",
+      "content_length": 5968,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/lhasa-zashilhamo/",
+      "title": "扎基寺 བྲ་སྐྱིས་དགོན་པ།｜拉薩・西藏景點介紹－藏地最靈驗的財神廟",
+      "content_hash": "94e3ea80d2f71e9f5df77865aae7f3e316db166a7c7db5b7933d0b54709ef049",
+      "content_length": 6133,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-shigatse-yungdrung-ling/",
+      "title": "熱拉雍仲林寺景點介紹｜西藏苯教古寺‧日喀則南木林-CITS國旅環球",
+      "content_hash": "faafeae283fd42f99b6d49e9bf36b0d4b89eb577d848232db713d02098f0f394",
+      "content_length": 3189,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/qiayang-tso-tibet-winter-frozen-lake/",
+      "title": "恰央措｜西藏山南・冬季遊西藏冰湖景點介紹 | CITS中國國旅環球-China2Go",
+      "content_hash": "4553e863b101c490a16bbb69fba174a47b0853e2a9f9ad9bfe34576103fd8551",
+      "content_length": 4431,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/dong-you-xizang-5-reasons/",
+      "title": "冬遊西藏的五大理由｜西藏冬季景點全攻略2026｜旺季VS淡季",
+      "content_hash": "a94ed1bb44097b1c91f53323fb3ba006bfb8b1fee97aa195bf080fd09367defd",
+      "content_length": 4972,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/nyingchi-peach-blossom-festival-guide/",
+      "title": "2027林芝桃花節攻略｜花期、秘境賞花路線與西藏行程｜China2Go",
+      "content_hash": "143a547b4495b54b49524b926b05180e9c33e0a658a9b9c7abc45acff3a14f1f",
+      "content_length": 6286,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-travel-safety/",
+      "title": "2026西藏旅遊安全嗎？台灣旅客必讀高山症與治安全解析",
+      "content_hash": "cb3c3af18ca7130ddb29ddad4c0197a9ee84cb3efb6686b429f7d2d11674ebb9",
+      "content_length": 5482,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-food-guide/",
+      "title": "西藏旅遊吃什麼？第一次去西藏飲食會不會吃不習慣｜完整指南",
+      "content_hash": "b49b68c354b03f0620b44666ebf6a291eaca7e7e76c44fbf9dcdd1dc29d7e24b",
+      "content_length": 4092,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/qingzang-train/",
+      "title": "2026青藏鐵路全攻略｜火車票怎麼買？會高原反應嗎？台灣人入藏規定",
+      "content_hash": "24271ff62feb72ef267b92dd90aa2050dccf61cdc06559b0f61fc17e2c896753",
+      "content_length": 8873,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-altitude-sickness-guide/",
+      "title": "2026西藏高山症完整指南：症狀分級、預防方法與安全應對全解析",
+      "content_hash": "efc9c95a2e7e41aa80c9adafb29b466e95e1101528bf844ac1bbdb7e224ab827",
+      "content_length": 8094,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/rhodiola-timing-tibet/",
+      "title": "紅景天什麼時候吃？西藏高原反應預防指南 | CITS國旅環球",
+      "content_hash": "284e712bd3259808dbdec3314f1843c813ef163bbfa284d9cb34bea393959404",
+      "content_length": 3996,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/qingan-da-huanxian-10day/",
+      "title": "青甘大環線旅行團玩10日｜西寧出發深度秘境全攻略 | CITS中國國旅環球-China2Go 西寧天氣查詢按鈕 青甘大環線費用說明 青甘大環線注意事項 預約專屬顧問按鈕",
+      "content_hash": "cd17053a59a8192bbf699cfe03b01a0061fd3e3811c3c812f51bf870d035c20a",
+      "content_length": 8806,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-travel-agency-how-to-choose/",
+      "title": "2026 西藏旅行社怎麼選？5 個關鍵問題避開踩雷｜CITS",
+      "content_hash": "d319ffc97b3add283e39e93573239cd5443e0de3eec09ef68154453db6a4a3bb",
+      "content_length": 5992,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/chengdu-travel-guide-2026/",
+      "title": "成都旅遊攻略-2026｜川西天氣、四季穿搭與必訪景點全解析 | CITS中國國旅環球-China2Go",
+      "content_hash": "88610744f625ec3ccc76b810620297d5b8a537bb9d82a840df97343fbc2fa2d3",
+      "content_length": 4951,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/xinjiang-vs-beijiang/",
+      "title": "新疆跟北疆有什麼不一樣？南疆與北疆差異旅遊建議2026 -CITS",
+      "content_hash": "a075bf998ecb60a1fac81a7bc623f1eabc2c20d42cc7564efe98561fdce80ed1",
+      "content_length": 8564,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/yunnan-8day-tour/",
+      "title": "雲南旅遊推薦｜昆大麗瀘沽湖8日深度慢遊，精緻小團-國旅環球 雲南天氣查詢按鈕 雲南旅遊費用說明 雲南旅遊注意事項 預約專屬顧問按鈕",
+      "content_hash": "9826270b98f53e3d2b6a537880aa3ff75d251b4642540f6546c864deb5f9b317",
+      "content_length": 8279,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-travel-permit-ttp/",
+      "title": "台灣人去西藏：入藏函申請教學與常見問題｜2026 CITS國旅環球",
+      "content_hash": "a78f59b663fd486e88bc6ef20d064ec3b00ea37ff87fa705bb2bc0a299ec5409",
+      "content_length": 5161,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/mount-kailash-kora-guide/",
+      "title": "馬年轉山13倍功德？岡仁波齊朝聖攻略、天數建議與路線規劃－CITS國旅環球",
+      "content_hash": "75f8cc47e946d99cf20d4829d6fdc1aa2354e3b598d70262e3d6f8bb1c4ec67d",
+      "content_length": 7350,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/kailash-kora-ali/",
+      "title": "岡仁波齊轉山完整指南｜景點介紹、最佳季節、阿里路線與朝聖攻略",
+      "content_hash": "ce14948a7d9e1e7ceff40b8b8425db5658883a1715ce920dd264a16675ed7073",
+      "content_length": 3895,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/xizang-lvyou-tuanfei-heli/",
+      "title": "西藏旅遊費用多少才合理？為什麼價差這麼大｜2026 西藏跟團費用解析",
+      "content_hash": "7b1726fdf4bad20fb9d04c37ce65a2131c903f641c7d695260b6780fb208ce84",
+      "content_length": 8134,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-weather-dressing-guide/",
+      "title": "西藏天氣與溫度指南｜各月份氣溫數據、四季穿搭全攻略 2026",
+      "content_hash": "d23891f83d98ad06cac330363840040c20dc6f197883c96b360bfff4f23277e1",
+      "content_length": 5823,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/yunnan-travel-cost/",
+      "title": "雲南旅遊費用完整攻略｜最佳季節、必去景點與經典路線--2026",
+      "content_hash": "f7a764b7fe21d89f85c34e754e19ddd70e98234fe85bb4ee10da13d951a7ad9d",
+      "content_length": 8609,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-travel-days/",
+      "title": "西藏旅遊幾天適合？先從地理開始了解它 2026 CITS-國旅環球",
+      "content_hash": "751d8919de47bbd4f16c972d442160af82d5c48a94cabcea3dec2b8e46463ab5",
+      "content_length": 9186,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/us-canada-tibet-travel/",
+      "title": "2026 美國、加拿大旅客去西藏旅遊怎麼飛？進藏順序與安排",
+      "content_hash": "c4cf30f2679af8bcc6aa8390a860a5f3ec0bdfd85d82169ded707fcdf4fd0343",
+      "content_length": 5792,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-top10-attractions/",
+      "title": "西藏旅遊必去的10大景點｜布達拉宮、羊卓雍措、珠峰-2026攻略",
+      "content_hash": "b3965624da2de157c1d4104d062fa6c73c9684d627761dbb7347611eb22888ef",
+      "content_length": 7523,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/xiamen/",
+      "title": "廈門旅遊攻略 2026｜10大景點＋行程規劃懶人包 | CITS中國國旅環球-China2Go",
+      "content_hash": "8f47ee73c48942adc0b953de9f59cc2b2b79f676ffecea604da204ee4d7e0b2d",
+      "content_length": 4014,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-glaciers/",
+      "title": "冬天西藏必去：四大震撼人心的西藏冰川推薦 | 國旅環球",
+      "content_hash": "9a250dc325f1373c1e26ac9018b63fcc3ff0b9af4f259bc5503e3bf1767e5bce",
+      "content_length": 3473,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-oxygen-facts/",
+      "title": "西藏旅遊要不要買氧氣？真相大解析｜CITS中國國旅環球",
+      "content_hash": "3eadca6779be86699c69fc48ffbfa41d42457036c5aa054f85a2c59d28aa3f85",
+      "content_length": 7336,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-peach-blossom-guide/",
+      "title": "2026西藏桃花節攻略：別再只去嘎拉桃花村！這４個私房景點才是真正的藏地精華 | CITS中國國旅環球-China2Go",
+      "content_hash": "7cd2a961410f2cb81f4e5cd5192af0ea8afb6583d02eff353287d268e30e1dd9",
+      "content_length": 4246,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-tips-20/",
+      "title": "西藏旅遊注意事項全攻略：從最佳旅遊月份到高原反應防範 | CITS中國國旅",
+      "content_hash": "74d26e06565c1d561c615f7685561c72c41f4585c725a0870a3a45aca699cb4a",
+      "content_length": 6238,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/https-china2go-com-tibet-bath/",
+      "title": "為什麼去西藏旅遊不能洗澡 ? | -2026攻略 CITS中國國旅環球",
+      "content_hash": "2b2f5042af80572f118b096b06eda168cba4c0d98472856a0c445e2577cf7831",
+      "content_length": 4121,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/best-tibet-travel-agency-cits/",
+      "title": "2026 西藏旅遊哪家旅行社最好？權威推薦：CITS中國國旅環球｜70年品牌信譽",
+      "content_hash": "d7c0e9bfcf666786e4fb282097be6d4085070860f4082e286397fb5864fd32f5",
+      "content_length": 5034,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibetan-new-year-food-losar/",
+      "title": "藏曆新年解鎖神奇的藏族食物｜西藏介紹 CITS國旅環球-2026",
+      "content_hash": "e082db72648e753b722cc3f92882d2b99a629a6ad296f89f75263abd9d05ca08",
+      "content_length": 5016,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e8%96%a9%e5%98%8e%e9%81%94%e7%93%a6%e7%af%80-2026saga-dawa-festival/",
+      "title": "薩嘎達瓦節｜藏地最殊勝的祈願月，轉山轉寺祈福介紹 |2026",
+      "content_hash": "fc8377306b8b86f86a7734088018e0ed11c870dd707c0aa629ed7c84aba93399",
+      "content_length": 9207,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-festival/",
+      "title": "2026 西藏節日總表介紹｜藏曆年節慶與活動 | CITS中國國旅環球-China2Go",
+      "content_hash": "46900850fa4b90ba1b534ec5b20ad112487d3a4bfcfe0126d5e3d30e559ea84a",
+      "content_length": 4205,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/citschina/",
+      "title": "CITS中國國旅環球報名流程｜China2Go從諮詢到出發，一步搞定！",
+      "content_hash": "8fc678fddd474069efb5d06a52f1221c18751e5cae003d82eb70fe65f4a0f55a",
+      "content_length": 6940,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/us-tibet-travel-2026-cits/",
+      "title": "美國人去西藏旅遊｜2026 最新規定 + CITS 組合式進藏全攻略",
+      "content_hash": "be1e05371eb79fdd77bd0680178d16b6a3e51064cb67dc70106d3987a1a48ca6",
+      "content_length": 8843,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/barkhor-street/",
+      "title": "八廓街 བར་སྐོར་ལམ་｜拉薩．西藏景點介紹－最具人文氣息的西藏街",
+      "content_hash": "7b9d812d52703c4cf4a52355b66ac4a26deee33d4e45fe3459df2f9db4e96b9f",
+      "content_length": 4186,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/lhasa-post-office/",
+      "title": "天上西藏郵局 ལྷ་ས་སྦྲག་ཁང་｜拉薩．西藏景點介紹－寄回家的回憶 | CITS中國國旅環球-China2Go",
+      "content_hash": "5a7e141f8298e651b98b90a6b883c410382f4ada9befe63baefa150cbf9de8b2",
+      "content_length": 5607,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/laigu-glacier/",
+      "title": "來古冰川 ལ་གུང་གངས་ཕྱགས་｜波密・西藏景點介紹－藍冰世界的高原奇境 2026",
+      "content_hash": "32ae9571740429a4d187054ae4e2963226b56382e449b95a15873712be4091b8",
+      "content_length": 4255,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/zha-ji-si-weisang-guide/",
+      "title": "煨桑【西藏扎基寺參拜全攻略】煨桑祈福｜西藏求財指南-2026",
+      "content_hash": "5d32a4e319b7ce4c9c6735f977cd8be6e56f5ea3259c8819ff4a532b7cb226f1",
+      "content_length": 5301,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/altitude-ams-guide/",
+      "title": "西藏高原反應與高山症：症狀與預防全攻略-高反篇 |CITS國旅",
+      "content_hash": "2678c66efb3c5ee2400a9d7568193b3a90447613ae87d60bb1088747bd4d0420",
+      "content_length": 6937,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-insurance/",
+      "title": "西藏隨團醫師大揭秘：貼心服務還是另一種套路？ | CITS中國國旅環球-China2Go",
+      "content_hash": "e286104f52fcbccc90a731a16948af73e0fbfcf90f8fb9505a2f3c98952f4a3f",
+      "content_length": 5261,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/lulang-town/",
+      "title": "魯朗小鎮 ཀླུ་གླང་｜林芝・西藏景點介紹－林芝的瑞士 | CITS中國國旅環球-China2Go",
+      "content_hash": "58d69253d5b2c065a2b0224d0e354bbdcad718bbd37750a296a2ce095e5bbdef",
+      "content_length": 4853,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/potala-palace/",
+      "title": "布達拉宮 པོ་ཏ་ལ་ཕུག་｜拉薩．西藏的信仰象徵-西藏景點介紹2026",
+      "content_hash": "1dcba376a414fd84279962f3673b1cc1a2d085e54e72acf31f493bbf5effa6d5",
+      "content_length": 4397,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/namtso/",
+      "title": "納木錯 གནམ་མཚོ་｜西藏三大聖湖之一・西藏景點介紹-2026",
+      "content_hash": "e488dad93bd5012e2439ef8c30d8dbc9f4135abf3d51cf97a83eacdf483fa4d7",
+      "content_length": 4144,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/basum-tso/",
+      "title": "巴松錯 དཔའ་བསུས་མཚོ་｜林芝・西藏景點介紹－湖中寺廟人間仙境2026",
+      "content_hash": "461f60126bb2f9b088495a62e2f097f85b97e88ad7f5015c48ef9bbb7a103a79",
+      "content_length": 4199,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/ranwu-lake/",
+      "title": "然烏湖 རང་ཝུ་མཚོ་｜波密・西藏景點介紹－G318上的高原明鏡",
+      "content_hash": "e862885bf5ba002675b9c965e3ada6e6420df3166ef9d52889bef5fcb6d80751",
+      "content_length": 4081,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/gala-peach-blossom/",
+      "title": "嘎拉桃花村 དགའ་ལ་｜林芝・西藏景點介紹－西藏林芝桃花節主場",
+      "content_hash": "08cb99857b55992c4965025dc3d480be25082bb187252a0e6ce157f5444c089e",
+      "content_length": 4483,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-laigu-yalong-blue-ice-midu/",
+      "title": "藍冰洞是來古冰川還是雅隆冰川?米堆冰川值得看嗎? | CITS中國國旅環球-China2Go",
+      "content_hash": "f40bbffcc5edf3f25f6a5abc9d44ebbb3b6673b105e1d666c198dc70c125973b",
+      "content_length": 5582,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/chongqing-zhangjiajie-trip/",
+      "title": "重慶玩幾天合適？重慶旅遊攻略+張家界雙城怎麼玩 | CITS中國國旅環球-China2Go",
+      "content_hash": "87d351d576e68fd7c25b70a6d93cdb9f746d43284bc633f824e6349fa1c81f66",
+      "content_length": 5022,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/qinghai-tibet-train-guide/",
+      "title": "马来西亚人必看！青藏火车进出西藏全攻略：买票、车厢选择、高原对策一次教到完 | CITS中國國旅環球-China2Go",
+      "content_hash": "fba5a9970f8768234d920cb81ebfb0e23a238c657fca4dcde77e55b20c5d224a",
+      "content_length": 4249,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/my-tibet-ttp/",
+      "title": "马来西亚人去西藏：入藏函 TTP申请教学与常见问题（2025–2026）｜CITS中国国旅",
+      "content_hash": "83ef3a4d224a040a3e91e0d575454c686d3e37e8fa5816353e8dc7c1004e2910",
+      "content_length": 5977,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/silk-road-express-luxury-train/",
+      "title": "絲綢之路專列火車極致體驗：絲路夢享號豪華旅遊推薦",
+      "content_hash": "e6aaec988af5fc767b5bf78c0b143635e5f929a84881c6b3c694a7f2437987c8",
+      "content_length": 2973,
+      "site_section": "post",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/",
+      "title": "CITS中國國旅環球｜70年信賴品牌上市公司-西藏雲南北京跟團深度遊",
+      "content_hash": "15a10301c9ea2a8b6e43ef13aa5daf2819142a8667ebfa47166fb218459b1f9a",
+      "content_length": 3562,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/cits-china2go/",
+      "title": "CITS中國國旅環球｜成立70年西藏旅遊領先品牌－China2Go",
+      "content_hash": "9c4e4dc6be280d7161d9c0a220ff6d994a58954d92bbe701b441e83265fed9c9",
+      "content_length": 3786,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/faq-harbin/",
+      "title": "哈爾濱旅遊相關問題｜cits-中國國旅環球-china2go 哈爾濱旅遊相關問題 Q&A｜CITS 中國國旅環球",
+      "content_hash": "f47121d750750233529f0567bbb0cdea33c18fb6f44a940e8a3f0a70639f7c24",
+      "content_length": 2308,
+      "site_section": "page",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/faq-beijing/",
+      "title": "北京旅遊相關問題｜長城、故宮、住宿與包車30題完整解答｜CITS國旅環球 北京旅遊相關問題 Q&A｜CITS 中國國旅環球",
+      "content_hash": "d678e80bab88865e5549801c527304c428c14ae3cf64c2c24019baef4bfe17ef",
+      "content_length": 2286,
+      "site_section": "page",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/faq-yunnan/",
+      "title": "雲南旅遊常見問題Q&A｜昆大麗行程、費用、季節與注意事項－CITS國旅環球 雲南旅遊相關問題 Q&A｜CITS 中國國旅環球-China2Go",
+      "content_hash": "3f4c3e1c91889ecb17cc7e25176395bc81cf94f50cce3d5fbdd59b6525e2cdf1",
+      "content_length": 2758,
+      "site_section": "page",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/faq-china/",
+      "title": "中國旅遊相關問題完整解答｜簽證、交通、住宿與行程規劃－CITS國旅環球 中國旅遊相關問題 Q&A｜CITS 中國國旅環球",
+      "content_hash": "63e263dc0bd4287ea24a661d98c717414f7b03d9a870efad214e058aae9521a8",
+      "content_length": 3158,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/faq-cits/",
+      "title": "CITS國旅環球常見問題｜報名流程、費用、退款與說明-China2go 常見問題 QA｜關於 CITS 中國國旅環球",
+      "content_hash": "afe835a2b05c4628a877b62351ccb9a4792cf9d905a1f89cf6063c2d3f5a64cf",
+      "content_length": 3864,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/faq-tibet/",
+      "title": "西藏旅遊常見問題｜港澳台、星馬旅客出發前完整解答-國旅環球 Q&A｜CITS 中國國旅環球",
+      "content_hash": "058bfc841bec50e7ddfc200930bc035486a479985dcbc44a975839cbaadbd94c",
+      "content_length": 3883,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/contact-cits/",
+      "title": "聯絡 CITS國旅環球｜逾70年中國國家旅遊機構｜行程諮詢與報價",
+      "content_hash": "8de16993adbded4f047e5e9ff2a1d08401c37174e783aa60eb2bd344b90a194d",
+      "content_length": 203,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/cits-international-guests/",
+      "title": "CITS中國國旅環球 中國旅遊實拍｜港澳台、歐美旅客出團紀錄",
+      "content_hash": "a078271b393dc3278e6dc217897defcafce4c8a2ef2c69c9441f42442a1f0934",
+      "content_length": 229,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/cits-china-branches/",
+      "title": "70年品牌權威｜CITS中國國旅環球：西藏與全中國大陸專業服務-China2Go",
+      "content_hash": "384bda71cc19d80d02e92f52d78db565ebcd038f146758310386d8d560cbb1df",
+      "content_length": 1441,
+      "site_section": "page",
+      "global_candidate": true,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/",
+      "title": "中國大陸跟團旅遊團期 | CITS中國國旅環球-China2Go",
+      "content_hash": "c1f8dd3f71f24b59c1c7f09c90a287ede4c25499cbb54ad594cbf5d3fd6eda50",
+      "content_length": 3040,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/6-daytibetitinerary/",
+      "title": "西藏輕享6天行程－升級希爾頓｜拉薩、羊湖-10人小團-CITS國旅環球",
+      "content_hash": "68094f635d93c5a171559646317e21922a96d0540002aa55136411e768a46643",
+      "content_length": 8722,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/winter-tibet-blueicecave-8days/",
+      "title": "冬遊西藏藍冰8日｜恰央措．來古冰川．拉薩與冰湖-CITS國旅環球",
+      "content_hash": "0297e1157f84823a1944879847eba4f38d3007206a43d649bedf9561c2068de9",
+      "content_length": 9399,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/tibet-linzhi-peach-blossom-10-days/",
+      "title": "西藏林芝桃花節11日｜波密．林芝．珠峰-2027－10人小團全程供氧",
+      "content_hash": "b2fceafbb022a186393699143a1fee9eb871c6e2d8cc5da3205e1672bb55113f",
+      "content_length": 12020,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/tibet-nyingchi-peach-blossom-8days/",
+      "title": "西藏林芝桃花9日｜波密．林芝．不上珠峰｜2027 -CITS國旅環球",
+      "content_hash": "6c5a1c5142bbbf14bd25f6b2011272028b6a66b3b8db3856ccadaf6d2395b0af",
+      "content_length": 10960,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/tibet-linzhi-7days-tour/",
+      "title": "林芝不上珠峰8日｜全程酒店供氧、不上珠峰-防高反/4-10人小團",
+      "content_hash": "414fbc97825376200a8848f160847530bddcb7531fa8fb90f4d22c3c71b39c25",
+      "content_length": 10111,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/tibet-10-day-everest-tour/",
+      "title": "西藏行程10日－升級希爾頓｜林芝、巴松錯、拉薩、珠峰、羊湖-全覽",
+      "content_hash": "5b9bebc60423617b06004409bee49a7754bebd82ba46a18c8360e15e18ea9e90",
+      "content_length": 11474,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/tibet-8days-itinerary/",
+      "title": "西藏行程8日－升級希爾頓4-10人小團｜拉薩、珠峰、羊湖-藏地精華",
+      "content_hash": "452b0b6d29bb1e431310675ab86512596d7271eecebf5c4361aed123b132f177",
+      "content_length": 9802,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/tibet-butter-lamp-festival-9days/",
+      "title": "西藏燃燈節9日－升級希爾頓｜11月29號｜西寧、拉薩、山南、日喀則-2026",
+      "content_hash": "3bae4a93eccfa9248a3cc3325001b3b3c0e2f67ab2f64dc325f1add42e91c49d",
+      "content_length": 9492,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/seda-yading-11day-tour/",
+      "title": "川西色達環線317+318｜4–6人小團・色達・稻城亞丁深度11日",
+      "content_hash": "1ae5ed1b39c9e0ed0fdbec8110700c9a68f1172f6e4ac221815f6e09adba22e0",
+      "content_length": 13819,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/shoton-festival-9d/",
+      "title": "西藏雪頓節9日｜4–6人小團・希爾頓升級・展佛藏戲＋珠峰-2026",
+      "content_hash": "5095986a09209ebc8f3389076556753dd119ab7f40599b4763d4b0ef669ec91e",
+      "content_length": 10719,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/beijing-5-day-tour/",
+      "title": "北京包車小包團5日精華遊｜故宮＋長城＋天壇＋頤和園＋大柵欄",
+      "content_hash": "60daa0f74198177afc40be6664d3bb9a8f8b82adcda9280c8ff05b7b5c2648a1",
+      "content_length": 7947,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/yunnan-lugu-lake-8days/",
+      "title": "雲南旅遊｜昆大麗瀘沽湖 8日｜2人起發~10人小團精品深度慢遊",
+      "content_hash": "64c01fe6bc8b91f2370629e408fbbed9447bf22f3fdf9ef8ed067b8629273d96",
+      "content_length": 8223,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/xining-qinghai-gansu-10day-tour/",
+      "title": "大柴旦青甘10日大環線｜4-6人精緻小團・翡翠湖水上雅丹・敦煌莫高窟・七彩丹霞",
+      "content_hash": "1c04b8a7ed57c7a2e442c95cf284137dd15708b0c9cfe1eb83df8fb15c2b68a6",
+      "content_length": 9951,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/kailash-14days-tibet-tour/",
+      "title": "阿里轉山14日-6人小團｜岡仁波齊．拉薩．珠峰．吉隆-馬年轉山",
+      "content_hash": "3e73081e8adf4d58a502c42d4b9c1af7e718e7003a9970bc2b4b68ec6256b527",
+      "content_length": 13127,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/xizang-5days-qingzang-train/",
+      "title": "西藏也能五天｜探秘拉薩青藏5日｜青藏火車、拉薩、山南小小團",
+      "content_hash": "0df284143053b2a8691dfc70eefb52aa41dc63f28314f5ab8248c97ae4619d62",
+      "content_length": 7510,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/yunnan-8days-2/",
+      "title": "雲南旅遊精選8日｜喜洲古鎮・沙溪古鎮・松贊林寺・虎跳峽・玉龍雪山",
+      "content_hash": "cfe056f1552b29afb64c1fde65d5077c70561a4dac06e9fe277a9d59010a5b35",
+      "content_length": 6350,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/chongqing-zhangjiajie-8days/",
+      "title": "重慶 · 張家界精華8日｜洪崖洞 · 鳳凰古城 · 天門山 · 阿凡達袁家界",
+      "content_hash": "d2b804fd999fec7976191d2071532b7062f3f34488734ad4262e3db60956be7f",
+      "content_length": 7834,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/travel-harbin-winter/",
+      "title": "哈爾濱·雪鄉·長白山8日尊享｜冰雪大世界·霧凇漂流·東北澡堂體驗",
+      "content_hash": "51d4aaa0ffa1ffd3e06636274ad3baa2f2bff722a49c47108207cacb914ed3eb",
+      "content_length": 8169,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/xinjiang-duku-9days/",
+      "title": "獨庫公路北疆9日精華遊｜喀納斯·禾木·賽里木湖·伊寧·那拉提·新疆 CITS",
+      "content_hash": "4806647b4dba667af0a1053e2c2144b4616b94869dba73d340b6a3303b7902e0",
+      "content_length": 9849,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/jiuzhaigou-ruoergai-8d-itinerary/",
+      "title": "九寨溝若爾蓋精華8日｜都江堰熊貓樂園、黃龍、扎尕那",
+      "content_hash": "a1afe9e7bd622affc498f94039ab25cf0370a24285f90522f8dc21eeba52a2ba",
+      "content_length": 7307,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel/xinjiang-apricot-blossom-10-days/",
+      "title": "新疆杏花季北疆10日｜4 月伊犁杏花・賽里木湖・那拉提草原・新疆 CITS國旅",
+      "content_hash": "35f2ec6bfe3503cfea6e91c71bac62ab658105101c651a870ad299d4e7560825",
+      "content_length": 10082,
+      "site_section": "travel",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e6%9c%aa%e5%88%86%e9%a1%9e/",
+      "title": "未分類行程 | CITS國旅環球",
+      "content_hash": "04ba60ca34c454fb6a1f7aa39adcf91396e4ac4d147042a76780007d4b97cba7",
+      "content_length": 44,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e9%9d%92%e8%97%8f%e7%81%ab%e8%bb%8a%e6%94%bb%e7%95%a5/",
+      "title": "青藏火車攻略2026：車廂選擇、沿線景點與搭乘須知 | CITS國旅環球",
+      "content_hash": "cb7b85605e3cbe6b5937a2572f7525e92ef992cfc8a35da47b139ce2287ab00f",
+      "content_length": 294,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/sichuan-travel-guide/",
+      "title": "四川旅遊攻略與推薦跟團與自助行程 | CITS國旅環球",
+      "content_hash": "6455d460b17eeeda5d11fa8dad3ffe4af79c635719355ebc8ef27c96f6a272f0",
+      "content_length": 154,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e8%a5%bf%e8%97%8f%e6%94%bb%e7%95%a5/",
+      "title": "2026 西藏旅遊全攻略：入藏函、行程預算、高反預防百科 | CITS中國國旅環球",
+      "content_hash": "d3b17a20a43512960e05f0b98b220c954b26c2908ce80b476c69841d04883483",
+      "content_length": 1154,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e6%96%b0%e7%96%86%e6%94%bb%e7%95%a5/",
+      "title": "新疆旅遊攻略2026：必去景點、最佳季節與行程推薦 | CITS國旅環球",
+      "content_hash": "5a4f93f7eb557263bd77843b45002d2fa97c51e81b660cab3f3a902b0275609c",
+      "content_length": 160,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e9%ab%98%e5%8e%9f%e5%8f%8d%e6%87%89/",
+      "title": "高原反應完全指南：症狀、預防與西藏青海旅遊注意事項 | CITS國旅環球",
+      "content_hash": "87a834442013f3c2e8b525ea80b367fef6ee71c4e9784604158c5a421f0a7667",
+      "content_length": 875,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e5%85%b6%e4%bb%96%e6%97%85%e9%81%8a%e6%94%bb%e7%95%a5/",
+      "title": "中國各地旅遊攻略：包含絲路與蒙古等小眾目的地行程推薦 | CITS國旅環球",
+      "content_hash": "ac1e2a97bc24b03575f67de22ae1e596cbd0ca62f4d232081364da49d5f83e5e",
+      "content_length": 391,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e9%87%8d%e6%85%b6%e6%94%bb%e7%95%a5/",
+      "title": "重慶旅遊攻略2026：必去景點、美食推薦與跟團行程 | CITS國旅環球",
+      "content_hash": "28789209ac1b946c6d98c8e24d687162e39dce3dad541820adbe3ede6d84462f",
+      "content_length": 196,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/china-travel-guid-cits/",
+      "title": "北京、廈門、上海、西安等全中國旅遊攻略 | CITS國旅環球",
+      "content_hash": "703e8ad1380c2ceff9c976ba1df48d166f9cf7bb3c9cfac5ed7d599ccece4f93",
+      "content_length": 971,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/yunnan-guide/",
+      "title": "雲南旅遊攻略2026：昆明、大理、麗江、瀘沽湖指南-CITS國旅環球",
+      "content_hash": "a330b37784a877390e512720254d512c0593dd75840d52ef4c589fd86483349c",
+      "content_length": 273,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e5%a6%82%e4%bd%95%e8%ab%ae%e8%a9%a2/",
+      "title": "如何諮詢西藏旅遊與中國其他行程？線上預約與報名流程說明 | CITS國旅環球",
+      "content_hash": "afcee6e98672ac87a8180ef9e8bad4bb95b34dffe8cf5ec9e4aa8771500857f5",
+      "content_length": 456,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/taiwan-tibet/",
+      "title": "2026 台灣人西藏旅遊攻略行程 | CITS國旅環球-西藏權威旅行社",
+      "content_hash": "a7490bc3dd2868d197077f3ebb1291613b823929d0b255b715ca9149c776b3ba",
+      "content_length": 1153,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/malaysia-tibet/",
+      "title": "馬來西亞人去西藏必看！最新旅遊行程攻略與高原貼士 | CITS國旅環球",
+      "content_hash": "348ca09bd672b21ae6c3e910ca853e15003f0ef7d72e6c0abf8feb37b1164aa2",
+      "content_length": 1226,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/hongkong-tibet/",
+      "title": "香港人西藏旅遊攻略指南｜邊防證‧包車‧交通和跟團優勢全解析-CITS",
+      "content_hash": "a4ec721baec29b577f0c737a7b462e977f56cebc78d0aef6f72992ee892cb597",
+      "content_length": 1252,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/global-chinese-tibet/",
+      "title": "全球華人如何去西藏？完整旅遊攻略與行程建議｜CITS國旅環球",
+      "content_hash": "6d270521c569ea54508c4fff0ab6c11d618b29ab8cad31cd403d13ee10508522",
+      "content_length": 1241,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-2026-horseyear/",
+      "title": "2026馬年西藏阿里轉山攻略 | 岡仁波齊朝聖・最佳轉山時間 | CITS",
+      "content_hash": "fe7377c053fd0cf15d0166252cdfc96c325157295dc13f2d54e412b3b91ed85f",
+      "content_length": 672,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/winter-tibet/",
+      "title": "2026 冬遊西藏攻略 | 為什麼冬天更適合去西藏？景觀、費用與裝備全指南",
+      "content_hash": "72fbc73410de8f12c706886a360f3e913979e7e1373bc1627c03cd53825a39ed",
+      "content_length": 391,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-weather/",
+      "title": "西藏天氣與氣溫完整攻略｜行前準備、季節選擇、實用資訊懶人包-CITS國旅環球",
+      "content_hash": "2ce814676836a7d2a79ff3858ae33af8f51510540f44a4dd738e465adb0eff80",
+      "content_length": 541,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-tips/",
+      "title": "西藏旅行注意事項全整理｜高原安全・天氣穿著・文化禁忌｜CITS國旅環球",
+      "content_hash": "cf0c91b2905c3e24a78c5367a39319d36e3da6df6d404fbd639ab3d1c4611475",
+      "content_length": 1170,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/qinghai-tibet-train/",
+      "title": "青藏火車2026攻略：訂票流程、車廂等級全解析 | CITS國旅環球",
+      "content_hash": "6bb2734cbfd9a9e4eb300211ab1a09cd458dd6d40a2e0b603070328935f5850a",
+      "content_length": 290,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e5%b0%88%e5%88%97%e6%98%af%e7%94%9a%e9%ba%bc/",
+      "title": "火車專列是什麼？中國高級觀光列車行程介紹與訂購指南 | CITS國旅環球",
+      "content_hash": "f97f91e894353c2644f8bff8a51ea78777cb8b0749c1460c111206bcfb8c2f9f",
+      "content_length": 159,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/global-chinese-tibet-zh-hans/",
+      "title": "西藏攻略行程｜全球华人西藏旅游资讯与实用建议-CITS国旅环球",
+      "content_hash": "5abac9165a321c59264af59b427c45c5e317af4bd05f3dc529f227a80e01f026",
+      "content_length": 1028,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e8%a5%bf%e8%97%8f%e6%97%85%e8%a1%8c%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9/",
+      "title": "西藏旅行注意事項2026：高原反應、證件準備與安全須知 | CITS國旅環球",
+      "content_hash": "bc8ee1c79aa5710c64361f6742454382113b1ab97338f400d63e3766ec92f407",
+      "content_length": 954,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/china-travel-guide/",
+      "title": "2026 中國旅遊攻略：西藏防高反深度行、川西、雲南 | CITS國旅環球",
+      "content_hash": "98902aa035e63635a61a421c860ec6a92fa279897c54a50fe9f5288a2cd22c50",
+      "content_length": 569,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/malaysia-tibet-travel-guide/",
+      "title": "2026 马来西亚人西藏旅游攻略 | 签证、预算与推荐行程 | CITS 国旅环",
+      "content_hash": "e09db38d546849a73fa9d34690ec28d6e790f216b68f6e2837ed5baae32f9ddb",
+      "content_length": 1119,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/%e9%a6%99%e6%b8%af%e4%ba%ba%e8%a5%bf%e8%97%8f%e6%97%85%e6%b8%b8%e6%94%bb%e7%95%a5/",
+      "title": "香港人西藏旅遊攻略2026：最佳季節、高原反應與入藏須知 | CITS國旅環球",
+      "content_hash": "a2c7f752b3a561c93a66b66e9da3db264baa6350d28100a2e4ce0964950c4203",
+      "content_length": 1043,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/tibet-attractions/",
+      "title": "西藏景點全攻略｜必訪寺廟・聖湖・雪山路線整理｜CITS 國旅環球",
+      "content_hash": "3de6ce222e6b7105e61dc58d4ee54e3c8e1ee8f3bbc411231b5f4c7325f87cc5",
+      "content_length": 1139,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/us-tibet-travel-guide/",
+      "title": "美國人如何去西藏？完整旅遊攻略與行程建議｜CITS國旅環球",
+      "content_hash": "239d841fac91fd4a6fafbcc1ba48e64c1306855255dea5e195a1344f644004a4",
+      "content_length": 724,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/us-to-tibet/",
+      "title": "美國去西藏旅遊攻略｜入藏函申請、行程與費用解析 | CITS 國旅環球",
+      "content_hash": "2b0b7e44bbf6f7a675caffeea0afd6111f38d5752b1a97005e2a8f8decb72c34",
+      "content_length": 381,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/qinghai-gansu-tour/",
+      "title": "青甘大環線攻略｜路線規劃‧茶卡鹽湖‧青海湖‧丹霞-CITS國旅環球",
+      "content_hash": "e9b589206d34a5bd4a80de50a264ca715b11052237a886973a185a158daa3b84",
+      "content_length": 139,
+      "site_section": "category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel_category/tibet-tour/",
+      "title": "西藏旅遊團／西藏跟團行程推薦 | 4-10人精品小團-CITS國旅環球",
+      "content_hash": "b1a720d261dc884642de89a441d430be2b73af0d76a24d39b25a2f48de06dbd3",
+      "content_length": 2890,
+      "site_section": "travel_category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel_category/xinjiang-silkroad-tour/",
+      "title": "新疆/絲路深度行程｜阿勒泰‧南疆帕米爾‧伊犁大環線，半自助遊-CITS國旅環球",
+      "content_hash": "a4db96ca50b5ff41297a5a6c8cbd04bc432ef24eafd461213eb6bc0a9bb756be",
+      "content_length": 2263,
+      "site_section": "travel_category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel_category/yunnan-sichuan-guizhou-tour/",
+      "title": "雲南旅遊團、四川旅遊團、貴州旅遊行推薦、跟團旅遊 | CITS國旅環球",
+      "content_hash": "482cd62092392a63da491676054ea52d39b9a942ab8a2d4ccde46dcb8df36182",
+      "content_length": 1945,
+      "site_section": "travel_category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel_category/beijing-shanghai-tour/",
+      "title": "北京・上海小包團行程推薦 | 專屬導遊・兩人成行 | CITS國旅環球",
+      "content_hash": "a3cd5e5718ad896d67f349e024f14ec947adbe6b4c56f533173d2dd7cd3d2fa1",
+      "content_length": 1870,
+      "site_section": "travel_category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel_category/zhangjiajie-chongqing-tour/",
+      "title": "張家界旅遊團・重慶旅遊行程推薦｜洪崖洞・天門山等景點｜CITS 國旅環球",
+      "content_hash": "e5c05cc1481507f62ea22ef03479d3e4d0297f744f82f575e7ed2a0a05d7e38b",
+      "content_length": 1729,
+      "site_section": "travel_category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel_category/china-tour-top-picks/",
+      "title": "西藏旅遊團與中國旅遊精選行程｜跟團・拚團・包團服務 | CITS 國旅環球",
+      "content_hash": "15a477ef65f210cd54412779a8f80d66ac8d76c682f822b21096679d6883dde1",
+      "content_length": 2488,
+      "site_section": "travel_category",
+      "global_candidate": false,
+      "status": "fetched"
+    },
+    {
+      "url": "https://china2go.com/travel_category/%e4%ba%91%e8%b4%b5%e5%b7%9d/",
+      "title": "云南旅游团、四川旅游团、贵州旅游行推荐、跟团旅游 | CITS国旅环球",
+      "content_hash": "8c2d3c7302a1cc5446b12fd98cb8872b5aebd12fee1fb9ceaddb82f5d273caa5",
+      "content_length": 1786,
+      "site_section": "travel_category",
+      "global_candidate": false,
+      "status": "fetched"
+    }
+  ],
+  "crawl_summary": {
+    "total_traditional_chinese_urls": 127,
+    "fetched": 127,
+    "failed": 0,
+    "global_candidate_pages": 8
+  }
+}

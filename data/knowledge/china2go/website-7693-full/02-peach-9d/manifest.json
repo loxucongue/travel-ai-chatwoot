@@ -1,0 +1,138 @@
+{
+  "number": 2,
+  "kind": "business_branch",
+  "title": "桃花 9日",
+  "directory": "02-peach-9d",
+  "content_chars": 3997,
+  "image_occurrences": 14,
+  "unique_images": 11,
+  "source_page": "https://china2go.com/7693-2/",
+  "images": [
+    {
+      "occurrence_id": 16,
+      "alt": "9日行程總覽",
+      "sha256": "861112f0557c33263934c4da07983003ae70b0c36c4a112c39d9bd9b283cfd95",
+      "mime_type": "image/jpeg",
+      "bytes": 18821,
+      "source": "embedded:data-uri",
+      "local_path": "images/01-9日行程總覽-861112f0.jpg"
+    },
+    {
+      "occurrence_id": 17,
+      "alt": "帕邦喀寺",
+      "sha256": "655786bd36487a23da21a04c647ac5bd51cabbf493b634d886d77d7c51d5210e",
+      "mime_type": "image/jpeg",
+      "bytes": 33076,
+      "source": "embedded:data-uri",
+      "local_path": "images/02-帕邦喀寺-655786bd.jpg"
+    },
+    {
+      "occurrence_id": 18,
+      "alt": "秀巴古堡",
+      "sha256": "d9361e1af2e2664e98db8b86b6e6d11188f45bf0f06fbba8d9c9c4af90280f9b",
+      "mime_type": "image/jpeg",
+      "bytes": 32390,
+      "source": "embedded:data-uri",
+      "local_path": "images/03-秀巴古堡-d9361e1a.jpg"
+    },
+    {
+      "occurrence_id": 19,
+      "alt": "希爾頓客房",
+      "sha256": "27fc8323908d87b0161791a5c98bff7496f3f889975b68b25bac743b78e85a22",
+      "mime_type": "image/jpeg",
+      "bytes": 15852,
+      "source": "embedded:data-uri",
+      "local_path": "images/04-希爾頓客房-27fc8323.jpg"
+    },
+    {
+      "occurrence_id": 20,
+      "alt": "希爾頓製氧機",
+      "sha256": "eb4d3ac9650fdcd2f66c54583d3734b539b9bcce69a833acfacd64004c872e39",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "source": "embedded:data-uri",
+      "local_path": "images/05-希爾頓製氧機-eb4d3ac9.jpg"
+    },
+    {
+      "occurrence_id": 21,
+      "alt": "車輛照片",
+      "sha256": "d0a4cfa762934385bd99a7e6c989e9dd0d32f9470d40caf4513e6d6086db3b01",
+      "mime_type": "image/jpeg",
+      "bytes": 20641,
+      "source": "embedded:data-uri",
+      "local_path": "images/06-車輛照片-d0a4cfa7.jpg"
+    },
+    {
+      "occurrence_id": 22,
+      "alt": "車輛製氧機",
+      "sha256": "c405f7e8de8a531f596b79f04829a58895574cca4556d97a1139ca31e15f85f4",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "source": "embedded:data-uri",
+      "local_path": "images/07-車輛製氧機-c405f7e8.jpg"
+    },
+    {
+      "occurrence_id": 23,
+      "alt": "住宿第二張",
+      "sha256": "7ce24f593d3679dcf3b1dc856cddc614992c015c31fe692bd378a3d35a6fd782",
+      "mime_type": "image/jpeg",
+      "bytes": 15392,
+      "source": "embedded:data-uri",
+      "local_path": "images/08-住宿第二張-7ce24f59.jpg"
+    },
+    {
+      "occurrence_id": 24,
+      "alt": "布達拉宮",
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "source": "embedded:data-uri",
+      "local_path": "images/09-布達拉宮-53456869.jpg"
+    },
+    {
+      "occurrence_id": 25,
+      "alt": "八廓街",
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "source": "embedded:data-uri",
+      "local_path": "images/10-八廓街-dd5e8b6a.jpg"
+    },
+    {
+      "occurrence_id": 26,
+      "alt": "扎基寺財神廟",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "local_path": "images/11-扎基寺財神廟-9f86c7e8.jpg"
+    },
+    {
+      "occurrence_id": 27,
+      "alt": "布達拉宮",
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "source": "embedded:data-uri",
+      "local_path": "images/09-布達拉宮-53456869.jpg"
+    },
+    {
+      "occurrence_id": 28,
+      "alt": "八廓街",
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "source": "embedded:data-uri",
+      "local_path": "images/10-八廓街-dd5e8b6a.jpg"
+    },
+    {
+      "occurrence_id": 29,
+      "alt": "扎基寺財神廟",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "local_path": "images/11-扎基寺財神廟-9f86c7e8.jpg"
+    }
+  ]
+}

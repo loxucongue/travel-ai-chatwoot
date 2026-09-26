@@ -1,0 +1,138 @@
+{
+  "number": 3,
+  "kind": "business_branch",
+  "title": "西藏全覽-10天林芝+拉薩+珠峰",
+  "directory": "03-tibet-overview-10d",
+  "content_chars": 6080,
+  "image_occurrences": 14,
+  "unique_images": 14,
+  "source_page": "https://china2go.com/7693-2/",
+  "images": [
+    {
+      "occurrence_id": 30,
+      "alt": "統回圖-2・10天林芝希爾頓行程",
+      "sha256": "ec2125a509ddcf332796a4070f802f176f9202284a927242cb6da6c48ca079f7",
+      "mime_type": "image/jpeg",
+      "bytes": 20385,
+      "source": "embedded:data-uri",
+      "local_path": "images/01-統回圖-2・10天林芝希爾頓行程-ec2125a5.jpg"
+    },
+    {
+      "occurrence_id": 31,
+      "alt": "統回圖-4・巴松錯",
+      "sha256": "250f92706793f72698b25ecd98b98b9199f74242a9dab1120a187dff12590e64",
+      "mime_type": "image/jpeg",
+      "bytes": 18447,
+      "source": "embedded:data-uri",
+      "local_path": "images/02-統回圖-4・巴松錯-250f9270.jpg"
+    },
+    {
+      "occurrence_id": 32,
+      "alt": "統回圖6・千年古堡",
+      "sha256": "872d08093d4570bf84369ee30631374a434d952b13d48329573e494b3c5ae6ed",
+      "mime_type": "image/jpeg",
+      "bytes": 25456,
+      "source": "embedded:data-uri",
+      "local_path": "images/03-統回圖6・千年古堡-872d0809.jpg"
+    },
+    {
+      "occurrence_id": 33,
+      "alt": "統回圖8・布達拉宮真美",
+      "sha256": "9adb86b7f7e94cdf85c6965ffaf4e0b4e076c1defb35c5f58361c9404a2c5578",
+      "mime_type": "image/jpeg",
+      "bytes": 33599,
+      "source": "embedded:data-uri",
+      "local_path": "images/04-統回圖8・布達拉宮真美-9adb86b7.jpg"
+    },
+    {
+      "occurrence_id": 34,
+      "alt": "統回圖9・財神廟扎基寺",
+      "sha256": "55b7f6e54333c2ef9edbeae3fc8f224f8b9e8bdece103eef4bfbaa9dbd6a6fbe",
+      "mime_type": "image/jpeg",
+      "bytes": 17863,
+      "source": "embedded:data-uri",
+      "local_path": "images/05-統回圖9・財神廟扎基寺-55b7f6e5.jpg"
+    },
+    {
+      "occurrence_id": 35,
+      "alt": "統回圖10・色拉寺",
+      "sha256": "d091fe2f31c3e04c0d11126fc09e4286a7a4ccc0ac0d4857dffbc9f46098db47",
+      "mime_type": "image/jpeg",
+      "bytes": 35731,
+      "source": "embedded:data-uri",
+      "local_path": "images/06-統回圖10・色拉寺-d091fe2f.jpg"
+    },
+    {
+      "occurrence_id": 36,
+      "alt": "統回圖12・希爾頓1",
+      "sha256": "6951fc913a12898a9d307e82f961404e18566ef8d02912be3457fdab4e82d453",
+      "mime_type": "image/jpeg",
+      "bytes": 15840,
+      "source": "embedded:data-uri",
+      "local_path": "images/07-統回圖12・希爾頓1-6951fc91.jpg"
+    },
+    {
+      "occurrence_id": 37,
+      "alt": "統回圖14・希爾頓2",
+      "sha256": "64c8cb33e51d264ecf55d966318a42ccd5524a4171df31066242498fe90be83a",
+      "mime_type": "image/jpeg",
+      "bytes": 11919,
+      "source": "embedded:data-uri",
+      "local_path": "images/08-統回圖14・希爾頓2-64c8cb33.jpg"
+    },
+    {
+      "occurrence_id": 38,
+      "alt": "統回圖16・車車照",
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "source": "embedded:data-uri",
+      "local_path": "images/09-統回圖16・車車照-49024768.jpg"
+    },
+    {
+      "occurrence_id": 39,
+      "alt": "統回圖17・車子製氧機",
+      "sha256": "2f17f3cb927999afab64b3c9fc6f7d52486241e83193b6188f88ca0e48de0080",
+      "mime_type": "image/jpeg",
+      "bytes": 11896,
+      "source": "embedded:data-uri",
+      "local_path": "images/10-統回圖17・車子製氧機-2f17f3cb.jpg"
+    },
+    {
+      "occurrence_id": 40,
+      "alt": "統回圖19・日照金山",
+      "sha256": "e4d9abed22997d94397f138ed71fe5e9377dcff5188561fc027c8df5a44e762e",
+      "mime_type": "image/jpeg",
+      "bytes": 18522,
+      "source": "embedded:data-uri",
+      "local_path": "images/11-統回圖19・日照金山-e4d9abed.jpg"
+    },
+    {
+      "occurrence_id": 41,
+      "alt": "統回圖22・客人魯朗林海照",
+      "sha256": "805f065dcf844c91588d4901167f7610477362b8b9110b02b5d07545fec4b0bd",
+      "mime_type": "image/jpeg",
+      "bytes": 23565,
+      "source": "embedded:data-uri",
+      "local_path": "images/12-統回圖22・客人魯朗林海照-805f065d.jpg"
+    },
+    {
+      "occurrence_id": 42,
+      "alt": "全覽圖後回2・薩迦寺",
+      "sha256": "68894faa85de80bf40449469a699a67d0c322ea1c6d277e8ba1a3b8669396daa",
+      "mime_type": "image/jpeg",
+      "bytes": 31827,
+      "source": "embedded:data-uri",
+      "local_path": "images/13-全覽圖後回2・薩迦寺-68894faa.jpg"
+    },
+    {
+      "occurrence_id": 43,
+      "alt": "全覽圖後回3・拉日鐵路",
+      "sha256": "8155f74c9c85d97aec3780dc56ff97bd19f1f7fd298179e80b5baae4f36bcd54",
+      "mime_type": "image/jpeg",
+      "bytes": 16641,
+      "source": "embedded:data-uri",
+      "local_path": "images/14-全覽圖後回3・拉日鐵路-8155f74c.jpg"
+    }
+  ]
+}

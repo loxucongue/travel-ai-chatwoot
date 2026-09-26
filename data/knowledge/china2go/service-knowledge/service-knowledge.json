@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "knowledge_version": "2026-09-21.health-service-3-device-scope-20260921",
+  "sources": [
+    {
+      "id": "china2go.tibet_insurance",
+      "url": "https://china2go.com/tibet-insurance/",
+      "snapshot_path": "sources/20260912/tibet-insurance.txt",
+      "snapshot_sha256": "ccc6c2b6e550046e3ae6d06ad1da8ceb7006fd87c482191772af02a74f69e1e3",
+      "fetched_at": "2026-09-12T13:16:58.829121+00:00"
+    },
+    {
+      "id": "china2go.altitude_ams",
+      "url": "https://china2go.com/altitude-ams-guide/",
+      "snapshot_path": "sources/20260912/altitude-ams-guide.txt",
+      "snapshot_sha256": "ddfce8927f6801f968d059b9fad83f2b6cf3e013f6de8fc2b24ade2198a316da",
+      "fetched_at": "2026-09-12T13:17:00.867572+00:00"
+    },
+    {
+      "id": "china2go.altitude_guide",
+      "url": "https://china2go.com/tibet-altitude-sickness-guide/",
+      "snapshot_path": "sources/tibet-altitude-sickness-guide.md",
+      "snapshot_sha256": "74695c37f00363004232b21025924b626f624efce44e6138e9621d828163c1b0",
+      "fetched_at": "2026-09-09T08:04:42+00:00"
+    }
+  ],
+  "facts": [
+    {
+      "id": "service.medical_preparedness",
+      "text": "導遊接受高原旅遊急救培訓，包括高原反應識別、緊急處置演練、氧氣使用程序及與醫院協作轉介。導遊隨車搭配專業血氧儀，隨身背包備有血氧儀、氧氣瓶與急救包；這些是途中支援設備，導遊負責協助而不作醫療診斷。",
+      "source_ref": "china2go.tibet_insurance#我們的不同",
+      "source_quote": "像這樣隨身專業的血氧儀，我們CITS國旅的導遊也都會隨車搭配",
+      "review_note": "採用服務配置，不採用風險止步、最快速等效果保證。"
+    },
+    {
+      "id": "service.medical_logistics",
+      "text": "旅途中不舒服可立即告知導遊，由團隊協助聯絡正規診所或醫院、安排交通，必要時由導遊或工作人員陪同，也可協助翻譯與保險理賠流程。",
+      "source_ref": "china2go.tibet_insurance#導遊能提供哪些協助",
+      "source_quote": "協助交通、翻譯與保險理賠流程"
+    },
+    {
+      "id": "service.website_medication_precautions",
+      "text": "紅景天、丹木斯等產品沒有適合所有人的統一用法。應先諮詢醫師或藥師，可帶上行程及目前使用的藥品，依個人狀況確認是否適合及使用方式，不照搬其他旅客的劑量。",
+      "source_ref": "china2go.altitude_ams#Q7",
+      "source_quote": "請勿自行購買或照他人劑量服用",
+      "review_note": "不同文章的紅景天提前天數互相矛盾，相關療效與天數未啟用。"
+    },
+    {
+      "id": "service.medical_support",
+      "text": "我們不會安排所謂的「醫師」隨行，也不會在飯店裡進行不正規的醫療操作。真正需要時，導遊會第一時間協助送到正規醫院或診所，有需要會有我們的導遊或是工作人員陪同。",
+      "source_ref": "china2go.tibet_insurance#隨團醫師"
+    },
+    {
+      "id": "service.altitude_symptoms",
+      "text": "高原反應常見症狀包括頭痛、頭暈、噁心、心跳加速、呼吸急促、睡不安穩等。若症狀明顯加重，例如胸悶、臉唇發紫，請立刻停止活動並告知導遊安排就醫。",
+      "source_ref": "china2go.tibet_insurance#高原反應常見症狀"
+    },
+    {
+      "id": "service.altitude_response",
+      "text": "旅途中有任何不舒服，請立即告知導遊，由團隊協助聯絡正規醫療機構、安排交通，必要時陪同就醫。是否需要吸氧及如何使用，聽從現場醫護人員建議；已有醫囑的藥物依醫囑使用。",
+      "source_ref": "china2go.tibet_insurance#出現高原反應",
+      "review_note": "刪除舊摘錄中導遊代作醫療判斷的歧義，保留已核實的聯絡、交通及陪同協助，個人治療交由醫护人員。"
+    }
+  ],
+  "fixed_answers": [
+    {
+      "id": "tour_doctor_service",
+      "name": "是否有隨團醫師",
+      "status": "active",
+      "priority": 300,
+      "topics": [
+        "medical_service"
+      ],
+        "answer_text": "行程沒有安排隨隊醫師。導遊接受過高原急救訓練，隨車備有血氧儀、氧氣瓶和急救包；旅途中若不舒服，會協助聯絡正規醫院、安排交通，必要時陪同就醫。",
+      "fact_ids": [
+        "service.medical_support",
+        "service.medical_preparedness",
+        "service.medical_logistics"
+      ],
+      "source_ref": "china2go.tibet_insurance#隨團醫師",
+      "positive_examples": [
+        "你們有隨團醫師嗎",
+        "有醫生隨團嗎",
+        "有隨車醫師嗎",
+        "旅途中不舒服有人協助嗎"
+      ],
+      "negative_examples": [
+        "我有心臟病可以去嗎",
+        "高血壓能不能去",
+        "需要吃什麼藥",
+        "可以保證不會高反嗎"
+      ],
+      "block_signals": [
+        "personal_health_suitability",
+        "medical_guarantee_request",
+        "current_conditions"
+      ]
+    },
+    {
+      "id": "altitude_sickness_symptoms",
+      "name": "高原反應常見症狀",
+      "status": "active",
+      "priority": 260,
+      "topics": [
+        "altitude_health"
+      ],
+      "answer_text": "高原反應常見症狀包括頭痛、頭暈、噁心、心跳加速、呼吸急促、睡不安穩等。若症狀明顯加重，例如胸悶、臉唇發紫，請立刻停止活動並告知導遊安排就醫。",
+      "fact_ids": [
+        "service.altitude_symptoms"
+      ],
+      "source_ref": "china2go.tibet_insurance#高原反應常見症狀",
+      "positive_examples": [
+        "高原反應有哪些症狀",
+        "高反有什麼症狀",
+        "高反常見症狀",
+        "怎麼判斷是不是高反"
+      ],
+      "negative_examples": [
+        "我有心臟病可以去嗎",
+        "我適合去西藏嗎",
+        "可以保證不會高反嗎"
+      ],
+      "block_signals": [
+        "personal_health_suitability",
+        "medical_guarantee_request",
+        "current_conditions"
+      ]
+    },
+    {
+      "id": "altitude_sickness_response",
+      "name": "旅途中出現高原反應",
+      "status": "active",
+      "priority": 270,
+      "topics": [
+        "altitude_health"
+      ],
+        "answer_text": "旅途中有任何不舒服，請立即告知導遊。團隊會協助聯絡正規醫療機構、安排交通，必要時陪同就醫；吸氧與用藥按現場醫護人員或既有醫囑處理。",
+      "fact_ids": [
+        "service.altitude_response"
+      ],
+      "source_ref": "china2go.tibet_insurance#出現高原反應",
+      "positive_examples": [
+        "到了西藏高反怎麼辦",
+        "出現高原反應怎麼處理",
+        "旅途中不舒服怎麼辦",
+        "高反了怎麼辦"
+      ],
+      "negative_examples": [
+        "我有心臟病可以去嗎",
+        "要先吃什麼藥",
+        "可以保證不會高反嗎"
+      ],
+      "block_signals": [
+        "personal_health_suitability",
+        "medical_guarantee_request",
+        "current_conditions"
+      ]
+    }
+  ]
+}

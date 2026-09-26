@@ -1,0 +1,1400 @@
+{
+  "schema_version": 1,
+  "package_version": "2026-09-21.business-completion-16",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "route_variant": "peach_11d_2027",
+  "branch": "peach_11d",
+  "name": "2027 林芝桃花＋珠峰 11 日",
+  "selection_title": "桃花+珠峰11日",
+  "selection_aliases": [
+    "桃花+珠峰11日",
+    "桃花加珠峰11日",
+    "11日桃花",
+    "桃花11D",
+    "11D Everest",
+    "11-day peach blossom",
+    "有珠峰的",
+    "包含珠峰"
+  ],
+  "default_entry_message": "想了解2027桃花加珠峰11日行程",
+  "initial_delivery_interval_seconds": 2,
+  "ai_guidance": "本线路包含珠峰段。优先强调从林芝低海拔入藏、桃花秘境、珠峰大本营、绒布旅馆、希尔顿住宿与供氧车辆。网址中的线路、价格、日期、住宿和用车资料可直接准确表达，不添加‘仅供参考’或笼统的‘需确认’；只有客户询问网页未列出的实时余位或特殊安排时，才说明需进一步处理。 公司定位依業務文件為4至10人小團，不將特定報價或9座車型推廣為10人適用；多人同行有優惠，不自行編造折扣金額。",
+  "source": {
+    "url": "https://china2go.com/7693-2/",
+    "snapshot_manifest": "data/knowledge/china2go/website-7693-full/manifest.json",
+    "snapshot_sha256": "fbdb6177105138d923c4f527f135b6e896f18398c0e2e0a14fd3fdab2441b9df",
+    "branch_content": "data/knowledge/china2go/website-7693-full/01-peach-everest-11d/content.md"
+  },
+  "required_slots": [
+    "party_size",
+    "departure_window"
+  ],
+  "knowledge_facts": [
+    {
+      "id": "route.shared.tips",
+      "text": "业务确认的小费建议原文：我们建议导游司机，每人每天30元人民币。团费不包含小费。未明确导游与司机分别还是合计计费，不据此计算整趟总额。",
+      "source_ref": "business-feedback-AI-20260911#tips"
+    },
+    {
+      "id": "route.11.scope",
+      "text": "這條11日行程沒有安排納木錯，重點是桃花秘境與珠峰大本營。已发布行程包含布达拉宫、八廓街、大昭寺、扎基寺、嘎拉桃花村、波密桃花沟、帕邦喀寺和秀巴古堡。其他未列景点不能推测包含。",
+      "source_ref": "business-feedback-AI-20260911#route-11-scope"
+    },
+    {
+      "id": "route.11.applicability",
+      "text": "2027桃花线路出发区间为3月20日至4月10日。",
+      "source_ref": "route.11.departure"
+    },
+    {
+      "id": "route.11.overview",
+      "text": "2027林芝桃花加珠峰11日线路，前段走林芝、波密、拉萨、山南和日喀则，后段前往珠峰大本营，再返回日喀则及拉萨。",
+      "source_ref": "route.11.overview"
+    },
+    {
+      "id": "route.11.days",
+      "text": "11日行程：D1林芝接机及嘎拉桃花村；D2四季拉山口、南迦巴瓦峰、鲁朗林海；D3波堆桃花谷、波密桃花沟、嘎朗湖、嘎朗王宫、鲁朗；D4秀巴古堡、巴松措、拉萨；D5布达拉宫、八廓街、大昭寺；D6扎基寺、色拉寺、拉萨桃花秘境；D7羊卓雍湖、卡若拉冰川、白居寺、日喀则；D8乌拉山口、绒布寺、珠峰大本营；D9嘉措拉山口、萨迦寺、日喀则；D10扎什伦布寺、从日喀则乘拉日铁路返回拉萨；D11拉萨送机或送火车。",
+      "source_ref": "route.11.days"
+    },
+    {
+      "id": "route.11.rongbuk",
+      "text": "11日线路珠峰段升级入住绒布旅馆，房间配有独立卫生间和供氧设备。",
+      "source_ref": "route.11.rongbuk"
+    },
+    {
+      "id": "route.11.departure",
+      "text": "11日线路出发区间为3月20日至4月10日，每周五、六、日、一出发。",
+      "source_ref": "route.11.departure"
+    },
+    {
+      "id": "route.11.price",
+      "text": "11日线路价格为人民币11,480元/人，2人一标间拼住；单住补单房差3,200元。包含入藏函、车、导游、司机、保险、住宿、酒店早餐和门票；不含机票、正餐和小费。",
+      "source_ref": "route.11.price"
+    },
+    {
+      "id": "route.shared.peach_highlights",
+      "text": "桃花线路页面介绍包括嘎拉桃花村、波密桃花沟、帕邦喀寺、秀巴古堡等桃花及沿线景点。",
+      "source_ref": "route.shared.peach_highlights"
+    },
+    {
+      "id": "route.shared.hotel_reference",
+      "text": "9日與11日桃花產品均全程安排供氧住宿。兩條線路的波密地區是希爾頓升級的例外；11日珠峰段同樣是希爾頓升級的例外，入住絨布旅館，客房有供氧設備及獨立衛浴。上述地區以外安排升級國際品牌希爾頓飯店。例外涉及飯店品牌，不是供氧缺失；9日不上珠峰、不安排絨布旅館。",
+      "source_ref": "business-feedback-AI1#hotel"
+    },
+    {
+      "id": "route.shared.vehicle_reference",
+      "text": "目前4至6人配置使用2025年9座VIP航空座椅車，每位旅客有自己的大座位；車內配有緊急醫療氧氣鋼瓶及彌散式供氧設備。",
+      "source_ref": "data/knowledge/china2go/website-7693-full/02-peach-9d/content.md#vehicle + business-feedback-AI1#vehicle"
+    },
+    {
+      "id": "route.shared.landmarks",
+      "text": "桃花线路资料包括布达拉宫、大昭寺、八廓街及扎基寺等拉萨景点。",
+      "source_ref": "route.shared.landmarks"
+    },
+    {
+      "id": "route.shared.spring_weather",
+      "text": "早春林芝白天气温约10℃至18℃；早晚及山口气温可能降至0℃上下，日夜温差大。建议采用三层洋葱式穿法，并准备毛帽、手套、防滑防水鞋和雨具。",
+      "source_ref": "website-current/nyingchi-peach-blossom-festival-guide/content.md#Q6"
+    },
+    {
+      "id": "route.shared.brand_positioning",
+      "text": "China2Go國旅環球專門做4至10人小團、全外賓不拼內賓、零購物的西藏行程。全外賓不拼內賓，即不安排外賓與中國大陸旅客拼同一團。這是公司服務定位，不代表所有人數適用同一報價或同一車型。",
+      "source_ref": "business-feedback-AI1#brand-positioning；公司名稱見website-7693-full/02-peach-9d/content.md:19"
+    },
+    {
+      "id": "route.shared.group_offer",
+      "text": "提供多人同行優惠。",
+      "source_ref": "business-feedback-AI1#group-offer"
+    },
+    {
+      "id": "route.shared.zhaji",
+      "text": "業務確認：桃花行程安排扎基寺，可介紹藏漢交流的寺院文化及當地祈福習俗，不保證求財或祈願效果。",
+      "source_ref": "business-feedback-AI1#zhaji"
+    },
+    {
+      "id": "route.shared.potala_culture",
+      "text": "景點文化背景：布達拉宮曾是達賴喇嘛的冬宮，由白宮與紅宮等建築構成，建於拉薩紅山，體現藏傳佛教與傳統西藏政教歷史；宮內保有壁畫、卷軸及其他歷史文物。這是背景介紹，不是保證每個展廳都開放或行程增設參觀項目。",
+      "source_ref": "https://whc.unesco.org/en/list/707"
+    },
+    {
+      "id": "route.shared.barkhor_culture",
+      "text": "景點文化背景：八廓街位於拉薩老城，環繞大昭寺，是朝聖者繞行的轉經道，也保留藏式民居、手工藝店與茶館等市井生活。順時針轉經是當地習俗。介紹文化與老城生活，不承諾購物安排或宗教效果。",
+      "source_ref": "https://china2go.com/barkhor-street/"
+    }
+  ],
+  "content_sequence": [
+    "advisor_greeting",
+    "brand_positioning",
+    "itinerary_overview",
+    "peach_highlights",
+    "hotel_reference",
+    "rongbuk_reference",
+    "vehicle_reference",
+    "landmarks",
+    "zhaji",
+    "read_check"
+  ],
+  "content_groups": {
+    "tips_reference": {
+      "purpose": "只回答小费建议；计价对象未明确不推算整趟总额",
+      "approved_text": "小費沒有包含在團費裡喔。導遊、司機的小費，我們建議每人每天人民幣30元。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.shared.tips"
+      ],
+      "delivery_mode": "text_only"
+    },
+    "route_scope": {
+      "purpose": "直接回答具体景点是否包含，不复述沿途城市、不承诺增减",
+      "approved_text": "這條11日行程沒有安排納木錯，重點是桃花秘境與珠峰大本營。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.scope"
+      ],
+      "delivery_mode": "text_only"
+    },
+    "altitude_health": {
+      "purpose": "回应高反顾虑和实际安排，不作个人医疗判断",
+      "approved_text": "這條從林芝進藏，後段會到珠峰大本營，車輛和住宿都有供氧安排。高原反應仍因人而異，供氧是途中支援配置。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.overview",
+        "service.safety"
+      ],
+      "delivery_mode": "text_only"
+    },
+    "advisor_greeting": {
+      "purpose": "顾问问候并说明接下来会整理线路重点",
+      "approved_text": "您好～這裡是 China2Go 國旅環球，先把行程重點傳給您看。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "service.requirements"
+      ],
+      "initial_delivery": true,
+      "initial_only": true,
+      "delivery_mode": "text_only"
+    },
+    "brand_positioning": {
+      "purpose": "说明精致小团与纯玩定位",
+      "approved_text": "這裡是 China2Go 國旅環球，專門安排4至10人小團、全外賓不拼內賓、零購物的西藏行程。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.shared.brand_positioning"
+      ],
+      "initial_delivery": true,
+      "initial_only": true,
+      "delivery_mode": "text_only"
+    },
+    "entry_question": {
+      "purpose": "首次进入线路时自然介绍差异",
+      "approved_text": "11日除了林芝桃花，後段還會到珠峰大本營～完整行程圖就在下面，桃花段和珠峰段怎麼接都看得到。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "service.requirements",
+        "route.11.overview"
+      ],
+      "initial_delivery": false
+    },
+    "party_intro_solo": {
+      "purpose": "单人客户回答人数后的承接话术",
+      "approved_text": "一位也可以先了解呀～行程、珠峰住宿和用車都可以先看看，等時間有想法時再接著安排就好。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.overview"
+      ],
+      "initial_delivery": false
+    },
+    "party_intro_small": {
+      "purpose": "2至3人客户回答人数后的承接话术",
+      "approved_text": "2至3位可以先看這條小團行程～珠峰段住宿、桃花亮點和用車都整理好了，慢慢看就可以。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.overview"
+      ],
+      "initial_delivery": false
+    },
+    "party_intro_group": {
+      "purpose": "4人以上客户回答人数后的承接话术",
+      "approved_text": "好喔，這邊先記下同行人數～我們這條主打4至10人的小團，接著把住宿和用車的安排傳給您看。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.overview",
+        "route.shared.vehicle_reference",
+        "route.shared.brand_positioning"
+      ],
+      "initial_delivery": false
+    },
+    "itinerary_overview": {
+      "purpose": "介绍线路范围并发送11日总览图",
+      "approved_text": "這是我們桃花加珠峰11日的行程喔～前段從林芝進藏，除了桃花秘境，後段還會到珠峰大本營，並安排住絨布旅館。每天怎麼走，行程圖裡都有整理好。",
+      "asset_keys": [
+        "routes12-11d-itinerary"
+      ],
+      "evidence_refs": [
+        "route.11.overview",
+        "route.11.days",
+        "route.11.rongbuk"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "assets_then_text"
+    },
+    "rongbuk_reference": {
+      "purpose": "介绍珠峰段住宿",
+      "approved_text": "珠峰段入住絨布旅館，客房有獨立衛浴與供氧設備。這是客房照片。",
+      "asset_keys": [
+        "routes12-rongbuk-room"
+      ],
+      "evidence_refs": [
+        "route.11.rongbuk"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "assets_then_text"
+    },
+    "peach_highlights": {
+      "purpose": "介绍桃花与沿线特色景点",
+      "approved_text": "除了經典景點，這趟也會帶您看看桃花秘境喔～先傳帕邦喀寺和秀巴古堡的照片，賞花之外也能看看沿途的寺院、古堡。",
+      "asset_keys": [
+        "routes12-pabongka",
+        "routes12-xiuba-fort"
+      ],
+      "evidence_refs": [
+        "route.shared.peach_highlights"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "hotel_reference": {
+      "purpose": "介绍住宿与供氧设备",
+      "approved_text": "11日住宿除波密與珠峰段外，其餘安排希爾頓飯店，住宿有供氧設備。先給您看希爾頓的客房與供氧設備。",
+      "asset_keys": [
+        "routes12-hilton-room",
+        "routes12-hilton-oxygen"
+      ],
+      "evidence_refs": [
+        "route.shared.hotel_reference"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "assets_then_text"
+    },
+    "vehicle_reference": {
+      "purpose": "介绍车辆与车载供氧",
+      "approved_text": "4至6人用車安排2025年9座VIP航空座椅車，配有彌散式供氧及緊急醫療氧氣鋼瓶。這是車內與供氧設備的照片。",
+      "asset_keys": [
+        "routes12-vehicle",
+        "routes12-vehicle-oxygen"
+      ],
+      "evidence_refs": [
+        "route.shared.vehicle_reference"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "assets_then_text"
+    },
+    "accommodation_summary": {
+      "purpose": "完成报价格前的住宿介绍节点",
+      "approved_text": "再給您一張不同角度的住宿照片～房間整體和活動空間都看得到，也很方便轉給同行家人一起看。",
+      "asset_keys": [
+        "routes12-hotel-secondary"
+      ],
+      "evidence_refs": [
+        "route.shared.hotel_reference"
+      ],
+      "initial_delivery": false
+    },
+    "landmarks": {
+      "purpose": "介绍拉萨经典景点",
+      "approved_text": "拉薩段也有布達拉宮和八廓街～11日除了桃花和珠峰，經典地標與老城人文也會安排進去。",
+      "asset_keys": [
+        "routes12-potala",
+        "routes12-barkhor"
+      ],
+      "evidence_refs": [
+        "route.shared.landmarks",
+        "route.shared.potala_culture",
+        "route.shared.barkhor_culture"
+      ],
+      "initial_delivery": false
+    },
+    "zhaji": {
+      "purpose": "介绍扎基寺",
+      "approved_text": "行程裡也會去扎基寺～除了布達拉宮和八廓街，還能看看更貼近當地生活的寺院人文。",
+      "asset_keys": [
+        "routes12-zhaji"
+      ],
+      "evidence_refs": [
+        "route.shared.zhaji"
+      ],
+      "initial_delivery": false
+    },
+    "party_question": {
+      "purpose": "人数信息缺失时的单一追问",
+      "approved_text": "這次大概會有幾位一起來呢？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "service.requirements"
+      ],
+      "initial_delivery": false
+    },
+    "departure_question": {
+      "purpose": "出发时间缺失时的单一追问",
+      "approved_text": "您大概想安排在什麼時候呢？還沒決定也沒關係。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "service.requirements",
+        "route.11.departure"
+      ],
+      "initial_delivery": false
+    },
+    "read_check": {
+      "purpose": "客户沉默后的温和确认",
+      "approved_text": "11日最直接的特色是桃花行程之外還會到珠峰，也安排珠峰段住宿；需要時我也可以把完整行程再整理給您。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "service.requirements"
+      ],
+      "initial_delivery": false
+    },
+    "contact_transition": {
+      "purpose": "提供价值后的留资承接",
+      "approved_text": "完整行程和費用我都可以整理給您，之後時間確定或想到其他問題，也能直接接著聊。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "service.requirements"
+      ],
+      "initial_delivery": false
+    },
+    "contact_request": {
+      "purpose": "满足留资前置条件后询问一种联系方式",
+      "approved_text": "完整行程可以傳給您留著慢慢看喔～之後日期有想法，或想到其他問題，都可以接著聊。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "service.requirements"
+      ],
+      "initial_delivery": false
+    },
+    "price_deferral": {
+      "purpose": "客戶插問價格時直接回答，不以介紹順序延後",
+      "approved_text": "11日是人民幣11,480元／人喔，按2人一間計算；如果單住，房差是3,200元。包含入藏函、車、導遊、司機、保險、住宿、早餐和門票；機票、正餐與小費另外計算。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.price"
+      ],
+      "initial_delivery": false
+    },
+    "price_reference": {
+      "purpose": "直接回答每人價格與2人一間的計價條件；4至6人屬於此小團規格，不因客戶說4人就延後報價，不延伸獨立包車或折扣承諾",
+      "approved_text": "11日價格是人民幣11,480元／人，按2人一間計算；單住補房差3,200元。包含入藏函、車、導遊、司機、保險、住宿、早餐與門票，不含機票、正餐及小費。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.price",
+        "route.shared.vehicle_reference",
+        "route.shared.group_offer"
+      ],
+      "initial_delivery": false
+    },
+    "departure_reference": {
+      "purpose": "回答线路出发区间",
+      "approved_text": "桃花加珠峰線出發區間是3月20日至4月10日，每週五、六、日、一出發。日期有想法時再跟我說就好。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.11.departure"
+      ],
+      "initial_delivery": false
+    },
+    "spring_weather": {
+      "purpose": "回答桃花季冷暖与穿衣准备",
+      "approved_text": "會喔，3、4月林芝白天大約10℃～18℃，不過早晚和山區路段可能到0℃上下，日夜溫差明顯。建議用三層洋蔥式穿法，帽子、手套、防水鞋和雨具也一起準備喔。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "route.shared.spring_weather"
+      ],
+      "initial_delivery": false
+    },
+    "altitude_guide": {
+      "purpose": "客户主动索取或留资完成后交付已批准的高原行前PDF；缺文件转人工待办，不假称已发",
+        "approved_text": "這份把兩條行程的海拔差異、供氧安排、用藥準備和途中不舒服時的處理方式整理在一起，出發前照著準備就可以。",
+      "asset_keys": [
+        "china2go-altitude-guide-v1"
+      ],
+      "evidence_refs": [
+        "service.safety"
+      ],
+      "delivery_mode": "text_then_assets"
+    }
+  },
+  "policies": {
+    "entry_group": "entry_question",
+    "intent_groups": {
+      "route_intro": "itinerary_overview",
+      "itinerary": "itinerary_overview",
+      "departure": "departure_reference"
+    },
+    "price_after_group": "hotel_reference",
+    "price_group": "price_reference",
+    "price_deferral_group": "price_deferral",
+    "departure_group": "departure_reference",
+    "party_question_group": "party_question",
+    "departure_question_group": "departure_question",
+    "departure_after_group": "hotel_reference",
+    "contact_ready_after_group": "hotel_reference",
+    "contact_transition_group": "contact_transition",
+    "contact_request_group": "contact_request",
+    "party_intro_groups": {
+      "solo": "party_intro_solo",
+      "small": "party_intro_small",
+      "group": "party_intro_group"
+    },
+    "contact_request_after_stage": "contact_ready",
+    "handoff_topics": [
+      "lead_captured",
+      "explicit_human_request",
+      "complaint",
+      "refund",
+      "contract_dispute",
+      "attachment_requires_vision"
+    ],
+    "post_capture_material_group": "altitude_guide"
+  },
+  "sop": {
+    "name": "桃花＋珠峰11日 · 默认未回复SOP",
+    "description": "线路首次入组后的未回复介绍链路；客户一旦回复，本轮SOP立即结束并交给AI被动回复。",
+    "trigger_type": "manual",
+    "trigger_labels": [],
+    "exit_labels": [
+      "人工接管",
+      "客诉",
+      "拒绝联系",
+      "黑名单",
+      "已留资",
+      "已成交"
+    ],
+    "stop_on_incoming": true,
+    "frequency_hours": 24,
+    "test_conversation_ids": [
+      26
+    ],
+    "nodes": [
+      {
+        "key": "ask_party",
+        "content_group_key": "entry_question",
+        "schedule_type": "relative",
+        "basis": "enrollment",
+        "delay_minutes": 10,
+        "skip_if_slots_present": [
+          "party_size"
+        ],
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "11日除了林芝桃花，後段還會到珠峰大本營～完整行程圖就在下面，桃花段和珠峰段怎麼接都看得到。"
+          }
+        ]
+      },
+      {
+        "key": "itinerary_overview",
+        "content_group_key": "itinerary_overview",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 1,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "這是我們桃花加珠峰11日的行程喔～前段從林芝進藏，除了桃花秘境，後段還會到珠峰大本營，並安排住絨布旅館。每天怎麼走，行程圖裡都有整理好。"
+          },
+          {
+            "key": "image",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-11d-itinerary"
+          }
+        ]
+      },
+      {
+        "key": "rongbuk_reference",
+        "content_group_key": "rongbuk_reference",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "珠峰段入住絨布旅館，客房有獨立衛浴與供氧設備。這是客房照片。"
+          },
+          {
+            "key": "image",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-rongbuk-room"
+          }
+        ]
+      },
+      {
+        "key": "peach_highlights",
+        "content_group_key": "peach_highlights",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "除了經典景點，這趟也會帶您看看桃花秘境喔～先傳帕邦喀寺和秀巴古堡的照片，賞花之外也能看看沿途的寺院、古堡。"
+          },
+          {
+            "key": "pabongka",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-pabongka"
+          },
+          {
+            "key": "xiuba",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-xiuba-fort"
+          }
+        ]
+      },
+      {
+        "key": "hotel_reference",
+        "content_group_key": "hotel_reference",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "11日住宿除波密與珠峰段外，其餘安排希爾頓飯店，住宿有供氧設備。先給您看希爾頓的客房與供氧設備。"
+          },
+          {
+            "key": "room",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-hilton-room"
+          },
+          {
+            "key": "oxygen",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-hilton-oxygen"
+          }
+        ]
+      },
+      {
+        "key": "vehicle_reference",
+        "content_group_key": "vehicle_reference",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "4至6人用車安排2025年9座VIP航空座椅車，配有彌散式供氧及緊急醫療氧氣鋼瓶。這是車內與供氧設備的照片。"
+          },
+          {
+            "key": "vehicle",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-vehicle"
+          },
+          {
+            "key": "oxygen",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-vehicle-oxygen"
+          }
+        ]
+      },
+      {
+        "key": "accommodation_summary",
+        "content_group_key": "accommodation_summary",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "再給您一張不同角度的住宿照片～房間整體和活動空間都看得到，也很方便轉給同行家人一起看。"
+          },
+          {
+            "key": "image",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-hotel-secondary"
+          }
+        ]
+      },
+      {
+        "key": "departure_question",
+        "content_group_key": "departure_question",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "skip_if_slots_present": [
+          "departure_window"
+        ],
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "您大概想安排在什麼時候呢？還沒決定也沒關係。"
+          }
+        ]
+      },
+      {
+        "key": "landmarks",
+        "content_group_key": "landmarks",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 720,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "拉薩段也有布達拉宮和八廓街～11日除了桃花和珠峰，經典地標與老城人文也會安排進去。"
+          },
+          {
+            "key": "potala",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-potala"
+          },
+          {
+            "key": "barkhor",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-barkhor"
+          }
+        ]
+      },
+      {
+        "key": "zhaji",
+        "content_group_key": "zhaji",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "skip_if_materials_provided": true,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "行程裡也會去扎基寺～除了布達拉宮和八廓街，還能看看更貼近當地生活的寺院人文。"
+          },
+          {
+            "key": "image",
+            "content_type": "image",
+            "content": "",
+            "asset_key": "routes12-zhaji"
+          }
+        ]
+      },
+      {
+        "key": "read_check",
+        "content_group_key": "read_check",
+        "schedule_type": "relative",
+        "basis": "previous_node",
+        "delay_minutes": 2,
+        "messages": [
+          {
+            "key": "text",
+            "content_type": "text",
+            "content": "11日最直接的特色是桃花行程之外還會到珠峰，也安排珠峰段住宿；需要時我也可以把完整行程再整理給您。"
+          }
+        ]
+      }
+    ]
+  },
+  "fixed_answers": [
+    {
+      "id": "namtso_scope",
+      "name": "是否包含納木錯",
+      "status": "active",
+      "priority": 180,
+      "topics": [
+        "destination_check"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "route_scope",
+      "answer_text": "這條11日行程沒有安排納木錯，重點是桃花秘境與珠峰大本營。",
+      "fact_ids": [
+        "route.11.scope"
+      ],
+      "asset_ids": [],
+      "source_ref": "business-feedback-AI-20260911#namtso",
+      "answer_origin": "operator_approved",
+      "positive_examples": [
+        "有去納木錯嗎",
+        "有納木錯嗎",
+        "包含納木錯嗎",
+        "有去纳木错吗"
+      ],
+      "negative_examples": [
+        "加進",
+        "改成",
+        "客製",
+        "客制",
+        "只去"
+      ]
+    },
+    {
+      "id": "route_overview",
+      "name": "行程怎麼走",
+      "status": "pending_review",
+      "priority": 130,
+      "topics": [
+        "route_intro",
+        "itinerary"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "itinerary_overview",
+      "answer_text": "這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～\n而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！",
+      "fact_ids": [
+        "route.11.overview",
+        "route.11.days"
+      ],
+      "asset_ids": [
+        "routes12-11d-itinerary"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L44-L45",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "11日行程怎麼走",
+        "想看11日行程",
+        "每天會去哪裡"
+      ],
+      "negative_examples": [
+        "多少錢",
+        "住哪裡",
+        "用什麼車"
+      ]
+    },
+    {
+      "id": "peach_highlights",
+      "name": "桃花與沿線亮點",
+      "status": "active",
+      "priority": 120,
+      "topics": [
+        "highlights"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "peach_highlights",
+      "answer_text": "這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程\n讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色",
+      "fact_ids": [
+        "route.shared.peach_highlights"
+      ],
+      "asset_ids": [
+        "routes12-pabongka",
+        "routes12-xiuba-fort"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L59-L63",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "有什麼亮點",
+        "桃花景點有哪些",
+        "除了桃花還看什麼"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "hotel",
+      "name": "飯店與房內設備",
+      "status": "active",
+      "priority": 120,
+      "topics": [
+        "hotel"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "hotel_reference",
+      "answer_text": "以及除了地區條件有限以外，我們全面升級都住國際品牌希爾頓飯店哦！",
+      "fact_ids": [
+        "route.shared.hotel_reference"
+      ],
+      "asset_ids": [
+        "routes12-hilton-room",
+        "routes12-hilton-oxygen"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L71",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "住什麼飯店",
+        "住宿環境怎麼樣",
+        "房間有供氧嗎",
+        "可以看房間照片嗎"
+      ],
+      "negative_examples": [
+        "珠峰住哪裡",
+        "絨布旅館"
+      ]
+    },
+    {
+      "id": "vehicle",
+      "name": "用車與車內設備",
+      "status": "pending_review",
+      "priority": 120,
+      "topics": [
+        "vehicle"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "vehicle_reference",
+      "answer_text": "因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空母車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕\n然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】",
+      "fact_ids": [
+        "route.shared.vehicle_reference"
+      ],
+      "asset_ids": [
+        "routes12-vehicle",
+        "routes12-vehicle-oxygen"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L79-L85",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "坐什麼車",
+        "車上有氧氣嗎",
+        "用車舒服嗎",
+        "可以看車子照片嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "price",
+      "name": "費用與包含項目",
+      "status": "active",
+      "priority": 150,
+      "topics": [
+        "price"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "price_reference",
+      "answer_text": "【桃花＋珠峰11日】\n出發：3/20～4/10，每週五、六、日、一\n4至6人小團：人民幣11,480元／人，2人一間；單住補3,200元。\n包含：入藏函、車、司機、導遊、保險、住宿、門票、飯店早餐。\n不含：機票、正餐、小費。",
+      "fact_ids": [
+        "route.11.price"
+      ],
+      "asset_ids": [],
+      "source_ref": "business-feedback-AI-20260911#price",
+      "answer_origin": "operator_approved",
+      "positive_examples": [
+        "一個人多少錢",
+        "團費多少",
+        "價格包含什麼",
+        "單房差多少",
+        "這個行程多少錢",
+        "11日多少錢"
+      ],
+      "negative_examples": [
+        "還有名額嗎",
+        "還有位子嗎",
+        "今天還有位子嗎",
+        "現在幾個人報名",
+        "一定會出團嗎"
+      ]
+    },
+    {
+      "id": "departure",
+      "name": "出發日期",
+      "status": "active",
+      "priority": 130,
+      "topics": [
+        "departure"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "departure_reference",
+      "answer_text": "出發時間：3/20-4/10（每週五、六、日、一發團）",
+      "fact_ids": [
+        "route.11.departure"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L183",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "幾月出發",
+        "有哪些出發日",
+        "三月底可以嗎",
+        "四月有團嗎"
+      ],
+      "negative_examples": [
+        "還有名額嗎",
+        "還有位子嗎",
+        "今天還有位子嗎",
+        "現在幾個人報名",
+        "一定會出團嗎"
+      ]
+    },
+    {
+      "id": "spring_weather",
+      "name": "桃花季冷暖與穿衣",
+      "status": "active",
+      "priority": 160,
+      "topics": [
+        "weather"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "spring_weather",
+      "answer_text": "早晚會冷喔～林芝早春白天約10～18°C，早晚和山口可能降到0°C左右。建議洋蔥式穿搭，帶保暖中層、羽絨衣和防風防水外套，也記得毛帽、手套與防滑防水鞋。",
+      "fact_ids": [
+        "route.shared.spring_weather"
+      ],
+      "asset_ids": [],
+      "source_ref": "business-feedback-20260912#weather-from-official-Q6",
+      "answer_origin": "operator_approved",
+      "positive_examples": [
+        "會不會冷",
+        "冷不冷",
+        "天氣會冷嗎",
+        "三月底冷嗎",
+        "四月冷嗎",
+        "那時候冷嗎",
+        "要穿什麼",
+        "衣服怎麼帶",
+        "要帶羽絨服嗎",
+        "溫度大概多少"
+      ],
+      "negative_examples": [
+        "今天天氣",
+        "現在幾度",
+        "即時天氣",
+        "近期天氣",
+        "明天天氣"
+      ]
+    },
+    {
+      "id": "documents",
+      "name": "入藏函與資料",
+      "status": "active",
+      "priority": 140,
+      "topics": [
+        "documents"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "price_reference",
+      "answer_text": "包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票",
+      "fact_ids": [
+        "route.11.price"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L186",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "入藏函有包含嗎",
+        "需要辦什麼證件",
+        "台灣旅客要準備什麼"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "solo_guest",
+      "name": "一位旅客",
+      "status": "active",
+      "priority": 120,
+      "topics": [
+        "party_size"
+      ],
+      "party_size_min": 1,
+      "party_size_max": 1,
+      "content_group_key": "party_intro_solo",
+      "answer_text": "您好~我們很多自己一人的旅客，非常歡迎您！，先給您看一下我們的行程",
+      "fact_ids": [
+        "route.11.overview"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L30",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "我一個人可以嗎",
+        "我一個人可以參加",
+        "只有一位能參加嗎",
+        "一人能報名嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "small_party",
+      "name": "2至3位旅客",
+      "status": "active",
+      "priority": 120,
+      "topics": [
+        "party_size"
+      ],
+      "party_size_min": 2,
+      "party_size_max": 3,
+      "content_group_key": "party_intro_small",
+      "answer_text": "2至3位可以先看這條小團行程～珠峰段住宿、桃花亮點和用車都整理好了，慢慢看就可以。",
+      "fact_ids": [
+        "route.shared.brand_positioning"
+      ],
+      "asset_ids": [],
+      "source_ref": "business-feedback-AI1#brand-positioning",
+      "answer_origin": "operator_approved",
+      "positive_examples": [
+        "我們兩位可以嗎",
+        "三個人能參加嗎",
+        "2到3人怎麼安排"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "group_party",
+      "name": "4至7位旅客",
+      "status": "active",
+      "priority": 125,
+      "topics": [
+        "party_size"
+      ],
+      "party_size_min": 4,
+      "party_size_max": 7,
+      "content_group_key": "party_intro_group",
+      "answer_text": "好喔，這邊先記下同行人數～我們這條主打4至10人的小團，接著把住宿和用車的安排傳給您看。",
+      "fact_ids": [
+        "route.shared.brand_positioning"
+      ],
+      "asset_ids": [],
+      "source_ref": "business-feedback-AI1#brand-positioning",
+      "answer_origin": "operator_approved",
+      "positive_examples": [
+        "我們4位可以嗎",
+        "我們6個人怎麼安排",
+        "7位可以參加嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "lhasa_landmarks",
+      "name": "布達拉宮與八廓街",
+      "status": "active",
+      "priority": 145,
+      "topics": [
+        "highlights"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "landmarks",
+      "answer_text": "給您介紹一下裡面的行程．除了桃花秘境之外，我們也安排了經典的布達拉宮與大昭寺八廓街～",
+      "fact_ids": [
+        "route.shared.landmarks"
+      ],
+      "asset_ids": [
+        "routes12-potala",
+        "routes12-barkhor"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L107",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "有布達拉宮嗎",
+        "會去八廓街嗎",
+        "拉薩有哪些景點"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "zhaji_temple",
+      "name": "扎基寺",
+      "status": "active",
+      "priority": 150,
+      "topics": [
+        "highlights"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "zhaji",
+      "answer_text": "以及我們家因為走的是純玩小團之深度行程，所以是親自帶大家去財神廟-扎基寺參觀！\n這裡是西藏最靈驗，香火非常鼎盛的廟喔！",
+      "fact_ids": [
+        "route.shared.landmarks"
+      ],
+      "asset_ids": [
+        "routes12-zhaji"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L113-L117",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "會去扎基寺嗎",
+        "有財神廟嗎",
+        "還有哪些寺廟"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "more_accommodation",
+      "name": "其他住宿照片",
+      "status": "active",
+      "priority": 155,
+      "topics": [
+        "hotel"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "accommodation_summary",
+      "answer_text": "在西藏這樣的高原環境，住宿與車配備好！真的很重要",
+      "fact_ids": [
+        "route.shared.hotel_reference"
+      ],
+      "asset_ids": [
+        "routes12-hotel-secondary"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L91",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "還有其他住宿照片嗎",
+        "可以再看住宿照片嗎",
+        "想多看一張房間"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "no_shopping_contract_claim",
+      "name": "無購物合約承諾",
+      "status": "pending_review",
+      "priority": 200,
+      "topics": [
+        "other"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "contact_transition",
+      "answer_text": "還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！",
+      "fact_ids": [
+        "service.requirements"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L97",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "有購物嗎",
+        "會帶去購物站嗎",
+        "無購物會寫進合約嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "senior_health_document",
+      "name": "65歲以上健康文件",
+      "status": "pending_review",
+      "priority": 180,
+      "topics": [
+        "documents",
+        "altitude"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "contact_transition",
+      "answer_text": "是這樣的～目前用台胞證進入西藏的旅客，65歲以上都是要辦理健康證明，不過放心～我到時候幫您備註下～健康證明的格式還有申請規定，我再發給您！也都會依照時間提醒您辦理",
+      "fact_ids": [
+        "service.requirements"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L139",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "65歲以上要健康證明嗎",
+        "長輩去西藏要準備什麼",
+        "老人家可以辦入藏函嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "age_75_entry_claim",
+      "name": "75歲以上入藏函限制",
+      "status": "pending_review",
+      "priority": 190,
+      "topics": [
+        "documents"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "contact_transition",
+      "answer_text": "目前75歲以上長輩申請入藏函是申請不下來的",
+      "fact_ids": [
+        "service.requirements"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L139",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "75歲可以去嗎",
+        "75歲能辦入藏函嗎",
+        "老人有年齡限制嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "young_child_suitability",
+      "name": "5歲以下孩童",
+      "status": "pending_review",
+      "priority": 180,
+      "topics": [
+        "altitude"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "contact_transition",
+      "answer_text": "我們通常是建議孩子5歲以上，能準確表達自己的身體狀況才會建議前往喔！",
+      "fact_ids": [
+        "service.requirements"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L141",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "5歲小孩可以去嗎",
+        "幼兒適合西藏嗎",
+        "小朋友有年齡限制嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "ticket_refund_claim",
+      "name": "優惠門票退費",
+      "status": "pending_review",
+      "priority": 170,
+      "topics": [
+        "other"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "contact_transition",
+      "answer_text": "只要符合景區當下政策我們都會退優惠門票喔！",
+      "fact_ids": [
+        "service.requirements"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L137",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "老人票會退嗎",
+        "小孩門票有優惠嗎",
+        "優惠門票怎麼退"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "hotel_oxygen_concentration_claim",
+      "name": "飯店供氧濃度",
+      "status": "pending_review",
+      "priority": 180,
+      "topics": [
+        "hotel",
+        "altitude"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "hotel_reference",
+      "answer_text": "希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！",
+      "fact_ids": [
+        "route.shared.hotel_reference"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L71",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "飯店氧氣濃度多少",
+        "飯店全天供氧嗎",
+        "房間供氧幾小時"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "mobile_oxygen_cabin_claim",
+      "name": "車內移動氧艙",
+      "status": "pending_review",
+      "priority": 180,
+      "topics": [
+        "vehicle",
+        "altitude"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "vehicle_reference",
+      "answer_text": "然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】",
+      "fact_ids": [
+        "route.shared.vehicle_reference"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L85",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "車上是移動氧艙嗎",
+        "車內氧氣有什麼效果",
+        "車上有醫療氧氣嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "vehicle_model_year_claim",
+      "name": "車輛年份",
+      "status": "pending_review",
+      "priority": 170,
+      "topics": [
+        "vehicle"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "vehicle_reference",
+      "answer_text": "車型則是2025年最新車，用VIP航空母車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕",
+      "fact_ids": [
+        "route.shared.vehicle_reference"
+      ],
+      "asset_ids": [],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L79",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "是2025新車嗎",
+        "車子是哪一年的",
+        "一定是最新車嗎"
+      ],
+      "negative_examples": []
+    },
+    {
+      "id": "rongbuk_hotel",
+      "name": "珠峰絨布旅館",
+      "status": "pending_review",
+      "priority": 160,
+      "topics": [
+        "rongbuk",
+        "hotel"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "rongbuk_reference",
+      "answer_text": "而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！\n這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！",
+      "fact_ids": [
+        "route.11.rongbuk"
+      ],
+      "asset_ids": [
+        "routes12-rongbuk-room"
+      ],
+      "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L49-L55",
+      "answer_origin": "website_verbatim",
+      "positive_examples": [
+        "珠峰住哪裡",
+        "絨布旅館有衛浴嗎",
+        "珠峰晚上住帳篷嗎"
+      ],
+      "negative_examples": []
+    }
+  ],
+  "match_keywords": [
+    "11天行程",
+    "十一天行程",
+    "珠峰",
+    "珠峰大本營",
+    "珠峰大本营",
+    "絨布旅館",
+    "绒布旅馆"
+  ]
+}

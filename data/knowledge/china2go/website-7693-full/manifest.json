@@ -1,0 +1,1753 @@
+{
+  "schema_version": 1,
+  "source_page": "https://china2go.com/7693-2/",
+  "wordpress_post_id": 7693,
+  "archived_at": "2026-08-29T15:05:49.221154+00:00",
+  "password_stored": false,
+  "raw_html_sha256": "fbdb6177105138d923c4f527f135b6e896f18398c0e2e0a14fd3fdab2441b9df",
+  "content_counts": {
+    "html_chars": 3843694,
+    "markdown_chars": 44748,
+    "details_sections": 21,
+    "business_branches": 6,
+    "image_occurrences": 126,
+    "unique_images": 59
+  },
+  "categories": [
+    {
+      "number": 1,
+      "kind": "business_branch",
+      "title": "桃花＋珠峰 11日",
+      "directory": "01-peach-everest-11d",
+      "content_chars": 4408,
+      "image_occurrences": 15,
+      "unique_images": 12
+    },
+    {
+      "number": 2,
+      "kind": "business_branch",
+      "title": "桃花 9日",
+      "directory": "02-peach-9d",
+      "content_chars": 3997,
+      "image_occurrences": 14,
+      "unique_images": 11
+    },
+    {
+      "number": 3,
+      "kind": "business_branch",
+      "title": "西藏全覽-10天林芝+拉薩+珠峰",
+      "directory": "03-tibet-overview-10d",
+      "content_chars": 6080,
+      "image_occurrences": 14,
+      "unique_images": 14
+    },
+    {
+      "number": 4,
+      "kind": "business_branch",
+      "title": "其他時間・上珠峰",
+      "directory": "04-other-time-everest",
+      "content_chars": 11288,
+      "image_occurrences": 30,
+      "unique_images": 25
+    },
+    {
+      "number": 5,
+      "kind": "business_branch",
+      "title": "其他時間・不上珠峰",
+      "directory": "05-other-time-no-everest",
+      "content_chars": 12626,
+      "image_occurrences": 34,
+      "unique_images": 28
+    },
+    {
+      "number": 6,
+      "kind": "business_branch",
+      "title": "自己包團或其他地點",
+      "directory": "06-private-group-or-other",
+      "content_chars": 4858,
+      "image_occurrences": 19,
+      "unique_images": 17
+    }
+  ],
+  "unique_assets": [
+    {
+      "sha256": "7ced011358924afd384ed6eca2c33df601b94ec52f0de993cbc0d6fec9349725",
+      "mime_type": "image/jpeg",
+      "bytes": 19941,
+      "local_path": "source/images/asset-7ced011358924afd.jpg",
+      "first_alt": "11日行程圖"
+    },
+    {
+      "sha256": "c1ef7277df247908e2b1173e3d874088f3fcf393a2eeb9b9db6a1596499f4913",
+      "mime_type": "image/jpeg",
+      "bytes": 15885,
+      "local_path": "source/images/asset-c1ef7277df247908.jpg",
+      "first_alt": "絨布旅館"
+    },
+    {
+      "sha256": "655786bd36487a23da21a04c647ac5bd51cabbf493b634d886d77d7c51d5210e",
+      "mime_type": "image/jpeg",
+      "bytes": 33076,
+      "local_path": "source/images/asset-655786bd36487a23.jpg",
+      "first_alt": "帕邦喀寺"
+    },
+    {
+      "sha256": "d9361e1af2e2664e98db8b86b6e6d11188f45bf0f06fbba8d9c9c4af90280f9b",
+      "mime_type": "image/jpeg",
+      "bytes": 32390,
+      "local_path": "source/images/asset-d9361e1af2e2664e.jpg",
+      "first_alt": "秀巴古堡"
+    },
+    {
+      "sha256": "27fc8323908d87b0161791a5c98bff7496f3f889975b68b25bac743b78e85a22",
+      "mime_type": "image/jpeg",
+      "bytes": 15852,
+      "local_path": "source/images/asset-27fc8323908d87b0.jpg",
+      "first_alt": "希爾頓客房"
+    },
+    {
+      "sha256": "eb4d3ac9650fdcd2f66c54583d3734b539b9bcce69a833acfacd64004c872e39",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "local_path": "source/images/asset-eb4d3ac9650fdcd2.jpg",
+      "first_alt": "希爾頓製氧機"
+    },
+    {
+      "sha256": "d0a4cfa762934385bd99a7e6c989e9dd0d32f9470d40caf4513e6d6086db3b01",
+      "mime_type": "image/jpeg",
+      "bytes": 20641,
+      "local_path": "source/images/asset-d0a4cfa762934385.jpg",
+      "first_alt": "車輛照片"
+    },
+    {
+      "sha256": "c405f7e8de8a531f596b79f04829a58895574cca4556d97a1139ca31e15f85f4",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "local_path": "source/images/asset-c405f7e8de8a531f.jpg",
+      "first_alt": "車輛製氧機"
+    },
+    {
+      "sha256": "7ce24f593d3679dcf3b1dc856cddc614992c015c31fe692bd378a3d35a6fd782",
+      "mime_type": "image/jpeg",
+      "bytes": 15392,
+      "local_path": "source/images/asset-7ce24f593d3679dc.jpg",
+      "first_alt": "住宿第二張"
+    },
+    {
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "local_path": "source/images/asset-53456869767fd20f.jpg",
+      "first_alt": "布達拉宮"
+    },
+    {
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "local_path": "source/images/asset-dd5e8b6a60a56c0d.jpg",
+      "first_alt": "八廓街"
+    },
+    {
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "local_path": "source/images/asset-9f86c7e88e47c96e.jpg",
+      "first_alt": "扎基寺財神廟"
+    },
+    {
+      "sha256": "861112f0557c33263934c4da07983003ae70b0c36c4a112c39d9bd9b283cfd95",
+      "mime_type": "image/jpeg",
+      "bytes": 18821,
+      "local_path": "source/images/asset-861112f0557c3326.jpg",
+      "first_alt": "9日行程總覽"
+    },
+    {
+      "sha256": "ec2125a509ddcf332796a4070f802f176f9202284a927242cb6da6c48ca079f7",
+      "mime_type": "image/jpeg",
+      "bytes": 20385,
+      "local_path": "source/images/asset-ec2125a509ddcf33.jpg",
+      "first_alt": "統回圖-2・10天林芝希爾頓行程"
+    },
+    {
+      "sha256": "250f92706793f72698b25ecd98b98b9199f74242a9dab1120a187dff12590e64",
+      "mime_type": "image/jpeg",
+      "bytes": 18447,
+      "local_path": "source/images/asset-250f92706793f726.jpg",
+      "first_alt": "統回圖-4・巴松錯"
+    },
+    {
+      "sha256": "872d08093d4570bf84369ee30631374a434d952b13d48329573e494b3c5ae6ed",
+      "mime_type": "image/jpeg",
+      "bytes": 25456,
+      "local_path": "source/images/asset-872d08093d4570bf.jpg",
+      "first_alt": "統回圖6・千年古堡"
+    },
+    {
+      "sha256": "9adb86b7f7e94cdf85c6965ffaf4e0b4e076c1defb35c5f58361c9404a2c5578",
+      "mime_type": "image/jpeg",
+      "bytes": 33599,
+      "local_path": "source/images/asset-9adb86b7f7e94cdf.jpg",
+      "first_alt": "統回圖8・布達拉宮真美"
+    },
+    {
+      "sha256": "55b7f6e54333c2ef9edbeae3fc8f224f8b9e8bdece103eef4bfbaa9dbd6a6fbe",
+      "mime_type": "image/jpeg",
+      "bytes": 17863,
+      "local_path": "source/images/asset-55b7f6e54333c2ef.jpg",
+      "first_alt": "統回圖9・財神廟扎基寺"
+    },
+    {
+      "sha256": "d091fe2f31c3e04c0d11126fc09e4286a7a4ccc0ac0d4857dffbc9f46098db47",
+      "mime_type": "image/jpeg",
+      "bytes": 35731,
+      "local_path": "source/images/asset-d091fe2f31c3e04c.jpg",
+      "first_alt": "統回圖10・色拉寺"
+    },
+    {
+      "sha256": "6951fc913a12898a9d307e82f961404e18566ef8d02912be3457fdab4e82d453",
+      "mime_type": "image/jpeg",
+      "bytes": 15840,
+      "local_path": "source/images/asset-6951fc913a12898a.jpg",
+      "first_alt": "統回圖12・希爾頓1"
+    },
+    {
+      "sha256": "64c8cb33e51d264ecf55d966318a42ccd5524a4171df31066242498fe90be83a",
+      "mime_type": "image/jpeg",
+      "bytes": 11919,
+      "local_path": "source/images/asset-64c8cb33e51d264e.jpg",
+      "first_alt": "統回圖14・希爾頓2"
+    },
+    {
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "local_path": "source/images/asset-49024768024b8ab2.jpg",
+      "first_alt": "統回圖16・車車照"
+    },
+    {
+      "sha256": "2f17f3cb927999afab64b3c9fc6f7d52486241e83193b6188f88ca0e48de0080",
+      "mime_type": "image/jpeg",
+      "bytes": 11896,
+      "local_path": "source/images/asset-2f17f3cb927999af.jpg",
+      "first_alt": "統回圖17・車子製氧機"
+    },
+    {
+      "sha256": "e4d9abed22997d94397f138ed71fe5e9377dcff5188561fc027c8df5a44e762e",
+      "mime_type": "image/jpeg",
+      "bytes": 18522,
+      "local_path": "source/images/asset-e4d9abed22997d94.jpg",
+      "first_alt": "統回圖19・日照金山"
+    },
+    {
+      "sha256": "805f065dcf844c91588d4901167f7610477362b8b9110b02b5d07545fec4b0bd",
+      "mime_type": "image/jpeg",
+      "bytes": 23565,
+      "local_path": "source/images/asset-805f065dcf844c91.jpg",
+      "first_alt": "統回圖22・客人魯朗林海照"
+    },
+    {
+      "sha256": "68894faa85de80bf40449469a699a67d0c322ea1c6d277e8ba1a3b8669396daa",
+      "mime_type": "image/jpeg",
+      "bytes": 31827,
+      "local_path": "source/images/asset-68894faa85de80bf.jpg",
+      "first_alt": "全覽圖後回2・薩迦寺"
+    },
+    {
+      "sha256": "8155f74c9c85d97aec3780dc56ff97bd19f1f7fd298179e80b5baae4f36bcd54",
+      "mime_type": "image/jpeg",
+      "bytes": 16641,
+      "local_path": "source/images/asset-8155f74c9c85d97a.jpg",
+      "first_alt": "全覽圖後回3・拉日鐵路"
+    },
+    {
+      "sha256": "ddb804883a486fb5d358e88857b9619fd9ab06fe652ad84be62886021eb6ac4f",
+      "mime_type": "image/jpeg",
+      "bytes": 22155,
+      "local_path": "source/images/asset-ddb804883a486fb5.jpg",
+      "first_alt": "冬遊西藏地圖"
+    },
+    {
+      "sha256": "934c6b43f3c097fd53838ec8dbdd7cdb4c7acac5587f96b0c296272e4561f159",
+      "mime_type": "image/jpeg",
+      "bytes": 33842,
+      "local_path": "source/images/asset-934c6b43f3c097fd.jpg",
+      "first_alt": "占堆拿旗子照"
+    },
+    {
+      "sha256": "0cac9807612af09c4cc9c8c354b299b5a794c7d9ae87366593cc5d9f2b655dd8",
+      "mime_type": "image/jpeg",
+      "bytes": 13774,
+      "local_path": "source/images/asset-0cac9807612af09c.jpg",
+      "first_alt": "然烏湖無人"
+    },
+    {
+      "sha256": "6c76a5e1669b5cf8e1e43a8aa0a0e7b8c7b97ac428959318f104fe7c97baa94d",
+      "mime_type": "image/jpeg",
+      "bytes": 18525,
+      "local_path": "source/images/asset-6c76a5e1669b5cf8.jpg",
+      "first_alt": "來古藍冰"
+    },
+    {
+      "sha256": "e35986fbc4427e7c794bdbaf2669068ebf435972e1af5452c43b45b6f04b53f0",
+      "mime_type": "image/jpeg",
+      "bytes": 39101,
+      "local_path": "source/images/asset-e35986fbc4427e7c.jpg",
+      "first_alt": "恰央措"
+    },
+    {
+      "sha256": "956456e64f4d8bf874208e6f804c13da6c63fc039890aceb4f3c0cf2b58fc59f",
+      "mime_type": "image/jpeg",
+      "bytes": 21431,
+      "local_path": "source/images/asset-956456e64f4d8bf8.jpg",
+      "first_alt": "旅客上恰央措"
+    },
+    {
+      "sha256": "04d54c7a11698f37a4133aef9b9df560efb64365105aa427efca129c4389d72f",
+      "mime_type": "image/jpeg",
+      "bytes": 30084,
+      "local_path": "source/images/asset-04d54c7a11698f37.jpg",
+      "first_alt": "旅客上恰央措躺著"
+    },
+    {
+      "sha256": "da79d8c7c65adaf86bae96633c711af77a3a79324f6eed1043976a8b6be2a231",
+      "mime_type": "image/jpeg",
+      "bytes": 12126,
+      "local_path": "source/images/asset-da79d8c7c65adaf8.jpg",
+      "first_alt": "車上的彌散氧氣瓶"
+    },
+    {
+      "sha256": "88ed5c0a5c381cdfbdd59c0fc25a2bbac8f6de04eea54f881a0f479adb5a56bf",
+      "mime_type": "image/jpeg",
+      "bytes": 15314,
+      "local_path": "source/images/asset-88ed5c0a5c381cdf.jpg",
+      "first_alt": "希爾頓1"
+    },
+    {
+      "sha256": "8c2a234fe8c4e563878a36dda98f5a71b5bf95b64bceb91e41105b191e396f37",
+      "mime_type": "image/jpeg",
+      "bytes": 11917,
+      "local_path": "source/images/asset-8c2a234fe8c4e563.jpg",
+      "first_alt": "希爾頓2"
+    },
+    {
+      "sha256": "365bc554443d2a5e1b3303ddc34fc74c4bd1f4b212caff3161d29d185a250674",
+      "mime_type": "image/jpeg",
+      "bytes": 35265,
+      "local_path": "source/images/asset-365bc554443d2a5e.jpg",
+      "first_alt": "冬-布達拉宮"
+    },
+    {
+      "sha256": "ab00cc0bf4929b25ac2cad3aa019896b7025c762655dd224c8b14ef043a07268",
+      "mime_type": "image/jpeg",
+      "bytes": 19141,
+      "local_path": "source/images/asset-ab00cc0bf4929b25.jpg",
+      "first_alt": "冬-八廓街"
+    },
+    {
+      "sha256": "8b995a6fb155e4a02f261ab768cf83277299deea36a974eb80b434f15285349d",
+      "mime_type": "image/jpeg",
+      "bytes": 18007,
+      "local_path": "source/images/asset-8b995a6fb155e4a0.jpg",
+      "first_alt": "冬-南迦巴瓦峰"
+    },
+    {
+      "sha256": "83bc515d19949d0c728132d17167cb6755937569f6d28d26fd4ec13ea9f579bd",
+      "mime_type": "image/jpeg",
+      "bytes": 20504,
+      "local_path": "source/images/asset-83bc515d19949d0c.jpg",
+      "first_alt": "西藏8天精華地圖"
+    },
+    {
+      "sha256": "568da706f659839cef46a781e862655099ecf468017d7347e44c7d9f6e12b50b",
+      "mime_type": "image/jpeg",
+      "bytes": 33455,
+      "local_path": "source/images/asset-568da706f659839c.jpg",
+      "first_alt": "布達拉宮天氣好"
+    },
+    {
+      "sha256": "d9df4f33de9ae9a566b366bde5e3b0978c03cbc251a740b2107f44def46394f4",
+      "mime_type": "image/jpeg",
+      "bytes": 28142,
+      "local_path": "source/images/asset-d9df4f33de9ae9a5.jpg",
+      "first_alt": "八廓街天氣好"
+    },
+    {
+      "sha256": "f944124074da7ffb6f2c3f16cf2ca151eddd3c0a754c1f6d69dee53fd1f660e4",
+      "mime_type": "image/jpeg",
+      "bytes": 17897,
+      "local_path": "source/images/asset-f944124074da7ffb.jpg",
+      "first_alt": "財神廟扎基寺"
+    },
+    {
+      "sha256": "8eea7cc59738c13f118a2a69043ece6b7ce7659826a4909a3209eeed047ae455",
+      "mime_type": "image/jpeg",
+      "bytes": 35684,
+      "local_path": "source/images/asset-8eea7cc59738c13f.jpg",
+      "first_alt": "色拉寺辯經"
+    },
+    {
+      "sha256": "ab6793c59f14f93b8b421302a119a06524699cc9ddca350b6ce0daeb3ff5163b",
+      "mime_type": "image/jpeg",
+      "bytes": 18083,
+      "local_path": "source/images/asset-ab6793c59f14f93b.jpg",
+      "first_alt": "珠峰大本營日落金山"
+    },
+    {
+      "sha256": "4184b614f8110aed10039264043d99a0045344f8ac9008675546f3ad2d7a52c4",
+      "mime_type": "image/jpeg",
+      "bytes": 20633,
+      "local_path": "source/images/asset-4184b614f8110aed.jpg",
+      "first_alt": "車車照"
+    },
+    {
+      "sha256": "bb5dd0a91ce774324f751efc2805791b08ceda6adf3785d47fbbd5159eb0641e",
+      "mime_type": "image/jpeg",
+      "bytes": 12020,
+      "local_path": "source/images/asset-bb5dd0a91ce77432.jpg",
+      "first_alt": "車子製氧機"
+    },
+    {
+      "sha256": "2cdb9baab8b7a4cb95ce866ccb2e648b3b50a4634297d3787fb818efebdad0cb",
+      "mime_type": "image/jpeg",
+      "bytes": 22636,
+      "local_path": "source/images/asset-2cdb9baab8b7a4cb.jpg",
+      "first_alt": "我們的客人+牌子"
+    },
+    {
+      "sha256": "efc3ed2ace31d78df25fd3ec51b5571774ec486353dd3466401f2c0a1d24aeb8",
+      "mime_type": "image/jpeg",
+      "bytes": 31593,
+      "local_path": "source/images/asset-efc3ed2ace31d78d.jpg",
+      "first_alt": "薩迦寺"
+    },
+    {
+      "sha256": "a3ce7be3c30dc7f7884b989d68b14a6efde32d8842d951b6840639c9b0d2829e",
+      "mime_type": "image/jpeg",
+      "bytes": 16657,
+      "local_path": "source/images/asset-a3ce7be3c30dc7f7.jpg",
+      "first_alt": "拉日鐵路"
+    },
+    {
+      "sha256": "6e7c73553c1be60c23d195bd3721b15d9ad208e1648d6140b70b909b3fe31562",
+      "mime_type": "image/jpeg",
+      "bytes": 20511,
+      "local_path": "source/images/asset-6e7c73553c1be60c.jpg",
+      "first_alt": "林芝8天地圖"
+    },
+    {
+      "sha256": "3fb21701eeb3fe36ab05c3f6c9e344eba355b89868519171eee87ddc3dc836c2",
+      "mime_type": "image/jpeg",
+      "bytes": 18516,
+      "local_path": "source/images/asset-3fb21701eeb3fe36.jpg",
+      "first_alt": "林芝巴松錯"
+    },
+    {
+      "sha256": "40d3c983674065c088689356cd812d07862167c0f6db7c487b1983ce382ba18f",
+      "mime_type": "image/jpeg",
+      "bytes": 25528,
+      "local_path": "source/images/asset-40d3c983674065c0.jpg",
+      "first_alt": "秀巴古堡"
+    },
+    {
+      "sha256": "2513b16b6478e9b87174b565179ee07f0e4a861fcd71c02275817563769b7fd2",
+      "mime_type": "image/jpeg",
+      "bytes": 20427,
+      "local_path": "source/images/asset-2513b16b6478e9b8.jpg",
+      "first_alt": "大昭寺"
+    },
+    {
+      "sha256": "37955c9f04fa90d4165695bd69c214d545af28581e7c6e4b7854dd6ca6795254",
+      "mime_type": "image/jpeg",
+      "bytes": 21569,
+      "local_path": "source/images/asset-37955c9f04fa90d4.jpg",
+      "first_alt": "羊湖客人照"
+    },
+    {
+      "sha256": "2cb516a27ceff652256ff65d4bd7828ba641ffe49eb777f80a8dc72816d7dbb2",
+      "mime_type": "image/jpeg",
+      "bytes": 22611,
+      "local_path": "source/images/asset-2cb516a27ceff652.jpg",
+      "first_alt": "分支圖回7・我們的客人+牌子"
+    },
+    {
+      "sha256": "fb14cdb8ca21c92d357ff36db9269d8183d5793c9e9ce56619c644147d4c10c4",
+      "mime_type": "image/jpeg",
+      "bytes": 21679,
+      "local_path": "source/images/asset-fb14cdb8ca21c92d.jpg",
+      "first_alt": "文後回圖2・客人照片1"
+    },
+    {
+      "sha256": "e6c227f3c2c18e18102b39bb6f97b8e094178d85c8ea0e5ef8c4fbb2e608b2da",
+      "mime_type": "image/jpeg",
+      "bytes": 19560,
+      "local_path": "source/images/asset-e6c227f3c2c18e18.jpg",
+      "first_alt": "文後回圖3・客人照片2"
+    }
+  ],
+  "image_occurrences": [
+    {
+      "occurrence_id": 1,
+      "category": "01-peach-everest-11d",
+      "alt": "11日行程圖",
+      "sha256": "7ced011358924afd384ed6eca2c33df601b94ec52f0de993cbc0d6fec9349725",
+      "mime_type": "image/jpeg",
+      "bytes": 19941,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-7ced011358924afd.jpg"
+    },
+    {
+      "occurrence_id": 2,
+      "category": "01-peach-everest-11d",
+      "alt": "絨布旅館",
+      "sha256": "c1ef7277df247908e2b1173e3d874088f3fcf393a2eeb9b9db6a1596499f4913",
+      "mime_type": "image/jpeg",
+      "bytes": 15885,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-c1ef7277df247908.jpg"
+    },
+    {
+      "occurrence_id": 3,
+      "category": "01-peach-everest-11d",
+      "alt": "帕邦喀寺",
+      "sha256": "655786bd36487a23da21a04c647ac5bd51cabbf493b634d886d77d7c51d5210e",
+      "mime_type": "image/jpeg",
+      "bytes": 33076,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-655786bd36487a23.jpg"
+    },
+    {
+      "occurrence_id": 4,
+      "category": "01-peach-everest-11d",
+      "alt": "秀巴古堡",
+      "sha256": "d9361e1af2e2664e98db8b86b6e6d11188f45bf0f06fbba8d9c9c4af90280f9b",
+      "mime_type": "image/jpeg",
+      "bytes": 32390,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-d9361e1af2e2664e.jpg"
+    },
+    {
+      "occurrence_id": 5,
+      "category": "01-peach-everest-11d",
+      "alt": "希爾頓客房",
+      "sha256": "27fc8323908d87b0161791a5c98bff7496f3f889975b68b25bac743b78e85a22",
+      "mime_type": "image/jpeg",
+      "bytes": 15852,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-27fc8323908d87b0.jpg"
+    },
+    {
+      "occurrence_id": 6,
+      "category": "01-peach-everest-11d",
+      "alt": "希爾頓製氧機",
+      "sha256": "eb4d3ac9650fdcd2f66c54583d3734b539b9bcce69a833acfacd64004c872e39",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-eb4d3ac9650fdcd2.jpg"
+    },
+    {
+      "occurrence_id": 7,
+      "category": "01-peach-everest-11d",
+      "alt": "車輛照片",
+      "sha256": "d0a4cfa762934385bd99a7e6c989e9dd0d32f9470d40caf4513e6d6086db3b01",
+      "mime_type": "image/jpeg",
+      "bytes": 20641,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-d0a4cfa762934385.jpg"
+    },
+    {
+      "occurrence_id": 8,
+      "category": "01-peach-everest-11d",
+      "alt": "車輛製氧機",
+      "sha256": "c405f7e8de8a531f596b79f04829a58895574cca4556d97a1139ca31e15f85f4",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-c405f7e8de8a531f.jpg"
+    },
+    {
+      "occurrence_id": 9,
+      "category": "01-peach-everest-11d",
+      "alt": "住宿第二張",
+      "sha256": "7ce24f593d3679dcf3b1dc856cddc614992c015c31fe692bd378a3d35a6fd782",
+      "mime_type": "image/jpeg",
+      "bytes": 15392,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-7ce24f593d3679dc.jpg"
+    },
+    {
+      "occurrence_id": 10,
+      "category": "01-peach-everest-11d",
+      "alt": "布達拉宮",
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-53456869767fd20f.jpg"
+    },
+    {
+      "occurrence_id": 11,
+      "category": "01-peach-everest-11d",
+      "alt": "八廓街",
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-dd5e8b6a60a56c0d.jpg"
+    },
+    {
+      "occurrence_id": 12,
+      "category": "01-peach-everest-11d",
+      "alt": "扎基寺財神廟",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9f86c7e88e47c96e.jpg"
+    },
+    {
+      "occurrence_id": 13,
+      "category": "01-peach-everest-11d",
+      "alt": "布達拉宮",
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-53456869767fd20f.jpg"
+    },
+    {
+      "occurrence_id": 14,
+      "category": "01-peach-everest-11d",
+      "alt": "八廓街",
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-dd5e8b6a60a56c0d.jpg"
+    },
+    {
+      "occurrence_id": 15,
+      "category": "01-peach-everest-11d",
+      "alt": "扎基寺財神廟",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9f86c7e88e47c96e.jpg"
+    },
+    {
+      "occurrence_id": 16,
+      "category": "02-peach-9d",
+      "alt": "9日行程總覽",
+      "sha256": "861112f0557c33263934c4da07983003ae70b0c36c4a112c39d9bd9b283cfd95",
+      "mime_type": "image/jpeg",
+      "bytes": 18821,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-861112f0557c3326.jpg"
+    },
+    {
+      "occurrence_id": 17,
+      "category": "02-peach-9d",
+      "alt": "帕邦喀寺",
+      "sha256": "655786bd36487a23da21a04c647ac5bd51cabbf493b634d886d77d7c51d5210e",
+      "mime_type": "image/jpeg",
+      "bytes": 33076,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-655786bd36487a23.jpg"
+    },
+    {
+      "occurrence_id": 18,
+      "category": "02-peach-9d",
+      "alt": "秀巴古堡",
+      "sha256": "d9361e1af2e2664e98db8b86b6e6d11188f45bf0f06fbba8d9c9c4af90280f9b",
+      "mime_type": "image/jpeg",
+      "bytes": 32390,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-d9361e1af2e2664e.jpg"
+    },
+    {
+      "occurrence_id": 19,
+      "category": "02-peach-9d",
+      "alt": "希爾頓客房",
+      "sha256": "27fc8323908d87b0161791a5c98bff7496f3f889975b68b25bac743b78e85a22",
+      "mime_type": "image/jpeg",
+      "bytes": 15852,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-27fc8323908d87b0.jpg"
+    },
+    {
+      "occurrence_id": 20,
+      "category": "02-peach-9d",
+      "alt": "希爾頓製氧機",
+      "sha256": "eb4d3ac9650fdcd2f66c54583d3734b539b9bcce69a833acfacd64004c872e39",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-eb4d3ac9650fdcd2.jpg"
+    },
+    {
+      "occurrence_id": 21,
+      "category": "02-peach-9d",
+      "alt": "車輛照片",
+      "sha256": "d0a4cfa762934385bd99a7e6c989e9dd0d32f9470d40caf4513e6d6086db3b01",
+      "mime_type": "image/jpeg",
+      "bytes": 20641,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-d0a4cfa762934385.jpg"
+    },
+    {
+      "occurrence_id": 22,
+      "category": "02-peach-9d",
+      "alt": "車輛製氧機",
+      "sha256": "c405f7e8de8a531f596b79f04829a58895574cca4556d97a1139ca31e15f85f4",
+      "mime_type": "image/jpeg",
+      "bytes": 11963,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-c405f7e8de8a531f.jpg"
+    },
+    {
+      "occurrence_id": 23,
+      "category": "02-peach-9d",
+      "alt": "住宿第二張",
+      "sha256": "7ce24f593d3679dcf3b1dc856cddc614992c015c31fe692bd378a3d35a6fd782",
+      "mime_type": "image/jpeg",
+      "bytes": 15392,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-7ce24f593d3679dc.jpg"
+    },
+    {
+      "occurrence_id": 24,
+      "category": "02-peach-9d",
+      "alt": "布達拉宮",
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-53456869767fd20f.jpg"
+    },
+    {
+      "occurrence_id": 25,
+      "category": "02-peach-9d",
+      "alt": "八廓街",
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-dd5e8b6a60a56c0d.jpg"
+    },
+    {
+      "occurrence_id": 26,
+      "category": "02-peach-9d",
+      "alt": "扎基寺財神廟",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9f86c7e88e47c96e.jpg"
+    },
+    {
+      "occurrence_id": 27,
+      "category": "02-peach-9d",
+      "alt": "布達拉宮",
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-53456869767fd20f.jpg"
+    },
+    {
+      "occurrence_id": 28,
+      "category": "02-peach-9d",
+      "alt": "八廓街",
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-dd5e8b6a60a56c0d.jpg"
+    },
+    {
+      "occurrence_id": 29,
+      "category": "02-peach-9d",
+      "alt": "扎基寺財神廟",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9f86c7e88e47c96e.jpg"
+    },
+    {
+      "occurrence_id": 30,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖-2・10天林芝希爾頓行程",
+      "sha256": "ec2125a509ddcf332796a4070f802f176f9202284a927242cb6da6c48ca079f7",
+      "mime_type": "image/jpeg",
+      "bytes": 20385,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ec2125a509ddcf33.jpg"
+    },
+    {
+      "occurrence_id": 31,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖-4・巴松錯",
+      "sha256": "250f92706793f72698b25ecd98b98b9199f74242a9dab1120a187dff12590e64",
+      "mime_type": "image/jpeg",
+      "bytes": 18447,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-250f92706793f726.jpg"
+    },
+    {
+      "occurrence_id": 32,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖6・千年古堡",
+      "sha256": "872d08093d4570bf84369ee30631374a434d952b13d48329573e494b3c5ae6ed",
+      "mime_type": "image/jpeg",
+      "bytes": 25456,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-872d08093d4570bf.jpg"
+    },
+    {
+      "occurrence_id": 33,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖8・布達拉宮真美",
+      "sha256": "9adb86b7f7e94cdf85c6965ffaf4e0b4e076c1defb35c5f58361c9404a2c5578",
+      "mime_type": "image/jpeg",
+      "bytes": 33599,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9adb86b7f7e94cdf.jpg"
+    },
+    {
+      "occurrence_id": 34,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖9・財神廟扎基寺",
+      "sha256": "55b7f6e54333c2ef9edbeae3fc8f224f8b9e8bdece103eef4bfbaa9dbd6a6fbe",
+      "mime_type": "image/jpeg",
+      "bytes": 17863,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-55b7f6e54333c2ef.jpg"
+    },
+    {
+      "occurrence_id": 35,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖10・色拉寺",
+      "sha256": "d091fe2f31c3e04c0d11126fc09e4286a7a4ccc0ac0d4857dffbc9f46098db47",
+      "mime_type": "image/jpeg",
+      "bytes": 35731,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-d091fe2f31c3e04c.jpg"
+    },
+    {
+      "occurrence_id": 36,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖12・希爾頓1",
+      "sha256": "6951fc913a12898a9d307e82f961404e18566ef8d02912be3457fdab4e82d453",
+      "mime_type": "image/jpeg",
+      "bytes": 15840,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-6951fc913a12898a.jpg"
+    },
+    {
+      "occurrence_id": 37,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖14・希爾頓2",
+      "sha256": "64c8cb33e51d264ecf55d966318a42ccd5524a4171df31066242498fe90be83a",
+      "mime_type": "image/jpeg",
+      "bytes": 11919,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-64c8cb33e51d264e.jpg"
+    },
+    {
+      "occurrence_id": 38,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖16・車車照",
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-49024768024b8ab2.jpg"
+    },
+    {
+      "occurrence_id": 39,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖17・車子製氧機",
+      "sha256": "2f17f3cb927999afab64b3c9fc6f7d52486241e83193b6188f88ca0e48de0080",
+      "mime_type": "image/jpeg",
+      "bytes": 11896,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-2f17f3cb927999af.jpg"
+    },
+    {
+      "occurrence_id": 40,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖19・日照金山",
+      "sha256": "e4d9abed22997d94397f138ed71fe5e9377dcff5188561fc027c8df5a44e762e",
+      "mime_type": "image/jpeg",
+      "bytes": 18522,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-e4d9abed22997d94.jpg"
+    },
+    {
+      "occurrence_id": 41,
+      "category": "03-tibet-overview-10d",
+      "alt": "統回圖22・客人魯朗林海照",
+      "sha256": "805f065dcf844c91588d4901167f7610477362b8b9110b02b5d07545fec4b0bd",
+      "mime_type": "image/jpeg",
+      "bytes": 23565,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-805f065dcf844c91.jpg"
+    },
+    {
+      "occurrence_id": 42,
+      "category": "03-tibet-overview-10d",
+      "alt": "全覽圖後回2・薩迦寺",
+      "sha256": "68894faa85de80bf40449469a699a67d0c322ea1c6d277e8ba1a3b8669396daa",
+      "mime_type": "image/jpeg",
+      "bytes": 31827,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-68894faa85de80bf.jpg"
+    },
+    {
+      "occurrence_id": 43,
+      "category": "03-tibet-overview-10d",
+      "alt": "全覽圖後回3・拉日鐵路",
+      "sha256": "8155f74c9c85d97aec3780dc56ff97bd19f1f7fd298179e80b5baae4f36bcd54",
+      "mime_type": "image/jpeg",
+      "bytes": 16641,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8155f74c9c85d97a.jpg"
+    },
+    {
+      "occurrence_id": 44,
+      "category": "04-other-time-everest",
+      "alt": "冬遊西藏地圖",
+      "sha256": "ddb804883a486fb5d358e88857b9619fd9ab06fe652ad84be62886021eb6ac4f",
+      "mime_type": "image/jpeg",
+      "bytes": 22155,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ddb804883a486fb5.jpg"
+    },
+    {
+      "occurrence_id": 45,
+      "category": "04-other-time-everest",
+      "alt": "占堆拿旗子照",
+      "sha256": "934c6b43f3c097fd53838ec8dbdd7cdb4c7acac5587f96b0c296272e4561f159",
+      "mime_type": "image/jpeg",
+      "bytes": 33842,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-934c6b43f3c097fd.jpg"
+    },
+    {
+      "occurrence_id": 46,
+      "category": "04-other-time-everest",
+      "alt": "然烏湖無人",
+      "sha256": "0cac9807612af09c4cc9c8c354b299b5a794c7d9ae87366593cc5d9f2b655dd8",
+      "mime_type": "image/jpeg",
+      "bytes": 13774,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-0cac9807612af09c.jpg"
+    },
+    {
+      "occurrence_id": 47,
+      "category": "04-other-time-everest",
+      "alt": "來古藍冰",
+      "sha256": "6c76a5e1669b5cf8e1e43a8aa0a0e7b8c7b97ac428959318f104fe7c97baa94d",
+      "mime_type": "image/jpeg",
+      "bytes": 18525,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-6c76a5e1669b5cf8.jpg"
+    },
+    {
+      "occurrence_id": 48,
+      "category": "04-other-time-everest",
+      "alt": "恰央措",
+      "sha256": "e35986fbc4427e7c794bdbaf2669068ebf435972e1af5452c43b45b6f04b53f0",
+      "mime_type": "image/jpeg",
+      "bytes": 39101,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-e35986fbc4427e7c.jpg"
+    },
+    {
+      "occurrence_id": 49,
+      "category": "04-other-time-everest",
+      "alt": "旅客上恰央措",
+      "sha256": "956456e64f4d8bf874208e6f804c13da6c63fc039890aceb4f3c0cf2b58fc59f",
+      "mime_type": "image/jpeg",
+      "bytes": 21431,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-956456e64f4d8bf8.jpg"
+    },
+    {
+      "occurrence_id": 50,
+      "category": "04-other-time-everest",
+      "alt": "旅客上恰央措躺著",
+      "sha256": "04d54c7a11698f37a4133aef9b9df560efb64365105aa427efca129c4389d72f",
+      "mime_type": "image/jpeg",
+      "bytes": 30084,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-04d54c7a11698f37.jpg"
+    },
+    {
+      "occurrence_id": 51,
+      "category": "04-other-time-everest",
+      "alt": "大VIP車",
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-49024768024b8ab2.jpg"
+    },
+    {
+      "occurrence_id": 52,
+      "category": "04-other-time-everest",
+      "alt": "車上的彌散氧氣瓶",
+      "sha256": "da79d8c7c65adaf86bae96633c711af77a3a79324f6eed1043976a8b6be2a231",
+      "mime_type": "image/jpeg",
+      "bytes": 12126,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-da79d8c7c65adaf8.jpg"
+    },
+    {
+      "occurrence_id": 53,
+      "category": "04-other-time-everest",
+      "alt": "希爾頓1",
+      "sha256": "88ed5c0a5c381cdfbdd59c0fc25a2bbac8f6de04eea54f881a0f479adb5a56bf",
+      "mime_type": "image/jpeg",
+      "bytes": 15314,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-88ed5c0a5c381cdf.jpg"
+    },
+    {
+      "occurrence_id": 54,
+      "category": "04-other-time-everest",
+      "alt": "希爾頓2",
+      "sha256": "8c2a234fe8c4e563878a36dda98f5a71b5bf95b64bceb91e41105b191e396f37",
+      "mime_type": "image/jpeg",
+      "bytes": 11917,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8c2a234fe8c4e563.jpg"
+    },
+    {
+      "occurrence_id": 55,
+      "category": "04-other-time-everest",
+      "alt": "冬-布達拉宮",
+      "sha256": "365bc554443d2a5e1b3303ddc34fc74c4bd1f4b212caff3161d29d185a250674",
+      "mime_type": "image/jpeg",
+      "bytes": 35265,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-365bc554443d2a5e.jpg"
+    },
+    {
+      "occurrence_id": 56,
+      "category": "04-other-time-everest",
+      "alt": "冬-八廓街",
+      "sha256": "ab00cc0bf4929b25ac2cad3aa019896b7025c762655dd224c8b14ef043a07268",
+      "mime_type": "image/jpeg",
+      "bytes": 19141,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ab00cc0bf4929b25.jpg"
+    },
+    {
+      "occurrence_id": 57,
+      "category": "04-other-time-everest",
+      "alt": "冬-南迦巴瓦峰",
+      "sha256": "8b995a6fb155e4a02f261ab768cf83277299deea36a974eb80b434f15285349d",
+      "mime_type": "image/jpeg",
+      "bytes": 18007,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8b995a6fb155e4a0.jpg"
+    },
+    {
+      "occurrence_id": 58,
+      "category": "04-other-time-everest",
+      "alt": "冬-布達拉宮",
+      "sha256": "365bc554443d2a5e1b3303ddc34fc74c4bd1f4b212caff3161d29d185a250674",
+      "mime_type": "image/jpeg",
+      "bytes": 35265,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-365bc554443d2a5e.jpg"
+    },
+    {
+      "occurrence_id": 59,
+      "category": "04-other-time-everest",
+      "alt": "冬-八廓街",
+      "sha256": "ab00cc0bf4929b25ac2cad3aa019896b7025c762655dd224c8b14ef043a07268",
+      "mime_type": "image/jpeg",
+      "bytes": 19141,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ab00cc0bf4929b25.jpg"
+    },
+    {
+      "occurrence_id": 60,
+      "category": "04-other-time-everest",
+      "alt": "冬-南迦巴瓦峰",
+      "sha256": "8b995a6fb155e4a02f261ab768cf83277299deea36a974eb80b434f15285349d",
+      "mime_type": "image/jpeg",
+      "bytes": 18007,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8b995a6fb155e4a0.jpg"
+    },
+    {
+      "occurrence_id": 61,
+      "category": "04-other-time-everest",
+      "alt": "西藏8天精華地圖",
+      "sha256": "83bc515d19949d0c728132d17167cb6755937569f6d28d26fd4ec13ea9f579bd",
+      "mime_type": "image/jpeg",
+      "bytes": 20504,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-83bc515d19949d0c.jpg"
+    },
+    {
+      "occurrence_id": 62,
+      "category": "04-other-time-everest",
+      "alt": "布達拉宮天氣好",
+      "sha256": "568da706f659839cef46a781e862655099ecf468017d7347e44c7d9f6e12b50b",
+      "mime_type": "image/jpeg",
+      "bytes": 33455,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-568da706f659839c.jpg"
+    },
+    {
+      "occurrence_id": 63,
+      "category": "04-other-time-everest",
+      "alt": "八廓街天氣好",
+      "sha256": "d9df4f33de9ae9a566b366bde5e3b0978c03cbc251a740b2107f44def46394f4",
+      "mime_type": "image/jpeg",
+      "bytes": 28142,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-d9df4f33de9ae9a5.jpg"
+    },
+    {
+      "occurrence_id": 64,
+      "category": "04-other-time-everest",
+      "alt": "財神廟扎基寺",
+      "sha256": "f944124074da7ffb6f2c3f16cf2ca151eddd3c0a754c1f6d69dee53fd1f660e4",
+      "mime_type": "image/jpeg",
+      "bytes": 17897,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-f944124074da7ffb.jpg"
+    },
+    {
+      "occurrence_id": 65,
+      "category": "04-other-time-everest",
+      "alt": "色拉寺辯經",
+      "sha256": "8eea7cc59738c13f118a2a69043ece6b7ce7659826a4909a3209eeed047ae455",
+      "mime_type": "image/jpeg",
+      "bytes": 35684,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8eea7cc59738c13f.jpg"
+    },
+    {
+      "occurrence_id": 66,
+      "category": "04-other-time-everest",
+      "alt": "珠峰大本營日落金山",
+      "sha256": "ab6793c59f14f93b8b421302a119a06524699cc9ddca350b6ce0daeb3ff5163b",
+      "mime_type": "image/jpeg",
+      "bytes": 18083,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ab6793c59f14f93b.jpg"
+    },
+    {
+      "occurrence_id": 67,
+      "category": "04-other-time-everest",
+      "alt": "希爾頓1",
+      "sha256": "88ed5c0a5c381cdfbdd59c0fc25a2bbac8f6de04eea54f881a0f479adb5a56bf",
+      "mime_type": "image/jpeg",
+      "bytes": 15314,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-88ed5c0a5c381cdf.jpg"
+    },
+    {
+      "occurrence_id": 68,
+      "category": "04-other-time-everest",
+      "alt": "希爾頓2",
+      "sha256": "8c2a234fe8c4e563878a36dda98f5a71b5bf95b64bceb91e41105b191e396f37",
+      "mime_type": "image/jpeg",
+      "bytes": 11917,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8c2a234fe8c4e563.jpg"
+    },
+    {
+      "occurrence_id": 69,
+      "category": "04-other-time-everest",
+      "alt": "車車照",
+      "sha256": "4184b614f8110aed10039264043d99a0045344f8ac9008675546f3ad2d7a52c4",
+      "mime_type": "image/jpeg",
+      "bytes": 20633,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-4184b614f8110aed.jpg"
+    },
+    {
+      "occurrence_id": 70,
+      "category": "04-other-time-everest",
+      "alt": "車子製氧機",
+      "sha256": "bb5dd0a91ce774324f751efc2805791b08ceda6adf3785d47fbbd5159eb0641e",
+      "mime_type": "image/jpeg",
+      "bytes": 12020,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-bb5dd0a91ce77432.jpg"
+    },
+    {
+      "occurrence_id": 71,
+      "category": "04-other-time-everest",
+      "alt": "我們的客人+牌子",
+      "sha256": "2cdb9baab8b7a4cb95ce866ccb2e648b3b50a4634297d3787fb818efebdad0cb",
+      "mime_type": "image/jpeg",
+      "bytes": 22636,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-2cdb9baab8b7a4cb.jpg"
+    },
+    {
+      "occurrence_id": 72,
+      "category": "04-other-time-everest",
+      "alt": "薩迦寺",
+      "sha256": "efc3ed2ace31d78df25fd3ec51b5571774ec486353dd3466401f2c0a1d24aeb8",
+      "mime_type": "image/jpeg",
+      "bytes": 31593,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-efc3ed2ace31d78d.jpg"
+    },
+    {
+      "occurrence_id": 73,
+      "category": "04-other-time-everest",
+      "alt": "拉日鐵路",
+      "sha256": "a3ce7be3c30dc7f7884b989d68b14a6efde32d8842d951b6840639c9b0d2829e",
+      "mime_type": "image/jpeg",
+      "bytes": 16657,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-a3ce7be3c30dc7f7.jpg"
+    },
+    {
+      "occurrence_id": 74,
+      "category": "05-other-time-no-everest",
+      "alt": "布達拉宮",
+      "sha256": "53456869767fd20f88c28edf4e843e999217a582e299bd652de879dde10f17f0",
+      "mime_type": "image/jpeg",
+      "bytes": 23502,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-53456869767fd20f.jpg"
+    },
+    {
+      "occurrence_id": 75,
+      "category": "05-other-time-no-everest",
+      "alt": "八廓街",
+      "sha256": "dd5e8b6a60a56c0d8be31c49699e81c0e90379aebfa72fd1c8c5a26ea02e26e4",
+      "mime_type": "image/jpeg",
+      "bytes": 22720,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-dd5e8b6a60a56c0d.jpg"
+    },
+    {
+      "occurrence_id": 76,
+      "category": "05-other-time-no-everest",
+      "alt": "扎基寺財神廟",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9f86c7e88e47c96e.jpg"
+    },
+    {
+      "occurrence_id": 77,
+      "category": "05-other-time-no-everest",
+      "alt": "冬遊西藏地圖",
+      "sha256": "ddb804883a486fb5d358e88857b9619fd9ab06fe652ad84be62886021eb6ac4f",
+      "mime_type": "image/jpeg",
+      "bytes": 22155,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ddb804883a486fb5.jpg"
+    },
+    {
+      "occurrence_id": 78,
+      "category": "05-other-time-no-everest",
+      "alt": "占堆拿旗子照",
+      "sha256": "934c6b43f3c097fd53838ec8dbdd7cdb4c7acac5587f96b0c296272e4561f159",
+      "mime_type": "image/jpeg",
+      "bytes": 33842,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-934c6b43f3c097fd.jpg"
+    },
+    {
+      "occurrence_id": 79,
+      "category": "05-other-time-no-everest",
+      "alt": "然烏湖無人",
+      "sha256": "0cac9807612af09c4cc9c8c354b299b5a794c7d9ae87366593cc5d9f2b655dd8",
+      "mime_type": "image/jpeg",
+      "bytes": 13774,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-0cac9807612af09c.jpg"
+    },
+    {
+      "occurrence_id": 80,
+      "category": "05-other-time-no-everest",
+      "alt": "來古藍冰",
+      "sha256": "6c76a5e1669b5cf8e1e43a8aa0a0e7b8c7b97ac428959318f104fe7c97baa94d",
+      "mime_type": "image/jpeg",
+      "bytes": 18525,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-6c76a5e1669b5cf8.jpg"
+    },
+    {
+      "occurrence_id": 81,
+      "category": "05-other-time-no-everest",
+      "alt": "恰央措",
+      "sha256": "e35986fbc4427e7c794bdbaf2669068ebf435972e1af5452c43b45b6f04b53f0",
+      "mime_type": "image/jpeg",
+      "bytes": 39101,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-e35986fbc4427e7c.jpg"
+    },
+    {
+      "occurrence_id": 82,
+      "category": "05-other-time-no-everest",
+      "alt": "旅客上恰央措",
+      "sha256": "956456e64f4d8bf874208e6f804c13da6c63fc039890aceb4f3c0cf2b58fc59f",
+      "mime_type": "image/jpeg",
+      "bytes": 21431,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-956456e64f4d8bf8.jpg"
+    },
+    {
+      "occurrence_id": 83,
+      "category": "05-other-time-no-everest",
+      "alt": "旅客上恰央措躺著",
+      "sha256": "04d54c7a11698f37a4133aef9b9df560efb64365105aa427efca129c4389d72f",
+      "mime_type": "image/jpeg",
+      "bytes": 30084,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-04d54c7a11698f37.jpg"
+    },
+    {
+      "occurrence_id": 84,
+      "category": "05-other-time-no-everest",
+      "alt": "大VIP車",
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-49024768024b8ab2.jpg"
+    },
+    {
+      "occurrence_id": 85,
+      "category": "05-other-time-no-everest",
+      "alt": "車上的彌散氧氣瓶",
+      "sha256": "da79d8c7c65adaf86bae96633c711af77a3a79324f6eed1043976a8b6be2a231",
+      "mime_type": "image/jpeg",
+      "bytes": 12126,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-da79d8c7c65adaf8.jpg"
+    },
+    {
+      "occurrence_id": 86,
+      "category": "05-other-time-no-everest",
+      "alt": "希爾頓1",
+      "sha256": "88ed5c0a5c381cdfbdd59c0fc25a2bbac8f6de04eea54f881a0f479adb5a56bf",
+      "mime_type": "image/jpeg",
+      "bytes": 15314,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-88ed5c0a5c381cdf.jpg"
+    },
+    {
+      "occurrence_id": 87,
+      "category": "05-other-time-no-everest",
+      "alt": "希爾頓2",
+      "sha256": "8c2a234fe8c4e563878a36dda98f5a71b5bf95b64bceb91e41105b191e396f37",
+      "mime_type": "image/jpeg",
+      "bytes": 11917,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8c2a234fe8c4e563.jpg"
+    },
+    {
+      "occurrence_id": 88,
+      "category": "05-other-time-no-everest",
+      "alt": "冬-布達拉宮",
+      "sha256": "365bc554443d2a5e1b3303ddc34fc74c4bd1f4b212caff3161d29d185a250674",
+      "mime_type": "image/jpeg",
+      "bytes": 35265,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-365bc554443d2a5e.jpg"
+    },
+    {
+      "occurrence_id": 89,
+      "category": "05-other-time-no-everest",
+      "alt": "冬-八廓街",
+      "sha256": "ab00cc0bf4929b25ac2cad3aa019896b7025c762655dd224c8b14ef043a07268",
+      "mime_type": "image/jpeg",
+      "bytes": 19141,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ab00cc0bf4929b25.jpg"
+    },
+    {
+      "occurrence_id": 90,
+      "category": "05-other-time-no-everest",
+      "alt": "冬-南迦巴瓦峰",
+      "sha256": "8b995a6fb155e4a02f261ab768cf83277299deea36a974eb80b434f15285349d",
+      "mime_type": "image/jpeg",
+      "bytes": 18007,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8b995a6fb155e4a0.jpg"
+    },
+    {
+      "occurrence_id": 91,
+      "category": "05-other-time-no-everest",
+      "alt": "冬-布達拉宮",
+      "sha256": "365bc554443d2a5e1b3303ddc34fc74c4bd1f4b212caff3161d29d185a250674",
+      "mime_type": "image/jpeg",
+      "bytes": 35265,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-365bc554443d2a5e.jpg"
+    },
+    {
+      "occurrence_id": 92,
+      "category": "05-other-time-no-everest",
+      "alt": "冬-八廓街",
+      "sha256": "ab00cc0bf4929b25ac2cad3aa019896b7025c762655dd224c8b14ef043a07268",
+      "mime_type": "image/jpeg",
+      "bytes": 19141,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ab00cc0bf4929b25.jpg"
+    },
+    {
+      "occurrence_id": 93,
+      "category": "05-other-time-no-everest",
+      "alt": "冬-南迦巴瓦峰",
+      "sha256": "8b995a6fb155e4a02f261ab768cf83277299deea36a974eb80b434f15285349d",
+      "mime_type": "image/jpeg",
+      "bytes": 18007,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8b995a6fb155e4a0.jpg"
+    },
+    {
+      "occurrence_id": 94,
+      "category": "05-other-time-no-everest",
+      "alt": "林芝8天地圖",
+      "sha256": "6e7c73553c1be60c23d195bd3721b15d9ad208e1648d6140b70b909b3fe31562",
+      "mime_type": "image/jpeg",
+      "bytes": 20511,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-6e7c73553c1be60c.jpg"
+    },
+    {
+      "occurrence_id": 95,
+      "category": "05-other-time-no-everest",
+      "alt": "布達拉宮",
+      "sha256": "568da706f659839cef46a781e862655099ecf468017d7347e44c7d9f6e12b50b",
+      "mime_type": "image/jpeg",
+      "bytes": 33455,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-568da706f659839c.jpg"
+    },
+    {
+      "occurrence_id": 96,
+      "category": "05-other-time-no-everest",
+      "alt": "林芝巴松錯",
+      "sha256": "3fb21701eeb3fe36ab05c3f6c9e344eba355b89868519171eee87ddc3dc836c2",
+      "mime_type": "image/jpeg",
+      "bytes": 18516,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-3fb21701eeb3fe36.jpg"
+    },
+    {
+      "occurrence_id": 97,
+      "category": "05-other-time-no-everest",
+      "alt": "秀巴古堡",
+      "sha256": "40d3c983674065c088689356cd812d07862167c0f6db7c487b1983ce382ba18f",
+      "mime_type": "image/jpeg",
+      "bytes": 25528,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-40d3c983674065c0.jpg"
+    },
+    {
+      "occurrence_id": 98,
+      "category": "05-other-time-no-everest",
+      "alt": "財神廟扎基寺",
+      "sha256": "9f86c7e88e47c96efe4307b810865df3f305fd75221abf2ce0f67ddef708d2d0",
+      "mime_type": "image/jpeg",
+      "bytes": 29080,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9f86c7e88e47c96e.jpg"
+    },
+    {
+      "occurrence_id": 99,
+      "category": "05-other-time-no-everest",
+      "alt": "色拉寺辯經",
+      "sha256": "8eea7cc59738c13f118a2a69043ece6b7ce7659826a4909a3209eeed047ae455",
+      "mime_type": "image/jpeg",
+      "bytes": 35684,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8eea7cc59738c13f.jpg"
+    },
+    {
+      "occurrence_id": 100,
+      "category": "05-other-time-no-everest",
+      "alt": "希爾頓1",
+      "sha256": "88ed5c0a5c381cdfbdd59c0fc25a2bbac8f6de04eea54f881a0f479adb5a56bf",
+      "mime_type": "image/jpeg",
+      "bytes": 15314,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-88ed5c0a5c381cdf.jpg"
+    },
+    {
+      "occurrence_id": 101,
+      "category": "05-other-time-no-everest",
+      "alt": "希爾頓2",
+      "sha256": "8c2a234fe8c4e563878a36dda98f5a71b5bf95b64bceb91e41105b191e396f37",
+      "mime_type": "image/jpeg",
+      "bytes": 11917,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8c2a234fe8c4e563.jpg"
+    },
+    {
+      "occurrence_id": 102,
+      "category": "05-other-time-no-everest",
+      "alt": "車車照",
+      "sha256": "4184b614f8110aed10039264043d99a0045344f8ac9008675546f3ad2d7a52c4",
+      "mime_type": "image/jpeg",
+      "bytes": 20633,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-4184b614f8110aed.jpg"
+    },
+    {
+      "occurrence_id": 103,
+      "category": "05-other-time-no-everest",
+      "alt": "車子製氧機",
+      "sha256": "bb5dd0a91ce774324f751efc2805791b08ceda6adf3785d47fbbd5159eb0641e",
+      "mime_type": "image/jpeg",
+      "bytes": 12020,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-bb5dd0a91ce77432.jpg"
+    },
+    {
+      "occurrence_id": 104,
+      "category": "05-other-time-no-everest",
+      "alt": "我們的客人+牌子",
+      "sha256": "2cdb9baab8b7a4cb95ce866ccb2e648b3b50a4634297d3787fb818efebdad0cb",
+      "mime_type": "image/jpeg",
+      "bytes": 22636,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-2cdb9baab8b7a4cb.jpg"
+    },
+    {
+      "occurrence_id": 105,
+      "category": "05-other-time-no-everest",
+      "alt": "大昭寺",
+      "sha256": "2513b16b6478e9b87174b565179ee07f0e4a861fcd71c02275817563769b7fd2",
+      "mime_type": "image/jpeg",
+      "bytes": 20427,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-2513b16b6478e9b8.jpg"
+    },
+    {
+      "occurrence_id": 106,
+      "category": "05-other-time-no-everest",
+      "alt": "羊湖客人照",
+      "sha256": "37955c9f04fa90d4165695bd69c214d545af28581e7c6e4b7854dd6ca6795254",
+      "mime_type": "image/jpeg",
+      "bytes": 21569,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-37955c9f04fa90d4.jpg"
+    },
+    {
+      "occurrence_id": 107,
+      "category": "05-other-time-no-everest",
+      "alt": "拉日鐵路",
+      "sha256": "8155f74c9c85d97aec3780dc56ff97bd19f1f7fd298179e80b5baae4f36bcd54",
+      "mime_type": "image/jpeg",
+      "bytes": 16641,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-8155f74c9c85d97a.jpg"
+    },
+    {
+      "occurrence_id": 108,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖-3・10天林芝希爾頓行程",
+      "sha256": "ec2125a509ddcf332796a4070f802f176f9202284a927242cb6da6c48ca079f7",
+      "mime_type": "image/jpeg",
+      "bytes": 20385,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ec2125a509ddcf33.jpg"
+    },
+    {
+      "occurrence_id": 109,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖3-2・林芝巴松錯",
+      "sha256": "250f92706793f72698b25ecd98b98b9199f74242a9dab1120a187dff12590e64",
+      "mime_type": "image/jpeg",
+      "bytes": 18447,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-250f92706793f726.jpg"
+    },
+    {
+      "occurrence_id": 110,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖3-4・千年古堡",
+      "sha256": "872d08093d4570bf84369ee30631374a434d952b13d48329573e494b3c5ae6ed",
+      "mime_type": "image/jpeg",
+      "bytes": 25456,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-872d08093d4570bf.jpg"
+    },
+    {
+      "occurrence_id": 111,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖3-6・布達拉宮真美",
+      "sha256": "9adb86b7f7e94cdf85c6965ffaf4e0b4e076c1defb35c5f58361c9404a2c5578",
+      "mime_type": "image/jpeg",
+      "bytes": 33599,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-9adb86b7f7e94cdf.jpg"
+    },
+    {
+      "occurrence_id": 112,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖3-7・財神廟扎基寺",
+      "sha256": "55b7f6e54333c2ef9edbeae3fc8f224f8b9e8bdece103eef4bfbaa9dbd6a6fbe",
+      "mime_type": "image/jpeg",
+      "bytes": 17863,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-55b7f6e54333c2ef.jpg"
+    },
+    {
+      "occurrence_id": 113,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖3-8・色拉寺辯經",
+      "sha256": "d091fe2f31c3e04c0d11126fc09e4286a7a4ccc0ac0d4857dffbc9f46098db47",
+      "mime_type": "image/jpeg",
+      "bytes": 35731,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-d091fe2f31c3e04c.jpg"
+    },
+    {
+      "occurrence_id": 114,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖4-0・希爾頓1",
+      "sha256": "6951fc913a12898a9d307e82f961404e18566ef8d02912be3457fdab4e82d453",
+      "mime_type": "image/jpeg",
+      "bytes": 15840,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-6951fc913a12898a.jpg"
+    },
+    {
+      "occurrence_id": 115,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖4-2・希爾頓2",
+      "sha256": "64c8cb33e51d264ecf55d966318a42ccd5524a4171df31066242498fe90be83a",
+      "mime_type": "image/jpeg",
+      "bytes": 11919,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-64c8cb33e51d264e.jpg"
+    },
+    {
+      "occurrence_id": 116,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖5-2・車車照",
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-49024768024b8ab2.jpg"
+    },
+    {
+      "occurrence_id": 117,
+      "category": "06-private-group-or-other",
+      "alt": "分支回圖5-4・車子製氧機",
+      "sha256": "2f17f3cb927999afab64b3c9fc6f7d52486241e83193b6188f88ca0e48de0080",
+      "mime_type": "image/jpeg",
+      "bytes": 11896,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-2f17f3cb927999af.jpg"
+    },
+    {
+      "occurrence_id": 118,
+      "category": "06-private-group-or-other",
+      "alt": "分支圖回7・我們的客人+牌子",
+      "sha256": "2cb516a27ceff652256ff65d4bd7828ba641ffe49eb777f80a8dc72816d7dbb2",
+      "mime_type": "image/jpeg",
+      "bytes": 22611,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-2cb516a27ceff652.jpg"
+    },
+    {
+      "occurrence_id": 119,
+      "category": "06-private-group-or-other",
+      "alt": "冬回問文2・地圖冬遊",
+      "sha256": "ddb804883a486fb5d358e88857b9619fd9ab06fe652ad84be62886021eb6ac4f",
+      "mime_type": "image/jpeg",
+      "bytes": 22155,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-ddb804883a486fb5.jpg"
+    },
+    {
+      "occurrence_id": 120,
+      "category": "06-private-group-or-other",
+      "alt": "冬季回問文3・冰湖",
+      "sha256": "e35986fbc4427e7c794bdbaf2669068ebf435972e1af5452c43b45b6f04b53f0",
+      "mime_type": "image/jpeg",
+      "bytes": 39101,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-e35986fbc4427e7c.jpg"
+    },
+    {
+      "occurrence_id": 121,
+      "category": "06-private-group-or-other",
+      "alt": "冬季回問文5・藍冰",
+      "sha256": "6c76a5e1669b5cf8e1e43a8aa0a0e7b8c7b97ac428959318f104fe7c97baa94d",
+      "mime_type": "image/jpeg",
+      "bytes": 18525,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-6c76a5e1669b5cf8.jpg"
+    },
+    {
+      "occurrence_id": 122,
+      "category": "06-private-group-or-other",
+      "alt": "冬季回問文6・躺著的客人",
+      "sha256": "04d54c7a11698f37a4133aef9b9df560efb64365105aa427efca129c4389d72f",
+      "mime_type": "image/jpeg",
+      "bytes": 30084,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-04d54c7a11698f37.jpg"
+    },
+    {
+      "occurrence_id": 123,
+      "category": "06-private-group-or-other",
+      "alt": "文後回圖2・客人照片1",
+      "sha256": "fb14cdb8ca21c92d357ff36db9269d8183d5793c9e9ce56619c644147d4c10c4",
+      "mime_type": "image/jpeg",
+      "bytes": 21679,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-fb14cdb8ca21c92d.jpg"
+    },
+    {
+      "occurrence_id": 124,
+      "category": "06-private-group-or-other",
+      "alt": "文後回圖3・客人照片2",
+      "sha256": "e6c227f3c2c18e18102b39bb6f97b8e094178d85c8ea0e5ef8c4fbb2e608b2da",
+      "mime_type": "image/jpeg",
+      "bytes": 19560,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-e6c227f3c2c18e18.jpg"
+    },
+    {
+      "occurrence_id": 125,
+      "category": "06-private-group-or-other",
+      "alt": "文後回圖2・客人照片1",
+      "sha256": "fb14cdb8ca21c92d357ff36db9269d8183d5793c9e9ce56619c644147d4c10c4",
+      "mime_type": "image/jpeg",
+      "bytes": 21679,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-fb14cdb8ca21c92d.jpg"
+    },
+    {
+      "occurrence_id": 126,
+      "category": "06-private-group-or-other",
+      "alt": "文後回圖3・客人照片2",
+      "sha256": "e6c227f3c2c18e18102b39bb6f97b8e094178d85c8ea0e5ef8c4fbb2e608b2da",
+      "mime_type": "image/jpeg",
+      "bytes": 19560,
+      "source": "embedded:data-uri",
+      "global_local_path": "source/images/asset-e6c227f3c2c18e18.jpg"
+    }
+  ],
+  "validation": {
+    "unassigned_image_occurrences": [],
+    "all_tokens_replaced": true
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "number": 6,
+  "kind": "business_branch",
+  "title": "自己包團或其他地點",
+  "directory": "06-private-group-or-other",
+  "content_chars": 4858,
+  "image_occurrences": 19,
+  "unique_images": 17,
+  "source_page": "https://china2go.com/7693-2/",
+  "images": [
+    {
+      "occurrence_id": 108,
+      "alt": "分支回圖-3・10天林芝希爾頓行程",
+      "sha256": "ec2125a509ddcf332796a4070f802f176f9202284a927242cb6da6c48ca079f7",
+      "mime_type": "image/jpeg",
+      "bytes": 20385,
+      "source": "embedded:data-uri",
+      "local_path": "images/01-分支回圖-3・10天林芝希爾頓行程-ec2125a5.jpg"
+    },
+    {
+      "occurrence_id": 109,
+      "alt": "分支回圖3-2・林芝巴松錯",
+      "sha256": "250f92706793f72698b25ecd98b98b9199f74242a9dab1120a187dff12590e64",
+      "mime_type": "image/jpeg",
+      "bytes": 18447,
+      "source": "embedded:data-uri",
+      "local_path": "images/02-分支回圖3-2・林芝巴松錯-250f9270.jpg"
+    },
+    {
+      "occurrence_id": 110,
+      "alt": "分支回圖3-4・千年古堡",
+      "sha256": "872d08093d4570bf84369ee30631374a434d952b13d48329573e494b3c5ae6ed",
+      "mime_type": "image/jpeg",
+      "bytes": 25456,
+      "source": "embedded:data-uri",
+      "local_path": "images/03-分支回圖3-4・千年古堡-872d0809.jpg"
+    },
+    {
+      "occurrence_id": 111,
+      "alt": "分支回圖3-6・布達拉宮真美",
+      "sha256": "9adb86b7f7e94cdf85c6965ffaf4e0b4e076c1defb35c5f58361c9404a2c5578",
+      "mime_type": "image/jpeg",
+      "bytes": 33599,
+      "source": "embedded:data-uri",
+      "local_path": "images/04-分支回圖3-6・布達拉宮真美-9adb86b7.jpg"
+    },
+    {
+      "occurrence_id": 112,
+      "alt": "分支回圖3-7・財神廟扎基寺",
+      "sha256": "55b7f6e54333c2ef9edbeae3fc8f224f8b9e8bdece103eef4bfbaa9dbd6a6fbe",
+      "mime_type": "image/jpeg",
+      "bytes": 17863,
+      "source": "embedded:data-uri",
+      "local_path": "images/05-分支回圖3-7・財神廟扎基寺-55b7f6e5.jpg"
+    },
+    {
+      "occurrence_id": 113,
+      "alt": "分支回圖3-8・色拉寺辯經",
+      "sha256": "d091fe2f31c3e04c0d11126fc09e4286a7a4ccc0ac0d4857dffbc9f46098db47",
+      "mime_type": "image/jpeg",
+      "bytes": 35731,
+      "source": "embedded:data-uri",
+      "local_path": "images/06-分支回圖3-8・色拉寺辯經-d091fe2f.jpg"
+    },
+    {
+      "occurrence_id": 114,
+      "alt": "分支回圖4-0・希爾頓1",
+      "sha256": "6951fc913a12898a9d307e82f961404e18566ef8d02912be3457fdab4e82d453",
+      "mime_type": "image/jpeg",
+      "bytes": 15840,
+      "source": "embedded:data-uri",
+      "local_path": "images/07-分支回圖4-0・希爾頓1-6951fc91.jpg"
+    },
+    {
+      "occurrence_id": 115,
+      "alt": "分支回圖4-2・希爾頓2",
+      "sha256": "64c8cb33e51d264ecf55d966318a42ccd5524a4171df31066242498fe90be83a",
+      "mime_type": "image/jpeg",
+      "bytes": 11919,
+      "source": "embedded:data-uri",
+      "local_path": "images/08-分支回圖4-2・希爾頓2-64c8cb33.jpg"
+    },
+    {
+      "occurrence_id": 116,
+      "alt": "分支回圖5-2・車車照",
+      "sha256": "49024768024b8ab2d4f22605bd20ea8adf7a6588b35c5c98365d2c96110d04ea",
+      "mime_type": "image/jpeg",
+      "bytes": 20607,
+      "source": "embedded:data-uri",
+      "local_path": "images/09-分支回圖5-2・車車照-49024768.jpg"
+    },
+    {
+      "occurrence_id": 117,
+      "alt": "分支回圖5-4・車子製氧機",
+      "sha256": "2f17f3cb927999afab64b3c9fc6f7d52486241e83193b6188f88ca0e48de0080",
+      "mime_type": "image/jpeg",
+      "bytes": 11896,
+      "source": "embedded:data-uri",
+      "local_path": "images/10-分支回圖5-4・車子製氧機-2f17f3cb.jpg"
+    },
+    {
+      "occurrence_id": 118,
+      "alt": "分支圖回7・我們的客人+牌子",
+      "sha256": "2cb516a27ceff652256ff65d4bd7828ba641ffe49eb777f80a8dc72816d7dbb2",
+      "mime_type": "image/jpeg",
+      "bytes": 22611,
+      "source": "embedded:data-uri",
+      "local_path": "images/11-分支圖回7・我們的客人+牌子-2cb516a2.jpg"
+    },
+    {
+      "occurrence_id": 119,
+      "alt": "冬回問文2・地圖冬遊",
+      "sha256": "ddb804883a486fb5d358e88857b9619fd9ab06fe652ad84be62886021eb6ac4f",
+      "mime_type": "image/jpeg",
+      "bytes": 22155,
+      "source": "embedded:data-uri",
+      "local_path": "images/12-冬回問文2・地圖冬遊-ddb80488.jpg"
+    },
+    {
+      "occurrence_id": 120,
+      "alt": "冬季回問文3・冰湖",
+      "sha256": "e35986fbc4427e7c794bdbaf2669068ebf435972e1af5452c43b45b6f04b53f0",
+      "mime_type": "image/jpeg",
+      "bytes": 39101,
+      "source": "embedded:data-uri",
+      "local_path": "images/13-冬季回問文3・冰湖-e35986fb.jpg"
+    },
+    {
+      "occurrence_id": 121,
+      "alt": "冬季回問文5・藍冰",
+      "sha256": "6c76a5e1669b5cf8e1e43a8aa0a0e7b8c7b97ac428959318f104fe7c97baa94d",
+      "mime_type": "image/jpeg",
+      "bytes": 18525,
+      "source": "embedded:data-uri",
+      "local_path": "images/14-冬季回問文5・藍冰-6c76a5e1.jpg"
+    },
+    {
+      "occurrence_id": 122,
+      "alt": "冬季回問文6・躺著的客人",
+      "sha256": "04d54c7a11698f37a4133aef9b9df560efb64365105aa427efca129c4389d72f",
+      "mime_type": "image/jpeg",
+      "bytes": 30084,
+      "source": "embedded:data-uri",
+      "local_path": "images/15-冬季回問文6・躺著的客人-04d54c7a.jpg"
+    },
+    {
+      "occurrence_id": 123,
+      "alt": "文後回圖2・客人照片1",
+      "sha256": "fb14cdb8ca21c92d357ff36db9269d8183d5793c9e9ce56619c644147d4c10c4",
+      "mime_type": "image/jpeg",
+      "bytes": 21679,
+      "source": "embedded:data-uri",
+      "local_path": "images/16-文後回圖2・客人照片1-fb14cdb8.jpg"
+    },
+    {
+      "occurrence_id": 124,
+      "alt": "文後回圖3・客人照片2",
+      "sha256": "e6c227f3c2c18e18102b39bb6f97b8e094178d85c8ea0e5ef8c4fbb2e608b2da",
+      "mime_type": "image/jpeg",
+      "bytes": 19560,
+      "source": "embedded:data-uri",
+      "local_path": "images/17-文後回圖3・客人照片2-e6c227f3.jpg"
+    },
+    {
+      "occurrence_id": 125,
+      "alt": "文後回圖2・客人照片1",
+      "sha256": "fb14cdb8ca21c92d357ff36db9269d8183d5793c9e9ce56619c644147d4c10c4",
+      "mime_type": "image/jpeg",
+      "bytes": 21679,
+      "source": "embedded:data-uri",
+      "local_path": "images/16-文後回圖2・客人照片1-fb14cdb8.jpg"
+    },
+    {
+      "occurrence_id": 126,
+      "alt": "文後回圖3・客人照片2",
+      "sha256": "e6c227f3c2c18e18102b39bb6f97b8e094178d85c8ea0e5ef8c4fbb2e608b2da",
+      "mime_type": "image/jpeg",
+      "bytes": 19560,
+      "source": "embedded:data-uri",
+      "local_path": "images/17-文後回圖3・客人照片2-e6c227f3.jpg"
+    }
+  ]
+}

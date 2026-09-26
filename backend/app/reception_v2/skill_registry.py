@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+import hashlib
+import re
+from dataclasses import dataclass
+from pathlib import Path
+
+
+SKILL_ROOT = Path(__file__).with_name("skills")
+
+
+@dataclass(frozen=True)
+class Skill:
+    name: str
+    description: str
+    body: str
+    digest: str
+    route_variant: str = ''
+    followup_groups: tuple[str, ...] = ()
+    route_aliases: tuple[str, ...] = ()
+
+
+def _load(path: Path) -> Skill:
+    text = path.read_text(encoding="utf-8")
+    match = re.fullmatch(r"---\s*\n(.*?)\n---\s*\n(.*)", text, re.DOTALL)
+    if not match:
+        raise ValueError(f"v2_skill_frontmatter_invalid:{path}")
+    headers = {}
+    for line in match.group(1).splitlines():
+        key, separator, value = line.partition(":")
+        if separator:
+            headers[key.strip()] = value.strip()
+    name, description = headers.get("name", ""), headers.get("description", "")
+    if not name or not description:
+        raise ValueError(f"v2_skill_metadata_missing:{path}")
+    return Skill(name, description, match.group(2).strip(), hashlib.sha256(text.encode()).hexdigest(),
+                 headers.get('route_variant', ''),
+                 tuple(v.strip() for v in headers.get('followup_groups', '').split(',') if v.strip()),
+                 tuple(v.strip() for v in headers.get('route_aliases', '').split('|') if v.strip()))
+
+
+class SkillRegistry:
+    def __init__(self, root: Path = SKILL_ROOT):
+        skills = [_load(path) for path in sorted(root.rglob("SKILL.md"))]
+        if len({item.name for item in skills}) != len(skills):
+            raise ValueError("v2_skill_name_duplicate")
+        self._skills = {item.name: item for item in skills}
+
+    def index(self) -> list[dict]:
+        return [{"name": item.name, "description": item.description} for item in self._skills.values()]
+
+    def load(self, name: str) -> dict:
+        skill = self._skills.get(name)
+        if skill is None:
+            raise ValueError("v2_skill_not_found")
+        return {"name": skill.name, "instructions": skill.body, "digest": skill.digest}
+
+    def release_digest(self) -> str:
+        value = "\n".join(f"{item.name}:{item.digest}" for item in self._skills.values())
+        return hashlib.sha256(value.encode()).hexdigest()
+
+    def route_skill(self, route_variant: str) -> str | None:
+        matches = [skill.name for skill in self._skills.values() if skill.route_variant == route_variant and route_variant]
+        if len(matches) > 1:
+            raise ValueError('v2_route_skill_duplicate')
+        return matches[0] if matches else None
+
+    def route_metadata(self, route_variant: str) -> Skill | None:
+        name = self.route_skill(route_variant)
+        return self._skills.get(name) if name else None

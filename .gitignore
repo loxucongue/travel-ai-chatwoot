@@ -1,0 +1,54 @@
+.venv/
+.runlogs/
+.playwright-cli/
+backend/.env
+.env.deploy
+backend/data/
+backend/.pytest_cache/
+backend/**/__pycache__/
+frontend/dist/
+output/playwright/
+output/deploy/
+output/three-modules-20260826/
+frontend/.env.local
+cloudflare-relay/node_modules/
+cloudflare-relay/.wrangler/
+cloudflare-relay/.dev.vars
+cloudflare-relay/*.log
+/archives/storage-cleanup-20260926/
+
+# Local credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+!.env.demo
+!.env.production
+.dev.vars
+*.pem
+*.key
+
+# Dependencies, caches, and build products
+node_modules/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+*.tsbuildinfo
+.wrangler/
+*.log
+
+# Customer data, local snapshots, and generated evidence
+/output/
+/artifacts/
+/tmp/
+/archives/
+/stitch-source/
+/data/evaluation/chatwoot_customer_journeys/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Local storage inventories contain machine paths rather than project source
+/docs/development/storage-cleanup-candidates-*.csv

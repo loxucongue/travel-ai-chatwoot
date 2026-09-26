@@ -1,0 +1,22 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api, API_BASE } from '../api';
+import { EmptyState, Modal, Badge } from '../components';
+import { Failure, statusLabel } from './Automation';
+import { normalizeNode, timingLabel, contentLabel, sopReason } from './sop-types';
+import type { NodeItem } from './sop-types';
+
+import { DeliveryStatus } from '../DeliveryDetails';
+
+export default function SopReview({ id, onClose }: { id: number; onClose: () => void }) {
+  const [tab, setTab] = useState('versions');
+  const versions = useQuery({ queryKey: ['sop-review-versions', id], queryFn: () => api<{ items: { id: number; version: number; created_at: string; config: { nodes: NodeItem[] } }[] }>(`/sops/${id}/versions`) });
+  const preview = useQuery({ queryKey: ['sop-review-preview', id], queryFn: () => api<{ total: number; items: { id: number; conversation_id: number; labels: string[]; can_reply: boolean }[] }>(`/sops/${id}/preview`) });
+  const executions = useQuery({ queryKey: ['sop-review-executions', id], queryFn: () => api<{ items: { id: string | number; node_key: string; round_number?: number; conversation_id?: number; environment?: string; allow_repeat_delivery?: boolean; status: string; skip_reason?: string; scheduled_at?: string; delivery_items?: { key: string; status: string; chatwoot_message_id?: number }[] }[] }>(`/sops/${id}/executions`), refetchInterval: 5000 });
+  const environmentLabel = (value?: string) => value === 'live_test' ? '真实白名单测试' : value === 'shadow' ? '实时观察演练' : '隔离演练';
+  return <Modal open title={`SOP #${id}`} onClose={onClose} footer={<button className="secondary-button" onClick={onClose}>关闭</button>}>
+    <div className="automation-tabs" role="tablist">{[['versions', '发布版本'], ['preview', `受众 (${preview.data?.total ?? 0})`], ['executions', '执行明细']].map(([key, label]) => <button role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} key={key} onClick={() => setTab(key)}>{label}</button>)}</div>
+    <Failure error={versions.error || preview.error || executions.error} />
+    {(tab === 'versions' ? versions.isLoading : tab === 'preview' ? preview.isLoading : executions.isLoading) ? <EmptyState type="loading" title="正在读取" description="" /> : tab === 'versions' ? !versions.data?.items.length ? <EmptyState title="暂无发布版本" description="" /> : versions.data.items.map(x => <details key={x.id} className="sop-version-detail"><summary>v{x.version} · {new Date(x.created_at).toLocaleString()}</summary>{x.config.nodes.map(normalizeNode).map((n, index) => <section key={n.key} className="sop-published-group"><h3>内容组 {index + 1} · {timingLabel(n)}</h3>{n.messages.map((message, i) => <div className="sop-published-message" key={message.key}><Badge>{i + 1} · {contentLabel(message.content_type)}</Badge>{message.content && <p>{message.content}</p>}{message.media_id && (message.content_type === 'image' ? <img src={`${API_BASE}/media/${message.media_id}/preview`} alt="发布版本图片" loading="lazy" /> : message.content_type === 'video' ? <video src={`${API_BASE}/media/${message.media_id}/preview`} controls preload="metadata" /> : <span>附件 #{message.media_id}</span>)}</div>)}</section>)}</details>) : tab === 'preview' ? !preview.data?.items.length ? <EmptyState title="暂无匹配客户" description="" /> : <div className="selection-list">{preview.data.items.map(x => <div key={x.id} className="automation-policy-row"><strong>会话 #{x.conversation_id}</strong><span>{x.labels.join(' · ') || '无标签'}</span><Badge tone={x.can_reply ? 'green' : 'amber'}>{x.can_reply ? '待发送前复核' : '不可回复'}</Badge></div>)}</div> : !executions.data?.items.length ? <EmptyState title="暂无执行记录" description="" /> : executions.data.items.map(x => <div className="automation-policy-row" key={x.id}><div><strong>{x.conversation_id ? `会话 #${x.conversation_id} · ` : ''}第 {x.round_number ?? 1} 轮 · {x.node_key}</strong><small>{environmentLabel(x.environment)}{x.allow_repeat_delivery ? ' · 允许本轮重复' : ''}</small><small>{(x.skip_reason && sopReason(x.skip_reason)) || (x.scheduled_at && new Date(x.scheduled_at).toLocaleString())}</small>{!!x.delivery_items?.length && <small>{x.delivery_items.map((item, index) => <span key={`${item.key}-${index}`}>{item.key || index + 1}：<DeliveryStatus status={item.status} /> </span>)}</small>}</div><Badge tone={x.environment === 'live_test' ? 'amber' : 'neutral'}>{statusLabel(x.status)}</Badge></div>)}
+  </Modal>;
+}

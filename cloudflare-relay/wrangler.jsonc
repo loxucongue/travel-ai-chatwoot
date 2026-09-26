@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "china2go-chatwoot-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "china2go-chatwoot-relay",
+      "database_id": "9b6b00b1-b346-4e79-906a-02560741b8a7",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "relay.luoxuecong.asia",
+      "custom_domain": true
+    }
+  ]
+}
