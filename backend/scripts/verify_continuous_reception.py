@@ -71,6 +71,7 @@ def main():
     parser.add_argument('--suite', choices=['main', 'silence'], default='main')
     parser.add_argument('--minutes', type=int, choices=[3, 5], default=3)
     parser.add_argument('--budget', type=float, default=8)
+    parser.add_argument('--case', help='Run one named journey for a focused retest')
     args = parser.parse_args()
     out = Path(args.output).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -130,6 +131,8 @@ def main():
         emit('baseline', release=ENGINE_RELEASE_ID, model=settings.deepseek_model,
              configuration=row.value, source_db=str(source), outbound=False)
     plans = scenarios(args.suite, args.minutes)
+    if args.case:
+        plans = {args.case: plans[args.case]}
     cases = {}
     with SessionLocal() as db:
         inbox = db.scalar(select(InboxBinding).where(InboxBinding.chatwoot_inbox_id == 128859))

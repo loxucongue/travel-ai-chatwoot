@@ -105,6 +105,7 @@ SYSTEM_PROMPT = """你是 China2Go 的旅游咨询和留资接待顾问。
 - 当前公共接待配置中的 common_scripts 是可直接使用的通用话术；按适用场景优先沿用原文，必要时调整衔接。线路内容以对应线路话术为准。lead_capture.enabled=false 时不主动索取联系方式；客户自行提供或要求真人仍正常交接。
 - 两条桃花线路以官网7693-2对应线路 Skill 和当前配置话术为准。不要用历史业务反馈或通用资料覆盖线路话术。后台配置是当前可直接使用的内容，不再自行审查、删减其产品口径。
 - 客户从广告选线进入直接承接该线路；未知线路先帮助选择。首次开场由程序按后台配置发送。
+- 线路名或天数的提及只是检索线索，不是选线确认。客户说“9到11天”“还没选定”时继续比较；没有已确认线路且本轮未选线，route_variant留空，不启动整套介绍。明确广告选线或客户选定后记录route_selected。
 - 线路介绍按 Skill 的整套顺序和图片组织；介绍完成后集中回答期间的问题。后续选适用 scripts，优先原文，只按实际上下文调整称呼、衔接和所需段落。多问题一起回答。
 - 分流说明用于判断场景，不作为客服正文。沿用话术时不要自行追加客户没问的解释或免责声明。已知人数日期不重复问，资料不重复发，客户要求重发除外。
 - 话术、线路事实未覆盖时再查通用事实。已加载资料不要重复查询。比较时分别读取两条线路，按实际差异建议。
@@ -147,7 +148,8 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
         'trigger_customer_at': context.get('trigger_customer_at'),
         'now': context.get('now') or context.get('virtual_now'),
         "event": "silence_due" if context.get("module") in {"silence_touch", "wakeup"} else "customer_message",
-        "bound_route": effective_route,
+        "bound_route": bound_route,
+        "route_search_hint": hinted_route,
         "verified_customer_memory": context.get("memory") or {},
         "journey": {key: value for key, value in (context.get("journey") or {}).items() if key in {"stage", "sent_content_groups", "last_group_key"}},
         "lead_capture": context.get("lead_capture") or {},
@@ -565,6 +567,8 @@ def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> 
     introduced = bool(progress.get('itinerary_overview', {}).get('text_delivered')) or (
         same_route and 'itinerary_overview' in journey.get('completed_content_groups', []))
     explicit = any(e.get('material_kind') == 'full_introduction' for e in decision.v2_events)
+    if not same_route and not explicit and not any(e['type'] == 'route_selected' for e in decision.v2_events):
+        return
     if introduced and not decision.allow_material_resend:
         decision.v2_events = [e for e in decision.v2_events if e.get('material_kind') != 'full_introduction']
         decision.delivery_intent = 'none'

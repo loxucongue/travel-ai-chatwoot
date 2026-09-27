@@ -143,6 +143,21 @@ def test_live_intro_queues_questions_but_interrupts_control(session_factory, mon
             assert job.trace['introduction_queued_input_ids'] == [101]
 
 
+def test_route_search_hint_does_not_start_an_unconfirmed_introduction():
+    from app.deepseek_evaluation import EvaluationDecision
+    from app.reception_v2.runtime import _prepare_route_introduction, _messages
+    from app.reception_v2.skill_registry import SkillRegistry
+    context = {'module': 'reply', 'customer_text': '只有9到11天，不想太趕，住宿也希望好一點。',
+               'context_messages': [], 'memory': {'party_size': 2}}
+    decision = EvaluationDecision(action='reply', branch='peach_11d', intent='other',
+        route_variant='peach_11d_2027', reply='可以先比較兩條線路。')
+    _prepare_route_introduction(context, decision)
+    assert not decision.introduction_delivery
+    prompt = _messages(context, SkillRegistry())[0]['content']
+    assert '"bound_route": ""' in prompt
+    assert '"route_search_hint": "peach_11d_2027"' in prompt
+
+
 def test_rehearsal_queues_multiple_questions_across_outgoing_messages(session_factory, monkeypatch):
     from app.automation_models import AutomationSession, AutomationRun
     from app.automation_service import add_customer_message, queue_passive, _auto_confirm_journey_drafts
