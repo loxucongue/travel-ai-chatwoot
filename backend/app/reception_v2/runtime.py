@@ -36,7 +36,7 @@ from app.reception_v2.budget import bounded_turn, remaining
 from app.advisor_voice import v2_advisor_voice_contract, taiwan_copy_violation, v2_internal_copy_violation
 
 
-PROMPT_VERSION = "reception-v2-agent-consistency-20260926"
+PROMPT_VERSION = "reception-v2-agent-orchestration-20260927"
 MAX_TOOL_ROUNDS = 4
 
 

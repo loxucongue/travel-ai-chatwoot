@@ -32,4 +32,4 @@ def _release_digest() -> str:
     return digest.hexdigest()
 
 
-ENGINE_RELEASE_ID = f"reception-v2-feedback-20260920-{_release_digest()[:16]}"
+ENGINE_RELEASE_ID = f"reception-v2-agent-20260927-{_release_digest()[:16]}"
