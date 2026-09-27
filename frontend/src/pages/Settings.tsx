@@ -124,10 +124,10 @@ function ReplyTiming({ notify }: { notify: (value: string) => void }) {
   return <><header className="settings-section-head"><h2>运行参数</h2></header>
     <article className="setting-card"><div className="form-stack">
       <label>范围<select value={scope} onChange={event => { setScope(event.target.value); setForm(null); }}><option value="">全局默认</option>{inboxes.data?.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-      {form && <><label className="checkbox-line"><input type="checkbox" checked={form.enabled} onChange={event => setForm({...form, enabled: event.target.checked})} />启用客户消息回复</label>
+      {form && <><div className="global-toggle-row"><strong>启用客户消息回复</strong><Toggle checked={form.enabled} onChange={enabled => setForm({...form, enabled})} label="启用客户消息回复" /></div>
       <label>连续消息等待（秒）<input type="number" min={1} max={5} value={form.merge_wait_seconds} onChange={event => setForm({...form, merge_wait_seconds: Number(event.target.value)})} /></label>
       <label>最长合并等待（秒）<input type="number" min={1} max={5} value={form.merge_max_seconds} onChange={event => setForm({...form, merge_max_seconds: Number(event.target.value)})} /></label></>}
-      {reception.data && <p>模型 {reception.data.runtime.model} · 超时 {reception.data.runtime.timeout_seconds} 秒 · 并发 {reception.data.runtime.concurrency}（服务端设置）</p>}
+      {reception.data && <label>当前模型<input readOnly value={reception.data.runtime.model} /><small>超时 {reception.data.runtime.timeout_seconds} 秒 · 并发 {reception.data.runtime.concurrency}（服务端设置）</small></label>}
       {query.error || save.error ? <p role="alert">{(query.error || save.error)?.message}</p> : null}
     </div><div className="setting-actions"><button className="primary-button" disabled={!form || form.merge_wait_seconds > form.merge_max_seconds || save.isPending} onClick={() => save.mutate()}><Save size={15} />保存</button></div></article></>;
 }
