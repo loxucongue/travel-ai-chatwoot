@@ -177,9 +177,9 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
         hinted_skills.append("new-lead-intake")
     if flow.name == "route_selection":
         hinted_skills.append("route-matching")
-    if state["bound_route"]:
+    if state["bound_route"] and state['event'] != 'silence_due':
         hinted_skills.append("route-presentation")
-    if (context.get("journey") or {}).get("stage") in {"value_building", "considering"}:
+    if state['event'] != 'silence_due' and (context.get("journey") or {}).get("stage") in {"value_building", "considering"}:
         hinted_skills.append("value-building")
     for skill_name in hinted_skills:
         if skill_name not in {item["name"] for item in preloaded}:
@@ -964,7 +964,14 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
         candidate_assets = {key for group in ROUTES.get(bound_route, {}).get("groups", {}).values()
                             if candidates.intersection(group.get("evidence", [])) for key in group.get("assets", [])}
         available_materials.intersection_update(candidate_assets)
-        messages.append({"role": "system", "content": "本轮沉默跟进唯一可提供的新价值与素材如下。只选其中一项，不重讲行程、不转向其他主题；无必要时停止。\n"
+        messages.append({"role": "system", "content":
+                         "这是沉默评估，不是继续执行线路介绍。候选清单仅表示尚未发送，完全不代表与客户有关。"
+                         "先根据最后几轮对话判断客户实际关注什么、已经回答了什么；只有直接补充同一关注点的新内容才可发送。"
+                         "地名相同不等于相关：客户聊拉萨文化，不能转成拉萨住宿或供氧；聊车辆舒适度，不能转成景点介绍。"
+                         "客户说暂时不发整套时，不能借沉默逐项补齐整套。候选全部无关或相关内容已经回答，"
+                         "必须 action=no_action、wakeup_action=skip、reply=null、material_keys=[]。不要为了发消息牵强搭桥。"
+                         "有相关新价值才选一项，并用touch_reason说明与客户原话的联系及新增信息；不追问人数或联系方式。\n"
+                         + '客户最后原话：' + str(context.get('customer_text') or '') + '\n候选资料：'
                          + json.dumps({"facts": prefetched, "material_keys": sorted(available_materials),
                             'material_facts': {asset: group.get('evidence', [])
                                 for group in ROUTES.get(bound_route, {}).get('groups', {}).values()
