@@ -7,6 +7,8 @@ description: Present a selected route in layers, using approved itinerary and ma
 
 适用于客户明确想了解某条线路、索取完整介绍、行程图或继续追问住宿、车辆和亮点。
 
+客户只选定线路时，先执行线路 Skill 的接待顺序：人数未知且未问过就先问人数并等待，不直接发送行程图或住宿照片；人数已知不重复问。客户明确要求直接看资料时按其请求交付。
+
 - 使用 `get_route_details` 读取客户当前关注的主题；需要资料时使用 `get_route_material_packet`，不要自己拼素材 key。
 - 完整介绍按对应线路 Skill 和配置顺序发送整套图文；不要只发骨架后省略剩余介绍。
 - 行程图必须先于景点、住宿和车辆照片；同一素材不能重复交付。
