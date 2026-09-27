@@ -10,9 +10,9 @@ def test_login_and_csrf(client):
     assert response.status_code == 200
     assert "aiops_session" in response.cookies
     assert client.get("/v1/auth/me").json()["email"] == "admin@example.com"
-    assert client.put("/v1/settings/ai", json={"trigger_text": "a", "reply_text": "b"}).status_code == 403
+    assert client.patch("/v1/automation/reception-config", json={"lead_capture": {"enabled": True}}).status_code == 403
     token = response.json()["csrf_token"]
-    assert client.put("/v1/settings/ai", headers={"X-CSRF-Token": token}, json={"trigger_text": "a", "reply_text": "b"}).status_code == 200
+    assert client.patch("/v1/automation/reception-config", headers={"X-CSRF-Token": token}, json={"lead_capture": {"enabled": True}}).status_code == 200
 
 
 def test_chatwoot_token_is_not_returned(authenticated):

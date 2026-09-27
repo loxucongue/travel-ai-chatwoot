@@ -1288,19 +1288,6 @@ def test_same_request_is_idempotent_and_completed_round_requires_explicit_reenro
             assert str(exc) == "sop_reenrollment_required"
 
 
-def test_live_enrollment_api_requires_explicit_confirmation(authenticated, session_factory, monkeypatch):
-    client, csrf = authenticated
-    _fake, sop_id, _version_id = setup(session_factory, monkeypatch)
-    headers = {"X-CSRF-Token": csrf}
-    payload = {"conversation_ids": [26], "environment": "live_test", "request_key": "api-live"}
-    denied = client.post(f"/v1/sops/{sop_id}/enroll", json=payload, headers=headers)
-    assert denied.status_code == 422
-    payload["confirm_live_delivery"] = True
-    accepted = client.post(f"/v1/sops/{sop_id}/enroll", json=payload, headers=headers)
-    assert accepted.status_code == 200
-    assert accepted.json()["outbound"] is True
-    candidates = client.get(f"/v1/sops/{sop_id}/enrollment-candidates?environment=live_test")
-    assert candidates.status_code == 200 and candidates.json()["total"] == 1
 
 
 def test_explicit_repeat_test_bypasses_only_test_touch_cooldown(session_factory, monkeypatch):
@@ -1322,15 +1309,6 @@ def test_explicit_repeat_test_bypasses_only_test_touch_cooldown(session_factory,
         assert reservation.owner_key == f"live-sop:{enrollment_id}"
 
 
-def test_repeat_flag_is_rejected_outside_live_test(authenticated, session_factory, monkeypatch):
-    client, csrf = authenticated
-    _fake, sop_id, _version_id = setup(session_factory, monkeypatch)
-    response = client.post(f"/v1/sops/{sop_id}/enroll", json={
-        "conversation_ids": [26], "environment": "shadow", "request_key": "no-repeat",
-        "allow_repeat_delivery": True,
-    }, headers={"X-CSRF-Token": csrf})
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "repeat_delivery_live_test_only"
 
 
 def make_canonical_sop(session_factory, sop_id):

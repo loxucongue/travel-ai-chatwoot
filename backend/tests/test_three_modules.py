@@ -205,8 +205,8 @@ def test_api_isolated_no_real_writes_and_csrf(authenticated,session_factory):
 def test_scope_and_policy_conflict(authenticated,session_factory):
     client,csrf=authenticated
     h={'X-CSRF-Token':csrf}
-    assert client.patch('/v1/automation/reply-policy',json={'version':1},headers=h).status_code==200
-    assert client.patch('/v1/automation/reply-policy',json={'version':1},headers=h).status_code==409
+    assert client.patch('/v1/settings/reply-timing',json={'version':1},headers=h).status_code==200
+    assert client.patch('/v1/settings/reply-timing',json={'version':1},headers=h).status_code==409
 
 
 def test_redaction_preserves_dates_not_contact_details():
@@ -245,10 +245,6 @@ def test_supervisor_scope_and_publish_denied(authenticated,session_factory):
         db.add(UserInboxScope(user_id=1,inbox_binding_id=1));db.commit()
     h={'X-CSRF-Token':csrf}
     assert client.post('/v1/playground/sessions',json={'inbox_binding_id':2},headers=h).status_code==403
-    assert client.post('/v1/sops',json={'name':'bad','inbox_ids':[102]},headers=h).status_code==403
-    good=client.post('/v1/sops',json={'name':'good','inbox_ids':[101]},headers=h)
-    assert good.status_code==200
-    assert client.post(f"/v1/sops/{good.json()['id']}/publish",headers=h).status_code==403
     assert client.get('/v1/evaluation/runs').status_code==403
 
 
@@ -369,8 +365,11 @@ def test_label_rehearsal_enrollment_does_not_touch_real_jobs(authenticated,sessi
     with session_factory() as db:
         db.add(ChatwootLabel(tenant_id=1,chatwoot_label_id=1,title="qa-followup"));db.commit()
     h={'X-CSRF-Token':csrf}
-    sop=client.post('/v1/sops',json={'name':'label rehearsal','trigger_type':'label','trigger_labels':['qa-followup'],'nodes':[{'key':'n1','content':'fixed','delay_minutes':5}]},headers=h).json()
-    assert client.post(f"/v1/sops/{sop['id']}/publish",headers=h).status_code==200
+    with session_factory() as db:
+        definition = SopDefinition(tenant_id=1, created_by=1, name='label rehearsal', status='running', trigger_type='label', trigger_labels=['qa-followup'], nodes=[{'key':'n1','content':'fixed','delay_minutes':5}])
+        db.add(definition); db.flush()
+        sop_snapshot(db, definition, 1)
+        db.commit()
     session=client.post('/v1/playground/sessions',json={},headers=h).json()
     response=client.post(f"/v1/playground/sessions/{session['id']}/advance",json={'generation':0,'labels':['qa-followup']},headers=h)
     assert response.status_code==200

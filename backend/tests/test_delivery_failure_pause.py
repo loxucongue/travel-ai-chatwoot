@@ -255,6 +255,7 @@ def _opening_decision(db, tmp_path):
             {"key": "hello", "content_type": "text", "content": "Hello"},
             {"key": "repeat", "content_type": "text", "content": "Hello"},
             media(db, tmp_path), media(db, tmp_path, "video"),
+            {"key": "question", "content_type": "text", "content": "Which route would you like?"},
         ],
         opening_interval_seconds=4, reply_options=["Route A", "Route B"],
     )
@@ -360,7 +361,7 @@ def test_opening_validates_all_media_before_first_submission(session_factory, mo
     fake = setup(session_factory, monkeypatch, labels=["ai"])
     with session_factory() as db:
         decision = _opening_decision(db, tmp_path)
-        Path(db.get(StoredMedia, decision.opening_items[-1]["media_id"]).storage_path).unlink()
+        Path(db.get(StoredMedia, decision.opening_items[-2]["media_id"]).storage_path).unlink()
     monkeypatch.setattr(live, "generate_decision", lambda _: (decision, [], "hash", {}))
     live.process_job(1)
     assert fake.sent == []

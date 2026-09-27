@@ -179,6 +179,6 @@ def test_opening_configuration_round_trip(authenticated):
     config = client.get('/v1/automation/reception-config').json()['config']
     config['reply']['opening_message'] = '您好～想先了解哪條行程呢？'
     config['reply'].pop('opening_messages', None)
-    response = client.put('/v1/automation/reception-config', json=config, headers={'X-CSRF-Token': csrf})
+    response = client.patch('/v1/automation/reception-config', json={'reply': {'opening_items': [{'key':'hello','content_type':'text','content':config['reply']['opening_message']}]}}, headers={'X-CSRF-Token': csrf})
     assert response.status_code == 200, response.text
     assert client.get('/v1/automation/reception-config').json()['config']['reply']['opening_message'] == config['reply']['opening_message']

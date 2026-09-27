@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import select
 
 from app.config import settings
+from app.reception_config import live_silence_enabled
 from app.db import SessionLocal
 from app.delivery_status import reconcile_live_delivery
 from app.live_reply import assert_worker_ready, mirror_event, process_job, recover_jobs
@@ -64,7 +65,7 @@ def dispatch_due(scheduler):
                 LiveReplyJob.conversation_state_id.not_in(excluded)
             ).order_by(LiveReplyJob.due_at, LiveReplyJob.id).limit(1))
             sop = None
-            if settings.live_sop_enabled:
+            if live_silence_enabled(db):
                 sop = db.execute(select(LiveSopJob, LiveSopEnrollment.conversation_state_id).join(
                     LiveSopEnrollment, LiveSopEnrollment.id == LiveSopJob.enrollment_id).where(
                     LiveSopJob.status == "scheduled", LiveSopJob.scheduled_at <= utcnow(),
@@ -89,7 +90,9 @@ def maintenance_tick(receipts_checked, deadlines):
     if now >= deadlines.get("receipts", 0):
         tasks.append(("receipts", lambda: reconcile_live_delivery(receipts_checked)))
         deadlines["receipts"] = now + 30
-    if settings.live_sop_enabled and now >= deadlines.get("sops", 0):
+    with SessionLocal() as db:
+        silence_enabled = live_silence_enabled(db)
+    if silence_enabled and now >= deadlines.get("sops", 0):
         from app.live_sop import reconcile_model_route_sops
         tasks.append(("sops", reconcile_model_route_sops))
         deadlines["sops"] = now + 30
@@ -136,7 +139,7 @@ def run():
     try:
         with SessionLocal() as db:
             recover_jobs(db)
-            if settings.live_sop_enabled:
+            if live_silence_enabled(db):
                 from app.live_sop import recover_live_sop_jobs
                 recover_live_sop_jobs(db)
         logger.info("live_reply_started concurrency=%s", settings.live_reply_concurrency)

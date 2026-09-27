@@ -142,21 +142,6 @@ def test_added_anchor_frozen_and_new_reply_cancels_group(session_factory):
         assert db.scalar(select(RehearsalJob)).status == "cancelled"
 
 
-def test_api_roundtrip_schema_preview_and_publication(authenticated):
-    client, csrf = authenticated
-    headers = {"X-CSRF-Token": csrf}
-    assert client.post('/v1/sops/schedule-preview', json={"nodes": [node()], "customer_added_at": ADDED}).status_code == 403
-    preview = client.post('/v1/sops/schedule-preview', json={"nodes": [node()], "customer_added_at": ADDED}, headers=headers)
-    assert preview.status_code == 200 and preview.json()["items"][0]["scheduled_at"] == "2026-08-26T02:10:00+00:00"
-    result = client.post('/v1/sops', json={"name": "group test", "nodes": [node(messages=[text("x", "a"), text("y", "b")])]}, headers=headers)
-    assert result.status_code == 200
-    sid = result.json()["id"]
-    assert len(client.get(f'/v1/sops/{sid}').json()["nodes"][0]["messages"]) == 2
-    assert client.post(f'/v1/sops/{sid}/publish', headers=headers).status_code == 200
-    bad = client.post('/v1/sops', json={"name": "invalid", "nodes": [node(basis="previous_node")]}, headers=headers)
-    assert client.post(f'/v1/sops/{bad.json()["id"]}/publish', headers=headers).status_code == 422
-    for bad_node in [node(messages=[]), node(time_of_day="25:99"), node(day_number=0)]:
-        assert client.post('/v1/sops', json={"name": "bad", "nodes": [bad_node]}, headers=headers).status_code == 422
 
 
 def test_old_single_message_normalizes_without_loss():

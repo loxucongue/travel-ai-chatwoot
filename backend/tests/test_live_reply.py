@@ -200,7 +200,7 @@ def test_missing_global_message_setting_fails_closed(session_factory):
         assert global_message_sending_enabled(db) is False
 
 
-@pytest.mark.parametrize("condition", ["no_tag", "human_tag", "contact_block", "can_reply", "handoff_task", "new_input", "human_reply", "old_input", "global_off", "message_sending_off", "unknown_submission", "timestamp_unknown", "adapter_off"])
+@pytest.mark.parametrize("condition", ["no_tag", "human_tag", "contact_block", "can_reply", "handoff_task", "new_input", "human_reply", "old_input", "global_off", "message_sending_off", "unknown_submission", "timestamp_unknown"])
 def test_live_gates_zero_sends(session_factory, monkeypatch, condition):
     fake = setup(session_factory, monkeypatch)
     with session_factory() as db:
@@ -216,7 +216,6 @@ def test_live_gates_zero_sends(session_factory, monkeypatch, condition):
         if condition == "global_off": db.get(Tenant, 1).ai_enabled = False
         if condition == "message_sending_off":
             db.get(AppSetting, "global_message_sending").value = {"enabled": False}
-        if condition == "adapter_off": db.add(AppSetting(key="ai_adapter", value={"enabled": False}))
         if condition == "unknown_submission": db.add(OutboundMessage(conversation_state_id=1, idempotency_key="unknown", content="", status="submission_unknown"))
         db.commit()
     live.process_job(1)

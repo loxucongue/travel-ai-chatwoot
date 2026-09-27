@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pause, Play, RefreshCw, Upload } from 'lucide-react';
 import { api, API_BASE, DEMO_MODE } from '../api';
 import { Badge, EmptyState, PageHeader } from '../components';
-import { DemoUnavailable, Failure, statusLabel } from './Automation';
+import { DemoUnavailable, Failure, statusLabel } from './RuntimeRecords';
 import { useAuth } from '../auth';
 
 type ReplayRun = { id: number; dataset_id: number; status: string; model: string; total_cases: number; completed_cases: number; failed_cases: number; metrics: Record<string, unknown> };

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, ArrowRight, Ban, BookOpenText, Bot, CheckCircle2, ExternalLink, FileSearch, Globe2,
+  Activity, Ban, BookOpenText, CheckCircle2, ExternalLink, FileSearch, Globe2,
   RefreshCw, Search, ShieldCheck,
 } from 'lucide-react';
 import { api, ApiError } from '../api';
@@ -70,7 +70,7 @@ export default function WebKnowledge() {
     queryFn: () => api<SourcesResponse>('/knowledge/web-sources'),
   });
   const source = sources.data?.items[0];
-  const revisionId = source?.latest_revision?.id ?? null;
+  const revisionId = source?.published_revision?.id ?? source?.latest_revision?.id ?? null;
   const revision = useQuery({
     queryKey: ['web-knowledge-revision', revisionId],
     queryFn: () => api<Revision>(`/knowledge/web-revisions/${revisionId}`),
@@ -89,8 +89,9 @@ export default function WebKnowledge() {
     mutationFn: async (action: 'enable' | 'disable') => {
       if (!source) throw new Error('尚未建立官网知识');
       if (action === 'enable') {
-        if (!source.latest_revision) throw new Error('没有可启用的审核版本');
-        return api<Source>(`/knowledge/web-sources/${source.id}/revisions/${source.latest_revision.id}/publish`, { method: 'POST' });
+        const target = source.published_revision ?? source.latest_revision;
+        if (!target) throw new Error('没有可启用的版本');
+        return api<Source>(`/knowledge/web-sources/${source.id}/revisions/${target.id}/publish?runtime_scope=${usageScope}`, { method: 'POST' });
       }
       return api<Source>(`/knowledge/web-sources/${source.id}/disable`, { method: 'POST' });
     },
@@ -109,7 +110,9 @@ export default function WebKnowledge() {
     return modules.filter(item => `${item.title} ${item.summary} ${item.topics.join(' ')} ${item.facts.map(fact => fact.text).join(' ')}`.toLowerCase().includes(query));
   }, [modules, search]);
   const error = sources.error || revision.error || runtimeModules.error;
-  const playgroundEnabled = source?.ai_enabled && source.runtime_scope === 'playground';
+  const knowledgeEnabled = !!source?.ai_enabled && source.runtime_scope !== 'disabled';
+  const [usageScope, setUsageScope] = useState<'playground' | 'live'>('live');
+  useEffect(() => { if (source?.runtime_scope === 'playground' || source?.runtime_scope === 'live') setUsageScope(source.runtime_scope); }, [source?.runtime_scope]);
 
   useEffect(() => {
     if (view !== 'modules') setSearch('');
@@ -121,41 +124,25 @@ export default function WebKnowledge() {
       title="全局官网知识库"
       description="从 China2Go 官网整理、核对并分模块保存的共用文字知识。线路价格、团期、行程与图片仍在线路管理中维护。"
       actions={<div className="knowledge-disabled-actions">
-        <button className="secondary-button" disabled title="测试期间保持关闭，避免官网内容发生变化"><RefreshCw size={15} />更新资料</button>
-        <button className={playgroundEnabled ? 'secondary-button' : 'primary-button'} disabled={!source || changeUsage.isPending || (!playgroundEnabled && !sources.data?.capabilities.publish_enabled)} onClick={() => changeUsage.mutate(playgroundEnabled ? 'disable' : 'enable')}><BookOpenText size={15} />{changeUsage.isPending ? '处理中…' : playgroundEnabled ? '停止使用' : '启用到 AI 演练'}</button>
+        <select aria-label="知识使用范围" value={usageScope} onChange={event => setUsageScope(event.target.value as 'live' | 'playground')}><option value="live">真实接待与演练</option><option value="playground">仅演练</option></select>
+        {knowledgeEnabled && usageScope !== source?.runtime_scope && <button className="primary-button" onClick={() => changeUsage.mutate('enable')}>保存范围</button>}
+        <button className={knowledgeEnabled ? 'secondary-button' : 'primary-button'} disabled={!source || changeUsage.isPending || (!knowledgeEnabled && !sources.data?.capabilities.publish_enabled)} onClick={() => changeUsage.mutate(knowledgeEnabled ? 'disable' : 'enable')}><BookOpenText size={15} />{changeUsage.isPending ? '处理中…' : knowledgeEnabled ? '停止使用' : '启用知识'}</button>
       </div>}
     />
 
-    <div className="knowledge-hold-note"><Ban size={18} /><div><strong>官网更新功能暂时停用</strong><span>{playgroundEnabled ? '当前审核版本仅供 AI 演练和离线评测使用，真实客户接待不会读取。' : '当前知识不会进入任何 AI 回复；可手动启用到 AI 演练，生产启用本轮不开放。'}</span></div></div>
+    <div className="knowledge-library-meta"><Badge tone={knowledgeEnabled ? 'green' : 'neutral'}>{knowledgeEnabled ? source?.runtime_scope === 'live' ? '真实接待与演练使用中' : '仅演练使用中' : '已停用'}</Badge><span>已发布版本 {source?.published_revision?.revision_number ?? '—'}</span></div>
     {changeUsage.error ? <div className="config-error"><ShieldCheck size={16} />{(changeUsage.error as Error).message}</div> : null}
     {error ? <div className="config-error"><ShieldCheck size={16} />{(error as ApiError).message}</div> : null}
     {sources.isLoading || (revisionId && revision.isLoading) ? <EmptyState type="loading" title="正在读取全局知识" description="" /> : !source || !revision.data ? <EmptyState title="尚未建立全局知识" description="当前没有可检查的官网知识版本。" /> : <>
       <section className="knowledge-library-summary">
-        <div className="knowledge-library-source"><span className="knowledge-library-icon"><Globe2 size={21} /></span><div><strong>{source.name}</strong><a href="https://china2go.com/" target="_blank" rel="noreferrer">https://china2go.com/ <ExternalLink size={11} /></a><small>{source.description}</small></div><Badge tone={playgroundEnabled ? 'blue' : 'amber'}>{playgroundEnabled ? '仅 AI 演练使用' : '未启用'}</Badge></div>
+        <div className="knowledge-library-source"><span className="knowledge-library-icon"><Globe2 size={21} /></span><div><strong>{source.name}</strong><a href="https://china2go.com/" target="_blank" rel="noreferrer">https://china2go.com/ <ExternalLink size={11} /></a><small>{source.description}</small></div><Badge tone={knowledgeEnabled ? 'blue' : 'amber'}>{knowledgeEnabled ? (source.runtime_scope === 'live' ? '真实接待与演练' : '仅演练') : '未启用'}</Badge></div>
         <div className="knowledge-library-stats">
           <article><span>知识模块</span><strong>{modules.length}</strong><small>{runtimeModules.data?.summary.modules ?? 0} 个运行核心模块</small></article>
           <article><span>已核对事实</span><strong>{revision.data.fact_count + (runtimeModules.data?.summary.facts ?? 0)}</strong><small>每条保留来源与范围</small></article>
           <article><span>全站页面</span><strong>{inventory.length}</strong><small>{inventory.filter(item => item.status === 'fetched').length} 页读取成功</small></article>
-          <article><span>AI 状态</span><strong>{playgroundEnabled ? '仅演练' : '关闭'}</strong><small>{playgroundEnabled ? '真实接待不读取' : '不参与回答'}</small></article>
+          <article><span>AI 状态</span><strong>{knowledgeEnabled ? (source.runtime_scope === 'live' ? '已启用' : '仅演练') : '关闭'}</strong><small>{knowledgeEnabled ? (source.runtime_scope === 'live' ? '真实接待与演练读取' : '真实接待不读取') : '不参与回答'}</small></article>
         </div>
         <div className="knowledge-library-meta"><span>最近整理：{formatTime(source.last_checked_at)}</span><span>内容指纹：{revision.data.content_hash.slice(0, 16)}</span><span>来源语言：繁体中文</span></div>
-      </section>
-
-      <section className="knowledge-ai-flow" aria-label="AI 回复使用链路">
-        <header>
-          <div><Bot size={19} /><div><strong>这些知识如何进入 AI 回复</strong><span>高原健康与系统安全模块会进入演练及合规真实接待；官网审核模块{playgroundEnabled ? '目前仅进入演练' : '目前停用'}。</span></div></div>
-          <Badge tone={playgroundEnabled ? 'blue' : 'amber'}>{playgroundEnabled ? '仅演练使用' : '尚未使用'}</Badge>
-        </header>
-        <div className="knowledge-ai-flow-steps">
-          <div><b>1</b><span><strong>客户提出问题</strong><small>例如签证、交通、付款或联络方式</small></span></div>
-          <ArrowRight size={16} />
-          <div><b>2</b><span><strong>检索相关事实</strong><small>只取已审核启用且与问题相关的内容</small></span></div>
-          <ArrowRight size={16} />
-          <div><b>3</b><span><strong>加入回复依据</strong><small>回复模型只能引用检索到的官网事实</small></span></div>
-          <ArrowRight size={16} />
-          <div><b>4</b><span><strong>发送前核验</strong><small>核对事实是否真正支持客户可见文案</small></span></div>
-        </div>
-        <p><ShieldCheck size={14} />运行核心知识按客户主题筛选，并受安全规划器约束；官网审核知识还需要版本启用且主题命中。页面展示不等于每轮都塞进提示词。</p>
       </section>
 
       <nav className="knowledge-library-tabs" aria-label="知识库视图">

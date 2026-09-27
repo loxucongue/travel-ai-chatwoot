@@ -10,11 +10,8 @@ import { api, ApiError, DEMO_MODE } from './api';
 const Conversations = lazy(() => import('./pages/Conversations'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Overview = lazy(() => import('./pages/Overview'));
-const PassiveReply = lazy(() => import('./pages/Automation'));
-const Wakeup = lazy(() => import('./pages/Automation').then(module => ({ default: module.Wakeup })));
 const EvaluationReports = lazy(() => import('./pages/EvaluationReports'));
 const Handoff = lazy(() => import('./pages/Handoff'));
-const Sops = lazy(() => import('./pages/Sops'));
 const RouteProducts = lazy(() => import('./pages/RouteProducts'));
 const AiReceptionStrategy = lazy(() => import('./pages/AiReceptionStrategy'));
 const WebKnowledge = lazy(() => import('./pages/WebKnowledge'));
@@ -26,9 +23,9 @@ const navigation = [
   { id: 'conversations', label: '会话控制台', icon: MessageCircleMore },
   { id: 'handoff', label: '人工接管', icon: Headphones },
   { id: 'evaluation', label: '回放与资料', icon: FlaskConical },
-  { id: 'products', label: '线路管理', icon: MapPinned },
-  { id: 'ai-strategy', label: 'AI 接待策略', icon: Bot },
-  { id: 'knowledge', label: '官网资料库', icon: BookOpenText },
+  { id: 'products', label: '线路配置', icon: MapPinned },
+  { id: 'ai-strategy', label: '公共接待', icon: Bot },
+  { id: 'knowledge', label: '通用知识', icon: BookOpenText },
   { id: 'settings', label: '系统设置', icon: SettingsIcon },
 ];
 
@@ -92,14 +89,14 @@ function AuthenticatedApp({ onLogout }: { onLogout: () => Promise<void> }) {
   return <div className="app-shell">
     <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`}>
       <div className="brand-block"><span className="brand-symbol"><Sparkles size={21} /></span><div><strong>China2Go</strong><span>AI Operations</span></div><button className="mobile-close" onClick={() => setSidebarOpen(false)} aria-label="关闭导航"><X size={19} /></button></div>
-      <div className="workspace-pill"><span className="workspace-avatar">C2</span><div><strong>china2go</strong><span><i />{DEMO_MODE ? '公开演示' : '本地开发'}</span></div><ChevronDown size={15} /></div>
+      <div className="workspace-pill"><span className="workspace-avatar">C2</span><div><strong>china2go</strong><span><i />{DEMO_MODE ? '公开演示' : '接待工作台'}</span></div><ChevronDown size={15} /></div>
       <nav className="main-nav" aria-label="主要导航">
         <span className="nav-section-label">运营</span>
         {visibleNavigation.filter((item) => !['products', 'ai-strategy', 'knowledge', 'settings'].includes(item.id)).map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => go(item.id)}><Icon size={18} /><span>{item.label}</span></button>; })}
         {visibleNavigation.some((item) => ['products', 'ai-strategy', 'knowledge', 'settings'].includes(item.id)) ? <><span className="nav-section-label management-label">管理</span>{visibleNavigation.filter((item) => ['products', 'ai-strategy', 'knowledge', 'settings'].includes(item.id)).map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => go(item.id)}><Icon size={18} /><span>{item.label}</span></button>; })}</> : null}
       </nav>
       <div className="sidebar-spacer" />
-      <div className="sidebar-status"><Bot size={17} /><div><strong>{DEMO_MODE ? '脱敏演示数据' : '自动回复闭环'}</strong><span>{DEMO_MODE ? '操作不会写入 Chatwoot' : '第一阶段开发'}</span></div><i /></div>
+      <div className="sidebar-status"><Bot size={17} /><div><strong>{DEMO_MODE ? '脱敏演示数据' : '自动回复闭环'}</strong><span>{DEMO_MODE ? '操作不会写入 Chatwoot' : '线路咨询与留资'}</span></div><i /></div>
     </aside>
     {sidebarOpen ? <button className="sidebar-scrim" onClick={() => setSidebarOpen(false)} aria-label="关闭导航遮罩" /> : null}
     <div className="workspace-main">
@@ -113,11 +110,8 @@ function AuthenticatedApp({ onLogout }: { onLogout: () => Promise<void> }) {
         <Route path="/settings" element={role === 'admin' ? <Settings notify={setToast} /> : <Navigate to="/conversations" replace />} />
         <Route path="/overview" element={role !== 'agent' ? <Overview onNavigate={go} /> : <Navigate to="/conversations" replace />} />
         <Route path="/playground" element={role !== 'agent' ? <AiPlayground /> : <Navigate to="/conversations" replace />} />
-        <Route path="/reply-policy" element={role !== 'agent' ? <PassiveReply /> : <Navigate to="/conversations" replace />} />
-        <Route path="/wakeup" element={role !== 'agent' ? <Wakeup /> : <Navigate to="/conversations" replace />} />
         <Route path="/evaluation" element={<EvaluationReports />} />
         <Route path="/handoff" element={<Handoff notify={setToast} />} />
-        <Route path="/sops" element={role !== 'agent' ? <Sops notify={setToast} /> : <Navigate to="/conversations" replace />} />
         <Route path="/products" element={role !== 'agent' ? <RouteProducts /> : <Navigate to="/conversations" replace />} />
         <Route path="/ai-strategy" element={role !== 'agent' ? <AiReceptionStrategy /> : <Navigate to="/conversations" replace />} />
         <Route path="/knowledge" element={role !== 'agent' ? <WebKnowledge /> : <Navigate to="/conversations" replace />} />

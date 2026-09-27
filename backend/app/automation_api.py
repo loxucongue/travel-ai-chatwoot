@@ -17,46 +17,36 @@ from app.auth import current_user, require_csrf, require_super_admin_csrf
 from app.asset_narratives import normalized_asset_narrative
 from app.db import get_db
 from app.models import User, Tenant, InboxBinding, ConversationState, MessageEvent, SopDefinition, StoredMedia, MaterialAsset, KnowledgeVersion, AuditLog, WebKnowledgeSource, WebKnowledgeRevision, utcnow
-from app.advisor_voice import ADVISOR_VOICE_VERSION
 from app.automation_models import *
 from app.live_reply_models import LiveReplyJob
-from app.automation_service import (DEFAULT_REPLY, DEFAULT_WAKEUP, reply_policy, add_customer_message, cancel_generation, dt, iso, gate,
-    confirm_draft, create_cycle, queue_wakeup, enroll_rehearsal, advance_sops, sop_snapshot, media_error, reserve_touch, touch_key,
-    apply_controls, trigger_sops, enrollment_allowed, subject_key, start_journey, start_open_journey,
+from app.automation_service import (reply_policy, add_customer_message, cancel_generation, dt, iso, confirm_draft, create_cycle, queue_wakeup, enroll_rehearsal, advance_sops, sop_snapshot, apply_controls, trigger_sops, subject_key, start_journey, start_open_journey,
     change_journey_status, simulation_state, set_simulation_state)
 from app.config import settings
 from app.decision_service import VALIDATOR_VERSION, generate_decision
 from app.deepseek_evaluation import EvaluationCallError
 from app.decision_knowledge import FACTS
 from app.realtime_reply_pipeline import REALTIME_REPLY_PROMPT_VERSION
-from app.reply_generation import REPLY_GENERATOR_PROMPT_VERSION
-from app.reply_fact_verification import FACT_VERIFIER_PROMPT_VERSION
-from app.reply_planning import PLANNER_VERSION
-from app.reply_understanding import UNDERSTANDING_PROMPT_VERSION
-from app.silence_generation import SILENCE_GENERATOR_PROMPT_VERSION
-from app.silence_planning import SILENCE_PLANNER_VERSION
-from app.silence_touch_pipeline import SILENCE_TOUCH_PROMPT_VERSION
 from app.material_library import candidate_materials, freeze_nodes, replace_asset_binding
-from app.operations import allowed_inbox_ids, is_admin, audit, save_setting, setting_value
-from app.ops_schemas import SopNode
-from app.route_packages import (JOURNEY_POLICY, ROUTE_PACKAGES, RoutePackageError,
+from app.operations import allowed_inbox_ids, is_admin, audit
+from app.route_packages import (ROUTE_PACKAGES, RoutePackageError,
                                 RUNTIME_PACKAGE_ROOT, _validate, install_route_package,
                                 ensure_route_packages_current, remove_runtime_route_package,
                                 route_package_summary)
 from app.route_reply import ROUTES, journey_context_from_values, normalize_journey_stage, playbook_prompt, prepare_route_reply_values
 from app.security import encrypt_secret
 from app.service_knowledge import SERVICE_KNOWLEDGE, SERVICE_KNOWLEDGE_VERSION
+from app.reception_v2.proactive_policy import silence_schedule_templates
 from app.reception_config import (
     ReceptionConfiguration,
+    live_silence_enabled,
     configured_silence_nodes,
     effective_reception_policy,
     get_reception_configuration,
     put_reception_configuration,
-    silence_intervals,
+    v2_silence_intervals,
 )
 from app.reception_rollout import reception_rollout
 from app.reception_v2 import ENGINE_RELEASE_ID as V2_ENGINE_RELEASE_ID
-from app.sop_schedule import schedule_preview
 from app.web_knowledge import (
     WebKnowledgeError,
     enrich_context_with_web_knowledge,
@@ -191,12 +181,6 @@ def _web_source_json(db: Session, row: WebKnowledgeSource, *, include_revisions:
     return value
 
 
-class SchedulePreviewInput(BaseModel):
-    nodes: list[SopNode] = Field(max_length=20)
-    customer_added_at: str
-    frequency_hours: int = Field(default=24, ge=1, le=720)
-
-
 class RouteSimulationMessage(BaseModel):
     role: Literal["customer", "assistant"] = "customer"
     content: str = Field(min_length=1, max_length=4000)
@@ -302,16 +286,6 @@ class RouteAssetUpdate(BaseModel):
 
 class RouteAssetReplace(BaseModel):
     media_id: int = Field(gt=0)
-
-
-@router.post("/sops/schedule-preview")
-def preview_schedule(payload: SchedulePreviewInput, user: User = Depends(manager_write)):
-    try:
-        added_at = iso(dt(payload.customer_added_at))
-    except ValueError:
-        fail("customer_added_time_invalid", 422)
-    return {"items": schedule_preview([n.model_dump() for n in payload.nodes], added_at, payload.frequency_hours),
-            "timezone": "Asia/Shanghai", "customer_added_source": "first_public_customer_message_in_inbox", "outbound": False}
 
 
 def fail(code: str, status: int = 409):
@@ -564,7 +538,7 @@ def web_knowledge_usage(
 
 
 @router.post("/knowledge/web-sources/{source_id}/revisions/{revision_id}/publish")
-def publish_web_knowledge_revision(source_id: int, revision_id: int, user: User = Depends(manager_write), db: Session = Depends(get_db)):
+def publish_web_knowledge_revision(source_id: int, revision_id: int, user: User = Depends(manager_write), db: Session = Depends(get_db), runtime_scope: Literal["playground", "live"] = "playground"):
     if not web_knowledge_publish_enabled():
         fail("website_publish_temporarily_disabled", 409)
     tenant = _primary_tenant(db)
@@ -575,7 +549,7 @@ def publish_web_knowledge_revision(source_id: int, revision_id: int, user: User 
     revision = db.get(WebKnowledgeRevision, revision_id)
     if not source or not revision or revision.source_id != source.id:
         fail("website_revision_not_found", 404)
-    publish_revision(db, source, revision, runtime_scope="playground")
+    publish_revision(db, source, revision, runtime_scope=runtime_scope)
     audit(db, user, "web_knowledge.publish", "web_knowledge_revision", revision.id, {
         "source_id": source.id, "content_hash": revision.content_hash,
         "runtime_scope": "playground",
@@ -774,7 +748,7 @@ def update_conversation_engine(
     }
 
 
-@router.get("/automation/reply-policy")
+@router.get("/settings/reply-timing")
 def get_reply_policy(inbox_binding_id: int | None=None,user:User=Depends(manager),db:Session=Depends(get_db)):
     scope(db,user,inbox_binding_id)
     config,version = reply_policy(db,inbox_binding_id)
@@ -783,7 +757,7 @@ def get_reply_policy(inbox_binding_id: int | None=None,user:User=Depends(manager
     return {**config,"version":local.version if local else 1,"effective_version":version,"inbox_binding_id":inbox_binding_id}
 
 
-@router.patch("/automation/reply-policy")
+@router.patch("/settings/reply-timing")
 def save_reply_policy(payload:ReplyConfig,user:User=Depends(manager_write),db:Session=Depends(get_db)):
     scope(db,user,payload.inbox_binding_id)
     key = f"inbox:{payload.inbox_binding_id}" if payload.inbox_binding_id else "global"
@@ -985,8 +959,8 @@ def route_products(user: User = Depends(manager), db: Session = Depends(get_db))
                 "stop_on_incoming": package["runtime_sop"]["stop_on_incoming"],
                 "frequency_hours": package["runtime_sop"].get("frequency_hours", 24),
                 "nodes": configured_silence_nodes(
-                    package["runtime_sop"]["nodes"],
-                    silence_intervals(db),
+                    silence_schedule_templates(package["runtime_sop"]["nodes"]),
+                    v2_silence_intervals(db),
                     silence_enabled=bool(get_reception_configuration(db)["silence"]["enabled"]),
                 ),
             },
@@ -1032,22 +1006,16 @@ def reception_config(user: User = Depends(manager), db: Session = Depends(get_db
     return {
         "config": get_reception_configuration(db),
         "version": {
-            "label": "v6.4",
-            "prompt_version": REALTIME_REPLY_PROMPT_VERSION,
-            "validator_version": VALIDATOR_VERSION,
+            "label": V2_ENGINE_RELEASE_ID,
             "status": "published",
             "published_at": history[0].created_at if history else None,
             "published_by": history[0].user_id if history else None,
         },
-        "model_nodes": {
-            "advisor_voice": ADVISOR_VOICE_VERSION,
-            "customer_understanding": UNDERSTANDING_PROMPT_VERSION,
-            "business_planner": PLANNER_VERSION,
-            "reply_generation": REPLY_GENERATOR_PROMPT_VERSION,
-            "reply_fact_verification": FACT_VERIFIER_PROMPT_VERSION,
-            "silence_planner": SILENCE_PLANNER_VERSION,
-            "silence_generation": SILENCE_GENERATOR_PROMPT_VERSION,
-            "silence_touch": SILENCE_TOUCH_PROMPT_VERSION,
+        "runtime": {
+            "live_silence_enabled": live_silence_enabled(db),
+            "model": settings.deepseek_model,
+            "timeout_seconds": settings.deepseek_timeout_seconds,
+            "concurrency": settings.live_reply_concurrency,
         },
         "history": [{
             "id": row.id,
@@ -1070,25 +1038,41 @@ def reception_config(user: User = Depends(manager), db: Session = Depends(get_db
     }
 
 
-@router.put("/automation/reception-config")
+@router.patch("/automation/reception-config")
 def update_reception_config(
-    payload: ReceptionConfiguration,
+    payload: dict,
     user: User = Depends(manager_write),
     db: Session = Depends(get_db),
 ):
     before = get_reception_configuration(db)
-    value = put_reception_configuration(db, payload)
-    audit(db, user, "reception_config.updated", "app_setting", "route_reception_config", {
-        "before": before,
-        "after": value,
-    })
-    db.commit()
-    return {
-        "config": value,
-        "applies_to": "new_ai_decisions_and_new_sop_enrollments",
-        "existing_active_sop_rounds_unchanged": True,
-        "outbound": False,
+    editable = {
+        "reply": {"opening_items", "opening_interval_seconds", "goal", "tone", "tone_guidance", "custom_guidance", "max_characters", "max_images_per_turn"},
+        "lead_capture": {"enabled", "channels"},
+        "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action"},
+        "handoff": {"large_group_enabled", "large_group_minimum"},
+        "silence": {"enabled", "live_enabled", "v2_intervals_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
+        "common_scripts": None,
     }
+    value = deepcopy(before)
+    for section, changes in payload.items():
+        if section not in editable:
+            fail("configuration_field_not_editable", 422)
+        allowed = editable[section]
+        if allowed is None:
+            value[section] = changes
+        else:
+            if not isinstance(changes, dict) or set(changes) - allowed:
+                fail("configuration_field_not_editable", 422)
+            value[section].update(changes)
+    try:
+        candidate = ReceptionConfiguration.model_validate(value)
+    except ValueError as exc:
+        raise HTTPException(422, detail={"code": "configuration_invalid", "message": str(exc)}) from exc
+    value = put_reception_configuration(db, candidate)
+    audit(db, user, "reception_config.updated", "app_setting", "route_reception_config", {"before": before, "after": value})
+    db.commit()
+    return {"config": value, "applies_to": "new_ai_decisions_and_new_sop_enrollments",
+            "existing_active_sop_rounds_unchanged": True, "outbound": False}
 
 
 @router.post("/automation/route-products/import")
@@ -1953,11 +1937,6 @@ def enroll(session_id:int,payload:EnrollInput,user:User=Depends(manager_write),d
     return session_json(db,row)
 
 
-def sop_scope(db,user,sop):
-    if not sop:fail("sop_not_found",404)
-    published_scope(db,user,{"inbox_ids":sop.inbox_ids})
-
-
 def published_scope(db,user,config):
     allowed=allowed_inbox_ids(db,user)
     if allowed is not None:
@@ -1965,185 +1944,12 @@ def published_scope(db,user,config):
         if not config.get("inbox_ids") or not set(config["inbox_ids"]).issubset(remote):fail("inbox_forbidden",403)
 
 
-@router.get("/sops/{sop_id}/versions")
-def versions(sop_id:int,user:User=Depends(manager),db:Session=Depends(get_db)):
-    sop_scope(db,user,db.get(SopDefinition,sop_id))
-    items=[]
-    for x in db.scalars(select(SopVersion).where(SopVersion.sop_id==sop_id).order_by(SopVersion.version.desc())).all():
-        try:published_scope(db,user,x.config)
-        except HTTPException:continue
-        items.append({"id":x.id,"version":x.version,"config":x.config,"created_at":x.created_at})
-    return {"items":items}
-
-
-@router.get("/sops/{sop_id}/preview")
-def preview(sop_id:int,user:User=Depends(manager),db:Session=Depends(get_db)):
-    sop=db.get(SopDefinition,sop_id)
-    sop_scope(db,user,sop)
-    version=db.scalar(select(SopVersion).where(SopVersion.sop_id==sop_id).order_by(SopVersion.version.desc()))
-    config=version.config if version else {"inbox_ids":sop.inbox_ids,"trigger_type":sop.trigger_type,"trigger_labels":sop.trigger_labels}
-    published_scope(db,user,config)
-    q=select(ConversationState)
-    allowed=allowed_inbox_ids(db,user)
-    if allowed is not None:q=q.where(ConversationState.inbox_binding_id.in_(allowed))
-    items=[]
-    for x in db.scalars(q).all():
-        if config.get("inbox_ids") and x.inbox.chatwoot_inbox_id not in config["inbox_ids"]:continue
-        if config.get("test_conversation_ids") and x.chatwoot_conversation_id not in config["test_conversation_ids"]:continue
-        if config.get("trigger_type") in ("label","stage") and not set(config.get("trigger_labels",[]))&set(x.labels):continue
-        items.append({"id":x.id,"conversation_id":x.chatwoot_conversation_id,"inbox_id":x.inbox.chatwoot_inbox_id,"labels":x.labels,"can_reply":x.can_reply,"delivery_eligible":"requires_fresh_preflight"})
-    return {"items":items,"total":len(items),"version":version.version if version else None,"outbound":False}
-
-
-@router.post("/sops/{sop_id}/resume")
-def resume_sop(sop_id:int,user:User=Depends(require_super_admin_csrf),db:Session=Depends(get_db)):
-    row=db.get(SopDefinition,sop_id)
-    if not row or not db.scalar(select(SopVersion.id).where(SopVersion.sop_id==sop_id)):fail("published_version_required")
-    row.status="running"
-    audit(db,user,"sop.resume","sop",sop_id)
-    db.commit()
-    return {"id":sop_id,"status":row.status}
-
-
-class WakeConfig(BaseModel):
-    name:str=Field(min_length=1,max_length=200)
-    version:int=Field(default=1,ge=1)
-    inbox_ids:list[int]=Field(default_factory=list,max_length=50)
-    threshold_minutes:int=Field(default=120,ge=1,le=1380)
-    frequency_hours:int=Field(default=24,ge=24,le=720)
-
-
-def wake_json(row):return {"id":row.id,"name":row.name,"version":row.version,"status":row.status,**row.config}
-
-
 def wake_scope(db,user,ids):
     if not ids and not is_admin(user):fail("inbox_required",403)
     for i in ids:scope(db,user,i)
 
 
-@router.get("/wakeup/policies")
-def policies(user:User=Depends(manager),db:Session=Depends(get_db)):
-    allowed=allowed_inbox_ids(db,user)
-    return {"items":[wake_json(x) for x in db.scalars(select(WakeupPolicy).order_by(WakeupPolicy.id.desc())).all() if allowed is None or (x.config.get("inbox_ids") and set(x.config["inbox_ids"]).issubset(allowed))]}
-
-
-@router.post("/wakeup/policies",status_code=201)
-def new_policy(payload:WakeConfig,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    wake_scope(db,user,payload.inbox_ids)
-    row=WakeupPolicy(name=payload.name,created_by=user.id,config={**DEFAULT_WAKEUP,**payload.model_dump(exclude={"name","version"})})
-    db.add(row)
-    db.flush()
-    audit(db,user,"wakeup.create","policy",row.id)
-    db.commit()
-    return wake_json(row)
-
-
-@router.patch("/wakeup/policies/{policy_id}")
-def edit_policy(policy_id:int,payload:WakeConfig,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    row=db.get(WakeupPolicy,policy_id)
-    if not row:fail("policy_not_found",404)
-    wake_scope(db,user,row.config.get("inbox_ids",[]))
-    wake_scope(db,user,payload.inbox_ids)
-    if not db.execute(update(WakeupPolicy).where(WakeupPolicy.id==policy_id,WakeupPolicy.version==payload.version).values(name=payload.name,version=payload.version+1,status="draft",config={**DEFAULT_WAKEUP,**payload.model_dump(exclude={"name","version"})})).rowcount:fail("version_conflict")
-    audit(db,user,"wakeup.update","policy",policy_id)
-    db.commit()
-    return wake_json(row)
-
-
-@router.post("/wakeup/policies/{policy_id}/{action}")
-def policy_action(policy_id:int,action:Literal["publish","pause","resume"],user:User=Depends(require_super_admin_csrf),db:Session=Depends(get_db)):
-    row=db.get(WakeupPolicy,policy_id)
-    if not row:fail("policy_not_found",404)
-    row.status="paused" if action=="pause" else "running"
-    row.updated_at=utcnow()
-    audit(db,user,"wakeup."+action,"policy",policy_id)
-    db.commit()
-    return wake_json(row)
-
-
 def cycle_json(x):return {"id":x.id,"session_id":x.session_id,"generation":x.generation,"policy_id":x.policy_id,"customer_at":x.customer_at,"reply_at":x.reply_at,"due_at":x.due_at,"expires_at":x.expires_at,"status":x.status,"reason":x.reason,"run_id":x.run_id,"evaluation_count":x.evaluation_count}
-
-
-@router.get("/wakeup/cycles")
-def cycles(user:User=Depends(manager),db:Session=Depends(get_db)):
-    q=select(SilenceCycle).join(AutomationSession).where(AutomationSession.owner_id==user.id)
-    allowed=allowed_inbox_ids(db,user)
-    if allowed is not None:q=q.where(AutomationSession.inbox_binding_id.in_(allowed))
-    return {"items":[cycle_json(x) for x in db.scalars(q.order_by(SilenceCycle.id.desc()).limit(200)).all()]}
-
-
-@router.get("/wakeup/candidates")
-def historical_candidates(policy_id:int|None=None,user:User=Depends(manager),db:Session=Depends(get_db)):
-    from app.automation_service import confirmed
-    policy=db.get(WakeupPolicy,policy_id) if policy_id else None
-    if policy_id and not policy:fail("policy_not_found",404)
-    if policy:wake_scope(db,user,policy.config.get("inbox_ids",[]))
-    config={**DEFAULT_WAKEUP,**(policy.config if policy else {})}
-    allowed=allowed_inbox_ids(db,user)
-    q=select(ConversationState)
-    if allowed is not None:q=q.where(ConversationState.inbox_binding_id.in_(allowed))
-    if config.get("inbox_ids"):q=q.where(ConversationState.inbox_binding_id.in_(config["inbox_ids"]))
-    items=[]
-    now=utcnow()
-    for conv in db.scalars(q).all():
-        rows=db.scalars(select(MessageEvent).where(MessageEvent.conversation_state_id==conv.id,MessageEvent.private.is_(False),MessageEvent.direction.in_(["incoming","outgoing"])).order_by(MessageEvent.created_at.desc(),MessageEvent.id.desc())).all()
-        messages=[{"direction":x.direction,"content":x.content,"status":x.status,"created_at":x.created_at} for x in reversed(rows)]
-        incoming=[x for x in messages if x["direction"]=="incoming"]
-        if not incoming:continue
-        last=incoming[-1]
-        replies=[x for x in messages if confirmed(x) and dt(x["created_at"])>=dt(last["created_at"])]
-        if not replies:continue
-        due=iso(dt(replies[-1]["created_at"])+timedelta(minutes=config["threshold_minutes"]))
-        shadow=AutomationSession(messages=messages,controls={"can_reply":conv.can_reply,"channel":conv.inbox.channel_type,"labels":conv.labels,"human":conv.effective_ai_state=="HUMAN_HANDOFF","ai_enabled":conv.ai_mode!="off"},virtual_now=now)
-        reason=gate(shadow,now,True)
-        if dt(now)<dt(due):reason=reason or "threshold_not_reached"
-        items.append({"conversation_id":conv.id,"chatwoot_conversation_id":conv.chatwoot_conversation_id,"inbox_binding_id":conv.inbox_binding_id,"last_customer_at":last["created_at"],"last_reply_at":replies[-1]["created_at"],"due_at":due,"status":"blocked" if reason else "candidate","reason":reason,"permission_source":"current_mirror_requires_fresh_preflight"})
-    return {"items":items,"total":len(items),"outbound":False}
-
-
-@router.get("/wakeup/executions")
-def wake_executions(user:User=Depends(manager),db:Session=Depends(get_db)):
-    return runs("wakeup",1,user,db)
-
-
-class SimulateInput(BaseModel):
-    session_id:int
-    policy_id:int|None=None
-
-
-@router.post("/wakeup/simulate")
-def simulate(payload:SimulateInput,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    session=own_session(db,user,payload.session_id)
-    policy=db.get(WakeupPolicy,payload.policy_id) if payload.policy_id else None
-    if payload.policy_id and not policy:fail("policy_not_found",404)
-    if policy:
-        wake_scope(db,user,policy.config.get("inbox_ids",[]))
-        if policy.config.get("inbox_ids") and session.inbox_binding_id not in policy.config["inbox_ids"]:fail("inbox_forbidden",403)
-    cycle=create_cycle(db,session,policy)
-    if not cycle:fail("confirmed_reply_required",422)
-    queue_wakeup(db,session,cycle)
-    db.commit()
-    return cycle_json(cycle)
-
-
-@router.post("/wakeup/cycles/{cycle_id}/{action}")
-def cycle_action(cycle_id:int,action:Literal["exclude","confirm"],user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    cycle=db.get(SilenceCycle,cycle_id)
-    if not cycle:fail("cycle_not_found",404)
-    session=own_session(db,user,cycle.session_id)
-    if action=="exclude":
-        cycle.status,cycle.reason="excluded","operator_excluded"
-    else:
-        reason=gate(session,session.virtual_now,True)
-        if reason:fail(reason)
-        if cycle.policy_id:
-            policy=db.get(WakeupPolicy,cycle.policy_id)
-            if not policy or policy.status!="running" or policy.version!=cycle.policy_snapshot.get("version"):fail("wakeup_policy_changed")
-        if cycle.status!="draft" or cycle.generation!=session.generation:fail("cycle_not_sendable")
-        if not reserve_touch(db,subject_key(db, session),f"wakeup:{cycle.id}",session.virtual_now,cycle.policy_snapshot.get("frequency_hours",24)):fail("contact_frequency_limit")
-        cycle.status="simulated_delivered"
-    db.commit()
-    return cycle_json(cycle)
 
 
 @router.get("/media/{media_id}/preview")

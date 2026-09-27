@@ -195,7 +195,8 @@ def test_slow_customer_does_not_block_other_customer_and_same_conversation_is_se
     assert not scheduler.active
 
 
-def test_maintenance_runs_all_tasks_even_when_one_fails(monkeypatch):
+def test_maintenance_runs_all_tasks_even_when_one_fails(monkeypatch, session_factory):
+    monkeypatch.setattr(worker, "SessionLocal", session_factory)
     calls = []
     monkeypatch.setattr(dispatch, "process_handoff_overdue", lambda _: (_ for _ in ()).throw(RuntimeError()))
     monkeypatch.setattr(dispatch, "process_notification_delivery", lambda _: calls.append("notify"))
@@ -205,7 +206,8 @@ def test_maintenance_runs_all_tasks_even_when_one_fails(monkeypatch):
     assert calls == ["notify", "receipts"]
 
 
-def test_receipt_failure_remains_unhealthy_between_scheduled_checks(monkeypatch):
+def test_receipt_failure_remains_unhealthy_between_scheduled_checks(monkeypatch, session_factory):
+    monkeypatch.setattr(worker, "SessionLocal", session_factory)
     beats = []
     monkeypatch.setattr(dispatch, "process_handoff_overdue", lambda _: False)
     monkeypatch.setattr(dispatch, "process_notification_delivery", lambda _: False)

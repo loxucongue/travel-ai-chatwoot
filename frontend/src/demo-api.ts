@@ -70,12 +70,6 @@ let handoffs = [
   { id: 204, conversation_id: 1058, customer_name: '何先生', inbox: 'CITS 国际旅游 - China2Go', reason_code: 'ai_error_threshold', reason_detail: '企业 AI 接口连续超时，已执行安全降级', priority: 'P2', status: 'completed', assignee: '王顾问', assignee_user_id: 1, sla_due_at: isoAgo(210), created_at: isoAgo(260), version: 3, labels: ['人工接管'] },
 ];
 
-let sops = [
-  { id: 301, name: '方案发送后跟进', description: '方案发送后 24 小时仍未回复时提醒一次', status: 'running', dry_run: true, live_enabled: false, trigger_type: 'label', trigger_labels: ['方案介绍'], inbox_ids: [1], nodes: [{ key: 'step_1', schedule_type: 'relative', delay_minutes: 1440, basis: 'last_customer_reply', content_type: 'text', content: '您好，之前提供的行程方案您有时间看过了吗？' }], exit_labels: ['人工接管', '客诉', '已留资', '已成交'], stop_on_incoming: true, frequency_hours: 24, enrolled: 128, sent: 0, blocked: 7, updated_at: isoAgo(45) },
-  { id: 302, name: '报价后温和提醒', description: '报价后两天无回复，进行一次合规提醒', status: 'paused', dry_run: true, live_enabled: false, trigger_type: 'label', trigger_labels: ['报价中'], inbox_ids: [1], nodes: [{ key: 'step_1', schedule_type: 'relative', delay_minutes: 2880, basis: 'last_customer_reply', content_type: 'text', content: '报价方案已为您保留，如需调整人数或日期可以直接告诉我。' }], exit_labels: ['人工接管', '已留资', '拒绝联系'], stop_on_incoming: true, frequency_hours: 48, enrolled: 46, sent: 0, blocked: 4, updated_at: isoAgo(620) },
-  { id: 303, name: '桃花节白名单验证', description: '仅用于指定演示客户的多节点流程验证', status: 'draft', dry_run: true, live_enabled: false, trigger_type: 'manual', trigger_labels: [], inbox_ids: [1], nodes: [{ key: 'step_1', schedule_type: 'relative', delay_minutes: 60, basis: 'enrollment', content_type: 'text', content: '这是第一条演练消息。' }, { key: 'step_2', schedule_type: 'relative', delay_minutes: 1440, basis: 'previous_node', content_type: 'text', content: '这是第二条演练消息。' }], exit_labels: ['人工接管', '客诉', '已留资'], stop_on_incoming: true, frequency_hours: 24, enrolled: 12, sent: 0, blocked: 3, updated_at: isoAgo(1440) },
-];
-
 interface DemoPlatformUser {
   id: number;
   email: string;
@@ -226,28 +220,6 @@ export async function demoApi<T>(path: string, init: RequestInit = {}): Promise<
     return clone(item) as T;
   }
 
-  if (pathname === '/sops' && method === 'GET') {
-    const status = url.searchParams.get('status');
-    const query = (url.searchParams.get('q') ?? '').toLowerCase();
-    return clone({ items: sops.filter((item) => (!status || item.status === status) && (!query || `${item.name} ${item.description}`.toLowerCase().includes(query))) }) as T;
-  }
-  if (pathname === '/sops' && method === 'POST') {
-    const created = { ...body, id: Math.max(...sops.map((item) => item.id)) + 1, status: 'draft', enrolled: 0, sent: 0, blocked: 0, updated_at: new Date().toISOString() } as typeof sops[number];
-    sops.unshift(created);
-    return clone(created) as T;
-  }
-  const sopPatch = pathname.match(/^\/sops\/(\d+)$/);
-  if (sopPatch && method === 'PATCH') {
-    const index = sops.findIndex((item) => item.id === Number(sopPatch[1]));
-    if (index >= 0) sops[index] = { ...sops[index], ...body, updated_at: new Date().toISOString() } as typeof sops[number];
-    return clone(sops[index] ?? {}) as T;
-  }
-  const sopAction = pathname.match(/^\/sops\/(\d+)\/(publish|pause|enroll)$/);
-  if (sopAction) {
-    const item = sops.find((candidate) => candidate.id === Number(sopAction[1]));
-    if (item) { if (sopAction[2] === 'publish') item.status = 'running'; if (sopAction[2] === 'pause') item.status = 'paused'; if (sopAction[2] === 'enroll' && Array.isArray(body.conversation_ids)) item.enrolled += body.conversation_ids.length; item.updated_at = new Date().toISOString(); }
-    return clone(item ?? {}) as T;
-  }
   if (pathname === '/media' && method === 'POST') return { id: 9001 } as T;
 
   if (pathname === '/bi/overview') return clone({ conversations: 186, incoming_messages: 742, outgoing_messages: 619, ai_only: 104, mixed: 47, human_only: 35, ai_handled: 151, handoffs: 38, handoff_pending: 2, handoff_overdue: 1, leads: 45, conversions: 18, ai_errors: 3, inferred_history: 22 }) as T;
@@ -260,7 +232,6 @@ export async function demoApi<T>(path: string, init: RequestInit = {}): Promise<
   if (pathname === '/settings/chatwoot/sync') return { inboxes: inboxes.length } as T;
   if (pathname === '/settings/chatwoot/webhook') return clone({ webhook_id: 901, url: 'https://demo.invalid/v1/webhooks/chatwoot/DEMO', events: ['message_created', 'message_updated', 'conversation_created', 'conversation_updated', 'conversation_status_changed', 'contact_created', 'contact_updated'], last_received_at: isoAgo(2) }) as T;
   if (pathname === '/settings/ai') return clone({ trigger_text: '测试人员触发消息', reply_text: '测试人员回复消息' }) as T;
-  if (pathname === '/settings/ai-adapter') return clone({ adapter: 'http', enabled: true, url: 'https://ai.example.test/reply', timeout_seconds: 15, failure_handoff_threshold: 3, token_configured: true }) as T;
   if (pathname === '/settings/history-sync/status') return clone({ status: 'completed', phase: 'complete', current_page: 4, total_items: 66, completed_items: 66, failed_items: 0, updated_at: isoAgo(35) }) as T;
   if (pathname === '/settings/label-mappings') return clone({ handoff_labels: ['人工接管', '客诉'], contact_block_labels: ['拒绝联系', '黑名单'], lead_labels: ['已留资'], conversion_labels: ['已成交'], stage_labels: ['新咨询', '方案介绍', '报价中'], sop_whitelist_label: 'SOP测试白名单' }) as T;
   if (pathname === '/settings/resources') return clone({ agents }) as T;

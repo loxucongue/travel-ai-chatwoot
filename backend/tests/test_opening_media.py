@@ -6,8 +6,10 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.models import StoredMedia, OutboundMessage, utcnow
-from app.opening_messages import OpeningItem, delivery_items, opening_media_info, SELECTION_QUESTION
+from app.opening_messages import OpeningItem, delivery_items, opening_media_info
 from app.reception_config import ReplySettings
+
+SELECTION_QUESTION = "您想先了解哪一條行程呢？"
 
 
 def png():
@@ -37,10 +39,10 @@ def test_typed_opening_upload_and_publication(authenticated, tmp_path, monkeypat
     response = client.post('/v1/media', files={'file': ('opening.png', png(), 'image/png')}, headers=headers)
     assert response.status_code == 200, response.text
     config = client.get('/v1/automation/reception-config').json()['config']
-    config['reply']['opening_items'] = [{'key': 'photo', 'content_type': 'image', 'content': '', 'media_id': response.json()['id']}]
+    config['reply']['opening_items'] = [{'key': 'photo', 'content_type': 'image', 'content': '', 'media_id': response.json()['id']}, {'key':'question','content_type':'text','content':SELECTION_QUESTION}]
     config['reply']['opening_message'] = ''
     config['reply']['opening_messages'] = []
-    saved = client.put('/v1/automation/reception-config', json=config, headers=headers)
+    saved = client.patch('/v1/automation/reception-config', json={'reply': {k:v for k,v in config['reply'].items() if k not in {'opening_message','opening_messages'}}}, headers=headers)
     assert saved.status_code == 200, saved.text
     reply = saved.json()['config']['reply']
     assert len(reply['opening_items'][0]['media_hash']) == 64
@@ -48,7 +50,7 @@ def test_typed_opening_upload_and_publication(authenticated, tmp_path, monkeypat
     assert reply['opening_items'][-1]['content'] == SELECTION_QUESTION
     assert client.get('/v1/automation/reception-config').json()['config']['reply'] == reply
     (next(tmp_path.iterdir())).write_bytes(b'changed')
-    rejected = client.put('/v1/automation/reception-config', json=saved.json()['config'], headers=headers)
+    rejected = client.patch('/v1/automation/reception-config', json={'reply': {'opening_items':saved.json()['config']['reply']['opening_items']}}, headers=headers)
     assert rejected.status_code == 422
 
 
@@ -64,14 +66,15 @@ def test_remove_opening_image_keeps_visible_question_and_runtime_order(authentic
     config['reply']['opening_items'] = [
         {'key': 'greeting', 'content_type': 'text', 'content': '您好～很高興認識您！'},
         {'key': 'room', 'content_type': 'image', 'content': '', 'media_id': media_id},
+        {'key':'question','content_type':'text','content':SELECTION_QUESTION},
     ]
     config['reply']['opening_interval_seconds'] = 1
-    saved = client.put('/v1/automation/reception-config', json=config, headers=headers)
+    saved = client.patch('/v1/automation/reception-config', json={'reply': {k:v for k,v in config['reply'].items() if k not in {'opening_message','opening_messages'}}}, headers=headers)
     assert saved.status_code == 200, saved.text
     visible = client.get('/v1/automation/reception-config').json()['config']
     assert [x['content_type'] for x in visible['reply']['opening_items']] == ['text', 'image', 'text']
     visible['reply']['opening_items'] = [x for x in visible['reply']['opening_items'] if x['key'] != 'room']
-    saved = client.put('/v1/automation/reception-config', json=visible, headers=headers)
+    saved = client.patch('/v1/automation/reception-config', json={'reply': {'opening_items':visible['reply']['opening_items']}}, headers=headers)
     assert saved.status_code == 200, saved.text
     config = client.get('/v1/automation/reception-config').json()['config']
     expected = ['您好～很高興認識您！', SELECTION_QUESTION]
@@ -126,7 +129,7 @@ def test_typed_opening_plan_remains_verbatim():
     plan = build_reply_plan(context, CustomerUnderstanding(intent='other', semantic_signals=['general_inquiry']))
     reply, logs, _ = call_reply_generator(context, plan)
     assert plan.opening_items == delivery_items(items, [])
-    assert reply.body == '先傳相片給您看～\n\n' + SELECTION_QUESTION
+    assert reply.body == '先傳相片給您看～'
     assert logs == [] and plan.allowed_asset_ids == []
 
 
@@ -138,6 +141,13 @@ def test_live_typed_sequence_and_label_removal(session_factory, tmp_path, monkey
     fake = setup(session_factory, monkeypatch, labels=['ai'])
     fake.remove_ai_after_text = remove_after == 'text'
     fake.remove_ai_after_image = remove_after == 'image'
+    original_select = fake.create_input_select_message
+    def select_message(*args, **kwargs):
+        result = original_select(*args, **kwargs)
+        if remove_after == 'text':
+            fake.labels = []
+        return result
+    fake.create_input_select_message = select_message
     with session_factory() as db:
         image = media(db, tmp_path)
         video = media(db, tmp_path, 'video')
@@ -150,7 +160,7 @@ def test_live_typed_sequence_and_label_removal(session_factory, tmp_path, monkey
     live.process_job(1)
     with session_factory() as db:
         types = list(db.scalars(select(OutboundMessage.content_type).order_by(OutboundMessage.id)))
-    expected = ['text'] if remove_after == 'text' else ['text', 'image'] if remove_after == 'image' else ['text', 'image', 'video', 'input_select']
+    expected = ['input_select'] if remove_after == 'text' else ['input_select', 'image'] if remove_after == 'image' else ['input_select', 'image', 'video']
     assert types == expected
     before = len(fake.sent)
     live.process_job(1)
@@ -164,7 +174,7 @@ def test_playground_typed_media_sequence(session_factory, tmp_path, monkeypatch)
         session, _ = setup_journey(db)
         image, video = media(db, tmp_path), media(db, tmp_path, 'video')
         reply = decision()
-        reply.opening_items = [image, video]
+        reply.opening_items = [image, video, {'key':'question','content_type':'text','content':SELECTION_QUESTION}]
         reply.opening_messages = [SELECTION_QUESTION]
         reply.reply_options = ['桃花9日', '桃花+珠峰11日']
         session.due_at = utcnow()

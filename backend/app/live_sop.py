@@ -13,6 +13,7 @@ from app.chatwoot_service import client_for, payload_dict
 from app.automation_models import LiveSopEnrollment, LiveSopJob, SopVersion, TouchReservation
 from app.automation_service import blocking_labels, dt, iso, reserve_touch
 from app.config import settings
+from app.reception_config import live_silence_enabled
 from app.conversation_policy import compute_state, has_ai_label, observe_ai_label
 from app.db import SessionLocal
 from app.delivery_plan import delivery_mode_for, ordered_delivery_parts, expand_static_delivery_nodes
@@ -24,7 +25,7 @@ from app.live_reply import ReplyBlocked, safe_decision_json, snapshot
 from app.live_reply_models import LiveReplyJob
 from app.material_library import (by_media, candidate_materials, catalog_assets, material_live_approved,
                                   material_info, resolve_materials)
-from app.models import (ChatwootConnection, ConversationState, HandoffTask, MessageEvent,
+from app.models import (ChatwootConnection, ConversationState, ConversationJourney, HandoffTask, MessageEvent,
                         OutboundMessage, SopDefinition, StoredMedia, Tenant, AppSetting, utcnow)
 from app.lead_capture import apply_model_policy, mark_requested
 from app.lead_capture_models import LeadCaptureState
@@ -50,7 +51,7 @@ RETRYABLE_BLOCKS = {"passive_reply_pending", "outside_contact_hours"}
 
 def assert_live_sop_armed(db=None) -> ReceptionRollout:
     if (settings.app_profile != "live_reply" or not settings.outbound_enabled
-            or not settings.live_sop_enabled or not global_message_sending_enabled(db)):
+            or not live_silence_enabled(db) or not global_message_sending_enabled(db)):
         raise ReplyBlocked("live_sop_not_armed")
     rollout = reception_rollout(db)
     if rollout.allowlist_enabled and not rollout.conversation_ids:
@@ -814,9 +815,9 @@ def _save_dynamic_plan(db, job, journey, items, interval_seconds, contact_reques
 
 
 def process_due_live_sop(job_id: int | None = None) -> bool:
-    if not settings.live_sop_enabled:
-        return False
     with SessionLocal() as db:
+        if not live_silence_enabled(db):
+            return False
         query = select(LiveSopJob).where(
             LiveSopJob.status == "scheduled", LiveSopJob.scheduled_at <= utcnow())
         if job_id is not None:

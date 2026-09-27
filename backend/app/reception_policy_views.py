@@ -16,6 +16,7 @@ def reception_policy_views(effective_policy: dict) -> dict:
     reply_style = policy.get("reply_style") or {}
     return {
         "prompt_policy": {
+            "common_scripts": [item for item in operator.get("common_scripts", []) if item.get("enabled", True)],
             "business_goal": operator.get("business_goal", ""),
             "tone": reply_style.get("operator_tone", "friendly_professional"),
             "tone_description": tone_preset_guidance(reply_style.get("operator_tone", "friendly_professional")),

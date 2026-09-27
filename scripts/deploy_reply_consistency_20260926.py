@@ -86,6 +86,12 @@ for name,table in Base.metadata.tables.items():
  columns={c['name'] for c in ins.get_columns(name)} if ins.has_table(name) else set()
  if set(table.columns.keys())-columns: missing[name]=sorted(set(table.columns.keys())-columns)
 assert not missing, missing
+from app.db import SessionLocal
+from app.reception_config import get_reception_configuration, live_silence_enabled
+with SessionLocal() as db:
+ config = get_reception_configuration(db)
+ live_silence_enabled(db)
+ assert config['reply']['opening_items'] or config['reply']['opening_messages']
 print(json.dumps({'release':ENGINE_RELEASE_ID,'schema_compatible':True,'dependency_mismatches':incompatible,'outbound':False}))
 '''
     result = subprocess.run([str(LIVE / 'venv/bin/python'), '-c', code], cwd=stage / 'backend', env=env,

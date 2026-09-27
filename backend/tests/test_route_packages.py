@@ -15,7 +15,6 @@ from app.route_packages import (
 )
 from app.reception_config import configured_silence_nodes
 from app.route_reply import append_deferred_initial_follow_up, deferred_initial_follow_up
-from app.silence_touch_pipeline import SILENCE_TOUCH_PROMPT_VERSION
 
 
 def test_follow_up_is_appended_after_all_immediate_mainline_nodes():
@@ -390,7 +389,7 @@ def test_route_product_api_exposes_complete_read_only_configuration(authenticate
             node for node in item["default_sop"]["nodes"]
             if node.get("initial_delivery") is not True
         ]
-        assert [node["delay_minutes"] for node in silence_nodes] == [1, 3, 5, 10, 30, 60]
+        assert [node["delay_minutes"] for node in silence_nodes] == [1, 120]
         assert item["readiness"]["assets_total"] == len(item["assets"])
         for asset in item["assets"]:
             assert set(asset) >= {
@@ -478,108 +477,30 @@ def test_route_product_simulation_surfaces_handoff_without_sop(authenticated, mo
 
 
 def test_reception_configuration_is_editable_and_returned_with_hard_guards(authenticated, monkeypatch):
+    from app.reception_v2 import ENGINE_RELEASE_ID
     client, csrf = authenticated
     monkeypatch.setattr(settings, "live_sop_scope", "allowlist")
-    initial = client.get("/v1/automation/reception-config")
-    assert initial.status_code == 200
-    payload = initial.json()
-    assert payload["config"]["schema_version"] == 5
-    assert payload["model_nodes"] == {
-                "advisor_voice": "china2go-taiwan-advisor-voice-v15",
-            "customer_understanding": "customer-understanding-v20",
-                "business_planner": "deterministic-reply-planner-v35",
-                "reply_generation": "planned-reply-generator-v69",
-                "reply_fact_verification": "reply-fact-verifier-v16",
-        "silence_planner": "deterministic-silence-planner-v13",
-        "silence_generation": "planned-silence-generator-v32",
-            "silence_touch": SILENCE_TOUCH_PROMPT_VERSION,
-    }
-    assert {rule["system_key"] for rule in payload["config"]["business_rules"]} >= {
-        "large_group", "captured_contact", "explicit_human", "service_dispute", "attachment_review",
-    }
-    assert payload["config"]["silence"]["intervals_minutes"] == [1, 3, 5, 10, 30, 60]
-    assert payload["config"]["stage_journey"] == {
-        "mandatory_send": False,
-        "skip_when_no_relevant_content": True,
-        "model_max_attempts": 2,
-        "model_failure_action": "warn_and_skip_touch",
-        "stages": [
-            "route_selection", "needs_discovery", "value_building", "objection_handling",
-            "contact_ready", "contact_requested", "considering", "captured", "handoff",
-        ],
-        "touch_goals": [
-            "route_choice", "collect_need", "build_value", "handle_objection",
-            "request_contact", "contact_reminder", "soft_nurture",
-        ],
-    }
-    assert set(payload["config"]["profile_fields"]) >= {
-        "first_time_tibet", "permit_awareness", "concerns", "decision_status",
-        "intent_level", "unresolved_question", "contact_status",
-    }
-    assert payload["hard_guards"]["rollout_scope"] == "allowlist"
+    payload = client.get("/v1/automation/reception-config").json()
+    assert payload["config"]["schema_version"] == 6
+    assert payload["version"]["label"] == ENGINE_RELEASE_ID
+    assert "model_nodes" not in payload
     assert payload["hard_guards"]["require_ai_label"] is True
-    assert payload["hard_guards"]["evaluation_outbound"] is False
-
-    config = payload["config"]
-    config["reply"]["goal"] = "先完整回答，再取得一种联系方式"
-    config["reply"]["tone_guidance"] = "像台灣真人旅遊顧問，語氣柔和自然。"
-    config["reply"]["max_images_per_turn"] = 2
-    config["handoff"]["large_group_minimum"] = 15
-    config["silence"]["intervals_minutes"] = [2, 4, 8, 16, 32, 64, 128, 256]
-    config["silence"]["max_proactive_messages_per_day"] = 8
-    config["business_rules"].append({
-        "id": "vip_customer",
-        "name": "高价值客户优先人工",
-        "enabled": True,
-        "condition": "客户档案确认是高价值客户",
-        "action": "handoff",
-        "guidance": "说明将由资深顾问继续接待。",
-        "system_key": None,
-    })
-    updated = client.put(
-        "/v1/automation/reception-config",
-        headers={"X-CSRF-Token": csrf},
-        json=config,
-    )
-    assert updated.status_code == 200
-    assert updated.json()["config"]["reply"]["max_images_per_turn"] == 2
-    assert updated.json()["config"]["reply"]["tone_guidance"] == "像台灣真人旅遊顧問，語氣柔和自然。"
-    assert updated.json()["config"]["handoff"]["large_group_minimum"] == 15
-    assert updated.json()["config"]["business_rules"][-1]["id"] == "vip_customer"
+    patch = {"reply":{"goal":"先完整回答，再取得一种联系方式", "tone_guidance":"像台灣真人旅遊顧問，語氣柔和自然。"},
+             "handoff":{"large_group_minimum":15}, "silence":{"v2_intervals_minutes":[2,4,8],"max_proactive_messages_per_day":3}}
+    updated = client.patch("/v1/automation/reception-config", headers={"X-CSRF-Token":csrf}, json=patch)
+    assert updated.status_code == 200, updated.text
     assert updated.json()["existing_active_sop_rounds_unchanged"] is True
-
-    effective = client.get("/v1/automation/route-products").json()["items"][0]["journey_policy"]
-    assert effective["reply_style"]["max_images_per_turn"] == 2
+    product = client.get("/v1/automation/route-products").json()["items"][0]
+    effective = product["journey_policy"]
     assert effective["handoff"]["large_group"]["minimum_party_size"] == 15
-    assert effective["handoff"]["large_group"]["source"] == "operator_reception_config"
-    assert effective["silence_journey"]["mainline_after_minutes"] == 2
-    assert effective["silence_journey"]["wakeup_after_minutes"] == [4, 8, 16, 32, 64, 128, 256]
-    assert effective["silence_journey"]["wakeup_max_touches"] == 7
-    assert effective["silence_journey"]["stop_after_minutes"] == 510
-    route_product = client.get("/v1/automation/route-products").json()["items"][0]
-    dynamic_nodes = [
-        node for node in route_product["default_sop"]["nodes"]
-        if node.get("initial_delivery") is not True
-    ]
-    assert len(dynamic_nodes) == 8
-    assert [node["delay_minutes"] for node in dynamic_nodes] == [
-        2, 4, 8, 16, 32, 64, 128, 256,
-    ]
-    assert dynamic_nodes[-1]["key"] == "wakeup_7"
-    assert effective["operator_configuration"]["business_rules"][-1]["id"] == "vip_customer"
-    assert effective["operator_configuration"]["tone_guidance"] == "像台灣真人旅遊顧問，語氣柔和自然。"
+    assert effective["operator_configuration"]["tone_guidance"] == patch["reply"]["tone_guidance"]
+    assert [node["delay_minutes"] for node in product["default_sop"]["nodes"]] == [2,4,8]
 
 
 def test_reception_configuration_rejects_more_than_twenty_silence_nodes(authenticated):
     client, csrf = authenticated
-    config = client.get("/v1/automation/reception-config").json()["config"]
-    config["silence"]["intervals_minutes"] = list(range(1, 22))
-    config["silence"]["max_proactive_messages_per_day"] = 20
-    response = client.put(
-        "/v1/automation/reception-config",
-        headers={"X-CSRF-Token": csrf},
-        json=config,
-    )
+    response = client.patch("/v1/automation/reception-config", headers={"X-CSRF-Token":csrf},
+                            json={"silence":{"v2_intervals_minutes":list(range(1,22))}})
     assert response.status_code == 422
 
 

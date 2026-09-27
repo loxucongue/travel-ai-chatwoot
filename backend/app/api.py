@@ -7,10 +7,10 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.auth import current_user, require_csrf, require_super_admin_csrf, super_admin
-from app.chatwoot import ChatwootClient, ChatwootError, normalize_collection
+from app.chatwoot import ChatwootError, normalize_collection
 from app.chatwoot_service import client_for, payload_dict, string_payload
 from app.config import settings
-from app.conversation_policy import AI_CONTROL_LABEL, compute_state, has_ai_label, observe_ai_label
+from app.conversation_policy import AI_CONTROL_LABEL, compute_state, observe_ai_label
 from app.db import get_db
 from app.automation_service import dt
 from app.history_sync import attachment_placeholder, message_timestamp, sync_conversation_history
@@ -18,7 +18,6 @@ from app.live_reply_models import LiveReplyJob
 from app.lead_capture import capture_json
 from app.lead_capture_models import LeadCaptureState
 from app.models import (
-    AiRun,
     AppSession,
     AppSetting,
     ChatwootConnection,
@@ -34,8 +33,6 @@ from app.models import (
     Tenant,
     User,
     UserInboxScope,
-    WebhookEvent,
-    WorkerHeartbeat,
     utcnow,
 )
 from app.operations import audit
@@ -43,7 +40,6 @@ from app.outbound_control import global_message_sending_enabled
 from app.route_reply import journey_context
 from app.route_packages import route_quick_reply_titles
 from app.schemas import (
-    AiConfigRequest,
     ChatwootConfigRequest,
     ConversationAssignmentRequest,
     ConversationAiModeRequest,
@@ -55,7 +51,7 @@ from app.schemas import (
     ChangePasswordRequest,
     WebhookConfigRequest,
 )
-from app.security import decrypt_secret, digest, encrypt_secret, expires_at, hash_password, random_token, verify_password, session_csrf_token
+from app.security import digest, encrypt_secret, expires_at, hash_password, random_token, verify_password, session_csrf_token
 from app.webhook_ingest import AccountMismatchError, ingest_payload
 
 router = APIRouter(prefix="/v1")
@@ -323,21 +319,6 @@ def update_inbox(binding_id: int, payload: InboxPolicyRequest, user: User = Depe
     row.ai_enabled = payload.ai_enabled
     db.commit()
     return {"id": row.id, "ai_enabled": row.ai_enabled}
-
-
-@router.get("/settings/ai")
-def read_ai(user: User = Depends(current_user), db: Session = Depends(get_db)):
-    row = db.get(AppSetting, "mock_ai")
-    return row.value if row else {"adapter": "mock", "trigger_text": "测试人员触发消息", "reply_text": "测试人员回复消息"}
-
-
-@router.put("/settings/ai")
-def save_ai(payload: AiConfigRequest, user: User = Depends(require_super_admin_csrf), db: Session = Depends(get_db)):
-    row = db.get(AppSetting, "mock_ai") or AppSetting(key="mock_ai")
-    row.value = {"adapter": "mock", **payload.model_dump()}
-    db.add(row)
-    db.commit()
-    return row.value
 
 
 @router.get("/settings/chatwoot/webhook")

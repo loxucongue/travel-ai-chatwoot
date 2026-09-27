@@ -209,24 +209,6 @@ def test_manual_handoff_stops_ai_and_claim_assigns_chatwoot(authenticated, sessi
     assert conflict.status_code == 409
 
 
-def test_sop_create_publish_and_enroll(authenticated, session_factory):
-    client, csrf = authenticated
-    seed(session_factory)
-    with session_factory() as db:
-        db.add(ChatwootLabel(tenant_id=1, chatwoot_label_id=1, title="人工接管"))
-        db.commit()
-    payload = {"name": "测试 SOP", "description": "dry run", "trigger_type": "manual", "trigger_labels": [], "inbox_ids": [], "nodes": [{"key": "step1", "schedule_type": "relative", "delay_minutes": 0, "basis": "enrollment", "content_type": "text", "content": "hello"}], "exit_labels": ["人工接管"], "stop_on_incoming": True, "frequency_hours": 24}
-    created = client.post("/v1/sops", headers={"X-CSRF-Token": csrf}, json=payload)
-    assert created.status_code == 200
-    sop_id = created.json()["id"]
-    assert client.post(f"/v1/sops/{sop_id}/publish", headers={"X-CSRF-Token": csrf}).status_code == 200
-    enrolled = client.post(f"/v1/sops/{sop_id}/enroll", headers={"X-CSRF-Token": csrf}, json={"conversation_ids": [10]})
-    assert enrolled.json()["enrolled"] == 1
-    with session_factory() as db:
-        assert db.get(SopDefinition, sop_id).dry_run is True
-        from app.automation_models import RehearsalJob
-        assert db.scalar(select(SopJob)) is None
-        assert db.scalar(select(RehearsalJob)).status == "scheduled"
 
 
 def test_first_login_password_change(authenticated, session_factory):

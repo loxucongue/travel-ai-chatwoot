@@ -61,6 +61,8 @@ class SkillRegistry:
             from app.route_packages import ROUTES
             route = ROUTES.get(skill.route_variant, {})
             result['route_variant'] = skill.route_variant
+            if route.get('ai_guidance'):
+                result['instructions'] += '\n\n线路接待说明：\n' + route['ai_guidance']
             result['scripts'] = deepcopy([
                 item for item in route.get('fixed_answers', [])
                 if item.get('status') == 'active'

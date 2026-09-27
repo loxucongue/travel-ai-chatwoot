@@ -1,58 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertTriangle, Bot, CheckCircle2, Clock3, FileClock, LockKeyhole,
+  Bot, CheckCircle2, Clock3,
   Plus, Save, SlidersHorizontal, Trash2, Users, X,
 } from 'lucide-react';
 import { api, ApiError } from '../api';
 import { Badge, EmptyState } from '../components';
 import OpeningItemsEditor from './OpeningItemsEditor';
 import {
-  actionLabels, BusinessRule, clone, ConfigResponse, normalizeConfig,
+  configurationChanges, clone, ConfigResponse, normalizeConfig,
   OpeningItem, ReceptionConfig,
 } from './reception-config';
 
-type StrategyTab = 'base' | 'silence' | 'rules' | 'versions';
-
-const tabItems: { id: StrategyTab; label: string; hint: string; icon: typeof Bot }[] = [
-  { id: 'base', label: '基础接待', hint: '目标、语气与留资方式', icon: Bot },
-  { id: 'silence', label: '沉默跟进', hint: '触达节奏与发送时段', icon: Clock3 },
-  { id: 'rules', label: '全局业务规则', hint: '跨线路通用的处理条件', icon: SlidersHorizontal },
-  { id: 'versions', label: '版本记录', hint: '查看策略发布历史', icon: FileClock },
+type StrategyTab = 'base' | 'scripts' | 'lead' | 'silence';
+const tabItems: { id: StrategyTab; label: string; icon: typeof Bot }[] = [
+  {id: 'base', label: '开场与语气', icon: Bot},
+  {id: 'scripts', label: '通用话术', icon: SlidersHorizontal},
+  {id: 'lead', label: '留资与交接', icon: Users},
+  {id: 'silence', label: '沉默跟进', icon: Clock3},
 ];
-
-const MAX_SILENCE_TOUCHES = 20;
-const SUGGESTED_SILENCE_INTERVALS = [
-  1, 3, 5, 10, 30, 60, 120, 240, 360, 480,
-  600, 720, 840, 960, 1080, 1200, 1260, 1320, 1380, 1440,
-];
-
-function nextSilenceInterval(values: number[]) {
-  const last = values.at(-1) ?? 0;
-  return SUGGESTED_SILENCE_INTERVALS.find(value => value > last)
-    ?? Math.min(1440, last + 1);
-}
 
 function Switch({ checked, onChange, disabled = false }: { checked: boolean; onChange: (value: boolean) => void; disabled?: boolean }) {
   return <button type="button" className={`strategy-switch ${checked ? 'on' : ''}`} onClick={() => !disabled && onChange(!checked)} disabled={disabled} aria-pressed={checked}><span /></button>;
-}
-
-function formatTime(value?: string | null) {
-  if (!value) return '暂无记录';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', { hour12: false });
-}
-
-function newRule(): BusinessRule {
-  return {
-    id: `operator_rule_${Date.now()}`,
-    name: '新业务规则',
-    enabled: true,
-    condition: '',
-    action: 'continue_ai',
-    guidance: '',
-    system_key: null,
-  };
 }
 
 export default function AiReceptionStrategy() {
@@ -71,8 +40,9 @@ export default function AiReceptionStrategy() {
   const [previewStatus, setPreviewStatus] = useState<Record<string, 'ready' | 'error'>>({});
 
   useEffect(() => {
-    if (configQuery.data?.config && !draft) {
+    if (configQuery.data?.config && (!draft || JSON.stringify(draft) === saved)) {
       const value = normalizeConfig(configQuery.data.config);
+      if (JSON.stringify(value) === JSON.stringify(draft)) return;
       setDraft(value);
       setSaved(JSON.stringify(value));
     }
@@ -83,15 +53,15 @@ export default function AiReceptionStrategy() {
     mutationFn: () => {
       if (uploads.current.size) throw new Error('请等待附件上传完成。');
       return api<{ config: ReceptionConfig }>('/automation/reception-config', {
-      method: 'PUT',
-      body: JSON.stringify(draft),
+      method: 'PATCH',
+      body: JSON.stringify(configurationChanges(JSON.parse(saved), draft!)),
       });
     },
     onSuccess: async data => {
       const value = normalizeConfig(data.config);
       setDraft(value);
       setSaved(JSON.stringify(value));
-      setNotice('全局 AI 接待策略已发布。');
+      setNotice('已保存');
       await queryClient.invalidateQueries({ queryKey: ['reception-config'] });
     },
   });
@@ -157,22 +127,13 @@ export default function AiReceptionStrategy() {
     if (media.some(item => previewStatus[`${item.content_type}:${item.media_id}`] === 'error')) return '附件预览失败，请检查或重新上传后再发布。';
     if (media.some(item => item.content_type === 'video' && previewStatus[`video:${item.media_id}`] !== 'ready')) return '请等待视频预览就绪后再发布。';
     if (!Number.isInteger(draft.reply.opening_interval_seconds) || draft.reply.opening_interval_seconds < 1 || draft.reply.opening_interval_seconds > 30) return '开场消息间隔需为1至30秒。';
-    if (draft.reply.custom_guidance.length > 1200) return '其他全局说明最多 1200 字。';
+    if (draft.reply.custom_guidance.length > 40000) return '其他全局说明最多 40000 字。';
     if (draft.reply.max_characters < 80 || draft.reply.max_characters > 200) return '单次回复上限必须在 80–200 字之间。';
     if (draft.reply.max_images_per_turn < 0 || draft.reply.max_images_per_turn > 2) return '单次图片数量必须在 0–2 张之间。';
     if (draft.lead_capture.enabled && !draft.lead_capture.channels.length) return '开启留资后，至少选择一种联系方式。';
-    if (!draft.silence.intervals_minutes.length) return '请至少保留一个沉默跟进时间。';
-    if (draft.silence.intervals_minutes.length > MAX_SILENCE_TOUCHES) return `沉默跟进最多允许 ${MAX_SILENCE_TOUCHES} 个时间节点。`;
-    if (draft.silence.intervals_minutes.some(value => !Number.isInteger(value) || value < 1 || value > 1440)) return '每个沉默间隔必须是 1–1440 的整数分钟。';
-    if (draft.silence.intervals_minutes.some((value, index, values) => index > 0 && value <= values[index - 1])) return '沉默跟进时间必须按从小到大排列，且不能重复。';
-    if (draft.silence.max_proactive_messages_per_day > draft.silence.intervals_minutes.length) return '每天最多主动消息不能超过时间节点数量。';
-    if (draft.silence.max_proactive_messages_per_day < 1) return '每天最多主动消息至少为 1 条。';
-    if (draft.handoff.large_group_minimum < 2 || draft.handoff.large_group_minimum > 100) return '大团人数必须在 2–100 人之间。';
-    if (draft.business_rules.length > 30) return '自定义业务规则最多 30 条。';
-    const incompleteRule = draft.business_rules.find(rule => !rule.name.trim() || !rule.condition.trim());
-    if (incompleteRule) return '业务规则名称和触发条件不能为空。';
-    const oversizedRule = draft.business_rules.find(rule => rule.name.length > 80 || rule.condition.length > 500 || rule.guidance.length > 500);
-    if (oversizedRule) return '业务规则名称最多 80 字，触发条件和处理说明最多 500 字。';
+    const intervals = draft.silence.v2_intervals_minutes ?? [];
+    if (!intervals.length || intervals.some(value => !Number.isInteger(value) || value < 1) || intervals.reduce((sum, value) => sum + value, 0) >= 1435) return '请填写有效的跟进间隔，总时长应少于 1435 分钟。';
+    if (draft.common_scripts.some(item => !item.name.trim() || !item.scenario.trim() || !item.text.trim())) return '请补全话术名称、适用场景和正文。';
     return '';
   }, [draft, previewStatus]);
 
@@ -180,168 +141,47 @@ export default function AiReceptionStrategy() {
   if (configQuery.isLoading) return <div className="page-content ai-strategy-page"><section className="panel"><EmptyState type="loading" title="正在读取 AI 接待策略" description="" /></section></div>;
   if (!draft || !configQuery.data) return <div className="page-content ai-strategy-page"><section className="panel"><EmptyState type="error" title="策略读取失败" description={(error as Error)?.message ?? '无法读取策略'} /></section></div>;
 
-  const version = configQuery.data.version;
   return <div className="page-content ai-strategy-page">
-    {notice ? <div className="config-notice"><CheckCircle2 size={16} /><span>{notice}</span><button onClick={() => setNotice('')}><X size={14} /></button></div> : null}
-    {error ? <div className="config-error"><AlertTriangle size={16} />{(error as ApiError).message}</div> : null}
-
-    <header className="strategy-page-head">
-      <div>
-        <span className="eyebrow">AI RECEPTION POLICY</span>
-        <h1>AI 接待策略</h1>
-        <p>全部线路共用的低频配置，由运营主管或管理员维护。</p>
-      </div>
-      <div className="strategy-version-tags"><Badge tone="blue">全局配置</Badge><Badge>{version?.label ?? '当前版本'}</Badge><Badge tone="green">已发布</Badge></div>
-    </header>
-
-    <div className="strategy-scope-note"><AlertTriangle size={18} /><div><strong>修改后将影响全部启用线路</strong><span>线路价格、行程、事实和图片请在线路管理中维护。这里不保存任何线路专属内容。</span></div></div>
-
+    {notice ? <div className="config-notice"><CheckCircle2 size={16} />{notice}<button onClick={() => setNotice('')}><X size={14} /></button></div> : null}
+    {error ? <div className="config-error" role="alert">{(error as ApiError).message}</div> : null}
+    <header className="strategy-page-head"><h1>公共接待</h1><Badge tone="blue">全部线路共用</Badge></header>
     <div className="strategy-layout">
-      <nav className="strategy-subnav panel" aria-label="AI 接待策略设置">
-        {tabItems.map(item => { const Icon = item.icon; return <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)}><Icon size={17} /><span><strong>{item.label}</strong><small>{item.hint}</small></span></button>; })}
-      </nav>
-
+      <nav className="strategy-subnav panel" aria-label="公共接待设置">{tabItems.map(item => { const Icon = item.icon; return <button key={item.id} className={tab === item.id ? 'active' : ''} onClick={() => setTab(item.id)}><Icon size={17} /><span><strong>{item.label}</strong></span></button>; })}</nav>
       <section className="strategy-main panel">
-        {tab === 'base' ? <BaseStrategy config={draft} patch={patch} openingEditor={<OpeningItemsEditor config={draft} patch={patch} uploading={uploading} errors={uploadErrors} disabled={publish.isPending} upload={uploadOpening} previewChanged={(key, status) => setPreviewStatus(current => current[key] === status ? current : { ...current, [key]: status })} clearError={key => setUploadErrors(current => ({ ...current, [key]: '' }))} />} /> : null}
-        {tab === 'silence' ? <SilenceStrategy config={draft} patch={patch} /> : null}
-        {tab === 'rules' ? <RulesStrategy config={draft} patch={patch} /> : null}
-        {tab === 'versions' ? <VersionHistory response={configQuery.data} /> : null}
+        {tab === 'base' && <div className="strategy-section-stack">
+          <OpeningItemsEditor config={draft} patch={patch} uploading={uploading} errors={uploadErrors} disabled={publish.isPending} upload={uploadOpening} previewChanged={(key, status) => setPreviewStatus(current => current[key] === status ? current : {...current, [key]: status})} clearError={key => setUploadErrors(current => ({...current, [key]: ''}))} />
+          <section className="reply-expression-editor"><h3>回复语气</h3>
+            <div className="strategy-segments">{([['friendly_professional', '亲切柔和'], ['concise', '简短有礼'], ['warm', '温柔可亲']] as const).map(([value,label]) => <button key={value} className={draft.reply.tone === value ? 'active' : ''} onClick={() => patch(config => { config.reply.tone=value; })}>{label}</button>)}</div>
+            <label className="block-field">语气要求<textarea rows={4} value={draft.reply.tone_guidance} onChange={event => patch(config => {config.reply.tone_guidance=event.target.value;})} /></label>
+            <label className="block-field">接待目标<textarea rows={2} value={draft.reply.goal} onChange={event => patch(config => {config.reply.goal=event.target.value;})} /></label>
+            <label className="block-field">其他接待说明<textarea rows={4} value={draft.reply.custom_guidance} onChange={event => patch(config => {config.reply.custom_guidance=event.target.value;})} /></label>
+          </section>
+        </div>}
+        {tab === 'scripts' && <div className="strategy-section-stack"><div className="strategy-card-title"><h3>通用话术</h3><button className="secondary-button compact" disabled={draft.common_scripts.length >= 100} onClick={() => patch(config => {config.common_scripts.push({id: crypto.randomUUID(), name:'', scenario:'', text:'', enabled:true});})}><Plus size={14} />新增话术</button></div>
+          {draft.common_scripts.length === 0 && <EmptyState title="暂无通用话术" description="" />}
+          {draft.common_scripts.map((item,index) => <article className="strategy-card" key={item.id}>
+            <div className="strategy-card-title"><strong>话术 {index+1}</strong><Switch checked={item.enabled} onChange={enabled => patch(config => {config.common_scripts[index].enabled=enabled;})} /><button className="icon-button" aria-label={`删除话术 ${index+1}`} onClick={() => patch(config => {config.common_scripts.splice(index,1);})}><Trash2 size={16} /></button></div>
+            <label className="block-field">名称<input value={item.name} onChange={event => patch(config => {config.common_scripts[index].name=event.target.value;})} /></label>
+            <label className="block-field">适用场景<textarea rows={2} value={item.scenario} onChange={event => patch(config => {config.common_scripts[index].scenario=event.target.value;})} /></label>
+            <label className="block-field">话术原文<textarea rows={5} value={item.text} onChange={event => patch(config => {config.common_scripts[index].text=event.target.value;})} /></label>
+          </article>)}
+        </div>}
+        {tab === 'lead' && <div className="strategy-section-stack"><div className="strategy-card-title"><h3>主动留资</h3><Switch checked={draft.lead_capture.enabled} onChange={enabled => patch(config => {config.lead_capture.enabled=enabled;})} /></div>
+          <div className="strategy-check-grid">{(['LINE','微信','电话','Email','WhatsApp'] as const).map(channel => <label key={channel}><input type="checkbox" checked={draft.lead_capture.channels.includes(channel)} onChange={event => patch(config => {config.lead_capture.channels=event.target.checked ? [...config.lead_capture.channels,channel] : config.lead_capture.channels.filter(item => item!==channel);})} />{channel}</label>)}</div>
+          <div className="strategy-card-title"><h3>多人咨询交给顾问</h3><Switch checked={draft.handoff.large_group_enabled} onChange={enabled => patch(config => {config.handoff.large_group_enabled=enabled;})} /></div>
+          <label className="block-field">达到人数<input type="number" min={2} max={100} value={draft.handoff.large_group_minimum} onChange={event => patch(config => {config.handoff.large_group_minimum=Number(event.target.value);})} /></label>
+          <label className="block-field">目录外需求<select value={draft.routing.outside_catalog_action} onChange={event => patch(config => {config.routing.outside_catalog_action=event.target.value as ReceptionConfig['routing']['outside_catalog_action'];})}><option value="recommend_supported_routes">推荐现有线路</option><option value="explain_boundary_only">说明范围</option></select></label>
+        </div>}
+        {tab === 'silence' && <div className="strategy-section-stack">
+          <div className="strategy-card-title"><h3>沉默跟进</h3><Switch checked={draft.silence.enabled} onChange={enabled => patch(config => {config.silence.enabled=enabled;})} /></div>
+          <div className="strategy-card-title"><strong>用于真实客户</strong><Switch checked={draft.silence.live_enabled ?? configQuery.data.runtime.live_silence_enabled} disabled={!draft.silence.enabled} onChange={enabled => patch(config => {config.silence.live_enabled=enabled;})} /></div>
+          <p>第一项从回复完成计算，后续从上一次跟进计算。</p>
+          {(draft.silence.v2_intervals_minutes ?? []).map((minutes,index) => <div className="strategy-field-grid" key={index}><label>第 {index+1} 次间隔（分钟）<input type="number" min={1} max={1434} value={minutes} onChange={event => patch(config => {config.silence.v2_intervals_minutes![index]=Number(event.target.value);})} /></label><button className="icon-button" aria-label={`删除第 ${index+1} 次跟进`} disabled={draft.silence.v2_intervals_minutes!.length===1} onClick={() => patch(config => {config.silence.v2_intervals_minutes!.splice(index,1);})}><Trash2 size={16} /></button></div>)}
+          <button className="secondary-button compact" disabled={(draft.silence.v2_intervals_minutes?.length ?? 0)>=20} onClick={() => patch(config => {config.silence.v2_intervals_minutes!.push(120);})}><Plus size={14} />添加跟进</button>
+          <div className="strategy-field-grid"><label>开始时间<input type="time" value={draft.silence.active_start} onChange={event => patch(config => {config.silence.active_start=event.target.value;})} /></label><label>结束时间<input type="time" value={draft.silence.active_end} onChange={event => patch(config => {config.silence.active_end=event.target.value;})} /></label><label>每日最多触达<input type="number" min={1} max={20} value={draft.silence.max_proactive_messages_per_day} onChange={event => patch(config => {config.silence.max_proactive_messages_per_day=Number(event.target.value);})} /></label></div>
+        </div>}
       </section>
     </div>
-
-    {dirty || uploading.length ? <footer className="strategy-save-bar"><div>{uploading.length ? <span role="status">附件上传中，请稍候</span> : validationError ? <span className="save-error"><AlertTriangle size={15} />{validationError}</span> : <span>存在尚未发布的全局策略修改</span>}</div><button className="secondary-button" disabled={!!uploading.length || publish.isPending} onClick={() => { const value = normalizeConfig(configQuery.data.config); setDraft(value); setSaved(JSON.stringify(value)); setUploadErrors({}); }}>放弃修改</button><button className="primary-button" disabled={!!validationError || !!uploading.length || publish.isPending} onClick={() => publish.mutate()}><Save size={15} />{publish.isPending ? '发布中…' : '发布策略'}</button></footer> : null}
-  </div>;
-}
-
-function SectionHead({ title, description }: { title: string; description: string }) {
-  return <header className="strategy-section-head"><h2>{title}</h2><p>{description}</p></header>;
-}
-
-function BaseStrategy({ config, patch, openingEditor }: { config: ReceptionConfig; patch: (updater: (value: ReceptionConfig) => void) => void; openingEditor: React.ReactNode }) {
-  return <div className="strategy-section-stack">
-    <SectionHead title="基础接待" description="定义所有线路共同使用的回复目标、表达方式和留资原则。" />
-    {openingEditor}
-    <section className="reply-expression-editor">
-      <h3>AI 回覆語氣 · 即時與沉默跟進</h3>
-      <div className="strategy-field-grid">
-        <label className="full">台灣顧問語氣<div className="strategy-segments">{([['friendly_professional', '親切柔和'], ['concise', '簡短有禮'], ['warm', '溫柔可親']] as const).map(([value, label]) => <button type="button" aria-pressed={config.reply.tone === value} key={value} className={config.reply.tone === value ? 'active' : ''} onClick={() => patch(draft => { draft.reply.tone = value; })}>{label}</button>)}</div></label>
-      </div>
-      <label className="block-field">補充語氣要求<textarea rows={5} value={config.reply.tone_guidance} maxLength={1200} placeholder="親切、輕柔，像在 LINE 聊行程；可以帶一點可愛語尾，不要每句重複。" onChange={event => patch(value => { value.reply.tone_guidance = event.target.value; })} /><small>{config.reply.tone_guidance.length}/1200 字</small></label>
-      <div className="strategy-field-grid">
-        <label>單則文字上限<div className="number-suffix"><input type="number" min={80} max={200} value={config.reply.max_characters} onChange={event => patch(value => { value.reply.max_characters = Number(event.target.value); })} /><span>字</span></div></label>
-        <label>AI 單輪圖片上限<div className="number-suffix"><input type="number" min={0} max={2} value={config.reply.max_images_per_turn} onChange={event => patch(value => { value.reply.max_images_per_turn = Number(event.target.value); })} /><span>張</span></div></label>
-      </div>
-      <details><summary>接待目標與其他表達要求</summary><div className="reply-expression-extra">
-        <label className="block-field">接待目標<textarea rows={3} value={config.reply.goal} maxLength={160} onChange={event => patch(value => { value.reply.goal = event.target.value; })} /><small>{config.reply.goal.length}/160 字</small></label>
-        <label className="block-field">其他表達要求<textarea rows={3} value={config.reply.custom_guidance} maxLength={1200} onChange={event => patch(value => { value.reply.custom_guidance = event.target.value; })} /><small>{config.reply.custom_guidance.length}/1200 字</small></label>
-      </div></details>
-    </section>
-
-    <div className="strategy-card">
-      <div className="strategy-card-title"><div><h3>联系方式获取</h3><p>AI 先回答客户问题，信息和意向足够后，再自然索取一种联系方式。</p></div><Switch checked={config.lead_capture.enabled} onChange={checked => patch(value => { value.lead_capture.enabled = checked; })} /></div>
-      <div className="strategy-check-grid">{(['LINE', '微信', '电话', 'Email'] as const).map(channel => <label key={channel}><input type="checkbox" checked={config.lead_capture.channels.includes(channel)} disabled={!config.lead_capture.enabled} onChange={event => patch(value => { value.lead_capture.channels = event.target.checked ? [...value.lead_capture.channels, channel] : value.lead_capture.channels.filter(item => item !== channel); })} /><span>{channel}</span></label>)}</div>
-      <div className="strategy-inline-options">
-        <label><input type="checkbox" checked={config.lead_capture.require_supported_route} onChange={event => patch(value => { value.lead_capture.require_supported_route = event.target.checked; })} /> 已确认平台支持的线路</label>
-        <label><input type="checkbox" checked={config.lead_capture.answer_before_asking} onChange={event => patch(value => { value.lead_capture.answer_before_asking = event.target.checked; })} /> 必须先回答当前问题</label>
-        <label><input type="checkbox" checked={config.lead_capture.require_party_size} onChange={event => patch(value => { value.lead_capture.require_party_size = event.target.checked; })} /> 优先了解同行人数（非硬门槛）</label>
-        <label><input type="checkbox" checked={config.lead_capture.require_departure_window} onChange={event => patch(value => { value.lead_capture.require_departure_window = event.target.checked; })} /> 优先了解出发时间（不确定时不追问）</label>
-      </div>
-    </div>
-
-    <div className="strategy-card">
-      <h3>线路协同</h3>
-      <div className="strategy-toggle-list">
-        <label><span><strong>允许客户切换线路</strong><small>客户改问另一条已启用线路时，由 AI 重新判断并切换。</small></span><Switch checked={config.routing.allow_route_switch} onChange={checked => patch(value => { value.routing.allow_route_switch = checked; })} /></label>
-        <label><span><strong>切换时保留客户档案</strong><small>人数、出发时间和预算等继续沿用，不要求客户重复提供。</small></span><Switch checked={config.routing.preserve_profile_on_switch} onChange={checked => patch(value => { value.routing.preserve_profile_on_switch = checked; })} /></label>
-      </div>
-      <label className="block-field">客户咨询资料外线路<select value={config.routing.outside_catalog_action} onChange={event => patch(value => { value.routing.outside_catalog_action = event.target.value as ReceptionConfig['routing']['outside_catalog_action']; })}><option value="recommend_supported_routes">说明范围并推荐当前已启用线路</option><option value="explain_boundary_only">只说明资料边界，不主动推荐</option></select></label>
-    </div>
-  </div>;
-}
-
-function SilenceStrategy({ config, patch }: { config: ReceptionConfig; patch: (updater: (value: ReceptionConfig) => void) => void }) {
-  const intervals = config.silence.intervals_minutes;
-  const canAdd = config.silence.enabled
-    && intervals.length < MAX_SILENCE_TOUCHES
-    && (intervals.at(-1) ?? 0) < 1440;
-  function addInterval() {
-    patch(value => {
-      const currentLength = value.silence.intervals_minutes.length;
-      value.silence.intervals_minutes.push(nextSilenceInterval(value.silence.intervals_minutes));
-      if (value.silence.max_proactive_messages_per_day === currentLength) {
-        value.silence.max_proactive_messages_per_day = currentLength + 1;
-      }
-    });
-  }
-  function removeInterval(index: number) {
-    patch(value => {
-      value.silence.intervals_minutes.splice(index, 1);
-      value.silence.max_proactive_messages_per_day = Math.min(
-        value.silence.max_proactive_messages_per_day,
-        value.silence.intervals_minutes.length,
-      );
-    });
-  }
-  return <div className="strategy-section-stack">
-    <SectionHead title="沉默跟进" description="间隔从客户最后一次发言或上一条成功触达开始计算，与固定话术和具体素材无绑定。" />
-    <div className="strategy-card">
-      <h3>V2 普通沉默跟进</h3>
-      <p>第一项从本轮回复交付后计算，后续从上一次成功跟进计算。考虑中或约定联系另行处理；到期仍须有新价值且渠道允许发送。</p>
-      {(config.silence.v2_intervals_minutes ?? [1, 120]).map((minutes, index) => <label className="block-field" key={index}>第 {index + 1} 次间隔（分钟）<input type="number" min={1} max={1434} value={minutes} onChange={event => patch(value => {
-        const intervals = [...(value.silence.v2_intervals_minutes ?? [1, 120])];
-        intervals[index] = Number(event.target.value);
-        value.silence.v2_intervals_minutes = intervals;
-      })} /></label>)}
-      <p>间隔总和必须小于 23 小时 55 分。下方时间线用于 V1，发送时段及总开关仍共同生效。</p>
-    </div>
-    <div className="strategy-card">
-      <div className="strategy-card-title"><div><h3>客户沉默后继续推进</h3><p>无安全阻断时，每个到期节点都必须提供新的有效价值。</p></div><Switch checked={config.silence.enabled} onChange={checked => patch(value => { value.silence.enabled = checked; })} /></div>
-      <div className="silence-timeline-editor">{intervals.map((minutes, index) => <div key={index} className="silence-time-item"><span>第 {index + 1} 次</span><div className="silence-time-control"><label><input type="number" min={1} max={1440} value={minutes} disabled={!config.silence.enabled} aria-label={`第 ${index + 1} 次沉默跟进间隔`} onChange={event => patch(value => { value.silence.intervals_minutes[index] = Number(event.target.value); })} /><em>分钟后</em></label><button type="button" className="icon-button danger-icon silence-delete" title="删除时间节点" aria-label={`删除第 ${index + 1} 次时间节点`} disabled={!config.silence.enabled || intervals.length === 1} onClick={() => removeInterval(index)}><Trash2 size={14} /></button></div>{index < intervals.length - 1 ? <i>→</i> : null}</div>)}<button type="button" className="secondary-button compact silence-add" disabled={!canAdd} onClick={addInterval}><Plus size={14} />添加时间节点</button></div>
-      <p className="silence-timeline-help">每个时间表示距上一次成功触达的间隔；至少 1 个，最多 {MAX_SILENCE_TOUCHES} 个。新发布的设置只应用于之后建立的客户旅程。</p>
-      <div className="strategy-field-grid compact-grid">
-        <label>每天最多主动消息<div className="number-suffix"><input type="number" min={1} max={20} value={config.silence.max_proactive_messages_per_day} onChange={event => patch(value => { value.silence.max_proactive_messages_per_day = Number(event.target.value); })} /><span>条</span></div></label>
-        <label>允许发送开始时间<input type="time" value={config.silence.active_start} onChange={event => patch(value => { value.silence.active_start = event.target.value; })} /></label>
-        <label>允许发送结束时间<input type="time" value={config.silence.active_end} onChange={event => patch(value => { value.silence.active_end = event.target.value; })} /></label>
-      </div>
-      <div className="strategy-info-row"><CheckCircle2 size={16} /><span>客户一旦回复，当前沉默轮次立即取消；AI 回答完成后，再按最新阶段重新开始计时。</span></div>
-    </div>
-    <div className="strategy-card readonly-card">
-      <h3>固定执行方式</h3>
-      <div className="readonly-rule-grid">
-        <div><strong>先筛选再生成</strong><span>代码先确认还有相关的新内容；没有新价值时安全跳过本次触达。</span></div>
-        <div><strong>单节点最多修复 1 次</strong><span>只修复当前节点的 JSON 结构；业务动作不会交给模型反复修改。</span></div>
-        <div><strong>完成后停止</strong><span>最后一次触达完成后结束，不无限循环打扰客户。</span></div>
-      </div>
-    </div>
-  </div>;
-}
-
-function RulesStrategy({ config, patch }: { config: ReceptionConfig; patch: (updater: (value: ReceptionConfig) => void) => void }) {
-  const editable = config.business_rules.filter(rule => !rule.system_key);
-  return <div className="strategy-section-stack">
-    <SectionHead title="全局业务规则" description="维护全部线路共用的业务条件。安全保护规则不会放在这里编辑。" />
-    <div className="strategy-card">
-      <div className="strategy-card-title"><div><h3>大团交给人工</h3><p>只有客户明确给出人数并达到阈值时才触发。</p></div><Switch checked={config.handoff.large_group_enabled} onChange={checked => patch(value => { value.handoff.large_group_enabled = checked; })} /></div>
-      <label className="compact-number-field">人数达到 <input type="number" min={2} max={100} value={config.handoff.large_group_minimum} disabled={!config.handoff.large_group_enabled} onChange={event => patch(value => { value.handoff.large_group_minimum = Number(event.target.value); })} /> 人，自动转人工</label>
-    </div>
-    <div className="strategy-card">
-      <div className="strategy-card-title"><div><h3>自定义规则</h3><p>规则描述会交给模型判断；请写清触发条件和期望动作，不使用关键词列表。</p></div><button className="secondary-button compact" disabled={config.business_rules.length >= 30} onClick={() => patch(value => { value.business_rules.push(newRule()); })}><Plus size={14} />新增规则</button></div>
-      {!editable.length ? <EmptyState title="暂无自定义规则" description="只有跨线路共用的业务逻辑才需要放在这里。" /> : <div className="business-rule-list">{editable.map(rule => {
-        const index = config.business_rules.findIndex(item => item.id === rule.id);
-        return <article key={rule.id}>
-          <label className="block-field">匹配方式<select value={rule.trigger ?? 'semantic'} onChange={event => patch(value => { value.business_rules[index].trigger = event.target.value as BusinessRule['trigger']; })}><option value="semantic">自定义语义条件</option><option value="outside_catalog">客户所需线路不在产品目录内</option></select></label>
-          <div className="rule-row-head"><Switch checked={rule.enabled} onChange={checked => patch(value => { value.business_rules[index].enabled = checked; })} /><input value={rule.name} maxLength={80} onChange={event => patch(value => { value.business_rules[index].name = event.target.value; })} /><button className="icon-button danger-icon" title="删除规则" onClick={() => patch(value => { value.business_rules.splice(index, 1); })}><Trash2 size={15} /></button></div>
-          <div className="rule-field-grid"><label>触发条件<textarea rows={2} value={rule.condition} maxLength={500} onChange={event => patch(value => { value.business_rules[index].condition = event.target.value; })} /></label><label>触发后动作<select value={rule.action} onChange={event => patch(value => { value.business_rules[index].action = event.target.value as BusinessRule['action']; })}>{Object.entries(actionLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="full">处理说明<textarea rows={2} value={rule.guidance} maxLength={500} placeholder="告诉 AI 触发后应该如何表达和继续接待。" onChange={event => patch(value => { value.business_rules[index].guidance = event.target.value; })} /></label></div>
-        </article>;
-      })}</div>}
-    </div>
-  </div>;
-}
-
-function VersionHistory({ response }: { response: ConfigResponse }) {
-  return <div className="strategy-section-stack">
-    <SectionHead title="版本记录" description="每次发布都会记录操作时间和影响范围，正在执行的旧旅程不会被中途改写。" />
-    <div className="strategy-version-summary"><FileClock size={20} /><div><strong>{response.version?.label ?? '当前版本'} · 已发布</strong><span>提示词 {response.version?.prompt_version ?? '—'} · 校验器 {response.version?.validator_version ?? '—'}</span><small>最近发布：{formatTime(response.version?.published_at)}</small></div></div>
-    <div className="route-list-table-wrap"><table className="route-list-table"><thead><tr><th>记录</th><th>变更摘要</th><th>操作人</th><th>发布时间</th></tr></thead><tbody>{response.history?.length ? response.history.map(row => <tr key={row.id}><td><strong>{row.label}</strong></td><td>{row.summary}</td><td>{row.user_id ? `用户 #${row.user_id}` : '系统初始化'}</td><td>{formatTime(row.created_at)}</td></tr>) : <tr><td colSpan={4}>暂无策略变更记录</td></tr>}</tbody></table></div>
+    {dirty || uploading.length ? <footer className="strategy-save-bar"><div>{validationError ? <span className="save-error">{validationError}</span> : <span>尚未保存</span>}</div><button className="secondary-button" disabled={!!uploading.length || publish.isPending} onClick={() => {const value=normalizeConfig(configQuery.data.config);setDraft(value);setSaved(JSON.stringify(value));}}>取消修改</button><button className="primary-button" disabled={!!validationError || !!uploading.length || publish.isPending} onClick={() => publish.mutate()}><Save size={15} />{publish.isPending ? '保存中…' : '保存'}</button></footer> : null}
   </div>;
 }

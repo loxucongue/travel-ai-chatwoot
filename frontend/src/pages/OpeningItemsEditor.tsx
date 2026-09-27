@@ -49,7 +49,7 @@ export default function OpeningItemsEditor({ config, patch, uploading, errors, d
     });
   }
   return <section className="opening-message-editor opening-items-editor">
-    <div className="strategy-card-title"><h3>未选线路开场消息</h3><button type="button" className="secondary-button compact" disabled={disabled || items.length >= 10} onClick={() => {
+    <div className="strategy-card-title"><h3>首次客户消息开场</h3><button type="button" className="secondary-button compact" disabled={disabled || items.length >= 10} onClick={() => {
       const key = `opening-${crypto.randomUUID()}`;
       patch(value => { if (value.reply.opening_items.length < 10) value.reply.opening_items.push({ key, content_type: 'text', content: '' }); });
     }}><Plus size={14} />新增消息</button></div>

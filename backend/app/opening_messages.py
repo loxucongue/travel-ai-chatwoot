@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.models import StoredMedia
 
-SELECTION_QUESTION = "您想先了解哪一條行程呢？"
 MAX_BYTES = 20 * 1024 * 1024
 
 
@@ -39,8 +38,6 @@ def delivery_items(items: list[dict] | None, texts: list[str]) -> list[dict]:
         {"key": f"opening-{i}", "content_type": "text", "content": text}
         for i, text in enumerate(texts)
     ]
-    if result and result[-1]["content_type"] != "text":
-        result.append({"key": "selection-question", "content_type": "text", "content": SELECTION_QUESTION})
     return result
 
 

@@ -1792,20 +1792,6 @@ td { padding-block: 14px; }
 }
 
 /* Curated global website knowledge */
-.knowledge-ai-flow { margin: 14px 0; padding: 16px; border: 1px solid #d7e4e9; border-radius: 8px; background: #fff; }
-.knowledge-ai-flow > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 13px; border-bottom: 1px solid #e7edef; }
-.knowledge-ai-flow > header > div { display: flex; align-items: center; gap: 9px; color: #0b6382; }
-.knowledge-ai-flow > header strong, .knowledge-ai-flow > header span { display: block; }
-.knowledge-ai-flow > header strong { color: #183f56; font-size: 12px; }
-.knowledge-ai-flow > header span { margin-top: 3px; color: #758690; font-size: 9px; }
-.knowledge-ai-flow-steps { padding: 15px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; }
-.knowledge-ai-flow-steps > div { min-height: 68px; padding: 11px; display: flex; align-items: flex-start; gap: 9px; border: 1px solid #e0e8eb; border-radius: 7px; background: #f8fafb; }
-.knowledge-ai-flow-steps b { flex: 0 0 22px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: #e1f1f4; color: #09617c; font-size: 9px; }
-.knowledge-ai-flow-steps strong, .knowledge-ai-flow-steps small { display: block; }
-.knowledge-ai-flow-steps strong { color: #294b5e; font-size: 10px; }
-.knowledge-ai-flow-steps small { margin-top: 4px; color: #7d8e97; font-size: 8px; line-height: 1.5; }
-.knowledge-ai-flow-steps > svg { color: #9aabb3; }
-.knowledge-ai-flow > p { margin: 0; padding: 9px 11px; display: flex; align-items: center; gap: 7px; border-radius: 6px; background: #fff8e9; color: #82601f; font-size: 9px; }
 .knowledge-usage-section { padding: 18px; border: 1px solid #dce6ea; border-radius: 8px; background: #fff; }
 .knowledge-usage-section > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
 .knowledge-usage-section h2 { margin: 0; color: #173f57; font-size: 15px; }
@@ -1822,8 +1808,6 @@ td { padding-block: 14px; }
 .knowledge-usage-table td { padding: 11px 10px; border-top: 1px solid #e9eef1; color: #344f5f; font-size: 10px; vertical-align: top; }
 .knowledge-usage-table td small { display: block; margin-top: 4px; color: #87969e; font-size: 8px; overflow-wrap: anywhere; }
 @media(max-width:900px) {
-  .knowledge-ai-flow-steps { grid-template-columns: 1fr; }
-  .knowledge-ai-flow-steps > svg { justify-self: center; transform: rotate(90deg); }
   .knowledge-usage-stats { grid-template-columns: 1fr 1fr; }
 }
 .global-library-page { display: grid; gap: 14px; }

@@ -350,7 +350,7 @@ def guard(db, job, snap, expected=None):
                                             HandoffTask.status.in_(["pending", "claimed"]))):
         raise ReplyBlocked("human_handoff_active")
     config, version = reply_policy(db, state.inbox_binding_id)
-    if not config.get("enabled") or not setting_value(db, "ai_adapter", {}).get("enabled", True):
+    if not config.get("enabled"):
         raise ReplyBlocked("reply_policy_disabled")
     incoming = [m for m in messages if message_direction(m.get("message_type")) == "incoming" and not m.get("private")
                 and not (m.get("content_attributes") or {}).get("external_echo")]
@@ -769,6 +769,7 @@ def _freeze_opening_reply(db, job, state, decision):
     if not isinstance(interval, int) or interval < 0:
         raise ReplyBlocked("opening_interval_invalid")
     configured = delivery_items(decision.opening_items, decision.opening_messages or [decision.reply])
+    last_text = max((i for i, item in enumerate(configured) if item['content_type'] == 'text'), default=-1)
     plan = []
     for index, raw in enumerate(configured):
         item = OpeningItem.model_validate(deepcopy(raw)).model_dump()
@@ -779,11 +780,11 @@ def _freeze_opening_reply(db, job, state, decision):
             "plan_version": OPENING_PLAN_FORMAT, "kind": "media" if info else "text",
             "content": item["content"], "material": info, "opening_item": item,
             "interval_seconds": interval if index else 0,
-            "quick_replies": list(decision.reply_options) if index == len(configured) - 1 else [],
+            "quick_replies": list(decision.reply_options) if index == last_text else [],
             "skip_previously_sent": bool(info and previously_sent(db, state, info)),
             "status": "pending",
         })
-    if not plan or plan[-1]["kind"] != "text" or not plan[-1]["quick_replies"]:
+    if not plan:
         raise ReplyBlocked("opening_plan_invalid")
     digest = _opening_plan_digest(plan)
     for index, item in enumerate(plan):
@@ -816,8 +817,7 @@ def _persisted_reply_attempts(db, job):
     if opening:
         digest = _opening_plan_digest(plan)
         if (not plan or digest != job.trace.get("delivery_plan_digest")
-                or plan[-1].get("kind") != "text" or not plan[-1].get("quick_replies")
-                or any(item.get("quick_replies") for item in plan[:-1])
+                or any(item.get("quick_replies") and item.get("kind") != "text" for item in plan)
                 or any(item.get("item_id") != f"{digest}:{index}"
                        or item.get("plan_version") != OPENING_PLAN_FORMAT
                        for index, item in enumerate(plan))):
@@ -1298,7 +1298,7 @@ def process_job(job_id):
                 }
                 complete(db, job, "handoff", decision.handoff_reason)
                 return
-            if decision.reply_options:
+            if decision.reply_options or decision.opening_items:
                 _freeze_opening_reply(db, job, state, decision)
                 db.commit()
                 _execute_persisted_reply(db, client, job, state, run, fingerprint)

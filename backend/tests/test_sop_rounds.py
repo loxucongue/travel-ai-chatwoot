@@ -2,11 +2,11 @@ from datetime import timedelta
 import pytest
 from sqlalchemy import select, func
 
-from app.automation_models import AutomationSession, RehearsalEnrollment, RehearsalJob, TouchReservation
+from app.automation_models import AutomationSession, RehearsalEnrollment, RehearsalJob
 from app.automation_service import (apply_controls, trigger_sops, add_customer_message, enroll_rehearsal, sop_snapshot,
     advance_sops, reserve_touch, subject_key, dt, iso)
-from app.models import (SopDefinition, ChatwootLabel, InboxBinding, ConversationState, Contact, User, MessageEvent,
-    OutboundMessage, SopJob, HandoffTask, ChatwootConnection, WebhookEvent, utcnow)
+from app.models import (SopDefinition, InboxBinding, ConversationState, Contact, User, MessageEvent,
+    OutboundMessage, SopJob, HandoffTask, ChatwootConnection, utcnow)
 from app.ops_api import sop_json
 from app.sop_schedule import schedule_at
 
@@ -120,28 +120,8 @@ def test_old_customer_can_use_enrollment_anchor_but_not_reset_channel_window(ses
         assert db.scalar(select(RehearsalJob)).reason=='automatic_window_closed'
 
 
-def test_manual_enrollment_checks_published_inbox_and_batch_is_atomic(authenticated,session_factory):
-    client,csrf=authenticated;h={'X-CSRF-Token':csrf}
-    with session_factory() as db:
-        for i in (1,2):
-            db.add(InboxBinding(id=i,tenant_id=1,chatwoot_inbox_id=100+i,name=str(i)))
-        db.flush()
-        for i in (1,2):db.add(ConversationState(id=i,tenant_id=1,inbox_binding_id=i,chatwoot_conversation_id=i))
-        db.commit()
-    sop=client.post('/v1/sops',json={'name':'scope','inbox_ids':[101],'nodes':[node()]},headers=h).json()
-    assert client.post(f"/v1/sops/{sop['id']}/publish",headers=h).status_code==200
-    assert client.post(f"/v1/sops/{sop['id']}/enroll",json={'conversation_ids':[1,2]},headers=h).status_code==422
-    with session_factory() as db:assert db.scalar(select(RehearsalEnrollment)) is None
-    assert client.get(f"/v1/sops/{sop['id']}/enrollment-candidates").json()['total']==1
 
 
-def test_publish_rejects_empty_unknown_and_contradictory_tags(authenticated,session_factory):
-    client,csrf=authenticated;h={'X-CSRF-Token':csrf}
-    with session_factory() as db:
-        db.add(ChatwootLabel(tenant_id=1,chatwoot_label_id=1,title='start'));db.commit()
-    for entry,exit in (([],[]),(['unknown'],[]),(['start'],['start'])):
-        sop=client.post('/v1/sops',json={'name':'invalid','trigger_type':'label','trigger_labels':entry,'exit_labels':exit,'nodes':[node()]},headers=h).json()
-        assert client.post(f"/v1/sops/{sop['id']}/publish",headers=h).status_code==422
 
 
 def test_rehearsal_metrics_count_real_rehearsal_tables(session_factory):
@@ -251,26 +231,3 @@ def test_old_incoming_webhook_is_context_only_and_cannot_end_new_round(session_f
         ingest_payload(db,connection,event);assert observe_webhook(db)
         assert e.status=='active'
         assert any(x['content']=='backlog' for x in s.messages)
-
-
-@pytest.mark.parametrize("live", [False, True])
-def test_reenrollment_api_retry_does_not_rewind_session(authenticated,session_factory,monkeypatch,live):
-    if live:
-        from app.config import settings
-        monkeypatch.setattr(settings,"app_profile","live_reply")
-        monkeypatch.setattr(settings,"outbound_mode","live")
-        monkeypatch.setattr(settings,"chatwoot_write_enabled",True)
-    client,csrf=authenticated;h={'X-CSRF-Token':csrf}
-    with session_factory() as db:
-        db.add(InboxBinding(id=1,tenant_id=1,chatwoot_inbox_id=128859,name='test'));db.flush()
-        db.add(ConversationState(id=1,tenant_id=1,inbox_binding_id=1,chatwoot_conversation_id=26));db.flush()
-        v=version(db);s=session(db,conversation_state_id=1,inbox_binding_id=1,environment='shadow')
-        e=enroll_rehearsal(db,s,v);e.status='completed';sid,sopid=s.id,v.sop_id;db.commit()
-    url=f'/v1/sops/{sopid}/enroll';payload={'conversation_ids':[26],'environment':'shadow','reenroll':True,'request_key':'same-request'}
-    first=client.post(url,json=payload,headers=h);assert first.status_code==200
-    assert first.json()["outbound"] is False
-    with session_factory() as db:
-        s=db.get(AutomationSession,sid);s.messages=[{'content':'must-preserve','created_at':AT}];s.virtual_now=AT;db.commit()
-    assert client.post(url,json=payload,headers=h).json()==first.json()
-    with session_factory() as db:
-        s=db.get(AutomationSession,sid);assert s.messages[0]['content']=='must-preserve' and s.virtual_now==AT

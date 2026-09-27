@@ -293,12 +293,13 @@ def assets(_user: User = Depends(super_admin), db: Session = Depends(get_db)):
 @router.get("/safety/outbound-status")
 def outbound_status(_user: User = Depends(super_admin), db: Session = Depends(get_db)):
     from app.reception_rollout import reception_rollout
+    from app.reception_config import live_silence_enabled
     rollout = reception_rollout(db)
     return {"app_profile": settings.app_profile, "outbound_mode": settings.outbound_mode,
             "chatwoot_write_enabled": settings.chatwoot_write_enabled,
             "outbound_enabled": settings.outbound_enabled,
             "evaluation_inbox_id": settings.evaluation_inbox_id,
-            "live_sop_enabled": settings.live_sop_enabled,
+            "live_sop_enabled": live_silence_enabled(db),
             "live_sop_scope": rollout.scope,
             "live_sop_conversation_ids": sorted(rollout.conversation_ids)}
 

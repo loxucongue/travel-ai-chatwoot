@@ -84,7 +84,7 @@ export default function RouteProducts() {
   const publish = useMutation({
     mutationFn: async () => {
       if (contentDirty) await api(`/automation/route-products/${selected}/content`, { method: 'PUT', body: JSON.stringify({ ...content, base_package_version: contentBase.current.version }) });
-      if (configDirty) await api('/automation/reception-config', { method: 'PUT', body: JSON.stringify(draft) });
+      if (configDirty) await api('/automation/reception-config', { method: 'PATCH', body: JSON.stringify({ routing: { enabled_route_variants: draft!.routing.enabled_route_variants } }) });
     },
     onSuccess: async () => {
       setNotice('线路新版本已发布。');

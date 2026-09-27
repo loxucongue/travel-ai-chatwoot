@@ -617,19 +617,20 @@ def process_automation_run(
                     for index, part in enumerate(ordered)
                 ]
                 opening = outcome.get("opening_messages") or []
-                if opening:
+                if opening or outcome.get("opening_items"):
                     from app.opening_messages import delivery_items, opening_media_info
                     interval_seconds = int(outcome.get("opening_interval_seconds", 2))
                     timed_delivery = True
                     items = delivery_items(outcome.get("opening_items"), opening)
+                    last_text = max((i for i, item in enumerate(items) if item['content_type'] == 'text'), default=-1)
                     group = []
                     for index, item in enumerate(items):
                         info = opening_media_info(db, item, tenant_for_session(db, session)) if item["content_type"] != "text" else {}
                         group.append({
                             **text_message, **info, "id": f"draft:{run.id}:opening:{index}",
                             "content": item["content"],
-                            "content_type": text_message["content_type"] if index == len(items) - 1 else item["content_type"],
-                            "content_attributes": text_message["content_attributes"] if index == len(items) - 1 else {},
+                            "content_type": text_message["content_type"] if index == last_text else item["content_type"],
+                            "content_attributes": text_message["content_attributes"] if index == last_text else {},
                         })
                 for index, message in enumerate(group):
                     if index and timed_delivery:

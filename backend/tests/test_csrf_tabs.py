@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 def save(client, token, **headers):
-    return client.put('/v1/settings/ai', json={'trigger_text': 'a', 'reply_text': 'b'},
+    return client.patch('/v1/automation/reception-config', json={'lead_capture': {'enabled': True}},
                       headers={'X-CSRF-Token': token, **headers})
 
 

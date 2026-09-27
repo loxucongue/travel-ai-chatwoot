@@ -21,7 +21,7 @@ import {
 import { useSearchParams } from 'react-router-dom';
 import { api, API_BASE, ApiError, DEMO_MODE } from '../api';
 import { Badge, EmptyState } from '../components';
-import { sopReason } from './sop-types';
+import { sopReason } from './sop-reasons';
 
 import { DeliveryDetails, DeliveryStatus, RuntimeDetails } from '../DeliveryDetails';
 import { customerTranscriptMessage, deliveryStates, type RuntimeEvidence } from '../delivery';

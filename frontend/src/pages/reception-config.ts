@@ -46,14 +46,6 @@ export type RouteProduct = {
   };
 };
 
-export type BusinessRule = {
-  id: string; name: string; enabled: boolean; condition: string;
-  action: 'handoff' | 'request_contact' | 'recommend_routes' | 'continue_ai' | 'stop_ai';
-  guidance: string;
-  trigger?: 'semantic' | 'outside_catalog';
-  system_key: 'large_group' | 'captured_contact' | 'explicit_human' | 'service_dispute' | 'attachment_review' | null;
-};
-
 export type OpeningItem = {
   key: string;
   content_type: 'text' | 'image' | 'video';
@@ -65,18 +57,16 @@ export type OpeningItem = {
 
 export type ReceptionConfig = {
   schema_version: number;
+  common_scripts: {id: string; name: string; scenario: string; text: string; enabled: boolean}[];
   reply: { opening_message: string; opening_messages: string[]; opening_items: OpeningItem[]; opening_interval_seconds: number; goal: string; tone: 'friendly_professional' | 'concise' | 'warm'; tone_guidance: string; max_characters: number; max_images_per_turn: number; custom_guidance: string };
-  profile_fields: string[];
-  lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email')[]; require_supported_route: boolean; require_party_size: boolean; require_departure_window: boolean; answer_before_asking: boolean; ask_after_answered_topics: number };
+  lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[] };
   routing: { enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' };
   handoff: { large_group_enabled: boolean; large_group_minimum: number };
-  business_rules: BusinessRule[];
-  silence: { enabled: boolean; intervals_minutes: number[]; v2_intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
-  stage_journey: { mandatory_send: boolean; skip_when_no_relevant_content: boolean; model_max_attempts: number; model_failure_action: 'warn_and_skip_touch'; stages: string[]; touch_goals: string[] };
+  silence: { live_enabled?: boolean | null; enabled: boolean; v2_intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
 };
 
 export type ReceptionVersion = {
-  label: string; prompt_version: string; validator_version: string;
+  label: string;
   status: 'published'; published_at: string | null; published_by: number | null;
 };
 
@@ -87,15 +77,7 @@ export type ReceptionHistory = {
 export type ConfigResponse = {
   config: ReceptionConfig;
   version: ReceptionVersion;
-  model_nodes: {
-    customer_understanding: string;
-    business_planner: string;
-    reply_generation: string;
-    reply_fact_verification: string;
-    silence_planner: string;
-    silence_generation: string;
-    silence_touch: string;
-  };
+  runtime: {live_silence_enabled: boolean; model: string; timeout_seconds: number; concurrency: number};
   history: ReceptionHistory[];
   hard_guards: Record<string, boolean | string>;
   outbound: false;
@@ -119,25 +101,12 @@ export const groupLabels: Record<string, string> = {
   party_intro_group: '多人承接', summit_reference: '珠峰安排', summit_accommodation: '珠峰住宿',
 };
 
-export const actionLabels: Record<BusinessRule['action'], string> = {
-  handoff: '转人工', request_contact: '索取联系方式', recommend_routes: '推荐现有线路',
-  continue_ai: '继续 AI 接待', stop_ai: '停止 AI',
-};
-
-export const protectedRules = new Set(['captured_contact', 'explicit_human', 'service_dispute', 'attachment_review']);
-
-export const defaultRules: BusinessRule[] = [
-  { id: 'large_group', name: '大团交给人工', enabled: true, condition: '客户明确同行人数达到配置的大团人数阈值', action: 'handoff', guidance: '确认人数后说明由顾问继续制定安排，不承诺价格或余位。', system_key: 'large_group' },
-  { id: 'captured_contact', name: '取得联系方式后交给人工', enabled: true, condition: '客户提供了有效的 LINE、微信、电话或 Email', action: 'handoff', guidance: '确认收到联系方式并说明顾问会继续跟进。', system_key: 'captured_contact' },
-  { id: 'explicit_human', name: '客户要求真人', enabled: true, condition: '客户明确要求真人客服或顾问接待', action: 'handoff', guidance: '简短确认，停止 AI 继续营销。', system_key: 'explicit_human' },
-  { id: 'service_dispute', name: '售后争议交给人工', enabled: true, condition: '客户正在处理投诉、退款或合同争议', action: 'handoff', guidance: '不承诺处理结果，由人工根据订单和条款继续处理。', system_key: 'service_dispute' },
-  { id: 'attachment_review', name: '必须查看附件', enabled: true, condition: '回答依赖客户本轮图片或文件的实际内容，当前无法可靠识别', action: 'handoff', guidance: '说明需要顾问查看附件，不追加线路或留资问题。', system_key: 'attachment_review' },
-];
-
 export function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
 
 export function normalizeConfig(value: ReceptionConfig): ReceptionConfig {
   const result = clone(value);
+  result.common_scripts ??= [];
+  result.silence.v2_intervals_minutes ??= [1,120];
   result.reply.tone_guidance ??= '';
   result.reply.opening_message ??= '您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？';
   result.reply.opening_messages ??= [result.reply.opening_message];
@@ -145,7 +114,7 @@ export function normalizeConfig(value: ReceptionConfig): ReceptionConfig {
     key: `opening-${index}`, content_type: 'text', content,
   }));
   result.reply.opening_interval_seconds ??= 2;
-  return { ...result, schema_version: Math.max(value.schema_version ?? 0, 5), business_rules: clone(value.business_rules?.length ? value.business_rules : defaultRules) };
+  return { ...result, schema_version: Math.max(value.schema_version ?? 0, 6) };
 }
 
 export function productDraft(product: RouteProduct): ContentDraft {
@@ -161,4 +130,22 @@ export function productDraft(product: RouteProduct): ContentDraft {
     fixed_answers: clone(product.fixed_answers ?? []),
     initial_delivery_interval_seconds: product.initial_delivery_interval_seconds ?? 2,
   };
+}
+
+export function configurationChanges(before: ReceptionConfig, after: ReceptionConfig): Record<string, unknown> {
+  const fields: Record<string,string[]> = {
+    reply: ['opening_items','opening_interval_seconds','goal','tone','tone_guidance','custom_guidance'],
+    lead_capture: ['enabled','channels'], routing: ['outside_catalog_action'],
+    handoff: ['large_group_enabled','large_group_minimum'],
+    silence: ['enabled','live_enabled','v2_intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
+  };
+  const result: Record<string,unknown> = {};
+  for (const [section, keys] of Object.entries(fields)) {
+    const prev = before[section as keyof ReceptionConfig] as Record<string,unknown>;
+    const next = after[section as keyof ReceptionConfig] as Record<string,unknown>;
+    const changes = Object.fromEntries(keys.filter(key => JSON.stringify(prev[key]) !== JSON.stringify(next[key])).map(key => [key,next[key]]));
+    if (Object.keys(changes).length) result[section]=changes;
+  }
+  if (JSON.stringify(before.common_scripts)!==JSON.stringify(after.common_scripts)) result.common_scripts=after.common_scripts;
+  return result;
 }

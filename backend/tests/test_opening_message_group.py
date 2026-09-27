@@ -14,7 +14,10 @@ def test_opening_group_round_trip(authenticated):
     config = client.get('/v1/automation/reception-config').json()['config']
     config['reply']['opening_messages'] = ['您好～', '請問想了解哪條行程呢？']
     config['reply']['opening_interval_seconds'] = 3
-    result = client.put('/v1/automation/reception-config', json=config, headers={'X-CSRF-Token': csrf})
+    result = client.patch('/v1/automation/reception-config', json={'reply': {
+        'opening_items': [{'key':f'text-{index}','content_type':'text','content':text}
+                          for index,text in enumerate(config['reply']['opening_messages'])],
+        'opening_interval_seconds':3}}, headers={'X-CSRF-Token': csrf})
     assert result.status_code == 200, result.text
     saved = client.get('/v1/automation/reception-config').json()['config']['reply']
     assert saved['opening_messages'] == config['reply']['opening_messages']

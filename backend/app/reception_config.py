@@ -28,7 +28,7 @@ SUPPORTED_PROFILE_FIELDS = [
     "first_time_tibet", "permit_awareness", "concerns",
     "decision_status", "intent_level", "unresolved_question", "contact_status",
 ]
-SUPPORTED_CONTACT_CHANNELS = ["LINE", "微信", "电话", "Email"]
+SUPPORTED_CONTACT_CHANNELS = ["LINE", "微信", "电话", "Email", "WhatsApp"]
 SUPPORTED_JOURNEY_STAGES = [
     "route_selection", "needs_discovery", "value_building", "objection_handling",
     "contact_ready", "contact_requested", "considering", "captured", "handoff",
@@ -70,7 +70,7 @@ class ReplySettings(BaseModel):
     tone_guidance: str = Field(default=DEFAULT_TONE_GUIDANCE, max_length=1200)
     max_characters: int = Field(default=200, ge=80, le=200)
     max_images_per_turn: int = Field(default=2, ge=0, le=2)
-    custom_guidance: str = Field(default="", max_length=1200)
+    custom_guidance: str = Field(default="", max_length=40000)
 
     @model_validator(mode="before")
     @classmethod
@@ -90,11 +90,10 @@ class ReplySettings(BaseModel):
             if any(len(item.content) > self.max_characters for item in self.opening_items):
                 raise ValueError("opening_message_exceeds_reply_limit")
             items = delivery_items([item.model_dump() for item in self.opening_items], [])
-            # Expose the complete delivery list to the editor. Otherwise the
-            # generated closing question disappears when an image is removed.
+            # The authored list is the entire delivery list; no generated tail.
             self.opening_items = [OpeningItem.model_validate(item) for item in items]
             self.opening_messages = [item["content"] for item in items if item["content"]]
-            self.opening_message = self.opening_messages[0]
+            self.opening_message = self.opening_messages[0] if self.opening_messages else ''
             return self
         messages = self.opening_messages if self.opening_messages is not None else [self.opening_message]
         messages = [item.strip() for item in messages]
@@ -107,8 +106,8 @@ class ReplySettings(BaseModel):
 
 class LeadSettings(BaseModel):
     enabled: bool = True
-    channels: list[Literal["LINE", "微信", "电话", "Email"]] = Field(
-        default_factory=lambda: list(SUPPORTED_CONTACT_CHANNELS), min_length=1, max_length=4
+    channels: list[Literal["LINE", "微信", "电话", "Email", "WhatsApp"]] = Field(
+        default_factory=lambda: list(SUPPORTED_CONTACT_CHANNELS), min_length=1, max_length=5
     )
     require_supported_route: bool = True
     require_party_size: bool = False
@@ -151,6 +150,7 @@ class BusinessRule(BaseModel):
 
 
 class SilenceSettings(BaseModel):
+    live_enabled: bool | None = None
     v2_intervals_minutes: list[int] = Field(default_factory=lambda: [1, 120], min_length=1, max_length=20)
     enabled: bool = True
     intervals_minutes: list[int] = Field(
@@ -172,8 +172,6 @@ class SilenceSettings(BaseModel):
             raise ValueError("silence_interval_out_of_range")
         if self.intervals_minutes != sorted(set(self.intervals_minutes)):
             raise ValueError("silence_intervals_must_be_unique_and_ascending")
-        if self.max_proactive_messages_per_day > len(self.intervals_minutes):
-            raise ValueError("daily_limit_exceeds_timeline")
         for value in (self.active_start, self.active_end):
             parts = value.split(":")
             if len(parts) != 2 or not all(part.isdigit() for part in parts):
@@ -209,8 +207,17 @@ class StageJourneySettings(BaseModel):
         return self
 
 
+class CommonScript(BaseModel):
+    id: str = Field(min_length=1, max_length=100)
+    name: str = Field(min_length=1, max_length=100)
+    scenario: str = Field(min_length=1, max_length=1000)
+    text: str = Field(min_length=1, max_length=10000)
+    enabled: bool = True
+
+
 class ReceptionConfiguration(BaseModel):
-    schema_version: int = 5
+    common_scripts: list[CommonScript] = Field(default_factory=list, max_length=100)
+    schema_version: int = 6
     reply: ReplySettings = Field(default_factory=ReplySettings)
     profile_fields: list[str] = Field(
         default_factory=lambda: list(SUPPORTED_PROFILE_FIELDS), min_length=1, max_length=11
@@ -273,11 +280,17 @@ def default_reception_configuration() -> dict:
 
 def get_reception_configuration(db: Session) -> dict:
     value = setting_value(db, SETTING_KEY, default_reception_configuration())
-    # Persisted settings are intentionally forward-compatible.  The model
-    # fills newly introduced sections from their defaults, while callers see
-    # the current schema version and will save v5 on the next edit.
     value = deepcopy(value)
-    value["schema_version"] = 5
+    if value.get("schema_version", 0) < 6:
+        # Keep former custom instructions visible in the one current editor.
+        notes = [f"{rule['name']}：{rule['condition']}；{rule.get('guidance', '')}"
+                 for rule in value.get("business_rules", [])
+                 if rule.get("enabled") and not rule.get("system_key")]
+        if notes:
+            reply = value.setdefault("reply", {})
+            reply["custom_guidance"] = "\n".join(filter(None, [reply.get("custom_guidance", ""), *notes]))
+        value["business_rules"] = default_business_rules()
+    value["schema_version"] = 6
     value.setdefault("reply", {})["max_images_per_turn"] = min(
         2, int(value.get("reply", {}).get("max_images_per_turn", 2))
     )
@@ -347,6 +360,7 @@ def policy_from_configuration(config: dict) -> dict:
     })
     policy["safety"]["require_ai_label"] = True
     policy["operator_configuration"] = {
+        "common_scripts": config.get("common_scripts", []),
         "business_goal": config["reply"]["goal"],
         "opening_message": config["reply"]["opening_message"],
         "opening_messages": config["reply"]["opening_messages"],
@@ -355,7 +369,7 @@ def policy_from_configuration(config: dict) -> dict:
         "tone_guidance": config["reply"]["tone_guidance"],
         "custom_guidance": config["reply"]["custom_guidance"],
         "profile_fields": config["profile_fields"],
-        "lead_capture": config["lead_capture"],
+        "lead_capture": {key: config["lead_capture"][key] for key in ("enabled", "channels")},
         "business_rules": config["business_rules"],
         "stage_journey": config["stage_journey"],
     }
@@ -364,6 +378,17 @@ def policy_from_configuration(config: dict) -> dict:
 
 def silence_intervals(db: Session) -> list[int]:
     return get_reception_configuration(db)["silence"]["intervals_minutes"]
+
+
+def live_silence_enabled(db: Session | None = None) -> bool:
+    """The public setting owns live follow-up; the environment is a migration default."""
+    if db is None:
+        from app.db import SessionLocal
+        with SessionLocal() as session:
+            return live_silence_enabled(session)
+    config = get_reception_configuration(db)["silence"]
+    enabled = config.get("live_enabled")
+    return bool(config["enabled"] and (settings.live_sop_enabled if enabled is None else enabled))
 
 
 def v2_silence_intervals(db: Session | None = None) -> list[int]:

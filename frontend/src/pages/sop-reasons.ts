@@ -1,0 +1,18 @@
+export const sopReason = (value: string) => ({
+  customer_new_message: '客户再次回复，本轮结束', human_or_contact_block: '人工接管或安全标签阻断',
+  exit_label: '命中业务退出标签', ai_disabled: 'AI 开关已关闭', channel_cannot_reply: '渠道当前不可回复',
+  automatic_window_closed: '超出自动消息窗口', contact_frequency_limit: '跨轮次或策略触达间隔不足',
+  outside_contact_hours: '不在 09:00–21:00 联系时段', expired: '计划时间已过期',
+  predecessor_not_confirmed: '前一组未确认完成', trusted_customer_message_missing: '缺少可信客户消息',
+  material_unavailable: '本地素材不可用', session_reset: '演练已重置', passive_reply_pending: '等待被动回复完成',
+  material_revision_changed: '素材文件版本已变化', material_review_required: '素材尚未通过演练审核',
+  material_route_mismatch: '素材与线路不匹配', material_binding_changed: '素材绑定已变化',
+  material_already_provided: '素材此前已提供，本组跳过', partial_material_duplicate: '部分素材重复，需调整内容组',
+  route_changed: '客户线路已变化', test_conversation_required: '不在测试会话范围',
+  material_duplicate_requires_review: '素材重复，整组需重新核对',
+  contact_state_unknown: '联系人状态待核实', customer_added_time_missing: '尚无客户首次进入时间',
+  human_replied: '人工已回复，本轮停止', ai_opt_in_required: '会话缺少 ai 接管标签',
+  human_handoff_active: '存在人工接管任务', submission_unknown_reconcile_required: '发送结果未知，需人工核对',
+  previous_submission_failed: '该内容此前发送失败，不自动重试', material_not_approved_for_live: '素材尚未批准用于真实发送',
+  live_scope_mismatch: '不在真实测试账号范围', sop_not_running: '策略已暂停或停止',
+} as Record<string, string>)[value] ?? value;

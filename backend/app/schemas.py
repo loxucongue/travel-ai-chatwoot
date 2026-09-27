@@ -24,11 +24,6 @@ class InboxPolicyRequest(BaseModel):
     ai_enabled: bool
 
 
-class AiConfigRequest(BaseModel):
-    trigger_text: str = "测试人员触发消息"
-    reply_text: str = "测试人员回复消息"
-
-
 class WebhookConfigRequest(BaseModel):
     events: list[str]
 

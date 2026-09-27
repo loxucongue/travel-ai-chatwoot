@@ -88,13 +88,14 @@ def _configured_opening(context: dict, skill_digest: str):
     )
     items = delivery_items(policy.get("opening_items"), texts)
     messages = [item["content"] for item in items if item.get("content")]
-    if not messages:
+    if not items:
         return None
+    first_text = messages[0] if messages else ''
     allowed = policy.get("route_switch", {}).get("allowed_routes", list(ROUTES))
     options = [ROUTES[key]["selection_title"] for key in allowed if key in ROUTES]
     decision = EvaluationDecision(
-        action="reply", branch="unclassified", intent="other", reply=messages[0],
-        reply_body=messages[0], confidence=1.0, journey_stage="route_selection",
+        action="reply", branch="unclassified", intent="other", reply=first_text,
+        reply_body=first_text, confidence=1.0, journey_stage="route_selection",
         reply_options=options, opening_messages=messages,
         opening_items=items if policy.get("opening_items") else [],
         opening_interval_seconds=int(policy.get("opening_interval_seconds", 2)),
@@ -111,10 +112,11 @@ def _configured_opening(context: dict, skill_digest: str):
             context, decision, flow=flow.name, flow_reason="first_customer_message",
         ),
     }
-    return decision, [], hashlib.sha256((messages[0] + skill_digest).encode()).hexdigest(), trace
+    return decision, [], hashlib.sha256((first_text + skill_digest).encode()).hexdigest(), trace
 
 
 SYSTEM_PROMPT = """你是 China2Go 的旅游咨询和留资接待顾问。
+- 当前公共接待配置中的 common_scripts 是可直接使用的通用话术；按适用场景优先沿用原文，必要时调整衔接。线路内容以对应线路话术为准。lead_capture.enabled=false 时不主动索取联系方式；客户自行提供或要求真人仍正常交接。
 - 两条桃花线路以官网7693-2对应线路 Skill 和当前配置话术为准。不要用历史业务反馈或通用资料覆盖线路话术。后台配置是当前可直接使用的内容，不再自行审查、删减其产品口径。
 - 客户从广告选线进入直接承接该线路；未知线路先帮助选择。首次开场由程序按后台配置发送。
 - 线路介绍按 Skill 的整套顺序和图片组织；介绍完成后集中回答期间的问题。后续选适用 scripts，优先原文，只按实际上下文调整称呼、衔接和所需段落。多问题一起回答。
