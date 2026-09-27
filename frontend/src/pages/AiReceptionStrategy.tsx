@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle, Bot, CheckCircle2, Clock3, FileClock, LockKeyhole,
-  Plus, Save, ShieldCheck, SlidersHorizontal, Trash2, Users, X,
+  Plus, Save, SlidersHorizontal, Trash2, Users, X,
 } from 'lucide-react';
-import { api, ApiError, DEMO_MODE } from '../api';
+import { api, ApiError } from '../api';
 import { Badge, EmptyState } from '../components';
 import OpeningItemsEditor from './OpeningItemsEditor';
 import {
@@ -12,13 +12,12 @@ import {
   OpeningItem, ReceptionConfig,
 } from './reception-config';
 
-type StrategyTab = 'base' | 'silence' | 'rules' | 'guards' | 'versions';
+type StrategyTab = 'base' | 'silence' | 'rules' | 'versions';
 
 const tabItems: { id: StrategyTab; label: string; hint: string; icon: typeof Bot }[] = [
   { id: 'base', label: '基础接待', hint: '目标、语气与留资方式', icon: Bot },
   { id: 'silence', label: '沉默跟进', hint: '触达节奏与发送时段', icon: Clock3 },
   { id: 'rules', label: '全局业务规则', hint: '跨线路通用的处理条件', icon: SlidersHorizontal },
-  { id: 'guards', label: '系统保护（只读）', hint: '权限、窗口与防重复', icon: ShieldCheck },
   { id: 'versions', label: '版本记录', hint: '查看策略发布历史', icon: FileClock },
 ];
 
@@ -61,11 +60,6 @@ export default function AiReceptionStrategy() {
   const configQuery = useQuery({
     queryKey: ['reception-config'],
     queryFn: () => api<ConfigResponse>('/automation/reception-config'),
-  });
-  const globalSending = useQuery({
-    queryKey: ['global-message-sending'],
-    queryFn: () => api<{ enabled: boolean; effective_enabled: boolean }>('/settings/global-message-sending'),
-    enabled: !DEMO_MODE,
   });
   const [tab, setTab] = useState<StrategyTab>('base');
   const [draft, setDraft] = useState<ReceptionConfig | null>(null);
@@ -182,7 +176,7 @@ export default function AiReceptionStrategy() {
     return '';
   }, [draft, previewStatus]);
 
-  const error = configQuery.error || publish.error || globalSending.error;
+  const error = configQuery.error || publish.error;
   if (configQuery.isLoading) return <div className="page-content ai-strategy-page"><section className="panel"><EmptyState type="loading" title="正在读取 AI 接待策略" description="" /></section></div>;
   if (!draft || !configQuery.data) return <div className="page-content ai-strategy-page"><section className="panel"><EmptyState type="error" title="策略读取失败" description={(error as Error)?.message ?? '无法读取策略'} /></section></div>;
 
@@ -211,7 +205,6 @@ export default function AiReceptionStrategy() {
         {tab === 'base' ? <BaseStrategy config={draft} patch={patch} openingEditor={<OpeningItemsEditor config={draft} patch={patch} uploading={uploading} errors={uploadErrors} disabled={publish.isPending} upload={uploadOpening} previewChanged={(key, status) => setPreviewStatus(current => current[key] === status ? current : { ...current, [key]: status })} clearError={key => setUploadErrors(current => ({ ...current, [key]: '' }))} />} /> : null}
         {tab === 'silence' ? <SilenceStrategy config={draft} patch={patch} /> : null}
         {tab === 'rules' ? <RulesStrategy config={draft} patch={patch} /> : null}
-        {tab === 'guards' ? <SystemGuards hardGuards={configQuery.data.hard_guards} sendingEnabled={globalSending.data?.effective_enabled ?? false} /> : null}
         {tab === 'versions' ? <VersionHistory response={configQuery.data} /> : null}
       </section>
     </div>
@@ -342,23 +335,6 @@ function RulesStrategy({ config, patch }: { config: ReceptionConfig; patch: (upd
         </article>;
       })}</div>}
     </div>
-  </div>;
-}
-
-function SystemGuards({ hardGuards, sendingEnabled }: { hardGuards: Record<string, boolean | string>; sendingEnabled: boolean }) {
-  const guards = [
-    { title: '全局消息发送总开关', value: sendingEnabled ? '已开启' : '已关闭', good: !sendingEnabled, description: '关闭时所有 AI 回复和沉默触达都禁止真实发送。开关位于页面顶部。' },
-    { title: 'AI 接管范围', value: hardGuards.require_ai_label ? '需要 ai 标签' : '全部符合条件的会话', good: true, description: `当前范围：${String(hardGuards.rollout_scope ?? '未设置')}` },
-    { title: '渠道回复窗口', value: hardGuards.respect_channel_window ? '强制检查' : '未开启', good: !!hardGuards.respect_channel_window, description: 'Facebook 等渠道关闭回复窗口后，系统不会强行发送。' },
-    { title: '人工回复优先', value: hardGuards.stop_on_human_reply ? '强制停止' : '未开启', good: !!hardGuards.stop_on_human_reply, description: '真人接管或抢先回复后，废弃尚未发送的 AI 结果。' },
-    { title: '消息幂等', value: hardGuards.deduplicate_messages ? '已开启' : '未开启', good: !!hardGuards.deduplicate_messages, description: '同一客户事件和未知发送状态不会被重复提交。' },
-    { title: '素材去重', value: hardGuards.deduplicate_materials ? '已开启' : '未开启', good: !!hardGuards.deduplicate_materials, description: '已经提供过的同一素材不会重复发送。' },
-    { title: '演练环境出站', value: hardGuards.evaluation_outbound ? '允许' : '禁止', good: !hardGuards.evaluation_outbound, description: 'AI 演练和回放只能模拟，不能写入 Chatwoot。' },
-  ];
-  return <div className="strategy-section-stack">
-    <SectionHead title="系统保护（只读）" description="这些是防止误发、重复发送和人机冲突的硬性约束，不能作为业务配置关闭。" />
-    <div className="guard-grid">{guards.map(item => <article key={item.title}><span className={item.good ? 'guard-icon good' : 'guard-icon warn'}>{item.good ? <ShieldCheck size={18} /> : <AlertTriangle size={18} />}</span><div><strong>{item.title}</strong><p>{item.description}</p></div><Badge tone={item.good ? 'green' : 'amber'}>{item.value}</Badge></article>)}</div>
-    <div className="strategy-card readonly-card"><h3>固定转人工保护</h3><div className="readonly-rule-grid"><div><strong>客户已提供有效联系方式</strong><span>确认收到后结束 AI，并交给顾问继续。</span></div><div><strong>客户明确要求真人</strong><span>不继续营销，不与人工同时回复。</span></div><div><strong>投诉、退款或合同争议</strong><span>不由 AI 承诺处理结果。</span></div><div><strong>必须查看附件内容</strong><span>当前无法可靠理解附件时交由人工检查。</span></div></div></div>
   </div>;
 }
 

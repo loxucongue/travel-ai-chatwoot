@@ -174,7 +174,7 @@ function RouteDetail({ product, content, tab, setTab, enabled, dirty, publishing
   onPatchContent: (updater: (value: ContentDraft) => void) => void; onToggleEnabled: (value: boolean) => void;
   assetBusy: boolean; onSaveAsset: (asset: ProductAsset, values: AssetNarrativeDraft) => void; onReplaceAsset: (asset: ProductAsset, file: File) => void;
 }) {
-  const tabs: [RouteTab, string][] = [['base', '基础信息'], ['price', '价格与档期'], ['content', '线路资料'], ['mainline', '接待主线'], ['answers', '固定问答'], ['assets', '图片与文件'], ['versions', '版本记录']];
+  const tabs: [RouteTab, string][] = [['base', '基础信息'], ['price', '价格与档期'], ['content', '线路资料'], ['mainline', '接待主线'], ['answers', '场景话术'], ['assets', '图片与文件'], ['versions', '版本记录']];
   return <>
     <header className="route-detail-head panel">
       <div><button className="back-link" onClick={onBack}><ArrowLeft size={15} />返回线路列表</button><div className="route-detail-title"><h1>{content.name}</h1><ProductStatus product={product} enabled={enabled} />{dirty ? <Badge tone="amber">有未发布修改</Badge> : null}</div><p><code>{product.route_variant}</code><span>线上版本 {product.package_version}</span></p></div>
@@ -380,17 +380,17 @@ function FixedAnswersTab({ product, content, patch }: { product: RouteProduct; c
     const id = `operator_answer_${Date.now()}`;
     const group = content.content_groups.find(item => item.key === content.content_sequence[0]) ?? content.content_groups[0];
     patch(value => value.fixed_answers.push({
-      id, name: '新固定问答', status: 'pending_review', priority: 100, topics: ['other'], party_size_min: null, party_size_max: null,
-      content_group_key: group.key, answer_text: '请填写审核后要逐字发送给客户的内容。',
+      id, name: '新场景话术', status: 'pending_review', priority: 100, topics: ['other'], party_size_min: null, party_size_max: null,
+      content_group_key: group.key, answer_text: '请填写这个场景希望优先使用的话术原文。',
       fact_ids: [...group.evidence_refs], asset_ids: [], source_ref: 'operator.config', answer_origin: 'operator_approved',
       positive_examples: [], negative_examples: [],
     }));
     setEditingId(id);
   }
   return <div className="route-section-stack fixed-answer-page">
-    <header className="detail-section-intro"><div><h2>标准问答</h2><p>客户问题明确命中后，系统会逐字发送这里的标准回答，不交给 AI 改写。</p></div><button className="secondary-button compact" onClick={addAnswer}><Plus size={14} />新增问答</button></header>
-    <div className="fixed-answer-accuracy"><ShieldCheck size={18} /><div><strong>一条问答只有一段客户会收到的内容</strong><span>官网导入项直接使用官网原话；选择“已启用”并发布线路后立即参与匹配。识别分类、事实引用和匹配优先级由系统维护。</span></div></div>
-    {!content.fixed_answers.length ? <EmptyState title="暂无标准问答" description="可从官网话术或已审核顾问回答建立线路专属问答。" /> : <div className="fixed-answer-list">{[...content.fixed_answers].sort((a, b) => b.priority - a.priority).map(answer => <button type="button" key={answer.id} onClick={() => setEditingId(answer.id)}><span><strong>{answer.name}</strong><small>{answer.answer_origin === 'website_verbatim' ? '官网原话' : '运营维护'} · {answer.positive_examples.length} 个客户问法</small></span><span>{answer.status === 'active' ? <Badge tone="green">已启用</Badge> : answer.status === 'pending_review' ? <Badge tone="amber">待审核</Badge> : <Badge>已停用</Badge>}<ChevronRight size={16} /></span></button>)}</div>}
+    <header className="detail-section-intro"><div><h2>场景话术</h2><p>V2 加载线路 Skill 时读取启用的话术，优先沿用原文，按客户的问题调整称呼、衔接或组合相关段落。</p></div><button className="secondary-button compact" onClick={addAnswer}><Plus size={14} />新增话术</button></header>
+    <div className="fixed-answer-accuracy"><ShieldCheck size={18} /><div><strong>写清适用场景，维护一份话术原文</strong><span>选择“已启用”并发布线路后，后续回复会读取更新内容。问法示例帮助 AI 理解场景，不要求客户逐字命中。</span></div></div>
+    {!content.fixed_answers.length ? <EmptyState title="暂无场景话术" description="可从思维导图、官网或顾问回答中整理线路话术。" /> : <div className="fixed-answer-list">{[...content.fixed_answers].sort((a, b) => b.priority - a.priority).map(answer => <button type="button" key={answer.id} onClick={() => setEditingId(answer.id)}><span><strong>{answer.name}</strong><small>{answer.answer_origin === 'website_verbatim' ? '官网原话' : '运营维护'} · {answer.positive_examples.length} 个客户问法</small></span><span>{answer.status === 'active' ? <Badge tone="green">已启用</Badge> : answer.status === 'pending_review' ? <Badge tone="amber">草稿</Badge> : <Badge>已停用</Badge>}<ChevronRight size={16} /></span></button>)}</div>}
     {editing ? <FixedAnswerDrawer product={product} content={content} answer={editing} patch={patch} onClose={() => setEditingId('')} /> : null}
   </div>;
 }
@@ -416,18 +416,18 @@ function FixedAnswerDrawer({ product, content, answer, patch, onClose }: { produ
     const item = draft.fixed_answers.find(value => value.id === answer.id);
     if (item) updater(item, draft);
   });
-  const selectedGroup = content.content_groups.find(group => group.key === answer.content_group_key);
+  const routeAssetKeys = [...new Set(content.content_groups.flatMap(group => group.asset_keys))];
   return <div className="route-drawer-backdrop" role="presentation" onMouseDown={event => { if (event.currentTarget === event.target) onClose(); }}>
     <aside className="route-content-drawer fixed-answer-drawer" role="dialog" aria-modal="true" aria-label={`编辑${answer.name}`}>
-      <header><div><span>编辑标准问答</span><h3>{answer.name}</h3></div><button className="icon-button" title="关闭" onClick={onClose}><X size={19} /></button></header>
+      <header><div><span>编辑场景话术</span><h3>{answer.name}</h3></div><button className="icon-button" title="关闭" onClick={onClose}><X size={19} /></button></header>
       <div className="route-drawer-body">
-        <div className="fixed-answer-enable"><div><strong>{answer.answer_origin === 'website_verbatim' ? '官网原话 · 逐字发送' : '运营标准回答 · 逐字发送'}</strong><span>系统只负责判断是否命中，不会改写下方内容。</span></div><Badge tone={answer.answer_origin === 'website_verbatim' ? 'blue' : undefined}>{answer.answer_origin === 'website_verbatim' ? '官网来源' : '运营维护'}</Badge></div>
-        <div className="route-field-grid"><label>问答名称<input value={answer.name} maxLength={200} onChange={event => update(item => { item.name = event.target.value; })} /></label><label>生效状态<select value={answer.status} onChange={event => update(item => { item.status = event.target.value as FixedAnswer['status']; })}><option value="active">已启用</option><option value="pending_review">待审核</option><option value="disabled">已停用</option></select><small>选择“已启用”并发布线路后立即生效。</small></label></div>
-        <label>对应线路资料<select value={answer.content_group_key} onChange={event => update((item, draft) => { item.content_group_key = event.target.value; const group = draft.content_groups.find(value => value.key === event.target.value); item.topics = fixedAnswerTopicsByGroup[event.target.value] ?? ['other']; item.fact_ids = [...(group?.evidence_refs ?? [])]; item.asset_ids = item.asset_ids.filter(id => group?.asset_keys.includes(id)); })}>{content.content_groups.map(group => <option key={group.key} value={group.key}>{contentGroupLabel(group)}</option>)}</select></label>
+        <div className="fixed-answer-enable"><div><strong>{answer.answer_origin === 'website_verbatim' ? '官网话术原文' : '场景话术原文'}</strong><span>V2 优先沿用下方原文，可按实际场景调整；模型最终正文直接发送，不再二次审核改写。</span></div><Badge tone={answer.answer_origin === 'website_verbatim' ? 'blue' : undefined}>{answer.answer_origin === 'website_verbatim' ? '官网来源' : '运营维护'}</Badge></div>
+        <div className="route-field-grid"><label>问答名称<input value={answer.name} maxLength={200} onChange={event => update(item => { item.name = event.target.value; })} /></label><label>生效状态<select value={answer.status} onChange={event => update(item => { item.status = event.target.value as FixedAnswer['status']; })}><option value="active">已启用</option><option value="pending_review">草稿</option><option value="disabled">已停用</option></select><small>选择“已启用”并发布线路后立即生效。</small></label></div>
+        <label>对应线路资料<select value={answer.content_group_key} onChange={event => update((item, draft) => { item.content_group_key = event.target.value; const group = draft.content_groups.find(value => value.key === event.target.value); item.topics = fixedAnswerTopicsByGroup[event.target.value] ?? ['other']; item.fact_ids = [...(group?.evidence_refs ?? [])];  })}>{content.content_groups.map(group => <option key={group.key} value={group.key}>{contentGroupLabel(group)}</option>)}</select></label>
         <label>客户可能会这样问（每行一个）<textarea rows={5} value={answer.positive_examples.join('\n')} onChange={event => update(item => { item.positive_examples = lines(event.target.value); })} /></label>
         <label>相似但不能命中的问法（每行一个）<textarea rows={4} value={answer.negative_examples.join('\n')} onChange={event => update(item => { item.negative_examples = lines(event.target.value); })} /></label>
-        <label>{answer.answer_origin === 'website_verbatim' ? '官网标准回答' : '客户实际收到的标准回答'}<textarea rows={10} maxLength={10000} value={answer.answer_text} onChange={event => update(item => { item.answer_text = event.target.value; if (item.answer_origin === 'website_verbatim') { item.answer_origin = 'operator_approved'; item.source_ref = 'operator.config'; } })} /><small>{answer.answer_text.length} 字，命中后逐字发送。修改官网原话后，来源会自动改为“运营维护”。</small></label>
-        <section className="drawer-linked-section"><div><h4>随答案发送的图片</h4><span>{answer.asset_ids.length} 张</span></div>{selectedGroup?.asset_keys.length ? <div className="fixed-answer-assets">{selectedGroup.asset_keys.map(key => { const asset = product.assets.find(item => item.key === key); return <label key={key}><input type="checkbox" checked={answer.asset_ids.includes(key)} onChange={event => update(item => { item.asset_ids = event.target.checked ? [...item.asset_ids, key] : item.asset_ids.filter(id => id !== key); })} />{asset?.preview_url ? <img src={`${API_BASE}${asset.preview_url}`} alt={asset.display_name} /> : <ImageIcon size={24} />}<span>{asset?.display_name ?? key}</span></label>; })}</div> : <p>所选线路资料没有图片。</p>}</section>
+        <label>{answer.answer_origin === 'website_verbatim' ? '官网标准回答' : '优先使用的话术原文'}<textarea rows={10} maxLength={10000} value={answer.answer_text} onChange={event => update(item => { item.answer_text = event.target.value; if (item.answer_origin === 'website_verbatim') { item.answer_origin = 'operator_approved'; item.source_ref = 'operator.config'; } })} /><small>{answer.answer_text.length} 字，作为 V2 优先使用的话术。修改官网原话后，来源会自动改为“运营维护”。</small></label>
+        <section className="drawer-linked-section"><div><h4>关联线路素材（无需重复上传）</h4><span>{answer.asset_ids.length} 张</span></div>{routeAssetKeys.length ? <div className="fixed-answer-assets">{routeAssetKeys.map(key => { const asset = product.assets.find(item => item.key === key); return <label key={key}><input type="checkbox" checked={answer.asset_ids.includes(key)} onChange={event => update(item => { item.asset_ids = event.target.checked ? [...item.asset_ids, key] : item.asset_ids.filter(id => id !== key); })} />{asset?.preview_url ? <img src={`${API_BASE}${asset.preview_url}`} alt={asset.display_name} /> : <ImageIcon size={24} />}<span>{asset?.display_name ?? key}</span></label>; })}</div> : <p>本线路暂无素材，请先到“图片与文件”添加。</p>}</section>
         <div className="fixed-answer-source"><span>内容来源</span><strong>{answer.source_ref}</strong></div>
       </div>
       <footer><button className="secondary-button danger-button" onClick={() => { patch(value => { value.fixed_answers = value.fixed_answers.filter(item => item.id !== answer.id); }); onClose(); }}><Trash2 size={15} />删除</button><button className="primary-button" onClick={onClose}><CheckCircle2 size={16} />完成编辑</button></footer>
