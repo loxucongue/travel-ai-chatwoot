@@ -90,7 +90,8 @@ def merge_events(slots: dict, events: list[dict]) -> dict:
             state['contact_evidence'] = event['quote']
         elif event['type'] == 'considering':
             state['waiting_reason'] = 'considering'
-            state['reevaluate_at'] = (datetime.fromisoformat(event['occurred_at'].replace('Z', '+00:00')) + timedelta(hours=24)).isoformat()
+            state['reevaluate_at'] = event.get('reevaluate_at') or (
+                datetime.fromisoformat(event['occurred_at'].replace('Z', '+00:00')) + timedelta(hours=24)).isoformat()
         elif event['type'] == 'question':
             questions = state.setdefault('questions', [])
             identity = (event['source_message_id'], event['quote'])

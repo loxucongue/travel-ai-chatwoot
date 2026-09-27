@@ -15,6 +15,14 @@ import uuid
 
 
 def scenarios(suite, minutes):
+    if suite == 'appointment':
+        route = '9日' if minutes == 3 else '11日含珠峰'
+        return {'appointment': [f'我想了解桃花{route}。',
+            f'人數還沒定，先不用發整套。請{minutes}分鐘後再跟我介紹住宿，現在先不用講。',
+            {'wait': 315, 'label': 'scheduled_hotel'},
+            '收到，波密那晚也一樣嗎？', '機票有包含嗎？', '我們兩位，可以介紹完整行程。',
+            '其中一位自己住，要加多少？', '可以微信聯絡嗎？',
+            f'我的微信是 acceptance_time_{minutes}_0928，請顧問接手。']}
     if suite == 'silence':
         route = '9日' if minutes == 3 else '11日含珠峰'
         return {'silence': [f'我想了解桃花{route}。',
@@ -69,7 +77,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', required=True)
     parser.add_argument('--source-db', required=True)
-    parser.add_argument('--suite', choices=['main', 'silence'], default='main')
+    parser.add_argument('--suite', choices=['main', 'silence', 'appointment'], default='main')
     parser.add_argument('--minutes', type=int, choices=[3, 5], default=3)
     parser.add_argument('--budget', type=float, default=8)
     parser.add_argument('--case', help='Comma-separated named journeys for a focused retest')
@@ -125,7 +133,7 @@ def main():
         db.get(AppSetting, 'global_message_sending').value = {'enabled': False}
         row = db.get(AppSetting, 'route_reception_config')
         silence = {**row.value.get('silence', {}), 'active_start': '00:00', 'active_end': '23:59'}
-        if args.suite == 'silence':
+        if args.suite in {'silence', 'appointment'}:
             silence['v2_intervals_minutes'] = [args.minutes, 120]
         row.value = {**row.value, 'silence': silence}
         db.commit()
@@ -171,6 +179,10 @@ def main():
                               'confirmed_at': j.confirmed_at, 'reason': j.reason} for j in jobs],
                     'runs': [{'id': r.id, 'status': r.status, 'error_code': r.error_code, 'input': r.input_snapshot,
                               'decision': r.decision, 'trace': r.trace} for r in runs]}, ensure_ascii=False, default=str), encoding='utf-8')
+                failed = [r.id for r in runs if r.status == 'failed']
+                if failed:
+                    emit('failed', key=key, run_ids=failed)
+                    raise RuntimeError('acceptance_run_failed')
                 busy = bool(s.due_at or any(r.status in {'pending', 'processing'} for r in runs)
                             or any(m.get('status') == 'draft' for m in s.messages))
                 if case['index'] == len(plans[key]):

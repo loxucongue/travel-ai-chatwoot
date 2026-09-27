@@ -158,6 +158,29 @@ def test_route_search_hint_does_not_start_an_unconfirmed_introduction():
     assert '"route_search_hint": "peach_11d_2027"' in prompt
 
 
+def test_agent_customer_memory_excludes_internal_route_snapshot():
+    from app.reception_v2.skill_registry import SkillRegistry
+    prompt = runtime._messages({'module': 'reply', 'customer_text': '那單房差呢？',
+        'memory': {'party_size': 4, '_route_snapshot': {'private_dump': 'DO_NOT_DUPLICATE_ROUTE_SNAPSHOT'}}},
+        SkillRegistry())[0]['content']
+    assert 'DO_NOT_DUPLICATE_ROUTE_SNAPSHOT' not in prompt
+    assert '"party_size": 4' in prompt
+
+
+@pytest.mark.parametrize('minutes', [3, 5, 0])
+def test_considering_uses_explicit_model_delay_before_default_day(minutes):
+    from datetime import datetime, timedelta
+    now = '2026-09-28T01:00:00+08:00'
+    text = '稍後再介紹住宿'
+    decision = runtime._validated_decision({'content': json.dumps({
+        'action': 'reply', 'reply': '好的，稍後再介紹住宿。',
+        'wakeup_action': 'defer', 'defer_minutes': minutes,
+        'v2_events': [{'type': 'considering', 'quote': text, 'topic': 'hotel'}],
+    })}, set(), set(), {'module': 'reply', 'customer_text': text, 'now': now})
+    state = merge_events({}, decision.v2_events)['_v2_state']
+    assert datetime.fromisoformat(state['reevaluate_at']) == datetime.fromisoformat(now) + timedelta(minutes=minutes or 1440)
+
+
 def test_rehearsal_queues_multiple_questions_across_outgoing_messages(session_factory, monkeypatch):
     from app.automation_models import AutomationSession, AutomationRun
     from app.automation_service import add_customer_message, queue_passive, _auto_confirm_journey_drafts

@@ -150,7 +150,8 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
         "event": "silence_due" if context.get("module") in {"silence_touch", "wakeup"} else "customer_message",
         "bound_route": bound_route,
         "route_search_hint": hinted_route,
-        "verified_customer_memory": context.get("memory") or {},
+        "verified_customer_memory": {key: value for key, value in (context.get("memory") or {}).items()
+                                     if not str(key).startswith('_')},
         "journey": {key: value for key, value in (context.get("journey") or {}).items() if key in {"stage", "sent_content_groups", "last_group_key"}},
         "lead_capture": context.get("lead_capture") or {},
         "touch_index": context.get("touch_index"),
@@ -548,6 +549,9 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
     decision.v2_events = events
     for event in decision.v2_events:
         event['route_variant'] = decision.route_variant
+        if event['type'] == 'considering' and decision.wakeup_action == 'defer' and decision.defer_minutes:
+            event['reevaluate_at'] = (datetime.fromisoformat(event['occurred_at'].replace('Z', '+00:00'))
+                                      + timedelta(minutes=decision.defer_minutes)).isoformat()
     decision.reception_flow = str(raw.get("reception_flow") or "")
     decision.delivery_intent = str(raw.get("delivery_intent") or "none")
     return decision
@@ -1008,6 +1012,11 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
                 + json.dumps(prefetched_result, ensure_ascii=False),
             })
     if not proactive_turn:
+        if (context.get('lead_capture') or {}).get('status') == 'asked':
+            messages.append({'role': 'system', 'content':
+                '本客户已经被询问过联系方式，目前尚未提供。继续承接当前问题，不要再次主动索取微信、LINE、电话或QR code，'
+                '也不要在回答末尾重复上一轮留资话术。只有本轮客户主动表示要报名、愿意联系或选择联系渠道时，才继续承接留资。'
+                '这个状态优先于线路话术中的留资段落；它不影响正常答疑与介绍。'})
         # Keep stable rules/evidence in the cacheable prefix, followed by the
         # chronological conversation. A fresh knowledge dump after the current
         # question otherwise distracts from elliptical follow-ups and their object.
