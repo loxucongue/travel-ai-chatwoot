@@ -95,6 +95,23 @@ def test_generic_opening_accepts_polite_greeting_variants(monkeypatch, text):
     assert logs == [] and trace["fast_path"] == "configured_opening"
 
 
+def test_first_trip_inquiry_uses_operator_opening_without_model_call(monkeypatch):
+    monkeypatch.setattr(runtime, "_call", lambda *_args, **_kwargs: (_ for _ in ()).throw(
+        AssertionError("first customer message must use the configured opening")))
+    decision, logs, _, trace = runtime.run_v2_agent({
+        "module": "reply",
+        "customer_text": "你好，我想咨询旅行行程",
+        "context_messages": [],
+        "reception_policy": {"operator_configuration": {
+            "opening_messages": ["配置开场一", "配置开场二"],
+            "opening_interval_seconds": 4,
+        }},
+    })
+    assert decision.opening_messages == ["配置开场一", "配置开场二"]
+    assert decision.opening_interval_seconds == 4
+    assert logs == [] and trace["fast_path"] == "configured_opening"
+
+
 def test_specific_new_customer_question_does_not_use_operator_opening(monkeypatch):
     called = []
 
@@ -108,7 +125,7 @@ def test_specific_new_customer_question_does_not_use_operator_opening(monkeypatc
         runtime.run_v2_agent({
             "module": "reply",
             "customer_text": "想了解9日價格",
-            "context_messages": [{"direction": "incoming", "content": "想了解9日價格"}],
+            "context_messages": [{"direction": "incoming", "content": "之前的第一条消息"}],
             "reception_policy": {
                 "operator_configuration": {"opening_message": "不應覆蓋具體問題"},
             },

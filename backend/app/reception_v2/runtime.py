@@ -132,8 +132,74 @@ def _is_fresh_generic_opening(context: dict) -> bool:
     ))
 
 
+_OPENING_DIRECT_MARKERS = (
+    "9\u65e5", "9\u5929", "11\u65e5", "11\u5929", "\u6843\u82b1", "\u73e0\u5cf0", "\u7eb3\u6728\u9519", "\u7d0d\u6728\u932f",
+    "\u5e03\u8fbe\u62c9\u5bab", "\u5e03\u9054\u62c9\u5bae", "\u4ef7\u683c", "\u50f9\u683c", "\u4ef7\u94b1", "\u50f9\u9322", "\u8d39\u7528", "\u8cbb\u7528", "\u591a\u5c11\u94b1", "\u591a\u5c11\u9322",
+    "\u9884\u7b97", "\u9810\u7b97", "\u4f4f\u5bbf", "\u996d\u5e97", "\u98ef\u5e97", "\u9152\u5e97", "\u4f9b\u6c27", "\u6c27\u6c14", "\u6c27\u6c23", "\u96c6\u5408", "\u63a5\u673a", "\u63a5\u6a5f",
+    "\u65e5\u671f", "\u51e0\u4f4d", "\u5e7e\u4f4d", "\u9ad8\u53cd", "\u94c1\u8def", "\u9435\u8def", "\u5165\u85cf\u51fd", "\u5929\u6c14", "\u5929\u6c23", "\u5e74\u9f84", "\u5e74\u9f61",
+    "\u600e\u4e48\u5b89\u6392", "\u600e\u9ebc\u5b89\u6392", "\u5982\u4f55\u5b89\u6392", "\u5305\u542b\u4ec0\u4e48", "\u5305\u542b\u4ec0\u9ebc", "\u6709\u6ca1\u6709", "\u6709\u6c92\u6709",
+    "\u4ec0\u4e48\u65f6\u5019", "\u4ec0\u9ebc\u6642\u5019", "\u54ea\u4e00\u5929",
+)
+
+
+def _is_fresh_generic_opening_v2(context: dict) -> bool:
+    """Accept broad first-contact trip inquiries while preserving direct answers."""
+    if context.get("module") != "reply":
+        return False
+    journey = context.get("journey") or {}
+    if context.get("route_variant") or journey.get("route_variant"):
+        return False
+    if any(
+        item.get("role") == "assistant" or item.get("direction") == "outgoing"
+        for item in context.get("context_messages", [])
+        if isinstance(item, dict)
+    ):
+        return False
+    text = "".join(str(context.get("customer_text") or "").lower().split())
+    normalized = re.sub(r"[，,。.!！?？~～、:：]", "", text)
+    if not normalized or len(normalized) > 60:
+        return False
+    if any(marker.lower() in normalized for marker in _OPENING_DIRECT_MARKERS):
+        return False
+    if re.search(r"(?:请|請|给|給|发|發|傳|传|看|要).*(?:完整|詳細|详细)?.*(?:行程|路線|线路)", normalized):
+        return False
+    return bool(re.fullmatch(
+        r"(?:你好|您好|嗨|哈囉|hello|hi)(?:呀)?(?:我)?想(?:了解|咨询|咨詢)(?:一下)?"
+        r"(?:旅行|旅遊)?(?:行程|路線|线路)?"
+        r"|(?:想了解|想咨询|想咨詢|先了解一下|看看|看一下|介绍一下|介紹一下)"
+        r"(?:你们|你們)?(?:的)?(?:旅行|旅遊)?(?:行程|路線|线路)?",
+        normalized,
+    ))
+
+
+def _is_first_customer_message(context: dict) -> bool:
+    """Opening is a conversation-entry contract, not a keyword classifier."""
+    if context.get("module") != "reply":
+        return False
+    if context.get("context_complete") is False:
+        return False
+    history = context.get("context_messages")
+    if history is None:
+        return False
+    incoming = [
+        item for item in history
+        if isinstance(item, dict)
+        and (item.get("direction") == "incoming" or item.get("role") == "user")
+    ]
+    if not incoming:
+        return True
+    current = "".join(str(context.get("customer_text") or "").split())
+    if len(incoming) == 1 and "".join(str(incoming[0].get("content") or "").split()) == current:
+        return True
+    return not any(
+        item.get("direction") == "incoming" or item.get("role") == "user"
+        for item in history
+        if isinstance(item, dict)
+    )
+
+
 def _configured_opening(context: dict, skill_digest: str):
-    if not _is_fresh_generic_opening(context):
+    if not _is_first_customer_message(context):
         return None
     from app.opening_messages import delivery_items
 
