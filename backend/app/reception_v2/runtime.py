@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from typing import Any
 from dataclasses import replace, asdict
@@ -463,6 +464,37 @@ def _tool_evidence_refs(value: object) -> set[str]:
         for child in value:
             refs.update(_tool_evidence_refs(child))
     return refs
+
+
+def _execute_agent_tool_call(call: dict, registry: SkillRegistry, context: dict,
+                             *, allowed_skills: set[str], proactive_turn: bool,
+                             candidate_fact_ids: set[str]) -> tuple[dict, dict, str]:
+    """Execute one independent tool call and return a trace-safe result.
+
+    Tool calls in a single model turn are read-only route/knowledge lookups.
+    Keeping parsing and policy checks inside this worker lets unrelated lookups
+    run together while the caller still appends tool messages deterministically.
+    """
+    function = call.get("function") or {}
+    name = str(function.get("name") or "")
+    arguments: dict = {}
+    try:
+        arguments = json.loads(function.get("arguments") or "{}")
+        if name not in TOOL_NAMES or not isinstance(arguments, dict):
+            raise ValueError("v2_tool_not_allowed")
+        if name == "load_skill" and str(arguments.get("name") or "") not in allowed_skills:
+            raise ValueError("v2_skill_not_allowed_for_flow")
+        if proactive_turn and name == "get_service_facts":
+            raise ValueError("v2_service_not_in_proactive_candidates")
+        result = (execute_tool(name, arguments, registry, context=context)
+                  if name == "get_service_facts" else execute_tool(name, arguments, registry))
+        if proactive_turn and name == "get_route_facts":
+            result["facts"] = [item for item in result.get("facts", [])
+                                if item["id"] in candidate_fact_ids]
+        status = "completed"
+    except Exception as exc:
+        result, status = {"error": str(exc)[:120]}, "blocked"
+    return {"name": name, "status": status, "arguments": arguments}, result, str(call.get("id") or "")
 
 
 def _validated_decision(message: dict, available_facts: set[str], available_materials: set[str], context: dict | None = None) -> EvaluationDecision:
@@ -1198,36 +1230,35 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
             final_message = message
             break
         messages.append({"role": "assistant", "content": message.get("content"), "tool_calls": calls})
-        for call in calls:
-            function = call.get("function") or {}
-            name = str(function.get("name") or "")
-            arguments: dict = {}
-            try:
-                arguments = json.loads(function.get("arguments") or "{}")
-                if name not in TOOL_NAMES or not isinstance(arguments, dict):
-                    raise ValueError("v2_tool_not_allowed")
-                if name == "load_skill" and str(arguments.get("name") or "") not in allowed_skills:
-                    raise ValueError("v2_skill_not_allowed_for_flow")
-                if proactive_turn and name == 'get_service_facts':
-                    raise ValueError('v2_service_not_in_proactive_candidates')
-                result = (execute_tool(name, arguments, registry, context=context) if name == 'get_service_facts'
-                          else execute_tool(name, arguments, registry))
-                if name == 'get_service_facts':
-                    service_facts.update({item['id']:item for item in result['facts']})
-                    context = {**context,'global_knowledge_facts':list(service_facts.values())}
-                if proactive_turn and name == "get_route_facts":
-                    result["facts"] = [item for item in result.get("facts", []) if item["id"] in proactive.candidate_value_ids]
-                if name == "get_route_materials":
-                    result["materials"] = [item for item in result.get("materials", []) if item["key"] in available_materials]
-                available_facts.update(str(item["id"]) for item in result.get("facts", []))
-                available_facts.update(_tool_evidence_refs(result))
-                if name == "get_route_materials":
-                    available_materials.update(str(item["key"]) for item in result.get("materials", []))
-                status = "completed"
-            except Exception as exc:
-                result, status = {"error": str(exc)[:120]}, "blocked"
-            tool_trace.append({"name": name, "status": status, "arguments": arguments})
-            messages.append({"role": "tool", "tool_call_id": call.get("id"), "content": json.dumps(result, ensure_ascii=False)})
+        candidate_fact_ids = set(proactive.candidate_value_ids) if proactive_turn else set()
+        with ThreadPoolExecutor(max_workers=min(4, len(calls))) as executor:
+            futures = [executor.submit(
+                _execute_agent_tool_call,
+                call,
+                registry,
+                context,
+                allowed_skills=allowed_skills,
+                proactive_turn=proactive_turn,
+                candidate_fact_ids=candidate_fact_ids,
+            ) for call in calls]
+            tool_results = [future.result() for future in futures]
+        for trace_item, result, call_id in tool_results:
+            name = trace_item["name"]
+            arguments = trace_item["arguments"]
+            status = trace_item["status"]
+            if name == "get_service_facts" and status == "completed":
+                service_facts.update({item["id"]: item for item in result.get("facts", [])})
+                context = {**context, "global_knowledge_facts": list(service_facts.values())}
+            if name == "get_route_materials" and status == "completed":
+                result["materials"] = [item for item in result.get("materials", [])
+                                        if item["key"] in available_materials]
+            available_facts.update(str(item["id"]) for item in result.get("facts", []))
+            available_facts.update(_tool_evidence_refs(result))
+            if name == "get_route_materials" and status == "completed":
+                available_materials.update(str(item["key"]) for item in result.get("materials", []))
+            tool_trace.append({**trace_item, "parallel_batch": len(calls) > 1})
+            messages.append({"role": "tool", "tool_call_id": call_id,
+                             "content": json.dumps(result, ensure_ascii=False)})
     if final_message is None:
         final_message, log = _call(_request([*messages, {"role": "system", "content": "工具轮次已用完。基于已有结果立即输出最终 JSON，不再调用工具。"}], tools=False), MAX_TOOL_ROUNDS)
         logs.append(log)
