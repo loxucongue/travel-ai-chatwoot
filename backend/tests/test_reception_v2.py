@@ -291,6 +291,23 @@ def test_decision_contract_explains_reply_and_handoff():
     assert contract["memory_updates"][0]["evidence"] == "我們兩位"
 
 
+def test_unbound_multi_constraint_lead_prefetches_route_shortlist_and_comparison():
+    from app.reception_v2 import runtime
+
+    results = runtime._prefetch_route_backend("compare routes for two people with a budget", "")
+    assert [item["kind"] for item in results] == ["route_search", "route_comparison"]
+    assert {item["route_variant"] for item in results[0]["data"]["routes"]} >= {
+        "peach_9d_2027", "peach_11d_2027",
+    }
+    assert results[1]["data"]["route_ids"] == ["peach_11d_2027", "peach_9d_2027"]
+
+
+def test_bound_route_does_not_run_unnecessary_route_prefetch():
+    from app.reception_v2 import runtime
+
+    assert runtime._prefetch_route_backend("compare routes", "peach_9d_2027") == []
+
+
 def test_v2_trace_contains_latency_breakdown(monkeypatch):
     import app.reception_v2.runtime as runtime
 

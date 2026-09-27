@@ -6,6 +6,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+from functools import lru_cache
 from typing import Any
 from dataclasses import replace, asdict
 from datetime import datetime, timezone, timedelta
@@ -21,7 +22,7 @@ from app.reception_v2.journey_memory import build_journey_memory
 from app.reception_v2.proactive_policy import evaluate_proactive_eligibility
 from app.reception_v2.decision_contract import build_decision_contract
 from app.reception_v2.route_profiles import resolve_topic
-from app.reception_v2.route_agent_tools import compare_routes, get_route_details
+from app.reception_v2.route_agent_tools import compare_routes, get_route_details, search_routes
 from app.reception_v2.journey_state_machine import guard_decision_stage
 from app.reception_v2.tools import TOOL_NAMES, execute_tool, tool_specs
 from app.route_packages import ROUTES
@@ -37,6 +38,20 @@ from app.advisor_voice import v2_advisor_voice_contract, taiwan_copy_violation, 
 
 PROMPT_VERSION = "reception-v2-agent-consistency-20260926"
 MAX_TOOL_ROUNDS = 4
+
+
+@lru_cache(maxsize=4)
+def _static_system_prefix(index_text: str, silence: bool) -> str:
+    """Build the stable prompt prefix once per skill index/turn kind.
+
+    The customer history, journey state and current policy remain dynamic and
+    are appended later. Keeping this prefix stable gives the provider a chance
+    to reuse its prompt cache across turns.
+    """
+    return SYSTEM_PROMPT + (
+        "\n可用 Skill 索引：\n" + index_text + "\n"
+        + v2_advisor_voice_contract(silence=silence)
+    )
 
 
 def _allowed_skill_names(flow_name: str, bound_route: str) -> set[str]:
@@ -293,12 +308,11 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
     if state["event"] == "silence_due":
         if not flow_skill:
             preloaded.append(registry.load("silence-followup"))
-    system = SYSTEM_PROMPT + (
+    system = _static_system_prefix(index, state['event'] == 'silence_due') + (
         "\n历史状态建议的 Flow：" + flow.name
         + "。结合本轮语义决定实际 Flow，可以转换；沉默事件仍须遵守服务端跟进门禁。\n"
         + "可用 Skill 索引：\n" + index
     )
-    system += '\n' + v2_advisor_voice_contract(silence=state['event'] == 'silence_due')
     if preloaded:
         system += "\n服务端已预载的 Skills（无需再次 load_skill）：\n" + json.dumps(preloaded, ensure_ascii=False)
     state["route_catalog"] = [{"route_variant": key, "branch": route["branch"], "name": route["name"]} for key, route in ROUTES.items()]
@@ -491,6 +505,7 @@ def _execute_agent_tool_call(call: dict, registry: SkillRegistry, context: dict,
     Keeping parsing and policy checks inside this worker lets unrelated lookups
     run together while the caller still appends tool messages deterministically.
     """
+    started = time.monotonic()
     function = call.get("function") or {}
     name = str(function.get("name") or "")
     arguments: dict = {}
@@ -510,7 +525,31 @@ def _execute_agent_tool_call(call: dict, registry: SkillRegistry, context: dict,
         status = "completed"
     except Exception as exc:
         result, status = {"error": str(exc)[:120]}, "blocked"
-    return {"name": name, "status": status, "arguments": arguments}, result, str(call.get("id") or "")
+    return {"name": name, "status": status, "arguments": arguments,
+            "duration_ms": int((time.monotonic() - started) * 1000)}, result, str(call.get("id") or "")
+
+
+def _prefetch_route_backend(customer_text: str, bound_route: str) -> list[dict]:
+    """Supply a shortlist before the first model turn for an unbound lead.
+
+    Route search and comparison are read-only, deterministic operations. Doing
+    them before the Agent turn removes a needless tool round for the common
+    public-traffic message that contains several route constraints.
+    """
+    text = str(customer_text or "").strip()
+    if bound_route or not text:
+        return []
+    shortlist = search_routes(text)
+    routes = shortlist.get("routes") or []
+    results = [{"kind": "route_search", "data": shortlist}]
+    compare_markers = re.compile(
+        r"(?:\u6bd4\u8f03|\u6bd4\u8f03\u4e00\u4e0b|\u5dee\u5225|\u600e\u9ebc\u9078|\u600e\u9ebc\u9078|\u54ea\u500b\u9069\u5408|\u9810\u7b97|\u9810\u7b97|compare|budget|which)"
+    )
+    if len(routes) >= 2 and compare_markers.search(text.casefold()):
+        route_ids = [str(item.get("route_variant")) for item in routes[:4] if item.get("route_variant")]
+        criteria = ["duration", "pace", "hotel", "price", "highlights"]
+        results.append({"kind": "route_comparison", "data": compare_routes(route_ids, criteria)})
+    return results
 
 
 def _validated_decision(message: dict, available_facts: set[str], available_materials: set[str], context: dict | None = None) -> EvaluationDecision:
@@ -1151,6 +1190,25 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
         logs = []
     tool_trace = []
     available_facts: set[str] = set()
+    prefetched_route_results = _prefetch_route_backend(context.get("customer_text", ""), bound_route)
+    prefetched_route_ids = []
+    prefetched_route_comparison = False
+    for item in prefetched_route_results:
+        data = item["data"]
+        if item["kind"] == "route_search":
+            prefetched_route_ids = [str(route.get("route_variant")) for route in data.get("routes", [])]
+        if item["kind"] == "route_comparison":
+            prefetched_route_comparison = True
+        available_facts.update(_tool_evidence_refs(data))
+    if prefetched_route_results:
+        messages.append({
+            "role": "system",
+            "content": (
+                "服務端已預取與本輪客戶需求相關的線路候選和比較資料。這些是已發布資料，"
+                "請直接結合客戶所有條件完成比較、推薦或下一步，不要重複搜尋相同候選。\n"
+                + json.dumps(prefetched_route_results, ensure_ascii=False)
+            ),
+        })
     from app.web_knowledge import context_fact_map
     service_facts = context_fact_map(context)
     service_pool = context_fact_map({'global_knowledge_facts':context.get('global_knowledge_candidates')
@@ -1468,11 +1526,24 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
         }, ensure_ascii=True, sort_keys=True, default=str).encode()).hexdigest(),
         "tools": tool_trace,
         "prefetched_fact_ids": [str(item["id"]) for item in prefetched],
+        "prefetched_route_ids": prefetched_route_ids,
+        "prefetched_route_comparison": prefetched_route_comparison,
         "selected_web_facts": list(service_facts.values()),
         "loaded_skills": list(dict.fromkeys([*preloaded_skills, *[item["arguments"].get("name") for item in tool_trace if item["name"] == "load_skill" and item["status"] == "completed"]])),
         "available_fact_ids": sorted(available_facts),
         "total_ms": int((time.monotonic() - started) * 1000),
         "model_request_ms": sum(int(item.get("duration_ms") or 0) for item in logs if item.get("round") is not None),
+        "model_first_token_ms": min(
+            (int((item.get("response_meta") or {}).get("call_timing", {}).get("first_token_ms"))
+             for item in logs
+             if (item.get("response_meta") or {}).get("call_timing", {}).get("first_token_ms") is not None),
+            default=None,
+        ),
+        "tool_execution_ms": sum(int(item.get("duration_ms") or 0) for item in tool_trace),
+        "static_prompt_digest": hashlib.sha256(_static_system_prefix(
+            "\n".join(f"- {item['name']}: {item['description']}" for item in registry.index()),
+            context.get("module") in {"silence_touch", "wakeup"},
+        ).encode()).hexdigest(),
         "verification_ms": verification_ms,
         "repair_ms": repair_ms,
         "request_count": len(logs),
