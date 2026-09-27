@@ -780,9 +780,10 @@ def audit_route_packages() -> dict:
             key for key in package["content_sequence"]
             if package["content_groups"][key].get("initial_delivery") is True
         ]
+        configured_node_groups = {node.get("content_group_key") for node in package["sop"]["nodes"]}
         expected_silence_groups = [
             key for key in package["content_sequence"]
-            if not package["content_groups"][key].get("initial_only", False)
+            if not package["content_groups"][key].get("initial_only", False) and key in configured_node_groups
         ]
         route_checks = {
             "six_silence_interval_touches": len(nodes) == 6,
@@ -859,7 +860,7 @@ def _approved_reply(decision, route: str) -> bool:
     if any(term in claim_text for term in forbidden_claims):
         return False
     approved = {group["text"] for group in ROUTES[route]["groups"].values()} | {CONTACT_ACKNOWLEDGEMENT}
-    if all(part in approved for part in reply.split("\n") if part):
+    if reply in approved or all(part in approved for part in reply.split("\n") if part):
         return True
     route_specific = any(term in reply for term in (
         "9,980", "12,800", "珠峰", "絨布寺", "绒布寺", "希爾頓", "希尔顿",

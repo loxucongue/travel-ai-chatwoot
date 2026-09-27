@@ -222,14 +222,14 @@ def test_explicit_none_route_spec_preserves_current_route_lookup():
     assert delivery_mode_for(
         "peach_9d_2027", ["hotel_reference"], ["routes12-hilton-room"],
         route_spec=None,
-    ) == "assets_then_text"
+    ) == "text_then_assets"
 
 
 def test_route_delivery_mode_is_resolved_once_from_reviewed_group():
     assert delivery_mode_for(
         'peach_9d_2027', ['hotel_reference'],
         ['routes12-hilton-room', 'routes12-hilton-oxygen'],
-    ) == 'assets_then_text'
+    ) == 'text_then_assets'
     assert delivery_mode_for('', [], []) == 'text_then_assets'
 
 

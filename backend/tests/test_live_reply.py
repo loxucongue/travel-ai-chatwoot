@@ -881,8 +881,8 @@ def test_v2_full_introduction_uses_worker_and_stops_on_new_customer_message(
     from app.reception_v2.material_delivery import introduction_sections
     fake = setup(session_factory, monkeypatch)
     route = 'peach_9d_2027'
-    keys = {asset for key in ['itinerary_overview', 'hotel_reference', 'vehicle_reference']
-            for asset in ROUTES[route]['groups'][key]['assets']}
+    keys = {asset for group in ROUTES[route]['groups'].values() if group.get('initial_delivery')
+            for asset in group['assets']}
     with session_factory() as db:
         first_id = add_image(db, tmp_path)
         first = db.get(MaterialAsset, first_id)
@@ -906,7 +906,7 @@ def test_v2_full_introduction_uses_worker_and_stops_on_new_customer_message(
         add_itinerary_progress(db)
     sections = introduction_sections(ROUTES[route], keys, {})
     decision = EvaluationDecision('reply', 'peach_9d', 'itinerary', reply=sections[0]['text'],
-        route_variant=route, content_group_key='brand_positioning',
+        route_variant=route, content_group_key=sections[0]['group_key'],
         covered_content_groups=[s['group_key'] for s in sections],
         material_keys=list(keys), v2_delivery_sections=sections)
     if terminal != 'reply':
@@ -938,9 +938,9 @@ def test_v2_full_introduction_uses_worker_and_stops_on_new_customer_message(
             assert [kind for kind, *_ in fake.sent].count('image') == len(keys)
             attempts = db.scalars(select(OutboundMessage)).all()
             assert all(len(row.content_attributes['_delivery_item']['group_keys']) == 1 for row in attempts)
-            assert fake.sent[0][1] == ROUTES[route]['groups']['brand_positioning']['text']
+            assert fake.sent[0][1] == sections[0]['text']
             if terminal == 'reply':
-                assert fake.sent[-1][1] == ROUTES[route]['groups']['party_question']['text']
+                assert fake.sent[-1][1] == sections[-1]['text']
             else:
                 assert job.trace['terminal_handoff_plan']
                 assert db.scalar(select(HandoffTask)) is not None

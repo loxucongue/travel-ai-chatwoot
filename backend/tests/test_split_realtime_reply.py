@@ -587,7 +587,7 @@ def test_initial_only_route_copy_is_sent_exactly_without_model_rewrite():
     generated = deterministic_system_reply(plan)
     assert generated is not None
     assert generated.body == ROUTES["peach_9d_2027"]["groups"]["brand_positioning"]["text"]
-    assert "4至10人" in generated.body
+    assert "4-6人" in generated.body
     assert "成團" not in generated.body
 
 
@@ -1170,7 +1170,7 @@ def test_first_three_route_turns_each_plan_a_fresh_visual_group():
             confidence=0.9,
         ),
     )
-    assert second_turn.allowed_content_group_keys == ["party_intro_small", "peach_highlights"]
+    assert second_turn.allowed_content_group_keys == ["party_intro_small", "rongbuk_reference"]
     assert second_turn.allowed_asset_ids
     assert second_turn.follow_up and second_turn.follow_up.field == "departure_window"
 
@@ -1185,6 +1185,8 @@ def test_first_three_route_turns_each_plan_a_fresh_visual_group():
                     "peach_highlights",
                     "departure_question",
                     "rongbuk_reference",
+                    "rongbuk_upgrade",
+                    "peach_culture",
                 ],
                 "customer_profile": {"party_size": 2},
             },

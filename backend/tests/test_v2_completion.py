@@ -38,17 +38,16 @@ def test_material_request_survives_missing_optional_delivery_intent():
 def test_price_tool_includes_approved_discount_and_six_person_price():
     result = execute_tool('get_route_facts', {'route_variant': 'peach_9d_2027', 'topic': 'price'}, SkillRegistry())
     text = ' '.join(f['text'] for f in result['facts'])
-    # The approved offer is a fixed six-person-group price, not a starting price.
+    # Website price includes the limited four-to-six-person upgrade.
     price = next(f['text'] for f in result['facts'] if f['id'] == 'route.9.price')
-    assert '6人' in price and '9,980' in price and '元/人' in price
-    assert '其他人數' in price and '另行報價' in price
-    assert '多人' in text and ('優惠' in text or '优惠' in text)
+    assert '十人小團優惠價' in price and '9,980/人' in price
+    assert '限量升級4-6人小團' in price and '價格不變' in price
 
 
 def test_hotel_tool_identifies_route_specific_exception():
     result = execute_tool('get_route_facts', {'route_variant': 'peach_9d_2027', 'topic': 'hotel'}, SkillRegistry())
     hotel = next(f['text'] for f in result['facts'] if f['id'] == 'route.shared.hotel_reference')
-    assert '波密' in hotel
+    assert '地區條件有限' in hotel and '85-90%' in hotel
 
 
 def test_customer_evidence_required_and_silence_cannot_invent_events():

@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 
 SERVICES = ['china2go-worker', 'china2go-api', 'china2go-playground']
 LIVE = Path('/opt/china2go-ai')
+RELEASE_PATHS = ('backend/app', 'frontend/dist', 'data/knowledge/china2go/route-packages')
 
 
 def digest(path):
@@ -48,7 +49,13 @@ def preflight(stage):
     with sqlite3.connect(LIVE / 'backend/data/app.db') as source, sqlite3.connect(stage / 'backend/data/app.db') as target:
         source.backup(target)
     shutil.copy2(LIVE / 'backend/.env', stage / 'backend/.env')
-    shutil.copytree(LIVE / 'data/knowledge', stage / 'data/knowledge', dirs_exist_ok=True)
+    # Keep candidate knowledge files; copy only live-only supporting documents.
+    for source in (LIVE / 'data/knowledge').rglob('*'):
+        if source.is_file():
+            target = stage / 'data/knowledge' / source.relative_to(LIVE / 'data/knowledge')
+            if not target.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
     env = {**os.environ, 'APP_PROFILE': 'evaluation', 'OUTBOUND_MODE': 'disabled',
            'CHATWOOT_WRITE_ENABLED': 'false', 'LIVE_SOP_ENABLED': 'false',
            'DATABASE_URL': 'sqlite:///' + str(stage / 'backend/data/app.db')}
@@ -126,7 +133,7 @@ def health():
 
 def restore(backup):
     quiesce()
-    for rel in ('backend/app', 'frontend/dist'):
+    for rel in RELEASE_PATHS:
         target = LIVE / rel
         # Fixed directories under the explicitly named deployment root only.
         assert target.resolve().is_relative_to(LIVE.resolve())
@@ -167,10 +174,10 @@ def remote_phase(phase, stage):
             source.backup(target)
             write(backup / 'bindings.json', source.execute('select id,ai_engine_version,ai_engine_release_id from conversation_states').fetchall())
         shutil.copy2(LIVE / 'backend/.env', backup / 'backend.env')
-        for rel in ('backend/app', 'frontend/dist'):
+        for rel in RELEASE_PATHS:
             shutil.copytree(LIVE / rel, backup / rel)
         write(backup / 'before.json', before)
-        for rel in ('backend/app', 'frontend/dist'):
+        for rel in RELEASE_PATHS:
             target = LIVE / rel
             assert target.resolve().is_relative_to(LIVE.resolve())
             swapped = True
@@ -180,7 +187,7 @@ def remote_phase(phase, stage):
         with sqlite3.connect(LIVE / 'backend/data/app.db') as db:
             db.execute("update conversation_states set ai_engine_release_id=? where ai_engine_version='v2'", (checked['release'],))
         for rel, expected in manifest['files'].items():
-            if rel.startswith(('backend/app/', 'frontend/dist/')):
+            if any(rel.startswith(folder + '/') for folder in RELEASE_PATHS):
                 assert digest(LIVE / rel) == expected, rel
         subprocess.run(['systemctl', 'start', *SERVICES[1:], SERVICES[0]], check=True)
         health()
@@ -224,7 +231,7 @@ def main():
         if args.phase == 'stage':
             name = 'reply-consistency-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
             stage = (LIVE / 'releases' / name).as_posix()
-            files = [p for rel in ('backend/app', 'frontend/dist') for p in (root / rel).rglob('*')
+            files = [p for rel in RELEASE_PATHS for p in (root / rel).rglob('*')
                      if p.is_file() and '__pycache__' not in p.parts]
             files += [root / 'backend/pyproject.toml']
             manifest = {'git_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),

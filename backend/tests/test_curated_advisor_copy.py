@@ -15,10 +15,10 @@ def test_customer_copy_has_no_planner_instructions_or_unsupported_group_offer():
         assert 'route.shared.vehicle_reference' in groups['price_reference']['evidence_refs']
         answers = {answer['id']: answer for answer in package['fixed_answers']}
         assert answers['group_party']['status'] == 'active'
-        assert answers['group_party']['answer_origin'] == 'operator_approved'
-        assert '4至10人' in answers['group_party']['answer_text']
+        assert answers['group_party']['answer_origin'] == 'website_verbatim'
+        assert '4-6人' in answers['group_party']['answer_text']
         for key in {'route_overview', 'rongbuk_hotel'} & answers.keys():
-            assert answers[key]['status'] == 'pending_review'
+            assert answers[key]['status'] == 'active'
             assert answers[key]['answer_origin'] == 'website_verbatim'
         assert answers['spring_weather']['status'] == 'active'
 
@@ -35,4 +35,4 @@ def test_mainline_copy_and_legacy_sop_do_not_drift():
         for key in keys & package['content_groups'].keys():
             text = package['content_groups'][key]['approved_text']
             assert len(text) <= 200
-            assert not any(claim in text for claim in ('85-90%', '12小時', '快速適應', '保證不高反', '第一天不安排行程'))
+            assert not any(claim in text for claim in ('保證不高反', '第一天不安排行程'))

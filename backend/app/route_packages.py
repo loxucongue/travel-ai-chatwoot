@@ -489,6 +489,7 @@ def reload_route_packages() -> None:
         "initial_delivery_interval_seconds": package["initial_delivery_interval_seconds"],
         "required_slots": package["required_slots"],
         "knowledge_facts": package["knowledge_facts"],
+        "introduction_sequence": list(package["content_sequence"]),
         "sequence": [
             group_key for group_key in package["content_sequence"]
             if not package["content_groups"][group_key].get("initial_only", False)

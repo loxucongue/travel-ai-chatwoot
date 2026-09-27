@@ -53,6 +53,7 @@ def test_topic_coverage_cannot_skip_mandatory_initial_group(mandatory, partial):
     spec = route_snapshot_from_values(route, source["journey"]["slots"])
     spec["sequence"] = [mandatory, "landmarks", "zhaji"]
     # Require both dimensions even for normally text-only greeting groups.
+    spec["groups"][mandatory]["initial_delivery"] = True
     spec["groups"][mandatory]["assets"] = ["required-initial-image"]
     spec["groups"][mandatory]["delivery_mode"] = "assets_then_text"
     slots = {ROUTE_SNAPSHOTS_KEY: {route: make_route_snapshot(route, spec)}}
@@ -263,7 +264,7 @@ def test_undecided_departure_advances_mainline_instead_of_asking_another_slot():
         sent=["itinerary_overview"],
     ))
     assert plan.touch_goal == "build_value"
-    assert plan.reply_plan.allowed_content_group_keys == ["peach_highlights"]
+    assert plan.reply_plan.allowed_content_group_keys == ["rongbuk_upgrade"]
     assert plan.reply_plan.follow_up is None
     assert "不重複追問" in plan.touch_reason
 
@@ -364,6 +365,7 @@ def test_contact_reminder_without_new_value_stops_even_at_final_touch():
     sent = [
         "itinerary_overview", "peach_highlights", "hotel_reference", "vehicle_reference",
         "accommodation_summary", "landmarks", "zhaji", "read_check", "contact_request",
+        "vehicle_oxygen", "no_shopping",
     ]
     early = build_silence_plan(context(
         route="peach_9d_2027",
@@ -399,7 +401,7 @@ def test_completed_mainline_does_not_repeat_final_text_nurture():
         sent=[
             "itinerary_overview", "peach_highlights", "hotel_reference",
             "vehicle_reference", "accommodation_summary", "landmarks", "zhaji",
-            "read_check", "party_question",
+            "read_check", "party_question", "vehicle_oxygen", "no_shopping",
         ],
     ))
     assert plan.reply_plan.action == "no_action"
@@ -414,7 +416,7 @@ def test_proactive_hotel_mainline_uses_room_and_oxygen_images():
         stage="value_building",
         touch_index=3,
         profile={"party_size": 2, "departure_window": "明年3月底"},
-        sent=["itinerary_overview", "rongbuk_reference", "peach_highlights"],
+        sent=["itinerary_overview", "rongbuk_reference", "rongbuk_upgrade", "peach_highlights", "peach_culture"],
     )
     source["available_materials"] = [
         {"key": "routes12-hilton-room", "routes": ["peach_11d_2027"]},
@@ -433,7 +435,7 @@ def test_partial_landmarks_resume_describes_only_remaining_asset():
         stage="value_building",
         touch_index=2,
         profile={"party_size": 2, "departure_window": "3月底"},
-        sent=["itinerary_overview", "peach_highlights", "hotel_reference", "rongbuk_reference", "vehicle_reference"],
+        sent=[key for key, group in ROUTES["peach_11d_2027"]["groups"].items() if group.get("initial_delivery")],
     )
     source["journey"]["content_progress"] = {
         "landmarks": {"text_delivered": True, "asset_keys": ["routes12-potala"]},
@@ -535,7 +537,7 @@ def test_split_pipeline_turns_twice_rejected_silence_copy_into_no_action():
             route="peach_11d_2027",
             stage="value_building",
             touch_index=2,
-            sent=["itinerary_overview", "peach_highlights", "hotel_reference", "rongbuk_reference", "vehicle_reference"],
+            sent=[key for key, group in ROUTES["peach_11d_2027"]["groups"].items() if group.get("initial_delivery")],
         ),
         generation_node=generation,
         verification_node=lambda *_args: (

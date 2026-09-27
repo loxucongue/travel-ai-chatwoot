@@ -1,28 +1,28 @@
 from app.route_packages import ROUTE_PACKAGES
 
 
-def test_business_document_brand_is_shared_by_both_routes():
+def test_website_brand_is_shared_by_both_routes():
     for package in ROUTE_PACKAGES.values():
         group = package['content_groups']['brand_positioning']
-        assert '4至10人' in group['approved_text']
+        assert '4-6人' in group['approved_text']
         assert group['evidence_refs'] == ['route.shared.brand_positioning']
         facts = {f['id']: f['text'] for f in package['knowledge_facts']}
-        assert '4至10人' in facts['route.shared.brand_positioning']
-        assert '多人同行' in facts['route.shared.group_offer']
+        assert '4-6人' in facts['route.shared.brand_positioning']
+        assert '限量升級4-6人小團 價格不變' in facts['route.shared.group_offer']
         for key in ('party_intro_small', 'party_intro_group'):
-            assert '4至6' not in package['content_groups'][key]['approved_text']
+            assert '4-6' in package['content_groups'][key]['approved_text']
         for answer in package['fixed_answers']:
             if answer['id'] == 'small_party':
-                assert '4至6' not in answer['answer_text'] and '4-6' not in answer['answer_text']
-                assert answer['answer_origin'] == 'operator_approved'
+                assert '4-6' in answer['answer_text']
+                assert answer['answer_origin'] == 'website_verbatim'
 
 
 def test_brand_does_not_expand_vehicle_capacity_or_price_scope():
     for package in ROUTE_PACKAGES.values():
         facts = {f['id']: f['text'] for f in package['knowledge_facts']}
-        assert '9座' in facts['route.shared.vehicle_reference']
+        assert '2025年最新車' in facts['route.shared.vehicle_reference']
         assert '10位' not in facts['route.shared.vehicle_reference']
-        assert '4至6人' in facts['route.shared.vehicle_reference']
+        assert '升級6小團' in facts['route.shared.vehicle_reference']
 
 
 def test_company_brand_is_not_mistaken_for_large_group_handoff_threshold():

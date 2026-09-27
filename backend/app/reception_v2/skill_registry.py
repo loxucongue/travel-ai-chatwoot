@@ -58,13 +58,23 @@ class SkillRegistry:
         if skill.route_variant:
             # Use the same published route snapshot as facts and delivery.
             # Business edits belong in the route configuration, not SKILL.md.
-            from app.route_packages import ROUTES, ROUTE_PACKAGES
+            from app.route_packages import ROUTES
             route = ROUTES.get(skill.route_variant, {})
             result['route_variant'] = skill.route_variant
             result['scripts'] = deepcopy([
                 item for item in route.get('fixed_answers', [])
                 if item.get('status') == 'active'
             ])
+            embedded_ids = set()
+            for item in route.get('fixed_answers', []):
+                if '{{script:' + item['id'] + '}}' in result['instructions']:
+                    embedded_ids.add(item['id'])
+                result['instructions'] = result['instructions'].replace(
+                    '{{script:' + item['id'] + '}}',
+                    item['answer_text'] if item.get('status') == 'active' else '',
+                )
+            result['package_version'] = route.get('package_version', '')
+            result['script_source'] = deepcopy(route.get('source', {}))
             result['evidence_refs'] = list(dict.fromkeys(
                 ref for item in result['scripts'] for ref in item.get('fact_ids', [])
             ))
@@ -72,9 +82,20 @@ class SkillRegistry:
                 {'group_key': key, 'text': group.get('text', ''),
                  'asset_keys': list(group.get('assets', [])),
                  'evidence_refs': list(group.get('evidence', []))}
-                for key in ROUTE_PACKAGES.get(skill.route_variant, {}).get('content_sequence', route.get('sequence', []))
+                for key in route.get('introduction_sequence', route.get('sequence', []))
                 if (group := route.get('groups', {}).get(key))
             ]
+            # Make the loaded Skill itself readable, with the actual configured
+            # copy. The package remains the only editable source of these texts.
+            result['instructions'] += '\n\n## 本版场景话术\n' + '\n\n'.join(
+                f"### {item.get('name', item['id'])} [{item['id']}]\n"
+                + '场景：' + '；'.join(item.get('positive_examples', [])) + '\n'
+                + item['answer_text'] + '\n'
+                + ('使用说明：' + item['usage_note'] + '\n' if item.get('usage_note') else '')
+                + '素材：' + ', '.join(item.get('asset_ids', []))
+                for item in result['scripts']
+                if item['id'] not in embedded_ids
+            )
         return result
 
     def release_digest(self) -> str:

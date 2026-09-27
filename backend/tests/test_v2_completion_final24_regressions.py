@@ -12,7 +12,8 @@ from copy import deepcopy
 def test_reviewed_price_conditions_are_data_driven(body,missing):
     from app.fact_conditions import missing_answer_conditions
     from app.route_packages import ROUTES
-    fact=next(f for f in ROUTES['peach_9d_2027']['knowledge_facts'] if f['id']=='route.9.price')
+    # Explicit fixture: current website pricing no longer uses this old condition.
+    fact={'answer_conditions': [{'label': 'six person rate', 'when_any_of': ['9980'], 'require_any_of': ['6人', '六人']}]}
     assert bool(missing_answer_conditions(body,fact)) is missing
 
 

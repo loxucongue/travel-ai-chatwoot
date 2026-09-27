@@ -1,18 +1,28 @@
-"""Compile an explicit full-introduction request into reviewed, interruptible parts."""
+"""Compile the configured route introduction into ordered delivery parts."""
 from dataclasses import replace
 
 from app.delivery_plan import ordered_delivery_parts
 
 
-def introduction_sections(route: dict, available: set[str], slots: dict) -> list[dict]:
+def introduction_group_keys(route: dict, slots: dict) -> list[str]:
     groups = route.get('groups', {})
-    keys = ['brand_positioning', 'itinerary_overview', 'hotel_reference']
-    if 'rongbuk_reference' in groups:
-        keys.append('rongbuk_reference')
-    keys.append('vehicle_reference')
-    if not slots.get('party_size'):
-        keys.append('party_question')
-    return sections_for_groups(route, keys, available)
+    keys = [key for key in route.get('introduction_sequence', route.get('sequence', []))
+            if groups.get(key, {}).get('initial_delivery')]
+    party_size = slots.get('party_size')
+    if party_size and 'advisor_greeting' in keys:
+        try:
+            count = int(party_size)
+        except (TypeError, ValueError):
+            count = 0
+        selected = ('party_intro_solo' if count == 1 else 'party_intro_small'
+                    if 2 <= count <= 3 else 'party_intro_group' if count >= 4 else '')
+        if selected in groups:
+            keys[keys.index('advisor_greeting')] = selected
+    return keys
+
+
+def introduction_sections(route: dict, available: set[str], slots: dict) -> list[dict]:
+    return sections_for_groups(route, introduction_group_keys(route, slots), available)
 
 
 def sections_for_groups(route: dict, keys: list[str], available: set[str]) -> list[dict]:

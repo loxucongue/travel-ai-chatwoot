@@ -41,7 +41,9 @@ def test_pdf_and_vehicle_are_compiled_and_survive_postprocessing(route,handoff):
         handoff_reason='knowledge_confirmation_required' if handoff else None,
         v2_events=[{'type':'material_requested','material_kind':k} for k in ['altitude','vehicle']])
     _compile_delivery_contract(context,decision)
-    expected=set(spec['groups']['vehicle_reference']['assets'])|set(spec['groups'][spec['policies']['post_capture_material_group']]['assets'])
+    expected=(set(spec['groups']['vehicle_reference']['assets'])
+              | set(spec['groups']['vehicle_oxygen']['assets'])
+              | set(spec['groups'][spec['policies']['post_capture_material_group']]['assets']))
     assert set(decision.material_keys)==expected
     result,*_=generate_decision(context,model_call=lambda _: (decision,[],'stub'))
     assert set(result.material_keys)==expected

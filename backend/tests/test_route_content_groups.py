@@ -95,6 +95,8 @@ def test_versions_increase_with_frozen_clock_and_legacy_versions(content_api, mo
 @pytest.mark.parametrize("confirmed", [False, True])
 def test_native_group_source_sop_requires_explicit_confirmation(content_api, confirmed):
     current, payload, published, put = content_api
+    # Isolate the SOP dependency; fixed-answer dependencies have separate tests.
+    current["fixed_answers"] = [a for a in current["fixed_answers"] if a.get("content_group_key") != "read_check"]
     before = deepcopy(current)
     payload["content_groups"] = [g for g in payload["content_groups"] if g["key"] != "read_check"]
     if confirmed:
@@ -376,6 +378,7 @@ def test_publish_add_delete_round_trip_preserves_old_sop_snapshot(
             rejected = client.put(f"/v1/automation/route-products/{route}/content", headers=headers, json=added)
             assert rejected.status_code == 422
             assert get_product()["package_version"] == added_version
+            added["fixed_answers"] = [a for a in added["fixed_answers"] if a.get("content_group_key") != "read_check"]
             added["delete_sop_group_keys"] = ["read_check"]
             response = client.put(f"/v1/automation/route-products/{route}/content", headers=headers, json=added)
             assert response.status_code == 200, response.text

@@ -15,9 +15,9 @@ from app.route_packages import ROUTES
 _TOPIC_GROUPS = {
     "itinerary": ("itinerary_overview", "route_scope", "landmarks"),
     "hotel": ("hotel_reference", "accommodation_summary"),
-    "vehicle": ("vehicle_reference",),
-    "transport": ("vehicle_reference",),
-    "oxygen": ("altitude_health", "hotel_reference", "vehicle_reference"),
+    "vehicle": ("vehicle_reference", "vehicle_oxygen"),
+    "transport": ("vehicle_reference", "vehicle_oxygen"),
+    "oxygen": ("altitude_health", "hotel_reference", "vehicle_reference", "vehicle_oxygen"),
     "price": ("price_reference", "price_deferral"),
     "departure": ("departure_reference",),
     "highlights": ("peach_highlights", "landmarks", "zhaji"),

@@ -35,7 +35,7 @@ def test_skill_registry_is_versioned_and_route_specific():
     names = {item["name"] for item in registry.index()}
     assert {"peach-9d-2027", "peach-11d-2027", "silence-followup"} <= names
     loaded = registry.load("peach-9d-2027")
-    assert "先解决客户当前问题" in loaded["instructions"]
+    assert "這是我們精選9日的桃花節行程" in loaded["instructions"]
     assert len(registry.release_digest()) == 64
 
 
@@ -431,16 +431,23 @@ def test_v2_agent_rejects_fact_reference_not_returned(monkeypatch):
         runtime.run_v2_agent({"module": "reply", "customer_text": "價格？", "context_messages": []})
 
 
-def test_simple_considering_reply_needs_no_model_call(monkeypatch):
+def test_considering_reply_uses_agent_instead_of_hardcoded_copy(monkeypatch):
     import app.reception_v2.runtime as runtime
 
-    monkeypatch.setattr(runtime.settings, "deepseek_api_key", "")
+    monkeypatch.setattr(runtime.settings, "deepseek_api_key", "test")
+    calls = []
+    def call(*args, **kwargs):
+        calls.append(True)
+        return _final(reply="您先和家人討論～", journey_stage="considering",
+                      v2_events=[{'type':'considering','quote':'我先跟家人討論。'}]), {"duration_ms": 1}
+    monkeypatch.setattr(runtime, "_call", call)
     decision, logs, _, trace = runtime.run_v2_agent({
         "module": "reply", "customer_text": "我先跟家人討論。",
         "route_variant": "peach_9d_2027",
+        "journey": {"stage": "value_building"},
     })
     assert decision.journey_stage == "considering"
     assert decision.route_variant == "peach_9d_2027"
     assert "家人" in decision.reply
-    assert logs == []
-    assert trace["fast_path"] == "considering_ack"
+    assert calls
+    assert trace.get("fast_path") != "considering_ack"

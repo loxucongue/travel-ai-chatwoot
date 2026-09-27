@@ -114,14 +114,14 @@ def test_initial_delivery_respects_all_delivery_modes():
     assert [item["content_type"] for item in nodes["hotel_reference"]["messages"]] == ["image", "image"]
 
 
-def test_first_wave_order_keeps_hilton_before_rongbuk():
+def test_first_wave_order_follows_website_branches():
     nine = ROUTE_PACKAGES["peach_9d_2027"]
     eleven = ROUTE_PACKAGES["peach_11d_2027"]
     assert nine["content_sequence"][:6] == [
-        "advisor_greeting", "brand_positioning", "itinerary_overview",
-        "peach_highlights", "hotel_reference", "vehicle_reference",
+        "advisor_greeting", "itinerary_overview", "peach_highlights",
+        "hotel_reference", "vehicle_reference", "vehicle_oxygen",
     ]
-    assert eleven["content_sequence"].index("hotel_reference") < eleven["content_sequence"].index("rongbuk_reference")
+    assert eleven["content_sequence"].index("rongbuk_reference") < eleven["content_sequence"].index("hotel_reference")
     assert eleven["content_sequence"].index("rongbuk_reference") < eleven["content_sequence"].index("vehicle_reference")
 
 
@@ -190,12 +190,12 @@ def test_website_fixed_answers_are_single_source_verbatim_copy():
             assert all(line in website for line in answer["answer_text"].splitlines())
 
 
-def test_high_risk_website_copy_cannot_hide_inside_an_active_general_answer():
+def test_website_scripts_are_usable_without_pending_review():
     for package in ROUTE_PACKAGES.values():
         answers = {answer["id"]: answer for answer in package["fixed_answers"]}
         assert answers["hotel"]["status"] == "active"
-        assert "85-90%" not in answers["hotel"]["answer_text"]
-        assert answers["vehicle"]["status"] == "pending_review"
+        assert "85-90%" in answers["hotel"]["answer_text"]
+        assert answers["vehicle"]["status"] == "active"
         for answer_id in {
             "no_shopping_contract_claim",
             "senior_health_document",
@@ -206,7 +206,7 @@ def test_high_risk_website_copy_cannot_hide_inside_an_active_general_answer():
             "mobile_oxygen_cabin_claim",
             "vehicle_model_year_claim",
         }:
-            assert answers[answer_id]["status"] == "pending_review"
+            assert answers[answer_id]["status"] == "active"
 
 
 def test_legacy_fixed_answer_flags_are_normalized_to_one_status():
@@ -264,7 +264,8 @@ def test_runtime_journey_compiles_customer_silence_intervals():
         assert all(node["delivery_interval_seconds"] == 2 for node in initial)
         for node in silence:
             candidate_keys = {item["content_group_key"] for item in node["content_group_candidates"]}
-            assert candidate_keys == set(package["content_sequence"]) - {"advisor_greeting", "brand_positioning"}
+            source_keys = {n.get('content_group_key') for n in package['sop']['nodes']}
+            assert candidate_keys == set(package["content_sequence"]) & source_keys
 
 
 def test_disabling_silence_keeps_only_checked_initial_delivery_nodes():
@@ -302,7 +303,7 @@ def test_route_reference_copy_is_conversational_not_generic_read_check():
         assert "還滿意嗎" not in read_check
         assert "頁面展示" not in groups["hotel_reference"]["approved_text"]
         assert "頁面提供" not in groups["vehicle_reference"]["approved_text"]
-        assert "完整行程" in groups["contact_request"]["approved_text"]
+        assert "微信或是Line的QR code" in groups["contact_request"]["approved_text"]
         assert "不確定時不再追問" not in groups["contact_request"]["approved_text"]
         assert "邀請客戶" not in groups["contact_request"]["approved_text"]
 
@@ -311,8 +312,8 @@ def test_hotel_copy_matches_the_room_and_oxygen_images_sent_as_one_group():
     for package in ROUTE_PACKAGES.values():
         hotel = package["content_groups"]["hotel_reference"]
         assert hotel["asset_keys"] == ["routes12-hilton-room", "routes12-hilton-oxygen"]
-        assert "希爾頓" in hotel["approved_text"] and "客房" in hotel["approved_text"]
-        assert "供氧設備" in hotel["approved_text"]
+        assert "希爾頓" in hotel["approved_text"]
+        assert "85-90%" in hotel["approved_text"]
         assert "客戶詢問" not in hotel["approved_text"]
         node = next(item for item in package["sop"]["nodes"] if item["key"] == "hotel_reference")
         text = next(item["content"] for item in node["messages"] if item.get("content_type", "text") == "text")
@@ -370,7 +371,7 @@ def test_route_product_api_exposes_complete_read_only_configuration(authenticate
         assert isinstance(item["match_keywords"], list)
         assert item["match_keywords"]
         assert item["versions"][0]["status"] == "current"
-        assert "accommodation_summary" not in item["content_sequence"]
+        assert "accommodation_summary" in item["content_sequence"]
         assert "zhaji" in item["content_sequence"]
         assert "read_check" == item["content_sequence"][-1]
         assert item["source"]["url"] == "https://china2go.com/7693-2/"
