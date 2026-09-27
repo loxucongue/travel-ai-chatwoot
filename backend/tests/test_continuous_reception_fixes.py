@@ -98,10 +98,12 @@ def test_ad_entry_preserves_configured_brand_and_completes_fixed_introduction(ro
 def test_first_selected_route_asks_configured_party_question():
     route = ROUTES['peach_9d_2027']
     decision = EvaluationDecision('reply', route['branch'], 'other', reply='任意介绍',
-        route_variant='peach_9d_2027', v2_events=[{'type': 'route_selected'}])
+        route_variant='peach_9d_2027', evidence_refs=['route.9.price'],
+        covered_content_groups=['price_reference'], v2_events=[{'type': 'route_selected'}])
     runtime._prepare_route_introduction({'module': 'reply', 'context_messages': []}, decision)
     assert decision.reply == route['groups']['entry_question']['text']
     assert not decision.material_keys
+    assert not decision.evidence_refs and not decision.covered_content_groups
 
 
 @pytest.mark.parametrize('control,expected_count', [('queue', 3), ('stop', 1), ('switch', 1), ('handoff', 1)])
@@ -179,6 +181,16 @@ def test_considering_uses_explicit_model_delay_before_default_day(minutes):
     })}, set(), set(), {'module': 'reply', 'customer_text': text, 'now': now})
     state = merge_events({}, decision.v2_events)['_v2_state']
     assert datetime.fromisoformat(state['reevaluate_at']) == datetime.fromisoformat(now) + timedelta(minutes=minutes or 1440)
+
+
+def test_future_hotel_acknowledgement_does_not_mark_hotel_delivered():
+    decision = runtime._validated_decision({'content': json.dumps({
+        'action': 'reply', 'route_variant': 'peach_11d_2027', 'reply': '5分鐘後再介紹住宿。',
+        'wakeup_action': 'defer', 'defer_minutes': 5,
+        'evidence_refs': ['route.shared.hotel_reference'], 'covered_content_groups': ['hotel_reference'],
+        'v2_events': [{'type': 'considering', 'quote': '5分鐘後', 'topic': 'hotel'}],
+    })}, {'route.shared.hotel_reference'}, set(), {'module': 'reply', 'customer_text': '5分鐘後再介紹住宿。'})
+    assert not decision.evidence_refs and not decision.covered_content_groups
 
 
 def test_rehearsal_queues_multiple_questions_across_outgoing_messages(session_factory, monkeypatch):

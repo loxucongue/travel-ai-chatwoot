@@ -547,6 +547,11 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
     if (context or {}).get('module') not in {'silence_touch', 'wakeup'} and decision.action in {'reply','handoff'} and not decision.reply:
         raise ValueError('v2_customer_reply_required')
     decision.v2_events = events
+    if events and all(e['type'] in {'considering', 'contact_scheduled'} for e in events):
+        # An acknowledgement of future delivery is not a receipt for that topic.
+        decision.evidence_refs = []
+        decision.covered_content_groups = []
+        decision.content_group_key = ''
     for event in decision.v2_events:
         event['route_variant'] = decision.route_variant
         if event['type'] == 'considering' and decision.wakeup_action == 'defer' and decision.defer_minutes:
@@ -586,6 +591,10 @@ def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> 
             has_question = any(e['type'] == 'question' for e in decision.v2_events) or decision.intent in {'price', 'departure', 'contact'}
             decision.reply = decision.reply_body = (decision.reply_body or decision.reply) if has_question else question
             decision.follow_up_question = question if has_question else ''
+            if not has_question:
+                decision.evidence_refs = []
+                decision.covered_content_groups = []
+                decision.content_group_key = ''
             decision.lead_action = 'none'
             decision.material_keys = []
             decision.journey_stage = 'needs_discovery'
