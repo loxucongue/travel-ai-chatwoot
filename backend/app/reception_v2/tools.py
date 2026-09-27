@@ -4,9 +4,19 @@ from app.decision_knowledge import FACTS, KNOWLEDGE_KEY
 from app.route_packages import ROUTES
 from app.reception_v2.skill_registry import SkillRegistry
 from app.reception_v2.route_profiles import route_profile, resolve_topic
+from app.reception_v2.route_agent_tools import (
+    compare_routes,
+    get_route_details,
+    get_route_material_packet,
+    search_routes,
+)
 
 
-TOOL_NAMES = {"load_skill", "get_route_catalog", "get_route_capabilities", "get_route_facts", "get_route_materials", "get_service_facts"}
+TOOL_NAMES = {
+    "load_skill", "get_route_catalog", "get_route_capabilities", "get_route_facts",
+    "get_route_materials", "get_service_facts", "search_routes", "compare_routes",
+    "get_route_details", "get_route_material_packet",
+}
 
 TOPIC_FACTS = (
     (("集合", "接機", "接机", "arrival", "meeting"), ("service.peach_arrival",)),
@@ -28,8 +38,12 @@ def tool_specs() -> list[dict]:
         {"type":"function","function":{"name":"get_service_facts","description":"Read one published service-knowledge module from the server-provided index. Resolve pronouns using the conversation, then select its module_key. Never fetch websites or infer unpublished service terms.","parameters":{"type":"object","properties":{"module_key":{"type":"string"}},"required":["module_key"],"additionalProperties":False}}},
         {"type": "function", "function": {"name": "load_skill", "description": "Load the instructions for one relevant reception skill. Use only a name listed in the system skill index.", "parameters": {"type": "object", "properties": {"name": {"type": "string", "enum": [item["name"] for item in SkillRegistry().index()]}}, "required": ["name"], "additionalProperties": False}}},
         {"type": "function", "function": {"name": "get_route_catalog", "description": "List the supported route products and their stable ids.", "parameters": {"type": "object", "properties": {}, "additionalProperties": False}}},
+        {"type": "function", "function": {"name": "search_routes", "description": "Find a shortlist of published routes from the customer's stated constraints. Use all stated constraints; this returns route candidates and evidence refs, not a final reply.", "parameters": {"type": "object", "properties": {"query": {"type": "string"}, "filters": {"type": "object", "properties": {"days": {"type": "integer"}, "min_days": {"type": "integer"}, "max_days": {"type": "integer"}, "includes_everest": {"type": "boolean"}, "max_price": {"type": "integer"}}, "additionalProperties": False}}, "required": ["query"], "additionalProperties": False}}},
+        {"type": "function", "function": {"name": "compare_routes", "description": "Compare two or more published routes on the customer's requested dimensions. Values are backed by route package evidence.", "parameters": {"type": "object", "properties": {"route_ids": {"type": "array", "items": {"type": "string"}}, "criteria": {"type": "array", "items": {"type": "string"}}}, "required": ["route_ids"], "additionalProperties": False}}},
+        {"type": "function", "function": {"name": "get_route_details", "description": "Read the approved details for one selected route and the requested topics.", "parameters": {"type": "object", "properties": {"route_variant": {"type": "string"}, "topics": {"type": "array", "items": {"type": "string"}}}, "required": ["route_variant", "topics"], "additionalProperties": False}}},
         {"type": "function", "function": {"name": "get_route_capabilities", "description": "Read the selected route's reviewed topics, human-check boundaries and follow-up candidates.", "parameters": {"type": "object", "properties": {"route_variant": {"type": "string"}}, "required": ["route_variant"], "additionalProperties": False}}},
         {"type": "function", "function": {"name": "get_route_facts", "description": "Read approved facts for a route and customer topic. Use before stating prices, itinerary, accommodation, transport, oxygen, dates or inclusions.", "parameters": {"type": "object", "properties": {"route_variant": {"type": "string"}, "topic": {"type": "string"}}, "required": ["route_variant", "topic"], "additionalProperties": False}}},
+        {"type": "function", "function": {"name": "get_route_material_packet", "description": "List approved materials for a selected route and topics without sending them.", "parameters": {"type": "object", "properties": {"route_variant": {"type": "string"}, "topics": {"type": "array", "items": {"type": "string"}}}, "required": ["route_variant", "topics"], "additionalProperties": False}}},
         {"type": "function", "function": {"name": "get_route_materials", "description": "List approved material ids relevant to a route and topic. This does not send anything.", "parameters": {"type": "object", "properties": {"route_variant": {"type": "string"}, "topic": {"type": "string"}}, "required": ["route_variant", "topic"], "additionalProperties": False}}},
     ]
 
@@ -39,6 +53,14 @@ def execute_tool(name: str, arguments: dict, registry: SkillRegistry, *, context
         return registry.load(str(arguments.get("name") or ""))
     if name == "get_route_catalog":
         return {"routes": [{"route_variant": key, "name": item["name"], "selection_title": item["selection_title"], "branch": item["branch"]} for key, item in ROUTES.items()]}
+    if name == "search_routes":
+        return search_routes(str(arguments.get("query") or ""), arguments.get("filters"))
+    if name == "compare_routes":
+        return compare_routes(arguments.get("route_ids") or [], arguments.get("criteria"))
+    if name == "get_route_details":
+        return get_route_details(str(arguments.get("route_variant") or ""), arguments.get("topics") or [])
+    if name == "get_route_material_packet":
+        return get_route_material_packet(str(arguments.get("route_variant") or ""), arguments.get("topics") or [])
     if name == 'get_service_facts':
         from app.web_knowledge import context_fact_map
         supplied = context or {}

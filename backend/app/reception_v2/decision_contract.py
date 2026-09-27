@@ -21,6 +21,7 @@ def build_decision_contract(context: dict, decision, *, flow: str, flow_reason: 
         "intent": decision.intent,
         "evidence_refs": list(decision.evidence_refs or []),
         "material_keys": list(decision.material_keys or []),
+        "presentations": list(getattr(decision, "presentations", []) or []),
         "memory_updates": memory_updates,
         "journey_stage": decision.journey_stage,
         "handoff": {

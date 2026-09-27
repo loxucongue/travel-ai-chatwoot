@@ -29,6 +29,17 @@ import { customerTranscriptMessage, deliveryStates, type RuntimeEvidence } from 
 type RouteVariant = string;
 type OptionItem = { title?: string; value?: string };
 
+type Presentation = {
+  type?: string;
+  route_variant?: string;
+  route_ids?: string[];
+  criteria?: string[];
+  recommendation?: string;
+  material_keys?: string[];
+  evidence_refs?: string[];
+  topics?: string[];
+};
+
 type SessionMessage = {
   id: string | number;
   direction: 'incoming' | 'outgoing';
@@ -73,6 +84,7 @@ type RunRecord = {
     touch_goal?: string;
     touch_reason?: string;
     profile_updates?: Record<string, { value?: unknown; confidence?: number; evidence_quote?: string; reason?: string }>;
+    presentations?: Presentation[];
   };
   trace: RuntimeEvidence['trace'] & { total_ms?: number };
 };
@@ -208,6 +220,26 @@ const TOUCH_GOAL_LABELS: Record<string, string> = {
   contact_reminder: '轻提醒联系方式', soft_nurture: '低压力培育',
 };
 
+const PRESENTATION_LABELS: Record<string, string> = {
+  route_comparison: '线路比较',
+  route_details: '线路详情',
+  itinerary: '行程展示',
+  route_materials: '线路资料',
+  suggestions: '下一步建议',
+};
+
+const CRITERION_LABELS: Record<string, string> = {
+  duration: '天数',
+  pace: '节奏',
+  hotel: '住宿',
+  price: '价格',
+  highlights: '亮点',
+  itinerary: '行程',
+  vehicle: '用车',
+  oxygen: '供氧',
+  departure: '出发时间',
+};
+
 const SOP_NODE_LABELS: Record<string, string> = {
   silence_mainline: '第 1 次沉默跟进',
 };
@@ -238,6 +270,28 @@ function sopNodeLabel(value?: string) {
   const dynamicWakeup = /^wakeup_(\d+)$/.exec(value);
   if (dynamicWakeup) return `第 ${Number(dynamicWakeup[1]) + 1} 次沉默跟进`;
   return SOP_NODE_LABELS[value] ?? '沉默跟进';
+}
+
+function PresentationSummary({ presentations }: { presentations?: Presentation[] }) {
+  if (!presentations?.length) return null;
+  return <section className="ai-chat-presentation-summary">
+    <h3>结构化展示</h3>
+    <div className="ai-chat-presentation-list">
+      {presentations.map((item, index) => {
+        const routes = item.route_ids?.map(routeName).filter(Boolean) ?? [];
+        const route = item.route_variant ? routeName(item.route_variant) : '';
+        const criteria = item.criteria?.map(value => CRITERION_LABELS[value] ?? value) ?? [];
+        return <article key={`${item.type ?? 'presentation'}-${index}`}>
+          <header><strong>{PRESENTATION_LABELS[item.type ?? ''] ?? item.type ?? '展示内容'}</strong>{item.recommendation ? <Badge tone="green">推荐 {routeName(item.recommendation)}</Badge> : null}</header>
+          {routes.length ? <p>{routes.join(' · ')}</p> : null}
+          {route ? <p>{route}{item.topics?.length ? ` · ${item.topics.join('、')}` : ''}</p> : null}
+          {criteria.length ? <p className="ai-chat-presentation-tags">{criteria.map(value => <span key={value}>{value}</span>)}</p> : null}
+          {item.material_keys?.length ? <small>资料：{item.material_keys.join('、')}</small> : null}
+          {item.evidence_refs?.length ? <small>事实：{item.evidence_refs.join('、')}</small> : null}
+        </article>;
+      })}
+    </div>
+  </section>;
 }
 
 function hasOptionItems(message: SessionMessage): OptionItem[] {
@@ -543,13 +597,13 @@ function RehearsalRunner(props: {
       <section><h3>客户画像</h3>{Object.keys(session.memory).length ? <dl>{Object.entries(session.memory).filter(([key]) => key !== '_profile_meta').map(([key, value]) => <div key={key}><dt>{MEMORY_LABELS[key] ?? key}</dt><dd>{String(value.value)}{value.quote ? <small>客户原话：{value.quote}</small> : null}{'reason' in value && value.reason ? <small>AI 判断：{String(value.reason)}</small> : null}</dd></div>)}</dl> : <p>AI 会自动记录线路、人数、日期、首次进藏、手续认知、顾虑和决策状态，客户不需要填写表单。</p>}</section>
       <section><h3><CalendarClock size={14} />沉默跟进旅程</h3>{session.jobs.length ? <ol className="ai-chat-job-list">{session.jobs.map((job, index) => <li key={job.id}><span>{['simulated_delivered', 'already_provided', 'skipped', 'skipped_model_failure'].includes(job.status) ? <CheckCircle2 size={14} /> : index + 1}</span><div><strong>{sopNodeLabel(job.node_key)}</strong><small>{formatTime(job.scheduled_at)} · {statusLabel(job.status)}</small>{job.payload?.model_decision?.touch_goal ? <em>{TOUCH_GOAL_LABELS[job.payload.model_decision.touch_goal] ?? job.payload.model_decision.touch_goal}</em> : job.reason ? <em>{sopReason(job.reason)}</em> : null}</div></li>)}</ol> : <p>系统按已配置间隔检查旅程，只在还有相关新价值时生成跟进；没有新内容会安全跳过。</p>}{session.reception_state?.last_warning ? <p className="automation-error">{session.reception_state.last_warning}</p> : null}</section>
       <section><h3>最近一次沉默触达</h3>{lastTouch?.touch_goal ? <dl><div><dt>触达目标</dt><dd>{TOUCH_GOAL_LABELS[lastTouch.touch_goal] ?? lastTouch.touch_goal}</dd></div><div><dt>选择原因</dt><dd>{lastTouch.touch_reason || '-'}</dd></div><div><dt>触达后阶段</dt><dd>{JOURNEY_STAGE_LABELS[lastTouch.journey_stage || ''] ?? lastTouch.journey_stage ?? '-'}</dd></div></dl> : <p>客户尚未到达第一个沉默触达时间点。</p>}</section>
-      <section><h3>最近一次 AI 判断</h3>{latestRun ? <dl>
+      <section><h3>最近一次 AI 判断</h3>{latestRun ? <><PresentationSummary presentations={latestRun.decision.presentations} /><dl>
         <div><dt>处理结果</dt><dd>{latestRun.decision.action === 'handoff' ? '转人工' : latestRun.decision.action === 'no_action' ? '未执行 (no_action)' : latestRun.decision.action === 'reply' ? '生成回复决策' : '未知'}</dd></div>
         <div><dt>运行校验</dt><dd><RuntimeDetails run={latestRun} /></dd></div>
         <div><dt>线路</dt><dd>{routeName(latestRun.decision.route_variant)}</dd></div>
         <div><dt>留资动作</dt><dd>{latestRun.decision.lead_action === 'ask' ? '已询问联系方式' : latestRun.decision.lead_action === 'captured' ? '已获得联系方式' : '暂不询问'}</dd></div>
         <div><dt>处理耗时</dt><dd>{latestRun.trace.total_ms ? `${(latestRun.trace.total_ms / 1000).toFixed(2)} 秒` : '-'}</dd></div>
-      </dl> : <p>等待第一轮 AI 回复。</p>}</section>
+      </dl></> : <p>等待第一轮 AI 回复。</p>}</section>
       <section className="ai-chat-test-prompts"><h3>测试例句</h3>{QUICK_MESSAGES.map(message => <button key={message} disabled={!running || props.busy} onClick={() => { props.onSendText(message); setDetailsOpen(false); }}>{message}</button>)}</section>
       <footer><ShieldCheck size={15} /><span><strong>不会触达真实客户</strong><small>固定 outbound=false</small></span></footer>
     </aside> : null}

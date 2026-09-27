@@ -20,6 +20,7 @@ from app.reception_v2.journey_memory import build_journey_memory
 from app.reception_v2.proactive_policy import evaluate_proactive_eligibility
 from app.reception_v2.decision_contract import build_decision_contract
 from app.reception_v2.route_profiles import resolve_topic
+from app.reception_v2.route_agent_tools import compare_routes, get_route_details
 from app.reception_v2.journey_state_machine import guard_decision_stage
 from app.reception_v2.tools import TOOL_NAMES, execute_tool, tool_specs
 from app.route_packages import ROUTES
@@ -38,23 +39,14 @@ MAX_TOOL_ROUNDS = 4
 
 
 def _allowed_skill_names(flow_name: str, bound_route: str) -> set[str]:
-    # A historical stage must not prevent answering a new topic or switching routes.
-    if flow_name != "silence_followup":
-        return {item["name"] for item in SkillRegistry().index() if item["name"] != "silence-followup"}
-    names = {
-        "route_selection": {"route-selection"},
-        "route_detail": set(),
-        "concern_resolution": {"concern-resolution"},
-        "lead_handoff": {"lead-handoff"},
-        "silence_followup": {"silence-followup"},
-    }.get(flow_name, set())
-    route_skill = SkillRegistry().route_skill(bound_route)
-    if route_skill:
-        names = {*names, route_skill}
-    elif flow_name == "route_selection":
-        # The agent may load a route skill after catalog comparison settles the route.
-        names = {*names, *(name for route in ROUTES if (name := SkillRegistry().route_skill(route)))}
-    return names
+    """Return the skill vocabulary available to the main Agent.
+
+    ``flow_name`` and ``bound_route`` remain useful trace hints, but they must
+    not gate a turn: a customer may compare routes while a route is bound,
+    switch from price to accommodation, or ask for a human after a concern.
+    The agent chooses the relevant skill from the complete index.
+    """
+    return {item["name"] for item in SkillRegistry().index()}
 
 _CONSIDERING_MESSAGES = {
     "我先跟家人討論", "我先和家人討論", "我先跟家人讨论", "我先和家人讨论",
@@ -183,7 +175,7 @@ SYSTEM_PROMPT = """你是 China2Go 的旅游接待顾问。你的任务是先解
 - silence_due 事件中：值得发送时 action=reply、wakeup_action=generate；当前不适合打扰时 action=no_action、wakeup_action=defer 并给出分钟数；无需继续时 action=no_action、wakeup_action=skip。
 
 工具完成后输出一个 JSON 对象，不要 Markdown。字段：
-action(reply|handoff|no_action), branch(已注册产品branch或unclassified), intent(route_intro|price|departure|itinerary|contact|complaint|other), reply(string或null), route_variant(空或已注册产品route_variant), evidence_refs(string数组，只填工具返回的fact id), material_keys(string数组，只填工具返回的素材key，最多2项), handoff_reason(string或null), safety_flags(string数组), confidence(0到1), slots(object), slot_evidence(object；每个slot必须是本轮客户原文中的逐字证据), missing_slots(string数组), lead_action(none|ask|captured), contact_values(object), journey_stage(route_selection|needs_discovery|value_building|objection_handling|contact_ready|contact_requested|considering|captured|handoff), wakeup_action(null|generate|skip|defer|handoff), defer_minutes(0到720)。
+action(reply|handoff|no_action), branch(已注册产品branch或unclassified), intent(route_intro|price|departure|itinerary|contact|complaint|other), reply(string或null), route_variant(空或已注册产品route_variant), evidence_refs(string数组，只填工具返回的fact id), material_keys(string数组，只填工具返回的素材key，最多2项), presentations(数组；只能是工具证据支持的route_comparison、route_details、itinerary、route_materials或suggestions结构), handoff_reason(string或null), safety_flags(string数组), confidence(0到1), slots(object), slot_evidence(object；每个slot必须是本轮客户原文中的逐字证据), missing_slots(string数组), lead_action(none|ask|captured), contact_values(object), journey_stage(route_selection|needs_discovery|value_building|objection_handling|contact_ready|contact_requested|considering|captured|handoff), wakeup_action(null|generate|skip|defer|handoff), defer_minutes(0到720)。
 先输出answer_focus对象：request（本轮客户实际要解决的事），minimum_answer（最少需要回答哪些信息），omit（未问的相关主题）。然后再输出上述业务字段与reply。只问折扣金额的minimum_answer是其实际人数优惠金额待顾问核对，omit包含基础团费、房型和单房差；只问台湾75岁能否报名的minimum_answer是可以报名并提交健康证明，omit包含超过75岁政策、个案核对及审批延伸；只问64岁是否未达年龄的minimum_answer是65并非最低年龄、64不因未满65被排除，不展开65以上规则；只问香港70岁健康证明的omit包含台湾证明规则及其他年龄段，尤其不能追加“超过75岁才不建议”的政策尾巴。健康安全问题不推销另一条线路，未要求改线就不主动提出再介绍11日。answer_focus仅用于组织答案，不是新的事实依据，不改变任何校验要求。
 action是必填字段，不能省略；有reply正文也不能省略action。
 """
@@ -193,6 +185,8 @@ action是必填字段，不能省略；有reply正文也不能省略action。
 # release consoles with different code pages.
 SYSTEM_PROMPT += """
 Additional strict behavior:
+- When the customer gives multiple constraints or compares routes, use the high-level route tools: search_routes for a shortlist, compare_routes for requested dimensions, get_route_details for a selected route, and get_route_material_packet for approved media. Do not replace one high-level result with several redundant low-level fact calls.
+- When a high-level route result is used, presentations may include route_comparison, route_details, itinerary, route_materials, or suggestions. Presentations are structured UI data backed by tool evidence; they do not replace the concise natural-language reply and must not invent values.
 - 客户同时索要任何资料（包括PDF、酒店/车辆照片、整套介绍）并提出额外问题时，reply只写额外问题的答案；不要写素材解说或承诺，这些由服务端批准分段交付，避免同一轮重复讲住宿/用车。
 - 回答聚焦：只问价格时给对应人数、币种、每人价格和必要房型即可，不自动罗列全部包含项及优惠。客户人数正好符合已公布报价条件时直接报确定金额，不机械追加「起」「參考價」「以實際為準」；人数或安排超出已公布条件时才说明需另行报价。只问几人一房就答房型，不再次报价。只问交函地点就答成都，不自动介绍行程或其他城市交付；客户混淆集合和交函时才解释林芝与成都区别。64岁不是低于最低65岁，不代表无任何最低年龄限制，也不能断言64岁免交所有健康文件。不能由未写某限制推导「没有限制」。
 - 省略追问按上文客户已说明的对象理解，不把未问到的细节当新需求。例如已知台灣75歲再问「需要什麼證明」，直接回答健康證明，不擅自升级为证明模板、开具医院或认证流程的核对。客户主动提问时reply/handoff必须给非空reply说明，不能无声结束。完整介绍由服务端生成多段，reply只需短承接；额外问题则只写额外问题的答案，不重复生成整套正文。
@@ -362,8 +356,113 @@ def _parse_json(content: object) -> dict:
         "lead_action": "none", "contact_values": {}, "journey_stage": "needs_discovery",
         "wakeup_action": None, "defer_minutes": 0, "covered_content_groups": [],
         "content_group_key": "", "reply_options": [], "allow_material_resend": False,
+        "presentations": [],
     }
     return {**defaults, **value}
+
+
+def _normalize_presentations(decision: EvaluationDecision, available_facts: set[str], available_materials: set[str]) -> None:
+    """Keep optional UI presentations grounded without changing the reply.
+
+    Presentations are a view of an Agent decision. An invalid optional view
+    must not invalidate an otherwise usable customer reply, so unknown refs are
+    removed and route comparison cards receive the published overview refs
+    when those refs were already supplied to this turn.
+    """
+    normalized = []
+    for presentation in decision.presentations or []:
+        item = dict(presentation)
+        route_ids = [route_id for route_id in item.get("route_ids", []) if route_id in ROUTES]
+        if route_ids:
+            item["route_ids"] = list(dict.fromkeys(route_ids))
+        route_variant = str(item.get("route_variant") or "")
+        if route_variant and route_variant not in ROUTES:
+            item.pop("route_variant", None)
+            route_variant = ""
+        refs = [ref for ref in item.get("evidence_refs", []) if ref in available_facts]
+        if item.get("type") == "route_comparison":
+            for route_id in route_ids:
+                branch = ROUTES[route_id].get("branch")
+                refs.extend(
+                    fact["id"] for fact in FACTS
+                    if fact.get("id") in available_facts
+                    and fact.get("branches") and branch in fact.get("branches", [])
+                    and str(fact.get("id", "")).endswith(".overview")
+                )
+        item["evidence_refs"] = list(dict.fromkeys(refs))
+        item["material_keys"] = list(dict.fromkeys(
+            key for key in item.get("material_keys", []) if key in available_materials
+        ))
+        # The model only selects the routes and dimensions. Fill the card from
+        # the same published route package used by the high-level tool, then
+        # keep only dimensions whose evidence was actually loaded this turn.
+        # This makes the structured view deterministic and prevents a model
+        # from inventing comparison values in a UI-only field.
+        if item.get("type") == "route_comparison" and len(route_ids) >= 2:
+            criteria = item.get("criteria") or ["duration", "pace", "hotel", "price", "highlights"]
+            try:
+                comparison = compare_routes(route_ids, criteria)
+            except (TypeError, ValueError):
+                comparison = None
+            if comparison:
+                hydrated_routes = []
+                for route in comparison.get("routes", []):
+                    dimensions = {}
+                    for criterion, value in (route.get("dimensions") or {}).items():
+                        evidence = [ref for ref in value.get("evidence_refs", []) if ref in available_facts]
+                        if value.get("evidence_refs") and not evidence:
+                            continue
+                        dimensions[criterion] = {
+                            "value": value.get("value", ""),
+                            "evidence_refs": evidence,
+                            "material_keys": [key for key in value.get("material_keys", []) if key in available_materials],
+                        }
+                    hydrated_routes.append({
+                        key: route[key] for key in ("route_variant", "name", "selection_title", "days", "includes_everest", "price_per_person") if key in route
+                    } | {"dimensions": dimensions})
+                item["criteria"] = comparison.get("criteria", criteria)
+                item["routes"] = hydrated_routes
+        elif item.get("type") in {"route_details", "itinerary"} and route_variant:
+            topics = item.get("topics") or (["itinerary"] if item.get("type") == "itinerary" else ["itinerary", "hotel", "vehicle", "price"])
+            try:
+                details = get_route_details(route_variant, topics)
+            except (TypeError, ValueError):
+                details = None
+            if details:
+                item["details"] = [
+                    {
+                        "topic": detail.get("topic"),
+                        "text": detail.get("text", ""),
+                        "evidence_refs": list(detail.get("evidence_refs", [])),
+                        "material_keys": [key for key in detail.get("material_keys", []) if key in available_materials],
+                    }
+                    for detail in details.get("details", [])
+                    if not detail.get("evidence_refs") or set(detail.get("evidence_refs", [])) <= available_facts
+                ]
+        if item.get("type") == "route_comparison" and len(route_ids) < 2:
+            continue
+        if item.get("type") in {"route_details", "itinerary", "route_materials"} and not route_variant:
+            continue
+        if item.get("recommendation") not in route_ids:
+            item.pop("recommendation", None)
+        normalized.append(item)
+    decision.presentations = normalized
+
+
+def _tool_evidence_refs(value: object) -> set[str]:
+    """Collect evidence ids from both low-level and high-level tool shapes."""
+    refs: set[str] = set()
+    if isinstance(value, dict):
+        for key in ("evidence_refs", "fact_ids"):
+            items = value.get(key)
+            if isinstance(items, list):
+                refs.update(str(item) for item in items if isinstance(item, str) and item)
+        for child in value.values():
+            refs.update(_tool_evidence_refs(child))
+    elif isinstance(value, list):
+        for child in value:
+            refs.update(_tool_evidence_refs(child))
+    return refs
 
 
 def _validated_decision(message: dict, available_facts: set[str], available_materials: set[str], context: dict | None = None) -> EvaluationDecision:
@@ -466,6 +565,7 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
             and customer_text.strip() and raw.get('action')=='no_action'):
         raise ValueError('v2_customer_reply_required')
     decision = EvaluationDecision.parse(raw, infer_route_references=False)
+    _normalize_presentations(decision, available_facts, available_materials)
     if decision.lead_action == 'captured':
         from app.lead_capture import model_contacts
         grounded={(item.kind,item.value) for item in model_contacts(decision,customer_text)}
@@ -1120,7 +1220,9 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
                 if name == "get_route_materials":
                     result["materials"] = [item for item in result.get("materials", []) if item["key"] in available_materials]
                 available_facts.update(str(item["id"]) for item in result.get("facts", []))
-                available_materials.update(str(item["key"]) for item in result.get("materials", []))
+                available_facts.update(_tool_evidence_refs(result))
+                if name == "get_route_materials":
+                    available_materials.update(str(item["key"]) for item in result.get("materials", []))
                 status = "completed"
             except Exception as exc:
                 result, status = {"error": str(exc)[:120]}, "blocked"

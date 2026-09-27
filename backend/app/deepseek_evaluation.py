@@ -22,6 +22,9 @@ ALLOWED_LEAD_ACTIONS = {"none", "ask", "captured"}
 ALLOWED_CONTACT_CHANNELS = {"line", "wechat", "phone", "email", "whatsapp"}
 ALLOWED_BRANCHES = {item["key"] for item in BRANCHES} | {"unclassified"}
 ALLOWED_INTENTS = {"route_intro", "price", "departure", "itinerary", "contact", "complaint", "other"}
+ALLOWED_PRESENTATION_TYPES = {
+    "route_comparison", "route_details", "itinerary", "route_materials", "suggestions",
+}
 ALLOWED_JOURNEY_STAGES = {
     "route_selection", "needs_discovery", "value_building", "objection_handling",
     "contact_ready", "contact_requested", "considering", "captured", "handoff",
@@ -266,6 +269,7 @@ class EvaluationDecision:
     content_group_key: str = ""
     covered_content_groups: list[str] = field(default_factory=list)
     reply_options: list[str] = field(default_factory=list)
+    presentations: list[dict] = field(default_factory=list)
     allow_material_resend: bool = False
     journey_stage: str = "needs_discovery"
     touch_goal: str = ""
@@ -384,6 +388,49 @@ class EvaluationDecision:
             if not title:
                 raise ValueError("deepseek_invalid_reply_options")
             reply_options.append(title)
+        raw_presentations = value.get("presentations") or []
+        if not isinstance(raw_presentations, list) or len(raw_presentations) > 3:
+            raise ValueError("deepseek_invalid_presentations")
+        presentations: list[dict] = []
+        for raw_presentation in raw_presentations:
+            if not isinstance(raw_presentation, dict):
+                raise ValueError("deepseek_invalid_presentations")
+            presentation_type = str(raw_presentation.get("type") or "")
+            if presentation_type not in ALLOWED_PRESENTATION_TYPES:
+                raise ValueError("deepseek_invalid_presentation_type")
+            normalized = dict(raw_presentation)
+            route_ids = raw_presentation.get("route_ids", [])
+            if route_ids is not None:
+                if not isinstance(route_ids, list) or len(route_ids) > 4:
+                    raise ValueError("deepseek_invalid_presentation_routes")
+                normalized["route_ids"] = [str(route_id) for route_id in route_ids]
+                if any(route_id not in ROUTES for route_id in normalized["route_ids"]):
+                    raise ValueError("deepseek_invalid_presentation_route")
+            route_variant = str(raw_presentation.get("route_variant") or "")
+            if route_variant and route_variant not in ROUTES:
+                raise ValueError("deepseek_invalid_presentation_route")
+            if route_variant:
+                normalized["route_variant"] = route_variant
+            if presentation_type == "route_comparison" and len(normalized.get("route_ids", [])) < 2:
+                raise ValueError("deepseek_invalid_presentation_routes")
+            if presentation_type in {"route_details", "itinerary", "route_materials"} and not route_variant:
+                raise ValueError("deepseek_invalid_presentation_route")
+            criteria = raw_presentation.get("criteria", [])
+            if criteria is not None and (not isinstance(criteria, list) or any(not isinstance(item, str) for item in criteria)):
+                raise ValueError("deepseek_invalid_presentation_criteria")
+            normalized["type"] = presentation_type
+            if "recommendation" in normalized:
+                recommendation = str(normalized["recommendation"] or "")
+                if recommendation and recommendation not in normalized.get("route_ids", []):
+                    raise ValueError("deepseek_invalid_presentation_recommendation")
+                normalized["recommendation"] = recommendation
+            if "material_keys" in normalized:
+                if not isinstance(normalized["material_keys"], list) or any(not isinstance(item, str) for item in normalized["material_keys"]):
+                    raise ValueError("deepseek_invalid_presentation_materials")
+            if "evidence_refs" in normalized:
+                if not isinstance(normalized["evidence_refs"], list) or any(not isinstance(item, str) for item in normalized["evidence_refs"]):
+                    raise ValueError("deepseek_invalid_presentation_evidence")
+            presentations.append(normalized)
         journey_stage = str(value.get("journey_stage") or "needs_discovery")
         journey_stage = LEGACY_JOURNEY_STAGES.get(journey_stage, journey_stage)
         if journey_stage not in ALLOWED_JOURNEY_STAGES:
@@ -446,6 +493,7 @@ class EvaluationDecision:
             content_group_key=content_group_key,
             covered_content_groups=normalized_covered_groups,
             reply_options=list(dict.fromkeys(reply_options)),
+            presentations=presentations,
             allow_material_resend=allow_material_resend,
             journey_stage=journey_stage,
             touch_goal=touch_goal,
