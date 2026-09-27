@@ -18,7 +18,8 @@ def scenarios(suite, minutes):
     if suite == 'silence':
         route = '9日' if minutes == 3 else '11日含珠峰'
         return {'silence': [f'我想了解桃花{route}。',
-            '人數還沒定，先不用發整套，我對拉薩的寺廟文化有興趣。',
+            ('人數還沒定，先不用發整套，我對拉薩的寺廟文化有興趣。' if minutes == 3 else
+             '人數還沒定，我在意車子和住宿舒不舒服，先講車子就好，住宿後面再聊，不用發整套。'),
             {'wait': 315, 'label': 'relevant_new_value'},
             '收到，拉薩還有哪些文化景點？', '我們兩位，可以開始介紹整套行程。',
             '我們是朋友，3月底出發。', '第一天在哪裡集合？最後一天有送機嗎？',
@@ -71,7 +72,7 @@ def main():
     parser.add_argument('--suite', choices=['main', 'silence'], default='main')
     parser.add_argument('--minutes', type=int, choices=[3, 5], default=3)
     parser.add_argument('--budget', type=float, default=8)
-    parser.add_argument('--case', help='Run one named journey for a focused retest')
+    parser.add_argument('--case', help='Comma-separated named journeys for a focused retest')
     args = parser.parse_args()
     out = Path(args.output).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -132,7 +133,7 @@ def main():
              configuration=row.value, source_db=str(source), outbound=False)
     plans = scenarios(args.suite, args.minutes)
     if args.case:
-        plans = {args.case: plans[args.case]}
+        plans = {key: plans[key] for key in args.case.split(',')}
     cases = {}
     with SessionLocal() as db:
         inbox = db.scalar(select(InboxBinding).where(InboxBinding.chatwoot_inbox_id == 128859))
