@@ -45,10 +45,47 @@ def test_typed_opening_upload_and_publication(authenticated, tmp_path, monkeypat
     reply = saved.json()['config']['reply']
     assert len(reply['opening_items'][0]['media_hash']) == 64
     assert reply['opening_messages'] == [SELECTION_QUESTION]
+    assert reply['opening_items'][-1]['content'] == SELECTION_QUESTION
     assert client.get('/v1/automation/reception-config').json()['config']['reply'] == reply
     (next(tmp_path.iterdir())).write_bytes(b'changed')
     rejected = client.put('/v1/automation/reception-config', json=saved.json()['config'], headers=headers)
     assert rejected.status_code == 422
+
+
+def test_remove_opening_image_keeps_visible_question_and_runtime_order(authenticated, tmp_path, monkeypatch):
+    from app.reception_config import ReceptionConfiguration, policy_from_configuration
+    from app.reception_v2.runtime import run_v2_agent
+    client, csrf = authenticated
+    monkeypatch.setattr(settings, 'upload_dir', str(tmp_path))
+    headers = {'X-CSRF-Token': csrf}
+    media_id = client.post('/v1/media', files={'file': ('room.png', png(), 'image/png')},
+                           headers=headers).json()['id']
+    config = client.get('/v1/automation/reception-config').json()['config']
+    config['reply']['opening_items'] = [
+        {'key': 'greeting', 'content_type': 'text', 'content': '您好～很高興認識您！'},
+        {'key': 'room', 'content_type': 'image', 'content': '', 'media_id': media_id},
+    ]
+    config['reply']['opening_interval_seconds'] = 1
+    saved = client.put('/v1/automation/reception-config', json=config, headers=headers)
+    assert saved.status_code == 200, saved.text
+    visible = client.get('/v1/automation/reception-config').json()['config']
+    assert [x['content_type'] for x in visible['reply']['opening_items']] == ['text', 'image', 'text']
+    visible['reply']['opening_items'] = [x for x in visible['reply']['opening_items'] if x['key'] != 'room']
+    saved = client.put('/v1/automation/reception-config', json=visible, headers=headers)
+    assert saved.status_code == 200, saved.text
+    config = client.get('/v1/automation/reception-config').json()['config']
+    expected = ['您好～很高興認識您！', SELECTION_QUESTION]
+    assert config['reply']['opening_messages'] == expected
+    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: pytest.fail('opening called model'))
+    decision, _, _, trace = run_v2_agent({
+        'module': 'reply', 'customer_text': '你好，我想咨询旅行行程',
+        'context_messages': [], 'context_complete': True,
+        'reception_policy': policy_from_configuration(ReceptionConfiguration.model_validate(config).model_dump()),
+    })
+    assert decision.opening_messages == expected
+    assert [item['content'] for item in decision.opening_items] == expected
+    assert decision.opening_interval_seconds == 1
+    assert trace['model_http_request_count'] == 0
 
 
 @pytest.mark.parametrize('item', [
@@ -142,3 +179,33 @@ def test_playground_typed_media_sequence(session_factory, tmp_path, monkeypatch)
         assert drafts[-1]['content'] == SELECTION_QUESTION
         confirm_draft(db, session, drafts[0]['id'])
         assert all(item['status'] == 'simulated_delivered' for item in session.messages if item.get('run_id') == drafts[0]['run_id'])
+
+
+def test_playground_text_opening_keeps_question_separate_from_greeting(session_factory, monkeypatch):
+    from test_playground_journey import setup_journey
+    from app.automation_service import queue_passive, process_automation_run, dt
+    from app.reception_v2.runtime import run_v2_agent
+    from app.reception_config import ReceptionConfiguration, policy_from_configuration
+    config = ReceptionConfiguration().model_dump()
+    config['reply'].update(opening_items=[
+        {'key': 'hello', 'content_type': 'text', 'content': '您好～很高興認識您！'},
+        {'key': 'selection-question', 'content_type': 'text', 'content': SELECTION_QUESTION},
+    ], opening_interval_seconds=1)
+    policy = policy_from_configuration(ReceptionConfiguration.model_validate(config).model_dump())
+    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: pytest.fail('opening called model'))
+    with session_factory() as db:
+        session, _ = setup_journey(db)
+        session.due_at = utcnow()
+        db.commit()
+        assert queue_passive(db, environment='playground')
+        monkeypatch.setattr('app.automation_service.generate_decision', lambda context: run_v2_agent({
+            **context, 'reception_policy': policy,
+        }))
+        assert process_automation_run(db, environment='playground')
+        db.refresh(session)
+        drafts = [x for x in session.messages if x.get('status') == 'draft']
+        assert [x['content'] for x in drafts] == ['您好～很高興認識您！', SELECTION_QUESTION]
+        assert [x['content_type'] for x in drafts] == ['text', 'input_select']
+        assert 'items' not in drafts[0]['content_attributes']
+        assert len(drafts[1]['content_attributes']['items']) == 2
+        assert (dt(drafts[1]['created_at']) - dt(drafts[0]['created_at'])).total_seconds() == 1

@@ -90,6 +90,9 @@ class ReplySettings(BaseModel):
             if any(len(item.content) > self.max_characters for item in self.opening_items):
                 raise ValueError("opening_message_exceeds_reply_limit")
             items = delivery_items([item.model_dump() for item in self.opening_items], [])
+            # Expose the complete delivery list to the editor. Otherwise the
+            # generated closing question disappears when an image is removed.
+            self.opening_items = [OpeningItem.model_validate(item) for item in items]
             self.opening_messages = [item["content"] for item in items if item["content"]]
             self.opening_message = self.opening_messages[0]
             return self
