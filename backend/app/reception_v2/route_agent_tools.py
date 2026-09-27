@@ -14,7 +14,7 @@ from app.route_packages import ROUTES
 
 _TOPIC_GROUPS = {
     "itinerary": ("itinerary_overview", "route_scope", "landmarks"),
-    "hotel": ("hotel_reference", "accommodation_summary"),
+    "hotel": ("hotel_reference", "accommodation_summary", "rongbuk_reference", "rongbuk_upgrade"),
     "vehicle": ("vehicle_reference", "vehicle_oxygen"),
     "transport": ("vehicle_reference", "vehicle_oxygen"),
     "oxygen": ("altitude_health", "hotel_reference", "vehicle_reference", "vehicle_oxygen"),
@@ -143,6 +143,15 @@ def compare_routes(route_ids: list[str], criteria: list[str] | None = None) -> d
         route = ROUTES[route_id]
         values: dict[str, dict[str, Any]] = {}
         for criterion in dimensions:
+            if criterion == 'hotel':
+                details = get_route_details(route_id, ['hotel'])['details']
+                detail = details[0] if details else {}
+                values[criterion] = {
+                    'value': detail.get('text', ''),
+                    'evidence_refs': detail.get('evidence_refs', []),
+                    'material_keys': detail.get('material_keys', []),
+                }
+                continue
             key = {
                 "duration": None, "days": None, "pace": "itinerary_overview",
                 "hotel": "hotel_reference", "price": "price_reference",

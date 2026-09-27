@@ -82,3 +82,10 @@ def test_runtime_keeps_only_grounded_presentation_refs():
     assert presentation["material_keys"] == []
     assert [item["route_variant"] for item in presentation["routes"]] == ["peach_9d_2027", "peach_11d_2027"]
     assert presentation["routes"][0]["dimensions"]["duration"]["value"].startswith("9")
+def test_hotel_comparison_includes_route_specific_everest_lodging():
+    from app.route_packages import ROUTES
+    results = compare_routes(['peach_9d_2027', 'peach_11d_2027'], ['hotel'])['routes']
+    special = ROUTES['peach_11d_2027']['groups']['rongbuk_reference']
+    assert special['text'] in results[1]['dimensions']['hotel']['value']
+    assert special['text'] not in results[0]['dimensions']['hotel']['value']
+    assert set(special['evidence']) <= set(results[1]['dimensions']['hotel']['evidence_refs'])
