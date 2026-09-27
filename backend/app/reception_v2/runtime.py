@@ -716,10 +716,40 @@ def _verify(context: dict, decision: EvaluationDecision):
                                     if section is not section_question)
                          if decision.v2_delivery_sections else decision.reply_body or decision.reply)
     generated = GeneratedReply(verification_body, None, decision.evidence_refs, decision.material_keys)
-    checked, logs, digest = call_reply_fact_verifier({**context,
-        'v2_server_clarification':({'question':section_question['text'],'field':'party_size','reason':'requested_full_intro_missing_party'} if section_question else None),
-        'v2_events': decision.v2_events,
-        'v2_delivery_sections': [s for s in decision.v2_delivery_sections if s is not section_question]}, plan, generated)
+    structured_types = {str(item.get("type")) for item in getattr(decision, "presentations", []) or []}
+    structured_grounded = (
+        context.get("engine_version") == "v2"
+        and context.get("module") not in {"silence_touch", "wakeup"}
+        and decision.action == "reply"
+        and structured_types
+        and structured_types <= {"route_comparison", "route_details", "suggestions"}
+        and bool(decision.evidence_refs)
+        and not decision.material_keys
+        and not decision.v2_delivery_sections
+        and not decision.v2_events
+        and not decision.handoff_reason
+        and not context.get("v2_final_fact_recheck")
+    )
+    if structured_grounded:
+        # The presentation was hydrated from a read-only route tool. Its
+        # values and evidence have already been checked by the server, so a
+        # second semantic model call would only re-audit the same packet.
+        from app.reply_fact_verification import FactVerification
+        checked = FactVerification(
+            supported=True,
+            relevant=True,
+            claim_checks=[{"claim": "structured_route_presentation", "supported": True,
+                            "evidence": ",".join(decision.evidence_refs)}],
+            scope_check={"current_request": str(context.get("customer_text") or "")},
+            verified_fact_ids=list(decision.evidence_refs),
+        )
+        logs = [{"node": "v2_structured_grounded_verification", "status": "completed", "duration_ms": 0}]
+        digest = hashlib.sha256((verification_body + ",".join(decision.evidence_refs)).encode()).hexdigest()
+    else:
+        checked, logs, digest = call_reply_fact_verifier({**context,
+            'v2_server_clarification':({'question':section_question['text'],'field':'party_size','reason':'requested_full_intro_missing_party'} if section_question else None),
+            'v2_events': decision.v2_events,
+            'v2_delivery_sections': [s for s in decision.v2_delivery_sections if s is not section_question]}, plan, generated)
     # Audit against the approved packet actually supplied to this turn. A missed
     # citation need not cause repeated rewrites of a fact that is already known.
     resolved_refs = [ref for ref in checked.verified_fact_ids

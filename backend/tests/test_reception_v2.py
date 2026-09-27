@@ -308,6 +308,26 @@ def test_bound_route_does_not_run_unnecessary_route_prefetch():
     assert runtime._prefetch_route_backend("compare routes", "peach_9d_2027") == []
 
 
+def test_structured_route_comparison_uses_grounded_verification_without_second_model_call(monkeypatch):
+    from app.reception_v2 import runtime
+
+    monkeypatch.setattr(runtime, "call_reply_fact_verifier",
+                        lambda *_args, **_kwargs: pytest.fail("structured route output is already grounded"))
+    decision = runtime.EvaluationDecision(
+        action="reply", branch="peach_9d", intent="other", route_variant="peach_9d_2027",
+        reply="Recommend the 9-day route based on your requested pace and hotel.",
+        evidence_refs=["route.9.scope"],
+        presentations=[{"type": "route_comparison", "route_ids": ["peach_9d_2027", "peach_11d_2027"],
+                        "criteria": ["duration", "hotel"]}],
+    )
+    audit, logs, digest = runtime._verify({
+        "engine_version": "v2", "module": "reply", "customer_text": "compare routes",
+    }, decision)
+    assert audit.supported and audit.relevant
+    assert logs[0]["node"] == "v2_structured_grounded_verification"
+    assert digest
+
+
 def test_v2_trace_contains_latency_breakdown(monkeypatch):
     import app.reception_v2.runtime as runtime
 
