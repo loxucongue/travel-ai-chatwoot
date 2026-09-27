@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import lru_cache
+
 from app.decision_knowledge import FACTS, KNOWLEDGE_KEY
 from app.route_packages import ROUTES
 from app.reception_v2.skill_registry import SkillRegistry
@@ -33,6 +35,7 @@ TOPIC_FACTS = (
 )
 
 
+@lru_cache(maxsize=1)
 def tool_specs() -> list[dict]:
     return [
         {"type":"function","function":{"name":"get_service_facts","description":"Read one published service-knowledge module from the server-provided index. Resolve pronouns using the conversation, then select its module_key. Never fetch websites or infer unpublished service terms.","parameters":{"type":"object","properties":{"module_key":{"type":"string"}},"required":["module_key"],"additionalProperties":False}}},

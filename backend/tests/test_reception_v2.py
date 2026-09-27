@@ -103,6 +103,7 @@ def test_specific_new_customer_question_does_not_use_operator_opening(monkeypatc
         raise RuntimeError("sentinel")
 
     monkeypatch.setattr(runtime, "_call", fake_call)
+    monkeypatch.setattr(runtime.settings, "deepseek_api_key", "test")
     with pytest.raises(RuntimeError, match="sentinel"):
         runtime.run_v2_agent({
             "module": "reply",
@@ -281,6 +282,10 @@ def test_decision_contract_explains_reply_and_handoff():
         flow_reason="customer_requests_human",
     )
     assert contract["action"] == "handoff"
+    assert contract["response"]["text"] == ""
+    assert contract["response"]["suggestions"] == []
+    assert contract["delivery"]["sections"] == []
+    assert contract["delivery"]["material_keys"] == []
     assert contract["handoff"]["required"] is True
     assert contract["silence_plan"]["action"] == "skip"
     assert contract["memory_updates"][0]["evidence"] == "我們兩位"

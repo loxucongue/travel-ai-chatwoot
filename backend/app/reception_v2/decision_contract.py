@@ -12,6 +12,15 @@ def build_decision_contract(context: dict, decision, *, flow: str, flow_reason: 
             "evidence": (getattr(decision, "slot_evidence", {}) or {}).get(key, ""),
         })
     contract = {
+        "response": {
+            "text": decision.reply or "",
+            "presentations": list(getattr(decision, "presentations", []) or []),
+            "suggestions": list(getattr(decision, "reply_options", []) or []),
+        },
+        "delivery": {
+            "sections": list(getattr(decision, "v2_delivery_sections", []) or []),
+            "material_keys": list(decision.material_keys or []),
+        },
         'customer_events': list(getattr(decision, 'v2_events', []) or []),
         'delivery_sections': list(getattr(decision, 'v2_delivery_sections', []) or []),
         "flow": flow,

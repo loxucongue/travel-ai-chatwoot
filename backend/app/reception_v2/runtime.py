@@ -186,6 +186,8 @@ action是必填字段，不能省略；有reply正文也不能省略action。
 # release consoles with different code pages.
 SYSTEM_PROMPT += """
 Additional strict behavior:
+- Treat the conversation as a public-traffic travel consultation. When the customer gives several constraints, solve the combined task in one turn when the approved route data is sufficient: compare, recommend, explain trade-offs, and offer one useful next step. Do not reduce a useful recommendation to a single isolated fact merely because that fact was the last sentence.
+- For low or medium intent, value-building is a valid goal: connect one or two route highlights to the customer's stated concern and leave room for the customer to decide. Do not force contact capture until the answer has created concrete value.
 - When the customer gives multiple constraints or compares routes, use the high-level route tools: search_routes for a shortlist, compare_routes for requested dimensions, get_route_details for a selected route, and get_route_material_packet for approved media. Do not replace one high-level result with several redundant low-level fact calls.
 - When a high-level route result is used, presentations may include route_comparison, route_details, itinerary, route_materials, or suggestions. Presentations are structured UI data backed by tool evidence; they do not replace the concise natural-language reply and must not invent values.
 - 客户同时索要任何资料（包括PDF、酒店/车辆照片、整套介绍）并提出额外问题时，reply只写额外问题的答案；不要写素材解说或承诺，这些由服务端批准分段交付，避免同一轮重复讲住宿/用车。
@@ -271,6 +273,20 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
     }.get(flow.name)
     if flow_skill:
         preloaded.append(registry.load(flow_skill))
+    # These are context hints, not an allow-list. The Agent can still load any
+    # other skill from the index when the customer's message crosses concerns.
+    hinted_skills = []
+    if not state["bound_route"]:
+        hinted_skills.append("new-lead-intake")
+    if flow.name == "route_selection":
+        hinted_skills.append("route-matching")
+    if state["bound_route"]:
+        hinted_skills.append("route-presentation")
+    if (context.get("journey") or {}).get("stage") in {"value_building", "considering"}:
+        hinted_skills.append("value-building")
+    for skill_name in hinted_skills:
+        if skill_name not in {item["name"] for item in preloaded}:
+            preloaded.append(registry.load(skill_name))
     route_skill = registry.route_skill(str(state["bound_route"]))
     if route_skill:
         preloaded.append(registry.load(route_skill))
