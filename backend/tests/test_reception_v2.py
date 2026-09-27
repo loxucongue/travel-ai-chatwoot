@@ -9,6 +9,7 @@ from app.reception_v2.flow_classifier import infer_route_variant, select_flow
 from app.reception_v2.journey_memory import build_journey_memory
 from app.reception_v2.proactive_policy import evaluate_proactive_eligibility
 from app.reception_v2.journey_state_machine import allowed_next_stage, guard_decision_stage
+from app.reception_v2 import runtime
 
 
 def _tool_call(call_id, name, arguments):
@@ -53,6 +54,65 @@ def test_explicit_route_detail_bypasses_route_selection():
     selected = select_flow({"module": "reply", "customer_text": "桃花9日一個人多少錢？", "journey": {}})
     assert selected.name == "route_detail"
     assert "peach-9d-2027" in selected.allowed_skills
+
+
+def test_fresh_generic_greeting_uses_operator_opening_without_model_call(monkeypatch):
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("generic opening must not call the model")
+
+    monkeypatch.setattr(runtime, "_call", forbidden)
+    result = runtime.run_v2_agent({
+        "module": "reply",
+        "customer_text": "您好",
+        "context_messages": [{"direction": "incoming", "content": "您好"}],
+        "reception_policy": {
+            "operator_configuration": {
+                "opening_messages": ["您好～這裡是已配置的開場。", "想先了解哪條行程呢？"],
+                "opening_interval_seconds": 3,
+            },
+            "route_switch": {"allowed_routes": ["peach_9d_2027", "peach_11d_2027"]},
+        },
+    })
+    decision, logs, _, trace = result
+    assert decision.reply == "您好～這裡是已配置的開場。"
+    assert decision.opening_messages == ["您好～這裡是已配置的開場。", "想先了解哪條行程呢？"]
+    assert decision.opening_interval_seconds == 3
+    assert logs == []
+    assert trace["fast_path"] == "configured_opening"
+    assert trace["request_count"] == 0
+
+
+@pytest.mark.parametrize("text", ["您好，我想了解一下", "你好～"])
+def test_generic_opening_accepts_polite_greeting_variants(monkeypatch, text):
+    monkeypatch.setattr(runtime, "_call", lambda *_args, **_kwargs: (_ for _ in ()).throw(
+        AssertionError("generic opening must not call the model")))
+    decision, logs, _, trace = runtime.run_v2_agent({
+        "module": "reply", "customer_text": text,
+        "context_messages": [{"direction": "incoming", "content": text}],
+        "reception_policy": {"operator_configuration": {"opening_message": "配置開場"}},
+    })
+    assert decision.reply == "配置開場"
+    assert logs == [] and trace["fast_path"] == "configured_opening"
+
+
+def test_specific_new_customer_question_does_not_use_operator_opening(monkeypatch):
+    called = []
+
+    def fake_call(*_args, **_kwargs):
+        called.append(True)
+        raise RuntimeError("sentinel")
+
+    monkeypatch.setattr(runtime, "_call", fake_call)
+    with pytest.raises(RuntimeError, match="sentinel"):
+        runtime.run_v2_agent({
+            "module": "reply",
+            "customer_text": "想了解9日價格",
+            "context_messages": [{"direction": "incoming", "content": "想了解9日價格"}],
+            "reception_policy": {
+                "operator_configuration": {"opening_message": "不應覆蓋具體問題"},
+            },
+        })
+    assert called
 
 
 def test_route_comparison_does_not_bind_single_route():

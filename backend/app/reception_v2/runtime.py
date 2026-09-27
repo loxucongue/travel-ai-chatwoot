@@ -89,6 +89,78 @@ def _simple_ack(context: dict, skill_digest: str):
     return decision, [], hashlib.sha256(current.encode()).hexdigest(), trace
 
 
+_OPENING_SPECIFIC_MARKERS = (
+    "9日", "9天", "11日", "11天", "價格", "价钱", "多少", "費用", "费用",
+    "行程", "线路", "線路", "桃花", "珠峰", "住宿", "飯店", "酒店", "供氧", "氧氣", "集合", "接機",
+    "日期", "幾位", "几位", "人同行", "高反", "纳木错", "納木錯", "布達拉宮",
+)
+
+
+def _is_fresh_generic_opening(context: dict) -> bool:
+    """Recognise only a new, route-unselected greeting before any model call.
+
+    The operator opening is a deterministic delivery contract. Specific product
+    questions must continue through V2 so they are answered rather than replaced
+    by a greeting.
+    """
+    if context.get("module") != "reply":
+        return False
+    journey = context.get("journey") or {}
+    if context.get("route_variant") or journey.get("route_variant"):
+        return False
+    if any(
+        item.get("role") == "assistant" or item.get("direction") == "outgoing"
+        for item in context.get("context_messages", [])
+        if isinstance(item, dict)
+    ):
+        return False
+    text = "".join(str(context.get("customer_text") or "").lower().split())
+    normalized = re.sub(r"[，,。.!！?？~～、:：]", "", text)
+    if not text or len(text) > 40 or any(marker.lower() in normalized for marker in _OPENING_SPECIFIC_MARKERS):
+        return False
+    return bool(re.fullmatch(
+        r"(?:你好|您好|嗨|哈囉|hello|hi|在嗎|在吗|你好呀|您好呀|想了解(?:一下)?|想咨询(?:一下)?|想咨詢(?:一下)?|先了解一下|看看你們|看看你们|介紹一下|介绍一下|(?:你好|您好|嗨|哈囉)(?:呀)?(?:我)?想(?:了解|咨询|咨詢)(?:一下)?)",
+        normalized,
+    ))
+
+
+def _configured_opening(context: dict, skill_digest: str):
+    if not _is_fresh_generic_opening(context):
+        return None
+    from app.opening_messages import delivery_items
+
+    policy = views_for_context(context)["decision_policy"]
+    texts = policy.get("opening_messages") or (
+        [policy["opening_message"]] if policy.get("opening_message") else []
+    )
+    items = delivery_items(policy.get("opening_items"), texts)
+    messages = [item["content"] for item in items if item.get("content")]
+    if not messages:
+        return None
+    allowed = policy.get("route_switch", {}).get("allowed_routes", list(ROUTES))
+    options = [ROUTES[key]["selection_title"] for key in allowed if key in ROUTES]
+    decision = EvaluationDecision(
+        action="reply", branch="unclassified", intent="other", reply=messages[0],
+        reply_body=messages[0], confidence=1.0, journey_stage="route_selection",
+        reply_options=options, opening_messages=messages,
+        opening_items=items if policy.get("opening_items") else [],
+        opening_interval_seconds=int(policy.get("opening_interval_seconds", 2)),
+    )
+    flow = select_flow(context)
+    trace = {
+        "engine_version": ENGINE_VERSION, "engine_release_id": ENGINE_RELEASE_ID,
+        "prompt_version": PROMPT_VERSION, "skill_release_digest": skill_digest,
+        "tools": [], "loaded_skills": [], "available_fact_ids": [],
+        "total_ms": 0, "request_count": 0, "model_http_request_count": 0,
+        "fact_verification_passed": True, "fast_path": "configured_opening",
+        "outbound": False, "flow": flow.name, "flow_reason": "fresh_generic_opening",
+        "decision_contract": build_decision_contract(
+            context, decision, flow=flow.name, flow_reason="fresh_generic_opening",
+        ),
+    }
+    return decision, [], hashlib.sha256((messages[0] + skill_digest).encode()).hexdigest(), trace
+
+
 SYSTEM_PROMPT = """你是 China2Go 的旅游接待顾问。你的任务是先解决客户本轮问题，再在确有具体价值时自然推进。
 
 工作方式：
@@ -887,6 +959,9 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
     acknowledgement = _simple_ack(context, registry.release_digest())
     if acknowledgement is not None:
         return acknowledgement
+    configured_opening = _configured_opening(context, registry.release_digest())
+    if configured_opening is not None:
+        return configured_opening
     journey_memory = build_journey_memory(context)
     proactive = evaluate_proactive_eligibility(context, journey_memory)
     if context.get("module") in {"silence_touch", "wakeup"} and not proactive.eligible:
