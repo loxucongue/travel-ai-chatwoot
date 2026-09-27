@@ -79,7 +79,8 @@ def test_remove_opening_image_keeps_visible_question_and_runtime_order(authentic
     config = client.get('/v1/automation/reception-config').json()['config']
     expected = ['您好～很高興認識您！', SELECTION_QUESTION]
     assert config['reply']['opening_messages'] == expected
-    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: pytest.fail('opening called model'))
+    monkeypatch.setattr(settings, 'deepseek_api_key', 'test')
+    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: ({'content': '{"action":"reply","reply":"greeting","v2_events":[]}'}, {'round':0,'duration_ms':1}))
     decision, _, _, trace = run_v2_agent({
         'module': 'reply', 'customer_text': '你好，我想咨询旅行行程',
         'context_messages': [], 'context_complete': True,
@@ -88,7 +89,7 @@ def test_remove_opening_image_keeps_visible_question_and_runtime_order(authentic
     assert decision.opening_messages == expected
     assert [item['content'] for item in decision.opening_items] == expected
     assert decision.opening_interval_seconds == 1
-    assert trace['model_http_request_count'] == 0
+    assert trace['request_count'] == 1
 
 
 @pytest.mark.parametrize('item', [
@@ -202,9 +203,13 @@ def test_playground_text_opening_keeps_question_separate_from_greeting(session_f
         {'key': 'selection-question', 'content_type': 'text', 'content': SELECTION_QUESTION},
     ], opening_interval_seconds=1)
     policy = policy_from_configuration(ReceptionConfiguration.model_validate(config).model_dump())
-    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: pytest.fail('opening called model'))
+    monkeypatch.setattr(settings, 'deepseek_api_key', 'test')
+    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: ({'content': '{"action":"reply","reply":"greeting","v2_events":[]}'}, {'round':0,'duration_ms':1}))
     with session_factory() as db:
         session, _ = setup_journey(db)
+        # This case exercises an unknown-route greeting. The setup fixture
+        # otherwise represents an already selected nine-day ad entry.
+        session.controls = {**session.controls, 'route_variant': ''}
         session.due_at = utcnow()
         db.commit()
         assert queue_passive(db, environment='playground')

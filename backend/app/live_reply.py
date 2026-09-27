@@ -362,7 +362,23 @@ def guard(db, job, snap, expected=None):
     at = message_timestamp(latest.get("created_at"))
     trigger = db.get(MessageEvent, job.trigger_message_id)
     if latest["id"] != trigger.chatwoot_message_id:
-        raise ReplyBlocked("new_customer_message")
+        if not (job.decision or {}).get('introduction_delivery'):
+            raise ReplyBlocked("new_customer_message")
+        accepted = set(job.trace.get('introduction_queued_input_ids') or [])
+        pending = [m for m in incoming if int(m['id']) > trigger.chatwoot_message_id and m['id'] not in accepted]
+        if pending:
+            from app.reception_v2.introduction_input import classify_introduction_input
+            db.commit()
+            action, log = classify_introduction_input('\n'.join(str(m.get('content') or '') for m in pending),
+                (job.decision or {}).get('route_variant', ''))
+            db.refresh(job)
+            job.trace = {**job.trace, 'introduction_input_calls': [*job.trace.get('introduction_input_calls', []), log]}
+            if action != 'queue':
+                db.commit()
+                raise ReplyBlocked('new_customer_message')
+            accepted.update(m['id'] for m in pending)
+            job.trace = {**job.trace, 'introduction_queued_input_ids': sorted(accepted)}
+            db.commit()
     own_ids = set(db.scalars(select(OutboundMessage.chatwoot_message_id).where(
         OutboundMessage.conversation_state_id == state.id, OutboundMessage.chatwoot_message_id.is_not(None))).all())
     if any(message_direction(m.get("message_type")) == "outgoing" and not m.get("private")
@@ -778,12 +794,30 @@ def _freeze_opening_reply(db, job, state, decision):
             item["media_hash"] = info["media_hash"]
         plan.append({
             "plan_version": OPENING_PLAN_FORMAT, "kind": "media" if info else "text",
-            "content": item["content"], "material": info, "opening_item": item,
+            "content": item["content"], "material": info, "opening_item": item, "group_key": "",
             "interval_seconds": interval if index else 0,
             "quick_replies": list(decision.reply_options) if index == last_text else [],
             "skip_previously_sent": bool(info and previously_sent(db, state, info)),
             "status": "pending",
         })
+    if decision.v2_delivery_sections:
+        from app.reception_v2.material_delivery import introduction_parts
+        materials = [
+            material for section in decision.v2_delivery_sections
+            for material in live_materials(db, section['asset_keys'], decision.route_variant, state.tenant_id)]
+        route = ROUTES.get(decision.route_variant, {})
+        parts = introduction_parts(decision.v2_delivery_sections, materials,
+            plan_id=f'live:{job.id}:intro', interval_seconds=route.get('initial_delivery_interval_seconds', 2))
+        plan.extend({'plan_version': part.plan_version, 'kind': part.kind,
+                     'content': part.content, 'material': part.material, 'group_key': part.content_group_key,
+                     'interval_seconds': part.interval_seconds or interval, 'status': 'pending'} for part in parts)
+    elif decision.opening_continuation and decision.reply and decision.reply not in decision.opening_messages:
+        content = decision.reply
+        if decision.follow_up_question and not content.endswith(decision.follow_up_question):
+            content += '\n' + decision.follow_up_question
+        plan.append({'plan_version': OPENING_PLAN_FORMAT, 'kind': 'text', 'content': content,
+                     'material': None, 'group_key': decision.content_group_key or '',
+                     'interval_seconds': interval, 'status': 'pending'})
     if not plan:
         raise ReplyBlocked("opening_plan_invalid")
     digest = _opening_plan_digest(plan)
@@ -919,7 +953,7 @@ def _execute_persisted_reply(db, client, job, state, run, fingerprint=None):
                 state = terminal_handoff_guard(db, client, job, state)
             else:
                 state, _ = guard(db, job, snapshot(client, state.chatwoot_conversation_id), fingerprint)
-            if info and opening:
+            if info and item.get('opening_item'):
                 from app.opening_messages import opening_media_info
 
                 validated = opening_media_info(db, item["opening_item"], state.tenant_id)
@@ -934,7 +968,7 @@ def _execute_persisted_reply(db, client, job, state, run, fingerprint=None):
                 material_info(db, info, (job.decision or {}).get("route_variant", ""), state.tenant_id)
             submitted = submit_part(
                 db, client, job, state, run, key, item.get("content", ""), info=info,
-                delivery_groups=[item['group_key']] if (job.decision or {}).get('v2_delivery_sections') else groups,
+                delivery_groups=[item['group_key']] if item.get('group_key') else ([] if item.get('opening_item') else groups),
                 delivery_item_id=item["item_id"],
                 terminal_handoff=bool(job.trace.get("terminal_handoff_plan")),
                 quick_replies=item.get("quick_replies") if opening else None,

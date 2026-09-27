@@ -111,6 +111,10 @@ def _validated_route_references(decision, context: dict) -> tuple[list[str], lis
         for group in covered_groups
         for asset in ROUTES[route]["groups"][group]["assets"]
     } if route and covered_groups else route_assets
+    if context.get('engine_version') == 'v2':
+        # V2 may answer one topic and deliver several requested material kinds.
+        # Its topic hint must not silently remove other valid route attachments.
+        group_assets = route_assets
     materials = [
         key for key in decision.material_keys
         if key in available and key in group_assets

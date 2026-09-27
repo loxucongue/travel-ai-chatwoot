@@ -101,7 +101,9 @@ def test_media_only_opening_reaches_live_delivery_without_added_text(session_fac
     with session_factory() as db:
         item = media(db, tmp_path)
     config = ReceptionConfiguration(reply={'opening_items': [item]}).model_dump()
-    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: pytest.fail('opening calls model'))
+    from app.config import settings
+    monkeypatch.setattr(settings, 'deepseek_api_key', 'test')
+    monkeypatch.setattr('app.reception_v2.runtime._call', lambda *_a, **_kw: ({'content': '{"action":"reply","reply":"greeting","v2_events":[]}'}, {'round':0,'duration_ms':1}))
     result = run_v2_agent({'module':'reply','customer_text':'你好','context_messages':[],
                           'reception_policy':policy_from_configuration(config)})
     assert result[0].reply == ''

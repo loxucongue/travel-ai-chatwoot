@@ -13,6 +13,7 @@ description: Present a selected route in layers, using approved itinerary and ma
 - 完整介绍按对应线路 Skill 和配置顺序发送整套图文；不要只发骨架后省略剩余介绍。
 - 行程图必须先于景点、住宿和车辆照片；同一素材不能重复交付。
 - 普通插问在整套介绍完成后集中回答；停止、改线和转人工立即处理。
+- 查看已交付进度。完整介绍已经结束后，“继续看行程，另外问住宿”是继续答疑，不是要求重发；不要再次输出full_introduction。只有明确“重发整套”才设置allow_material_resend=true。
 - presentation 用于呈现路线比较、行程、详情和资料范围；实际附件交付仍由服务端计划决定。
 - 不把供氧、住宿或车辆配置扩展成医疗保证、实时余位或未发布承诺。
 

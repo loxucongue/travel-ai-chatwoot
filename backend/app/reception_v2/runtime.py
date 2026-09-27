@@ -77,42 +77,28 @@ def _is_first_customer_message(context: dict) -> bool:
     return not incoming
 
 
-def _configured_opening(context: dict, skill_digest: str):
-    if not _is_first_customer_message(context):
-        return None
+def _attach_configured_opening(context: dict, decision: EvaluationDecision) -> None:
+    """Keep operator copy, while retaining the first turn's route and answers."""
+    if not _is_first_customer_message(context) or decision.action != 'reply':
+        return
     from app.opening_messages import delivery_items
-
-    policy = views_for_context(context)["decision_policy"]
-    texts = policy.get("opening_messages") or (
-        [policy["opening_message"]] if policy.get("opening_message") else []
-    )
-    items = delivery_items(policy.get("opening_items"), texts)
-    messages = [item["content"] for item in items if item.get("content")]
-    if not items:
-        return None
-    first_text = messages[0] if messages else ''
-    allowed = policy.get("route_switch", {}).get("allowed_routes", list(ROUTES))
-    options = [ROUTES[key]["selection_title"] for key in allowed if key in ROUTES]
-    decision = EvaluationDecision(
-        action="reply", branch="unclassified", intent="other", reply=first_text,
-        reply_body=first_text, confidence=1.0, journey_stage="route_selection",
-        reply_options=options, opening_messages=messages,
-        opening_items=items if policy.get("opening_items") else [],
-        opening_interval_seconds=int(policy.get("opening_interval_seconds", 2)),
-    )
-    flow = select_flow(context)
-    trace = {
-        "engine_version": ENGINE_VERSION, "engine_release_id": ENGINE_RELEASE_ID,
-        "prompt_version": PROMPT_VERSION, "skill_release_digest": skill_digest,
-        "tools": [], "loaded_skills": [], "available_fact_ids": [],
-        "total_ms": 0, "request_count": 0, "model_http_request_count": 0,
-        "output_mode": "configured_opening", "fast_path": "configured_opening",
-        "outbound": False, "flow": flow.name, "flow_reason": "first_customer_message",
-        "decision_contract": build_decision_contract(
-            context, decision, flow=flow.name, flow_reason="first_customer_message",
-        ),
-    }
-    return decision, [], hashlib.sha256((first_text + skill_digest).encode()).hexdigest(), trace
+    policy = views_for_context(context)['decision_policy']
+    texts = policy.get('opening_messages') or ([policy['opening_message']] if policy.get('opening_message') else [])
+    items = delivery_items(policy.get('opening_items'), texts)
+    if decision.route_variant:
+        items = [item for item in items if item.get('key') != 'selection-question']
+        decision.reply_options = []
+    else:
+        allowed = policy.get('route_switch', {}).get('allowed_routes', list(ROUTES))
+        decision.reply_options = [ROUTES[key]['selection_title'] for key in allowed if key in ROUTES]
+    decision.opening_items = items
+    decision.opening_messages = [item['content'] for item in items if item.get('content')]
+    decision.opening_interval_seconds = int(policy.get('opening_interval_seconds', 2))
+    decision.opening_continuation = bool(decision.route_variant or any(e['type'] == 'question' for e in decision.v2_events))
+    # A generic entry needs only the configured greeting and choice. A concrete
+    # question or selected route keeps its answer as the continuation.
+    if not decision.route_variant and not any(e['type'] == 'question' for e in decision.v2_events):
+        decision.reply = decision.reply_body = decision.opening_messages[0] if decision.opening_messages else ('' if items else decision.reply)
 
 
 SYSTEM_PROMPT = """你是 China2Go 的旅游咨询和留资接待顾问。
@@ -122,19 +108,20 @@ SYSTEM_PROMPT = """你是 China2Go 的旅游咨询和留资接待顾问。
 - 线路介绍按 Skill 的整套顺序和图片组织；介绍完成后集中回答期间的问题。后续选适用 scripts，优先原文，只按实际上下文调整称呼、衔接和所需段落。多问题一起回答。
 - 分流说明用于判断场景，不作为客服正文。沿用话术时不要自行追加客户没问的解释或免责声明。已知人数日期不重复问，资料不重复发，客户要求重发除外。
 - 话术、线路事实未覆盖时再查通用事实。已加载资料不要重复查询。比较时分别读取两条线路，按实际差异建议。
-- 在介绍与问题处理完成后，按 Skill 话术主动询问联系方式。指定渠道只承接该渠道，收到有效联系方式或要求真人则转人工。已拒绝主动联系、已交接不再主动唤醒；客户再提问正常回答。
+- 在介绍与问题处理完成后，按 Skill 话术主动询问联系方式。读取历史和lead_capture：已经询问而客户没给时，不要在之后每条答疑后重复索取；客户重新表示要报名、主动选择联系渠道时才承接。考虑、拒绝某渠道时不换渠道追问。指定渠道只承接该渠道，收到有效联系方式或要求真人则转人工。已拒绝主动联系、已交接不再主动唤醒；客户再提问正常回答。
 - 你的正文直接使用，没有后续话术审核或改写。完整介绍由配置分段交付；图片引用asset_ids/available_material_keys，不能生成图片地址。普通回复自然使用原文繁体，不强制缩写话术。
 - 不知道的实时信息不要编造；需顾问核实填写handoff_reason，已知内容照常回答。设备配置不是个人医疗保证，用药与个人适宜性请医师处理。
-- 沉默事件按线路 Skill 和实际已发送内容继续，不能假装知道已读或已经发送过文件。可以reply/generate、no_action/defer或no_action/skip。
+- 沉默事件围绕最后一个实质关注点和未解决问题补充相关新价值，不因为还有景点内容未发就换话题。最新关注车辆时不要跳去文化景点；若相关内容已经讲完，选择no_action/skip。客户说可以继续介绍也要先承接他明确提出的顾虑。不能假装知道已读或已经发送过文件。可以reply/generate、no_action/defer或no_action/skip。
 
 只输出一个 JSON 对象，不要 Markdown。字段：
 action(reply|handoff|no_action), branch(已注册产品branch或unclassified), intent(route_intro|price|departure|itinerary|contact|complaint|other), reply(string或null), route_variant(空或已注册产品route_variant), evidence_refs(string数组，只填工具返回的fact id), material_keys(string数组，只填工具返回的素材key，最多2项), presentations(数组；只能是工具证据支持的route_comparison、route_details、itinerary、route_materials或suggestions结构), handoff_reason(string或null), safety_flags(string数组), confidence(0到1), slots(object), slot_evidence(object；每个slot必须是本轮客户原文中的逐字证据), missing_slots(string数组), lead_action(none|ask|captured), contact_values(object), journey_stage(route_selection|needs_discovery|value_building|objection_handling|contact_ready|contact_requested|considering|captured|handoff), wakeup_action(null|generate|skip|defer|handoff), defer_minutes(0到720)。
 
 - action必填；客户主动提问给出reply，正文可同时放reply_body；追问放follow_up_question，避免正文重复。未使用的数组为[]、对象为{}。
 - slots和slot_evidence仅用party_size/departure_window/budget/destination，证据逐字引用本轮原文；线路用route_variant。contact_values键为line/wechat/phone/email/whatsapp，只保存实际提供的联系方式。
-- 输出v2_events数组，每项含type、quote（本轮逐字原文）、topic。type为question/material_requested/considering/contact_agreed/contact_refused/human_requested/route_selected/route_comparison/profile_updated。沉默事件填[]。比较不等于选线。
+- 输出v2_events数组，每项含type、quote（本轮逐字原文）、topic。type为question/material_requested/considering/contact_agreed/contact_scheduled/contact_refused/human_requested/route_selected/route_comparison/profile_updated。沉默事件填[]。比较不等于选线。只记录本轮新增事件，不把历史信息再次引用为本轮证据；quote可以直接使用本轮完整原文，不能简繁转换或改写。
 - material_requested附material_kind（itinerary/full_introduction/hotel/vehicle/altitude/other）。完整线路介绍用full_introduction；只要行程图用itinerary。delivery_intent为full_introduction/itinerary/none，配content_group_key、covered_content_groups、allow_material_resend。完整介绍无需把全部图片塞进material_keys。
-- contact_refused附scope（all/LINE/微信/电话/Email/WhatsApp），单渠道拒绝不当成全拒绝。contact_agreed用于具体预约，附带时区的ISO contact_at，以服务端now计算。
+- contact_refused附scope（all/LINE/微信/电话/Email/WhatsApp），单渠道拒绝不当成全拒绝。contact_agreed表示同意联系，不需要预约时间。只有客户明确约定稍后联系，才用contact_scheduled并附带时区的ISO contact_at，以服务端now计算。实际提供联系方式必须contact_values和lead_action=captured，直接转人工。
+- presentations通常填[]，通过正文介绍和比较即可；需要比较卡时只能用{"type":"route_comparison","route_ids":["peach_9d_2027","peach_11d_2027"],"criteria":["hotel","price"]}。不要自创routes字段或在其中写线路对象。
 - reception_flow可为route_selection/route_detail/concern_resolution/lead_handoff/silence_followup，只是工作状态。journey_stage使用上面枚举。
 """
 
@@ -457,15 +444,15 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
         raw["intent"] = "other"
     slots = raw.get("slots") if isinstance(raw.get("slots"), dict) else {}
     evidence = raw.get("slot_evidence") if isinstance(raw.get("slot_evidence"), dict) else {}
+    if 'departure_date' in slots and 'departure_window' not in slots:
+        slots = {**slots, 'departure_window': slots['departure_date']}
+        evidence = {**evidence, 'departure_window': evidence.get('departure_date')}
     if (context or {}).get('module') in {'silence_touch','wakeup'}:
         # A scheduler tick has no customer input to persist. The existing
         # validated profile remains readable, but cannot be rewritten by it.
         slots, evidence = {}, {}
         raw["v2_events"] = []
     customer_text = str((context or {}).get('customer_text') or '')
-    if any(key not in ALLOWED_MEMORY_SLOTS for key in slots):
-        raise ValueError('v2_slot_unknown_field: invalid=' + ','.join(sorted(set(slots)-ALLOWED_MEMORY_SLOTS))
-                         + '; allowed=' + ','.join(sorted(ALLOWED_MEMORY_SLOTS)))
     # Historical values repeated by the generator are not new customer updates.
     # Persist only values with evidence in the current customer message.
     raw["slots"] = {key: value for key, value in slots.items()
@@ -506,13 +493,13 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
             raw['follow_up_question'] = ''
     if any(event['type'] == 'human_requested' for event in events):
         raw.update(action='handoff', handoff_reason='explicit_human_request', journey_stage='handoff')
-    if (any(event['type'] == 'contact_agreed' for event in events)
+    if (any(event['type'] == 'contact_scheduled' for event in events)
             and not raw.get('contact_values') and raw.get('lead_action') == 'captured'):
         # A validated future appointment is not receipt of a contact identifier.
         raw.update(lead_action='none', journey_stage='considering')
         if raw.get('handoff_reason') == 'lead_captured':
             raw.update(action='reply', handoff_reason=None)
-    if any(event['type']=='contact_agreed' for event in events):
+    if any(event['type']=='contact_scheduled' for event in events):
         # The appointment event owns this state, not an invented stage label.
         raw['journey_stage']='considering'
     # Model coverage hints are not delivery receipts. Ignore unknown optional
@@ -527,7 +514,27 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
     if ((context or {}).get('module') not in {'silence_touch','wakeup'}
             and customer_text.strip() and raw.get('action')=='no_action'):
         raise ValueError('v2_customer_reply_required')
+    # Cards are optional views. A malformed card cannot discard the text and
+    # customer actions; card facts are filled from the route backend below.
+    presentations = raw.pop('presentations', [])
     decision = EvaluationDecision.parse(raw, infer_route_references=False, validate_copy=False)
+    for item in presentations if isinstance(presentations, list) else []:
+        if not isinstance(item, dict):
+            continue
+        kind = item.get('type')
+        if kind not in {'route_comparison', 'route_details', 'itinerary', 'route_materials', 'suggestions'}:
+            continue
+        ids = item.get('route_ids', item.get('routes', []))
+        ids = [x.get('route_variant') if isinstance(x, dict) else x for x in ids] if isinstance(ids, list) else []
+        ids = list(dict.fromkeys(x for x in ids if isinstance(x, str) and x in ROUTES))[:4]
+        if kind == 'route_comparison' and len(ids) < 2:
+            continue
+        if kind in {'route_details', 'itinerary', 'route_materials'} and item.get('route_variant') not in ROUTES:
+            continue
+        normalized = {**item, 'route_ids': ids}
+        for key in ('criteria', 'material_keys', 'evidence_refs', 'suggestions'):
+            normalized[key] = [v for v in item.get(key, []) if isinstance(v, str)] if isinstance(item.get(key), list) else []
+        decision.presentations.append(normalized)
     _normalize_presentations(decision, available_facts, available_materials)
     if decision.lead_action == 'captured':
         from app.lead_capture import model_contacts
@@ -542,6 +549,43 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
     decision.reception_flow = str(raw.get("reception_flow") or "")
     decision.delivery_intent = str(raw.get("delivery_intent") or "none")
     return decision
+
+
+def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> None:
+    if context.get('module') != 'reply' or decision.action != 'reply' or not decision.route_variant:
+        return
+    if decision.lead_action == 'captured' or decision.handoff_reason:
+        return
+    if any(e['type'] in {'considering', 'contact_refused', 'human_requested', 'contact_scheduled', 'route_comparison'}
+           for e in decision.v2_events):
+        return
+    journey = context.get('journey') or {}
+    same_route = decision.route_variant == (context.get('route_variant') or journey.get('route_variant'))
+    progress = journey.get('content_progress', {}) if same_route else {}
+    introduced = bool(progress.get('itinerary_overview', {}).get('text_delivered')) or (
+        same_route and 'itinerary_overview' in journey.get('completed_content_groups', []))
+    explicit = any(e.get('material_kind') == 'full_introduction' for e in decision.v2_events)
+    if introduced and not decision.allow_material_resend:
+        decision.v2_events = [e for e in decision.v2_events if e.get('material_kind') != 'full_introduction']
+        decision.delivery_intent = 'none'
+        return
+    slots = {**(journey.get('slots') or context.get('memory') or {}), **decision.slots}
+    route = ROUTES.get(decision.route_variant, {})
+    if not slots.get('party_size'):
+        question = route.get('groups', {}).get('entry_question', {}).get('text', '')
+        if question and not explicit and (_is_first_customer_message(context) or any(
+                e['type'] == 'route_selected' for e in decision.v2_events)):
+            has_question = any(e['type'] == 'question' for e in decision.v2_events) or decision.intent in {'price', 'departure', 'contact'}
+            decision.reply = decision.reply_body = (decision.reply_body or decision.reply) if has_question else question
+            decision.follow_up_question = question if has_question else ''
+            decision.lead_action = 'none'
+            decision.material_keys = []
+            decision.journey_stage = 'needs_discovery'
+        return
+    # The delivery compiler consumes an instruction, not a fabricated customer
+    # event. Questions remain real events and are answered after the sequence.
+    decision.introduction_delivery = True
+    decision.delivery_intent = 'full_introduction'
 
 
 def _enforce_delivery_contract(context: dict, decision: EvaluationDecision) -> None:
@@ -591,6 +635,7 @@ def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> N
     slots = {**((context.get('journey') or {}).get('slots') or {}), **decision.slots}
     keys = []
     if 'full_introduction' in kinds:
+        decision.introduction_delivery = True
         keys = introduction_group_keys(spec, slots)
     else:
         keys = [key for kind, key in [('itinerary', 'itinerary_overview'),
@@ -641,7 +686,7 @@ def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> N
 
 
 def _apply_contact_window(context, decision):
-    contact = next((e for e in decision.v2_events if e.get('type') == 'contact_agreed'), None)
+    contact = next((e for e in decision.v2_events if (e.get('type') == 'contact_scheduled' or (e.get('type') == 'contact_agreed' and e.get('contact_at')))), None)
     if not contact:
         return False
     raw = context.get('trigger_customer_at') if 'trigger_customer_at' in context else context.get('now') or context.get('virtual_now')
@@ -718,7 +763,7 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
         _missing_material_handoff(decision, 'v2_requested_attachment_unavailable')
         return
     policy = views_for_context(context)['decision_policy']
-    contact = next((e for e in decision.v2_events if e['type'] == 'contact_agreed'), None)
+    contact = next((e for e in decision.v2_events if (e['type'] == 'contact_scheduled' or (e['type'] == 'contact_agreed' and e.get('contact_at')))), None)
     if contact:
         raw_anchor = context.get('trigger_customer_at') if 'trigger_customer_at' in context else context.get('now') or context.get('virtual_now')
         if not raw_anchor:
@@ -765,8 +810,9 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
         decision.follow_up_question, decision.reply_segments = '', []
         decision.evidence_refs = list(dict.fromkeys(ref for s in sections for ref in s['evidence_refs']))
         return
-    if decision.action == 'reply' and any(e.get('material_kind') == 'full_introduction'
-                                         for e in decision.v2_events):
+    if decision.action == 'reply' and (decision.introduction_delivery or any(
+            e.get('material_kind') == 'full_introduction' for e in decision.v2_events)):
+        decision.introduction_delivery = True
         from app.reception_v2.material_delivery import introduction_sections
         slots = {**((context.get('journey') or {}).get('slots') or context.get('memory') or {}),
                  **decision.slots}
@@ -775,7 +821,7 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
         if any(e['type'] == 'question' for e in decision.v2_events) and decision.reply:
             groups = ROUTES[decision.route_variant]['groups']
             group = decision.content_group_key if decision.content_group_key in groups else 'itinerary_overview'
-            sections.insert(0, {'group_key': group,
+            sections.append({'group_key': group,
                 'text': decision.reply_body or decision.reply, 'asset_keys': [],
                 'evidence_refs': list(decision.evidence_refs), 'delivery_mode': 'text_only',
                 'answers_customer_question': True})
@@ -812,9 +858,6 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
     registry = SkillRegistry()
     if registry.release_digest() != SKILL_RELEASE_DIGEST:
         raise ValueError("v2_skill_release_changed")
-    configured_opening = _configured_opening(context, registry.release_digest())
-    if configured_opening is not None:
-        return configured_opening
     journey_memory = build_journey_memory(context)
     proactive = evaluate_proactive_eligibility(context, journey_memory)
     if context.get("module") in {"silence_touch", "wakeup"} and not proactive.eligible:
@@ -1029,7 +1072,9 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
     initial_draft = asdict(decision)
     initial_draft['contact_values'] = {key: '[captured]' for key in initial_draft.get('contact_values', {})}
     try:
+        _prepare_route_introduction(context, decision)
         _enforce_delivery_contract(context, decision)
+        _attach_configured_opening(context, decision)
         current_stage = str((context.get("journey") or {}).get("stage") or "route_selection")
         transition_flag = guard_decision_stage(decision, current_stage)
     except Exception as exc:
@@ -1039,21 +1084,25 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
         decision.journey_stage = 'handoff'
         decision.wakeup_action = 'skip'
         decision.reception_flow = 'lead_handoff'
-    final_delivery = asdict(decision)
-    final_delivery['contact_values'] = {key: '[captured]' for key in final_delivery.get('contact_values', {})}
-    decision_revisions = [{'stage': 'model_output', 'decision': initial_draft},
-                          {'stage': 'delivery_plan', 'decision': final_delivery}]
     digest = hashlib.sha256(json.dumps(messages, ensure_ascii=True, sort_keys=True, default=str).encode()).hexdigest()
     if context.get("module") in {"silence_touch", "wakeup"} and decision.action == "reply":
         if decision.route_variant != bound_route:
             raise EvaluationCallError("v2_proactive_route_change_rejected", logs, digest)
         if not set(decision.evidence_refs).intersection(proactive.candidate_value_ids):
-            raise EvaluationCallError("v2_proactive_without_candidate_value", logs, digest)
+            decision.action, decision.wakeup_action = 'no_action', 'skip'
+            decision.reply = decision.reply_body = None
+            decision.material_keys = []
+            decision.lead_action = 'none'
+            decision.safety_flags.append('proactive_no_new_value')
         evidence_assets = {asset for group in ROUTES.get(bound_route, {}).get('groups', {}).values()
                            if set(decision.evidence_refs).intersection(group.get('evidence', []))
                            for asset in group.get('assets', [])}
         if not set(decision.material_keys) <= evidence_assets:
             raise EvaluationCallError('v2_proactive_material_evidence_mismatch', logs, digest)
+    final_delivery = asdict(decision)
+    final_delivery['contact_values'] = {key: '[captured]' for key in final_delivery.get('contact_values', {})}
+    decision_revisions = [{'stage': 'model_output', 'decision': initial_draft},
+                          {'stage': 'delivery_plan', 'decision': final_delivery}]
     trace = {
         "engine_version": ENGINE_VERSION,
         "decision_revisions": decision_revisions,

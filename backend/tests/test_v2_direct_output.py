@@ -62,12 +62,18 @@ def test_repeated_identical_customer_message_is_not_another_opening():
     context = {'module': 'reply', 'customer_text': '你好',
                'context_messages': [{'direction': 'incoming', 'content': '你好'}]}
     assert not runtime._is_first_customer_message(context)
-    assert runtime._configured_opening(context, 'test') is None
+    from app.deepseek_evaluation import EvaluationDecision
+    decision = EvaluationDecision('reply', 'unclassified', 'other', reply='原文')
+    runtime._attach_configured_opening(context, decision)
+    assert decision.opening_items == []
 
 
 @pytest.mark.parametrize('text', ['你好', '我想了解11日行程', '住宿和費用怎麼安排？', '我先考慮一下'])
 def test_first_contact_uses_configured_opening_regardless_of_text(monkeypatch, text):
-    monkeypatch.setattr(runtime, '_call', lambda *args: pytest.fail('Opening does not call a model'))
+    monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
+    monkeypatch.setattr(runtime, '_call', lambda *args: ({'content': json.dumps({
+        'action': 'reply', 'intent': 'other', 'reply': '自然承接', 'v2_events': [],
+    })}, {'round': 0, 'duration_ms': 1}))
     decision, logs, _, trace = runtime.run_v2_agent({
         'module': 'reply', 'customer_text': text, 'context_messages': [],
         'reception_policy': {'operator_configuration': {
@@ -76,7 +82,7 @@ def test_first_contact_uses_configured_opening_regardless_of_text(monkeypatch, t
     })
     assert decision.opening_messages == ['第一段原文。', '第二段原文。']
     assert decision.opening_interval_seconds == 3
-    assert logs == [] and trace['fast_path'] == 'configured_opening'
+    assert len(logs) == 1
 
 
 def test_model_cannot_reopen_a_conversation_by_setting_opening_intent():

@@ -56,60 +56,19 @@ def test_explicit_route_detail_bypasses_route_selection():
     assert "peach-9d-2027" in selected.allowed_skills
 
 
-def test_fresh_generic_greeting_uses_operator_opening_without_model_call(monkeypatch):
-    def forbidden(*_args, **_kwargs):
-        raise AssertionError("generic opening must not call the model")
-
-    monkeypatch.setattr(runtime, "_call", forbidden)
-    result = runtime.run_v2_agent({
-        "module": "reply",
-        "customer_text": "您好",
-        "context_messages": [],
-        "reception_policy": {
-            "operator_configuration": {
-                "opening_messages": ["您好～這裡是已配置的開場。", "想先了解哪條行程呢？"],
-                "opening_interval_seconds": 3,
-            },
-            "route_switch": {"allowed_routes": ["peach_9d_2027", "peach_11d_2027"]},
-        },
-    })
-    decision, logs, _, trace = result
-    assert decision.reply == "您好～這裡是已配置的開場。"
-    assert decision.opening_messages == ["您好～這裡是已配置的開場。", "想先了解哪條行程呢？"]
+@pytest.mark.parametrize("text", ["hello", "hi", "trip inquiry"])
+def test_first_turn_understood_once_and_opening_copy_preserved(monkeypatch, text):
+    import json
+    monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
+    monkeypatch.setattr(runtime, '_call', lambda *_a, **_kw: ({'content': json.dumps({
+        'action': 'reply', 'reply': 'model greeting', 'v2_events': []})}, {'round': 0, 'duration_ms': 1}))
+    decision, logs, _, trace = runtime.run_v2_agent({
+        'module': 'reply', 'customer_text': text, 'context_messages': [],
+        'reception_policy': {'operator_configuration': {
+            'opening_messages': ['configured copy', 'configured choice'], 'opening_interval_seconds': 3}}})
+    assert decision.opening_messages == ['configured copy', 'configured choice']
     assert decision.opening_interval_seconds == 3
-    assert logs == []
-    assert trace["fast_path"] == "configured_opening"
-    assert trace["request_count"] == 0
-
-
-@pytest.mark.parametrize("text", ["您好，我想了解一下", "你好～"])
-def test_generic_opening_accepts_polite_greeting_variants(monkeypatch, text):
-    monkeypatch.setattr(runtime, "_call", lambda *_args, **_kwargs: (_ for _ in ()).throw(
-        AssertionError("generic opening must not call the model")))
-    decision, logs, _, trace = runtime.run_v2_agent({
-        "module": "reply", "customer_text": text,
-        "context_messages": [],
-        "reception_policy": {"operator_configuration": {"opening_message": "配置開場"}},
-    })
-    assert decision.reply == "配置開場"
-    assert logs == [] and trace["fast_path"] == "configured_opening"
-
-
-def test_first_trip_inquiry_uses_operator_opening_without_model_call(monkeypatch):
-    monkeypatch.setattr(runtime, "_call", lambda *_args, **_kwargs: (_ for _ in ()).throw(
-        AssertionError("first customer message must use the configured opening")))
-    decision, logs, _, trace = runtime.run_v2_agent({
-        "module": "reply",
-        "customer_text": "你好，我想咨询旅行行程",
-        "context_messages": [],
-        "reception_policy": {"operator_configuration": {
-            "opening_messages": ["配置开场一", "配置开场二"],
-            "opening_interval_seconds": 4,
-        }},
-    })
-    assert decision.opening_messages == ["配置开场一", "配置开场二"]
-    assert decision.opening_interval_seconds == 4
-    assert logs == [] and trace["fast_path"] == "configured_opening"
+    assert len(logs) == 1
 
 
 def test_specific_new_customer_question_does_not_use_operator_opening(monkeypatch):

@@ -48,7 +48,7 @@ def guard_decision_stage(decision, current_stage: str | None) -> str | None:
     events = {event.get('type') for event in getattr(decision, 'v2_events', [])}
     if (current == 'considering' and proposed == 'considering' and
             events & {'question', 'material_requested', 'route_selected', 'profile_updated'} and
-            not events & {'considering', 'contact_agreed'}):
+            not events & {'considering', 'contact_scheduled'}):
         decision.journey_stage = proposed = 'value_building'
     if current not in {'captured', 'handoff'} and getattr(decision, 'action', '') == 'reply':
         if 'route_selected' in events and proposed == 'route_selection':
@@ -56,7 +56,7 @@ def guard_decision_stage(decision, current_stage: str | None) -> str | None:
         if proposed == 'contact_requested' and getattr(decision, 'lead_action', '') != 'ask':
             decision.journey_stage = proposed = 'value_building'
     has_evidence = (
-        (proposed != 'considering' or proposed == current or bool(events & {'considering', 'contact_agreed'}))
+        (proposed != 'considering' or proposed == current or bool(events & {'considering', 'contact_scheduled'}))
         and (proposed != 'captured' or proposed == current or
              (getattr(decision, 'lead_action', '') == 'captured' and bool(getattr(decision, 'contact_values', {}))))
         and (proposed != 'handoff' or proposed == current or getattr(decision, 'action', '') == 'handoff')

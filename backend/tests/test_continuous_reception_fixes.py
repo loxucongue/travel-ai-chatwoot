@@ -1,0 +1,179 @@
+import json
+
+import pytest
+
+from app.deepseek_evaluation import EvaluationDecision
+from app.reception_v2.events import validate_events, merge_events
+from app.reception_v2 import runtime
+from app.route_packages import ROUTES
+
+
+def test_contact_consent_has_no_appointment_and_preserves_optout():
+    events = validate_events([{'type': 'contact_agreed', 'quote': '微信聯絡'}],
+                             {'customer_text': '微信聯絡'})
+    state = merge_events({'_v2_state': {'proactive_opt_out': True}}, events)['_v2_state']
+    assert 'contact_at' not in state
+    assert state['proactive_opt_out']
+
+
+def test_acceptance_budget_respects_smaller_suite_allocation(tmp_path, monkeypatch):
+    from app import model_metering
+    path = tmp_path / 'cost.json'
+    path.write_text(json.dumps({'limit_cny': .1, 'calls': []}), encoding='utf-8')
+    monkeypatch.setattr(model_metering, '_ledger_path', lambda: path)
+    with pytest.raises(RuntimeError, match='budget_exhausted'):
+        model_metering.begin_request({'model': 'deepseek-v4-flash', 'max_tokens': 120})
+    assert json.loads(path.read_text())['calls'] == []
+
+
+def test_appointment_keeps_timezone_validation():
+    with pytest.raises(ValueError, match='timezone_required'):
+        validate_events([{'type': 'contact_scheduled', 'quote': '明天', 'contact_at': '2026-10-01T12:00:00'}],
+                        {'customer_text': '明天'})
+
+
+def test_pdf_topic_alias_combines_with_vehicle():
+    events = validate_events([
+        {'type': 'material_requested', 'quote': 'PDF', 'topic': 'altitude_guide', 'material_kind': 'other'},
+        {'type': 'material_requested', 'quote': '車照', 'material_kind': 'vehicle'},
+    ], {'customer_text': 'PDF和車照'})
+    route = ROUTES['peach_9d_2027']
+    available = {k for g in route['groups'].values() for k in g['assets']}
+    decision = EvaluationDecision('reply', route['branch'], 'other', reply='資料',
+        route_variant='peach_9d_2027', v2_events=events)
+    runtime._compile_delivery_contract({'available_materials': [{'key': k} for k in available]}, decision)
+    assert decision.action == 'reply'
+    guide = route['groups'][route['policies']['post_capture_material_group']]
+    assert set(guide['assets']) <= set(decision.material_keys)
+    assert set(route['groups']['vehicle_reference']['assets']) <= set(decision.material_keys)
+
+
+def test_topic_hint_does_not_remove_a_second_requested_attachment():
+    from app.decision_service import _validated_route_references
+    route = ROUTES['peach_9d_2027']
+    keys = [*route['groups']['vehicle_reference']['assets'],
+            *route['groups'][route['policies']['post_capture_material_group']]['assets']]
+    decision = EvaluationDecision('reply', route['branch'], 'other', reply='两份资料',
+        route_variant='peach_9d_2027', content_group_key='vehicle_reference', material_keys=keys)
+    _, kept, _, flags = _validated_route_references(decision, {
+        'engine_version': 'v2', 'available_materials': [{'key': k} for k in keys]})
+    assert kept == keys and not flags
+
+
+def test_optional_bad_comparison_card_does_not_discard_answer_or_customer_profile():
+    decision = runtime._validated_decision({'content': json.dumps({
+        'action': 'reply', 'reply': '两条线路的差异', 'v2_events': [],
+        'slots': {'route_variant': 'peach_11d_2027', 'party_size': 3},
+        'slot_evidence': {'party_size': '3位'},
+        'presentations': [{'type': 'route_comparison', 'routes': []}],
+    })}, set(), set(), {'customer_text': '我们3位，比较一下'})
+    assert decision.reply == '两条线路的差异'
+    assert decision.slots == {'party_size': 3}
+    assert not decision.presentations
+
+
+@pytest.mark.parametrize('route_id', ['peach_9d_2027', 'peach_11d_2027'])
+def test_ad_entry_preserves_configured_brand_and_completes_fixed_introduction(route_id):
+    route = ROUTES[route_id]
+    context = {'module': 'reply', 'context_messages': [], 'customer_text': '我們4位，選這條。',
+               'available_materials': [{'key': k} for g in route['groups'].values() for k in g['assets']],
+               'reception_policy': {'operator_configuration': {'opening_items': [
+                   {'key': 'brand', 'content_type': 'text', 'content': '配置品牌原文'},
+                   {'key': 'selection-question', 'content_type': 'text', 'content': '選哪條？'}]}}}
+    decision = EvaluationDecision('reply', route['branch'], 'other', reply='模型自行摘要',
+        route_variant=route_id, slots={'party_size': '4'},
+        v2_events=[{'type': 'route_selected', 'quote': '選這條'}])
+    runtime._prepare_route_introduction(context, decision)
+    runtime._enforce_delivery_contract(context, decision)
+    runtime._attach_configured_opening(context, decision)
+    assert decision.introduction_delivery
+    assert decision.opening_messages == ['配置品牌原文']
+    assert not decision.reply_options
+    keys = [s['group_key'] for s in decision.v2_delivery_sections]
+    assert keys[1] == 'itinerary_overview'
+    assert keys[-1] == 'no_shopping'
+    assert len(decision.material_keys) > 2
+
+
+def test_first_selected_route_asks_configured_party_question():
+    route = ROUTES['peach_9d_2027']
+    decision = EvaluationDecision('reply', route['branch'], 'other', reply='任意介绍',
+        route_variant='peach_9d_2027', v2_events=[{'type': 'route_selected'}])
+    runtime._prepare_route_introduction({'module': 'reply', 'context_messages': []}, decision)
+    assert decision.reply == route['groups']['entry_question']['text']
+    assert not decision.material_keys
+
+
+@pytest.mark.parametrize('control,expected_count', [('queue', 3), ('stop', 1), ('switch', 1), ('handoff', 1)])
+def test_live_intro_queues_questions_but_interrupts_control(session_factory, monkeypatch, control, expected_count):
+    import app.live_reply as live
+    from test_live_reply import setup, add_itinerary_progress
+    from app.live_reply_models import LiveReplyJob
+    from app.models import ConversationState, utcnow
+    from app.reception_v2 import ENGINE_RELEASE_ID
+    fake = setup(session_factory, monkeypatch)
+    with session_factory() as db:
+        state, job = db.get(ConversationState, 1), db.get(LiveReplyJob, 1)
+        state.ai_engine_version = job.engine_version = 'v2'
+        state.ai_engine_release_id = job.engine_release_id = ENGINE_RELEASE_ID
+        db.commit()
+        add_itinerary_progress(db)
+    sections = [{'group_key': 'itinerary_overview', 'text': text, 'asset_keys': [],
+                 'evidence_refs': [], 'delivery_mode': 'text_only'} for text in ['第一组', '第二组', '最后一组']]
+    decision = EvaluationDecision('reply', 'peach_9d', 'itinerary', reply='第一组',
+        route_variant='peach_9d_2027', v2_delivery_sections=sections, introduction_delivery=True)
+    monkeypatch.setattr(live, 'generate_decision', lambda _: (decision, [], 'test', {}))
+    classified = []
+    def classify(text, route):
+        classified.append(text)
+        return control, {'round': 0}
+    monkeypatch.setattr('app.reception_v2.introduction_input.classify_introduction_input', classify)
+    def new_message(_):
+        if not any(m['id'] == 101 for m in fake.messages):
+            fake.messages.append({'id': 101, 'created_at': utcnow(), 'message_type': 0,
+                                  'content': '住宿呢？', 'private': False})
+    monkeypatch.setattr(live.time, 'sleep', new_message)
+    live.process_job(1)
+    assert len(fake.sent) == expected_count
+    assert len(classified) == 1
+    with session_factory() as db:
+        job = db.get(LiveReplyJob, 1)
+        assert job.status == ('submitted' if control == 'queue' else 'blocked')
+        if control == 'queue':
+            assert job.trace['introduction_queued_input_ids'] == [101]
+
+
+def test_rehearsal_queues_multiple_questions_across_outgoing_messages(session_factory, monkeypatch):
+    from app.automation_models import AutomationSession, AutomationRun
+    from app.automation_service import add_customer_message, queue_passive, _auto_confirm_journey_drafts
+    from app.models import InboxBinding, utcnow
+    from sqlalchemy import select
+    with session_factory() as db:
+        db.add(InboxBinding(id=1, tenant_id=1, chatwoot_inbox_id=1, name='test'))
+        s = AutomationSession(owner_id=1, inbox_binding_id=1, mode='journey', environment='playground',
+            engine_version='v2', virtual_now=utcnow(), controls={'can_reply': True, 'ai_enabled': True,
+                'human': False, 'labels': [], 'route_variant': 'peach_9d_2027', 'history_complete': True})
+        db.add(s); db.flush()
+        run = AutomationRun(session_id=s.id, generation=s.generation, module='reply',
+            status='completed', idempotency_key='intro', decision={'introduction_delivery': True})
+        db.add(run); db.flush()
+        s.messages = [{'id': 'intro-end', 'direction': 'outgoing', 'source': 'ai', 'run_id': run.id,
+                       'status': 'draft', 'content': '介绍末段', 'created_at': s.virtual_now}]
+        db.commit()
+        monkeypatch.setattr('app.reception_v2.introduction_input.classify_introduction_input',
+                            lambda *args: ('queue', {}))
+        add_customer_message(db, s, '住宿呢？', 'q1'); db.commit()
+        add_customer_message(db, s, '含機票嗎？', 'q2'); db.commit()
+        assert s.messages[0]['status'] == 'draft'
+        assert not s.due_at
+        def deliver(db, session, *args, **kwargs):
+            session.messages = [{**m, 'status': 'simulated_delivered'} if m['id'] == 'intro-end' else m
+                                for m in session.messages]
+        monkeypatch.setattr('app.automation_service.confirm_draft', deliver)
+        assert _auto_confirm_journey_drafts(db, s)
+        db.commit()
+        assert queue_passive(db, session_id=s.id)
+        pending = db.scalar(select(AutomationRun).where(AutomationRun.status == 'pending'))
+        assert pending.input_snapshot['source_message_ids'] == ['q1', 'q2']
+        assert pending.input_snapshot['customer_text'] == '住宿呢？\n含機票嗎？'
+        assert pending.input_snapshot['context_messages'][0]['content'] == '介绍末段'

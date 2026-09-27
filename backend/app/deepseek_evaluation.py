@@ -269,6 +269,8 @@ class EvaluationDecision:
     bound_route_snapshot: dict | None = None
     v2_events: list[dict] = field(default_factory=list)
     v2_delivery_sections: list[dict] = field(default_factory=list)
+    introduction_delivery: bool = False
+    opening_continuation: bool = False
 
     @classmethod
     def parse(cls, value: object, *, infer_route_references: bool = True, validate_copy: bool = True) -> "EvaluationDecision":

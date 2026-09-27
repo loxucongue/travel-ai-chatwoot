@@ -80,8 +80,8 @@ def test_profile_parse_never_silently_discards_customer_updates(slots,evidence,e
     import json
     from app.reception_v2.runtime import _validated_decision
     raw={'action':'reply','reply':'已記下日期。','slots':slots,'slot_evidence':evidence,'v2_events':[]}
-    with pytest.raises(ValueError,match=error):
-        _validated_decision({'content':json.dumps(raw)},set(),set(),{'customer_text':'3月28日出發'})
+    decision = _validated_decision({'content':json.dumps(raw)},set(),set(),{'customer_text':'3月28日出發'})
+    assert decision.slots == {'departure_window': '3月28日'}
 
 
 def test_followup_question_cannot_recommit_historical_profile_as_current_input():
@@ -131,7 +131,7 @@ def test_appointment_without_contact_identifier_is_not_captured():
                       'contact_at':'2026-09-21T10:00:00+08:00'}]})},set(),set(),
         {'module':'reply','customer_text':'明天十点联系','now':NOW})
     assert decision.lead_action=='none' and decision.action=='reply'
-    assert decision.v2_events[0]['type']=='contact_agreed'
+    assert decision.v2_events[0]['type']=='contact_scheduled'
 
 
 def test_missing_event_field_is_not_silently_treated_as_no_customer_request():
@@ -229,10 +229,10 @@ def test_full_introduction_keeps_extra_answer_and_receipts_are_independent():
     materials = [{'key': key} for group in ROUTES[ROUTE]['groups'].values() for key in group['assets']]
     _enforce_delivery_contract({'available_materials': materials}, decision)
     sections = decision.v2_delivery_sections
-    assert sections[0]['answers_customer_question']
+    assert sections[-1]['answers_customer_question']
     assert all(s['group_key'] != 'party_question' for s in sections)
-    assert answer_receipt(asdict(decision), sections[0]['text'])['questions'] == questions
-    assert answer_receipt(asdict(decision), sections[1]['text'])['questions'] == []
+    assert answer_receipt(asdict(decision), sections[-1]['text'])['questions'] == questions
+    assert answer_receipt(asdict(decision), sections[0]['text'])['questions'] == []
 
 
 def test_material_retrieval_does_not_hide_assets_when_keywords_do_not_match():
@@ -268,9 +268,11 @@ def test_third_route_registers_followup_candidates_without_editing_runtime(tmp_p
 
 
 def test_published_opening_is_frozen_as_delivery_items():
-    from app.reception_v2.runtime import _configured_opening
-    decision, _, _, _ = _configured_opening({'module': 'reply', 'context_messages': [], 'reception_policy': {
-        'operator_configuration': {'opening_messages': ['歡迎來諮詢。', '您想了解哪條行程？'], 'opening_interval_seconds': 2}}}, 'test')
+    from app.reception_v2.runtime import _attach_configured_opening
+    from app.deepseek_evaluation import EvaluationDecision
+    decision = EvaluationDecision('reply','unclassified','other',reply='greeting')
+    _attach_configured_opening({'module': 'reply', 'context_messages': [], 'reception_policy': {
+        'operator_configuration': {'opening_messages': ['歡迎來諮詢。', '您想了解哪條行程？'], 'opening_interval_seconds': 2}}}, decision)
     assert decision.opening_messages == ['歡迎來諮詢。', '您想了解哪條行程？']
     assert len(decision.reply_options) == len(ROUTES)
 

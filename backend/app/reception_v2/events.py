@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from app.contact_channels import refusal_scope
 
 EVENT_TYPES = {
-    'question', 'material_requested', 'considering', 'contact_agreed',
+    'question', 'material_requested', 'considering', 'contact_agreed', 'contact_scheduled',
     'contact_refused', 'human_requested', 'route_selected', 'route_comparison', 'profile_updated',
 }
 
@@ -31,6 +31,12 @@ def validate_events(raw, context: dict) -> list[dict]:
         event['occurred_at'] = context.get('now') or context.get('virtual_now') or datetime.now(timezone.utc).isoformat()
         if item['type'] == 'material_requested':
             kind = item.get('material_kind') or item.get('topic')
+            aliases = {'altitude_guide': 'altitude', 'altitude_pdf': 'altitude',
+                       'itinerary_overview': 'itinerary', 'hotel_reference': 'hotel',
+                       'vehicle_reference': 'vehicle'}
+            kind = aliases.get(kind, kind)
+            if kind == 'other':
+                kind = aliases.get(item.get('topic'), kind)
             if kind not in {'itinerary', 'full_introduction', 'hotel', 'vehicle', 'altitude', 'other'}:
                 raise ValueError('v2_event_material_kind_required')
             event['material_kind'] = kind
@@ -39,7 +45,10 @@ def validate_events(raw, context: dict) -> list[dict]:
             if scope is None:
                 raise ValueError('v2_contact_refusal_scope_required')
             event['scope'] = scope
-        if item['type'] == 'contact_agreed':
+        # Old records used contact_agreed for appointments. Keep reading those,
+        # but consent to contact alone never requires a future timestamp.
+        if item['type'] == 'contact_scheduled' or (item['type'] == 'contact_agreed' and item.get('contact_at')):
+            event['type'] = 'contact_scheduled'
             try:
                 when = datetime.fromisoformat(str(item.get('contact_at') or '').replace('Z', '+00:00'))
             except ValueError as exc:
@@ -73,9 +82,11 @@ def merge_events(slots: dict, events: list[dict]) -> dict:
                 state['proactive_opt_out'] = True
             else:
                 state['refused_channels'] = sorted(set(state.get('refused_channels', [])) | {event['scope']})
-        elif event['type'] == 'contact_agreed':
+        elif event['type'] == 'contact_scheduled' or (event['type'] == 'contact_agreed' and event.get('contact_at')):
             state['proactive_opt_out'] = False
             state['contact_at'] = event['contact_at']
+            state['contact_evidence'] = event['quote']
+        elif event['type'] == 'contact_agreed':
             state['contact_evidence'] = event['quote']
         elif event['type'] == 'considering':
             state['waiting_reason'] = 'considering'

@@ -30,7 +30,7 @@ def _update(record, *, reserve=False):
         ledger = json.loads(path.read_text(encoding='utf8')) if path.exists() else {'limit_cny': 18, 'calls': []}
         if reserve:
             spent = sum(r['charged_or_reserved_cny'] for r in ledger['calls'])
-            if spent + record['charged_or_reserved_cny'] > 18:
+            if spent + record['charged_or_reserved_cny'] > min(18, float(ledger.get('limit_cny', 18))):
                 raise RuntimeError('model_test_budget_exhausted')
             ledger['calls'].append(record.copy())
         else:
@@ -43,7 +43,7 @@ def _update(record, *, reserve=False):
 
 
 def begin_request(payload):
-    if _ledger_path() is not None and payload.get('model') != 'deepseek-flash':
+    if _ledger_path() is not None and payload.get('model') not in {'deepseek-flash', 'deepseek-v4-flash'}:
         raise RuntimeError('model_test_requires_deepseek_flash')
     # Byte-level tokenization cannot exceed the serialized request's UTF-8
     # bytes for its visible text. Double that bound and add 64K framing room;

@@ -272,6 +272,31 @@ def add_customer_message(db: Session, session: AutomationSession, content: str, 
                          trigger_entry_sops: bool = True) -> None:
     if any(x.get("client_key") == client_key for x in session.messages):
         return
+    intro_run_ids = {m.get('run_id') for m in session.messages if m.get('status') == 'draft'}
+    active_intro = next((run for run_id in intro_run_ids
+                         if (run := db.get(AutomationRun, run_id)) and run.decision.get('introduction_delivery')), None)
+    if active_intro and session.engine_version == 'v2' and content_type == 'text':
+        from app.reception_v2.introduction_input import classify_introduction_input
+        db.commit()
+        try:
+            action, log = classify_introduction_input(content, session.controls.get('route_variant', ''))
+        except Exception as exc:
+            # Keep accepting the customer's message even if the short intent
+            # call fails. The normal reply worker will handle it next.
+            action, log = 'interrupt', {'error_code': type(exc).__name__}
+        db.refresh(session)
+        session.controls = {**session.controls, 'last_introduction_input': {'action': action, 'call': log}}
+        if action == 'queue':
+            session.messages = [*session.messages, {'id': client_key, 'client_key': client_key,
+                'direction': 'incoming', 'content': content, 'content_type': content_type,
+                'created_at': session.virtual_now, 'timeline_sequence': next_timeline_sequence(session)}]
+            session.controls = {**session.controls, 'queued_introduction_inputs': [
+                *session.controls.get('queued_introduction_inputs', []), client_key]}
+            append_timeline_event(session, 'question_queued', '问题已保留，线路介绍完成后统一回答。')
+            if not any(m.get('run_id') == active_intro.id and m.get('status') == 'draft' for m in session.messages):
+                session.generation += 1
+                session.batch_started_at = session.due_at = utcnow()
+            return
     had_active_sop = bool(db.scalar(select(RehearsalEnrollment.id).where(
         RehearsalEnrollment.session_id == session.id,
         RehearsalEnrollment.status == "active",
@@ -318,12 +343,18 @@ def queue_passive(db: Session, environment: str | None = None, *, session_id: in
         return False
     policy, version = reply_policy(db, session.inbox_binding_id)
     messages = list(session.messages)
+    queued_ids = set(session.controls.get('queued_introduction_inputs') or [])
     split = len(messages)
     handled = str(session.controls.get("last_handled_customer_message_id") or "")
     while (split > 0 and messages[split-1].get("direction") == "incoming"
            and (not handled or str(messages[split-1].get("id") or "") != handled)):
         split -= 1
     target = messages[split:]
+    if queued_ids:
+        target = [m for m in messages if m.get('id') in queued_ids or m in target]
+        context_messages = [m for m in messages if m not in target]
+    else:
+        context_messages = messages[:split]
     reason = gate(session, session.virtual_now)
     if not policy["enabled"]: reason = "reply_policy_disabled"
     if target and session.environment == "shadow" and dt(utcnow()) - dt(target[-1]["created_at"]) > timedelta(seconds=policy["backlog_seconds"]):
@@ -332,7 +363,7 @@ def queue_passive(db: Session, environment: str | None = None, *, session_id: in
     key = f"reply:{session.id}:{session.generation}"
     if not db.scalar(select(AutomationRun.id).where(AutomationRun.idempotency_key == key)):
         row = AutomationRun(session_id=session.id, generation=session.generation, module="reply", idempotency_key=key, policy_version=version,
-            input_snapshot={"customer_text": "\n".join(x.get("content", "") for x in target), "context_messages": messages[:split], "memory": session.memory, "module": "reply",
+            input_snapshot={"customer_text": "\n".join(x.get("content", "") for x in target), "context_messages": context_messages, "memory": session.memory, "module": "reply",
                             "source_message_ids": [x.get("id") for x in target],
                             "source_message_id": target[-1].get("id") if target else None,
                             "context_complete": session.controls.get("history_complete", False)})
@@ -342,6 +373,7 @@ def queue_passive(db: Session, environment: str | None = None, *, session_id: in
             row.status, row.completed_at = "completed", utcnow()
             row.decision = {"action": "handoff", "handoff_reason": "attachment_requires_review", "reply": "附件需要由顧問協助查看。", "material_keys": []}
         db.add(row)
+    session.controls = {k: v for k, v in session.controls.items() if k != 'queued_introduction_inputs'}
     session.due_at, session.batch_started_at = None, None
     db.commit()
     return True
@@ -553,7 +585,7 @@ def process_automation_run(
                 )).all():
                     stop_enrollment(db, enrollment, "ai_handoff")
                 append_timeline_event(session, "ai_handoff", "已切换为人工接管，剩余 SOP 已停止。")
-            if outcome.get("reply"):
+            if outcome.get("reply") or outcome.get('opening_items'):
                 deferred = deferred_initial_follow_up(
                     outcome,
                     (session.controls.get("journey") or {}).get("sent_content_groups", []),
@@ -613,6 +645,7 @@ def process_automation_run(
                                 "is_follow_up": part.is_follow_up,
                             },
                         },
+                        "delivery_delay_seconds": part.interval_seconds,
                     }
                     for index, part in enumerate(ordered)
                 ]
@@ -623,6 +656,7 @@ def process_automation_run(
                     timed_delivery = True
                     items = delivery_items(outcome.get("opening_items"), opening)
                     last_text = max((i for i, item in enumerate(items) if item['content_type'] == 'text'), default=-1)
+                    continuation = group if outcome.get('v2_delivery_sections') or outcome.get('opening_continuation') else []
                     group = []
                     for index, item in enumerate(items):
                         info = opening_media_info(db, item, tenant_for_session(db, session)) if item["content_type"] != "text" else {}
@@ -631,10 +665,14 @@ def process_automation_run(
                             "content": item["content"],
                             "content_type": text_message["content_type"] if index == last_text else item["content_type"],
                             "content_attributes": text_message["content_attributes"] if index == last_text else {},
+                            "delivery_delay_seconds": interval_seconds if index else 0,
                         })
+                    group.extend(continuation)
+                elapsed_seconds = 0
                 for index, message in enumerate(group):
                     if index and timed_delivery:
-                        message["created_at"] = iso(dt(session.virtual_now) + timedelta(seconds=index * interval_seconds))
+                        elapsed_seconds += float(message.pop('delivery_delay_seconds', interval_seconds) or interval_seconds)
+                        message["created_at"] = iso(dt(session.virtual_now) + timedelta(seconds=elapsed_seconds))
                     if timed_delivery:
                         message["preserve_delivery_timing"] = True
                     message["timeline_sequence"] = next_timeline_sequence(session)
@@ -1568,6 +1606,10 @@ def _auto_confirm_journey_drafts(db: Session, session: AutomationSession) -> boo
             confirm_draft(db, session, str(first["id"]), due_only=True)
             if not any(item.get("run_id") == run_id and item.get("status") == "draft" for item in session.messages):
                 append_timeline_event(session, "ai_replied", "本轮消息已逐条通过发送前校验，并在沙盒中模拟送达。")
+                if run.decision.get('introduction_delivery') and session.controls.get('queued_introduction_inputs'):
+                    cancel_generation(db, session, 'introduction_questions_ready')
+                    session.generation += 1
+                    session.batch_started_at = session.due_at = utcnow()
         except ValueError as exc:
             updated = [dict(x) for x in session.messages]
             for item in updated:
