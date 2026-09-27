@@ -367,11 +367,12 @@ def test_publish_add_delete_round_trip_preserves_old_sop_snapshot(
             assert added["package_version"] == response.json()["draft"]["package_version"]
             assert added["package_version"] > source["package_version"]
             assert next(g for g in added["content_groups"] if g["key"] == CUSTOM)["purpose"] == "Packing"
-            assert any(
-                candidate["content_group_key"] == CUSTOM
-                for node in added["default_sop"]["nodes"]
-                for candidate in node.get("content_group_candidates", [])
-            )
+            from app.reception_v2.skill_registry import SkillRegistry
+            registry = SkillRegistry()
+            skill = registry.load(registry.route_skill(route))
+            assert any(item['group_key'] == CUSTOM and item['text'] == 'Bring warm clothes.'
+                       for item in skill['introduction'])
+            assert all('content_group_candidates' not in node for node in added['default_sop']['nodes'])
             added_version = added["package_version"]
             added["base_package_version"] = added_version
             added["content_groups"] = [g for g in added["content_groups"] if g["key"] not in {CUSTOM, "read_check"}]
