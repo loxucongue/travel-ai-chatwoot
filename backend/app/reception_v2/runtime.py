@@ -581,6 +581,10 @@ def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> 
         same_route and 'itinerary_overview' in journey.get('completed_content_groups', []))
     explicit = any(e.get('material_kind') == 'full_introduction' for e in decision.v2_events)
     if not same_route and not explicit and not any(e['type'] == 'route_selected' for e in decision.v2_events):
+        # A product used to answer a question is not a customer selection.
+        # Keep the existing binding so the next turn cannot auto-start its SOP.
+        decision.route_variant = str(context.get('route_variant') or journey.get('route_variant') or '')
+        decision.branch = ROUTES[decision.route_variant]['branch'] if decision.route_variant in ROUTES else 'unclassified'
         return
     if introduced and not decision.allow_material_resend:
         decision.v2_events = [e for e in decision.v2_events if e.get('material_kind') != 'full_introduction']

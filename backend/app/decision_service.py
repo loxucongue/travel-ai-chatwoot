@@ -238,8 +238,10 @@ def _generate_decision(context: dict, model_call=None):
             raise EvaluationCallError('reviewed_delivery_plan_changed', logs, digest)
     decision.content_group_key = group_key
     allowed_groups = set(ROUTES.get(decision.route_variant, {}).get("groups", {}))
+    material_groups = [key for key, group in ROUTES.get(decision.route_variant, {}).get('groups', {}).items()
+                       if set(materials).intersection(group.get('assets', []))] if engine_version == 'v2' else []
     decision.covered_content_groups = list(dict.fromkeys(
-        group for group in [decision.content_group_key, *(decision.covered_content_groups or [])]
+        group for group in [decision.content_group_key, *(decision.covered_content_groups or []), *material_groups]
         if group in allowed_groups
     ))
     decision.reply_options, option_flags = _validated_reply_options(decision)

@@ -60,6 +60,19 @@ def test_capture_does_not_automatically_resend_an_already_delivered_guide():
     assert '附給您' not in decision.reply
 
 
+def test_combined_material_delivery_records_every_material_group():
+    from app.decision_service import generate_decision
+    route = ROUTES['peach_9d_2027']
+    guide_key = route['policies']['post_capture_material_group']
+    assets = [*route['groups'][guide_key]['assets'], *route['groups']['vehicle_reference']['assets']]
+    model = EvaluationDecision('reply', route['branch'], 'other', reply='兩份資料給您。',
+        route_variant='peach_9d_2027', material_keys=assets, covered_content_groups=['vehicle_reference'])
+    decision, _, _, _ = generate_decision({'engine_version': 'v2', 'module': 'reply',
+        'customer_text': 'PDF和車照都要', 'available_materials': [{'key': key} for key in assets]},
+        model_call=lambda _: (model, [], 'fixture'))
+    assert guide_key in decision.covered_content_groups
+
+
 def test_topic_hint_does_not_remove_a_second_requested_attachment():
     from app.decision_service import _validated_route_references
     route = ROUTES['peach_9d_2027']
@@ -167,6 +180,7 @@ def test_route_search_hint_does_not_start_an_unconfirmed_introduction():
         route_variant='peach_11d_2027', reply='可以先比較兩條線路。')
     _prepare_route_introduction(context, decision)
     assert not decision.introduction_delivery
+    assert decision.route_variant == '' and decision.branch == 'unclassified'
     prompt = _messages(context, SkillRegistry())[0]['content']
     assert '"bound_route": ""' in prompt
     assert '"route_search_hint": "peach_11d_2027"' in prompt
