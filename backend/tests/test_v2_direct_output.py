@@ -95,3 +95,16 @@ def test_model_cannot_reopen_a_conversation_by_setting_opening_intent():
     runtime._enforce_delivery_contract(context, decision)
     assert decision.reply == '還想了解哪些內容呢？'
     assert decision.opening_items == [] and decision.opening_messages == []
+
+
+@pytest.mark.parametrize('delivery_intent,continuation', [('opening', False), ('none', True)])
+def test_first_contact_opening_does_not_duplicate_generic_route_question(delivery_intent, continuation):
+    from app.deepseek_evaluation import EvaluationDecision
+    decision = EvaluationDecision('reply', 'unclassified', 'other', reply='模型答案',
+        v2_events=[{'type': 'question', 'quote': '想了解西藏'}])
+    decision.delivery_intent = delivery_intent
+    runtime._attach_configured_opening({'module': 'reply', 'context_messages': [],
+        'reception_policy': {'operator_configuration': {'opening_messages': ['配置欢迎', '配置选线']}}}, decision)
+    assert decision.opening_messages == ['配置欢迎', '配置选线']
+    assert decision.opening_continuation is continuation
+    assert decision.reply == ('模型答案' if continuation else '配置欢迎')

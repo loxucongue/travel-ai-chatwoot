@@ -187,7 +187,7 @@ def main():
                               'confirmed_at': j.confirmed_at, 'reason': j.reason} for j in jobs],
                     'runs': [{'id': r.id, 'status': r.status, 'error_code': r.error_code, 'input': r.input_snapshot,
                               'decision': r.decision, 'trace': r.trace} for r in runs]}, ensure_ascii=False, default=str), encoding='utf-8')
-                failed = [r.id for r in runs if r.status == 'failed']
+                failed = [r.id for r in runs if r.status in {'failed', 'blocked'}]
                 if failed:
                     emit('failed', key=key, run_ids=failed)
                     raise RuntimeError('acceptance_run_failed')

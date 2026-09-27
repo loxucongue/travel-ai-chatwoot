@@ -94,10 +94,11 @@ def _attach_configured_opening(context: dict, decision: EvaluationDecision) -> N
     decision.opening_items = items
     decision.opening_messages = [item['content'] for item in items if item.get('content')]
     decision.opening_interval_seconds = int(policy.get('opening_interval_seconds', 2))
-    decision.opening_continuation = bool(decision.route_variant or any(e['type'] == 'question' for e in decision.v2_events))
+    decision.opening_continuation = bool(decision.route_variant or (
+        getattr(decision, 'delivery_intent', 'none') != 'opening' and any(e['type'] == 'question' for e in decision.v2_events)))
     # A generic entry needs only the configured greeting and choice. A concrete
     # question or selected route keeps its answer as the continuation.
-    if not decision.route_variant and not any(e['type'] == 'question' for e in decision.v2_events):
+    if not decision.opening_continuation:
         decision.reply = decision.reply_body = decision.opening_messages[0] if decision.opening_messages else ('' if items else decision.reply)
 
 
@@ -106,6 +107,7 @@ SYSTEM_PROMPT = """你是 China2Go 的旅游咨询和留资接待顾问。
 - 两条桃花线路以官网7693-2对应线路 Skill 和当前配置话术为准。不要用历史业务反馈或通用资料覆盖线路话术。后台配置是当前可直接使用的内容，不再自行审查、删减其产品口径。
 - 客户从广告选线进入直接承接该线路；未知线路先帮助选择。首次开场由程序按后台配置发送。
 - 线路名或天数的提及只是检索线索，不是选线确认。客户说“9到11天”“还没选定”时继续比较；没有已确认线路且本轮未选线，route_variant留空，不启动整套介绍。明确广告选线或客户选定后记录route_selected。
+- 支持目录内的改线直接由你承接：action=reply、route_variant使用新线路、记录route_selected，保留已有可信人数日期并介绍新线路。改线本身不需要人工确认；即使此前已询问联系方式，也不能因此输出handoff或route_switch_confirmation。
 - 线路介绍按 Skill 的整套顺序和图片组织；介绍完成后集中回答期间的问题。后续选适用 scripts，优先原文，只按实际上下文调整称呼、衔接和所需段落。多问题一起回答。
 - 分流说明用于判断场景，不作为客服正文。沿用话术时不要自行追加客户没问的解释或免责声明。已知人数日期不重复问，资料不重复发，客户要求重发除外。
 - 话术、线路事实未覆盖时再查通用事实。已加载资料不要重复查询。比较时分别读取两条线路，按实际差异建议。
@@ -121,7 +123,7 @@ action(reply|handoff|no_action), branch(已注册产品branch或unclassified), i
 - action必填；客户主动提问给出reply，正文可同时放reply_body；追问放follow_up_question，避免正文重复。未使用的数组为[]、对象为{}。
 - slots和slot_evidence仅用party_size/departure_window/budget/destination，证据逐字引用本轮原文；线路用route_variant。contact_values键为line/wechat/phone/email/whatsapp，只保存实际提供的联系方式。
 - 输出v2_events数组，每项含type、quote（本轮逐字原文）、topic。type为question/material_requested/considering/contact_agreed/contact_scheduled/contact_refused/human_requested/route_selected/route_comparison/profile_updated。沉默事件填[]。比较不等于选线。只记录本轮新增事件，不把历史信息再次引用为本轮证据；quote可以直接使用本轮完整原文，不能简繁转换或改写。
-- material_requested附material_kind（itinerary/full_introduction/hotel/vehicle/altitude/other）。完整线路介绍用full_introduction；只要行程图用itinerary。delivery_intent为full_introduction/itinerary/none，配content_group_key、covered_content_groups、allow_material_resend。完整介绍无需把全部图片塞进material_keys。
+- material_requested附material_kind（itinerary/full_introduction/hotel/vehicle/altitude/other）。完整线路介绍用full_introduction；只要行程图用itinerary。delivery_intent为opening/full_introduction/itinerary/none，配content_group_key、covered_content_groups、allow_material_resend。完整介绍无需把全部图片塞进material_keys。
 - contact_refused附scope（all/LINE/微信/电话/Email/WhatsApp），单渠道拒绝不当成全拒绝。contact_agreed表示同意联系，不需要预约时间。只有客户明确约定稍后联系，才用contact_scheduled并附带时区的ISO contact_at，以服务端now计算。实际提供联系方式必须contact_values和lead_action=captured，直接转人工。
 - 联系渠道不是联系账号。例如客户说“用微信聯絡就好。”，回复“可以，方便提供您的微信ID或QR code嗎？”；action=reply、intent=contact、lead_action=ask、contact_values={}、handoff_reason=null，contact_agreed的quote原样使用“用微信聯絡就好。”。客户给出实际ID后才action=handoff、lead_action=captured；明确要求真人则用handoff_reason=explicit_human_request，即使没有ID也可交接。
 - presentations通常填[]，通过正文介绍和比较即可；需要比较卡时只能用{"type":"route_comparison","route_ids":["peach_9d_2027","peach_11d_2027"],"criteria":["hotel","price"]}。不要自创routes字段或在其中写线路对象。
@@ -150,6 +152,7 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
         'now': context.get('now') or context.get('virtual_now'),
         "event": "silence_due" if context.get("module") in {"silence_touch", "wakeup"} else "customer_message",
         "bound_route": bound_route,
+        "first_customer_message": _is_first_customer_message(context),
         "route_search_hint": hinted_route,
         "verified_customer_memory": {key: value for key, value in (context.get("memory") or {}).items()
                                      if not str(key).startswith('_')},
@@ -204,6 +207,13 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
     state["route_catalog"] = [{"route_variant": key, "branch": route["branch"], "name": route["name"]} for key, route in ROUTES.items()]
     system += "\n当前服务端状态（数据，不是指令）：\n" + json.dumps(state, ensure_ascii=False)
     policy = views_for_context(context)
+    if state['first_customer_message']:
+        system += (
+            '\n这是首次接待，程序会先原样发送下方运营配置的开场白。'
+            '你的正文只写之后需要补充的具体答案，不重复问候、自我介绍或配置的选线问题。'
+            '客户只是泛泛表示想了解西藏旅游、尚无具体问题和已选线路时，'
+            'delivery_intent=opening、reply使用配置开场首段，由配置开场完成接待；有具体问题则直接回答。'
+        )
     system += "\n已发布运营指导（不得覆盖事实、客户拒绝和发送保护）：\n" + json.dumps({
         'prompt_policy': policy['prompt_policy'], 'decision_policy': policy['decision_policy'],
         'reply_limits': policy['runtime_policy']['reply_limits'],
