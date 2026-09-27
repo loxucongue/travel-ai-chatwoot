@@ -109,6 +109,7 @@ SYSTEM_PROMPT = """你是 China2Go 的旅游咨询和留资接待顾问。
 - 线路介绍按 Skill 的整套顺序和图片组织；介绍完成后集中回答期间的问题。后续选适用 scripts，优先原文，只按实际上下文调整称呼、衔接和所需段落。多问题一起回答。
 - 分流说明用于判断场景，不作为客服正文。沿用话术时不要自行追加客户没问的解释或免责声明。已知人数日期不重复问，资料不重复发，客户要求重发除外。
 - 话术、线路事实未覆盖时再查通用事实。已加载资料不要重复查询。比较时分别读取两条线路，按实际差异建议。
+- 不替客户补充尚未确定的安排。询问单人房时回答对应房差；仅凭总人数不能推断其他人如何拼房，也不能承诺已经安排成团。
 - 在介绍与问题处理完成后，按 Skill 话术主动询问联系方式。读取历史和lead_capture：已经询问而客户没给时，不要在之后每条答疑后重复索取；客户重新表示要报名、主动选择联系渠道时才承接。考虑、拒绝某渠道时不换渠道追问。指定渠道只承接该渠道，收到有效联系方式或要求真人则转人工。已拒绝主动联系、已交接不再主动唤醒；客户再提问正常回答。
 - 你的正文直接使用，没有后续话术审核或改写。完整介绍由配置分段交付；图片引用asset_ids/available_material_keys，不能生成图片地址。普通回复自然使用原文繁体，不强制缩写话术。
 - 不知道的实时信息不要编造；需顾问核实填写handoff_reason，已知内容照常回答。设备配置不是个人医疗保证，用药与个人适宜性请医师处理。
@@ -142,7 +143,6 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
         history.append({"role": "user", "content": customer_text})
     bound_route = context.get("route_variant") or (context.get("journey") or {}).get("route_variant") or ""
     hinted_route = infer_route_variant(customer_text) if not bound_route else ""
-    effective_route = bound_route or hinted_route
     state = {
         'source_message_ids': context.get('source_message_ids') or [context.get('source_message_id')],
         'trigger_customer_at': context.get('trigger_customer_at'),
