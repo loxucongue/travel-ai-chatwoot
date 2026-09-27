@@ -8,67 +8,6 @@ FACT={'id':'web.7.8.0.0','module_key':'official_contact','text':'客服微信為
       'topics':['聯繫'],'source':'https://example.test/contact','branches':[]}
 
 
-@pytest.mark.parametrize('supplied,supports',[(True,True),(False,False),(True,False)])
-def test_auditor_resolves_only_supported_citations_from_supplied_packet(monkeypatch,supplied,supports):
-    import app.reply_fact_verification as verifier
-    from app.reception_v2.runtime import _verify
-    from app.deepseek_evaluation import EvaluationDecision
-    monkeypatch.setattr('app.reception_v2.reply_scope.verify_scope',lambda data:(
-        {'consultant_tasks':[],'unwanted_parts':[],'event_errors':[],'missing_answers':[]},[],''))
-    def audit(**kw):
-        ids={f['id'] for f in kw['input_data']['allowed_facts']}
-        assert (FACT['id'] in ids)==supplied
-        return kw['parser']({'claim_checks':[{'claim':FACT['text'],'evidence':FACT['id'],
-            'reason':'test proof','supported':supports}]}),[],''
-    monkeypatch.setattr(verifier,'call_json_node',audit)
-    verifier._VERIFIER_CACHE.clear()
-    decision=EvaluationDecision('reply','peach_9d','other',reply=FACT['text'],route_variant='peach_9d_2027')
-    checked,_,_=_verify({'engine_version':'v2','global_knowledge_facts':[FACT],
-        'v2_available_fact_ids':[FACT['id']] if supplied else []},decision)
-    assert decision.evidence_refs==([FACT['id']] if supplied and supports else [])
-    assert checked.supported==supports
-    verifier._VERIFIER_CACHE.clear()
-
-
-def test_independent_scope_can_see_service_fact_even_if_generator_omits_it(monkeypatch):
-    import app.reply_fact_verification as verifier
-    from app.reception_v2.runtime import _verify
-    from app.deepseek_evaluation import EvaluationDecision
-    seen=[]
-    def scope(data):
-        seen.extend(data['request_reference_facts'])
-        assert FACT['id'] not in {f['id'] for f in data['allowed_facts']}
-        return {'consultant_tasks':[],'unwanted_parts':[],'event_errors':[],
-                'missing_answers':['官方聯絡方式未回答']},[],''
-    monkeypatch.setattr('app.reception_v2.reply_scope.verify_scope',scope)
-    monkeypatch.setattr(verifier,'call_json_node',lambda **kw:(verifier.FactVerification(True),[],''))
-    verifier._VERIFIER_CACHE.clear()
-    decision=EvaluationDecision('reply','peach_9d','other',reply='我幫您查。',route_variant='peach_9d_2027')
-    result,_,_=_verify({'engine_version':'v2','global_knowledge_facts':[FACT]},decision)
-    assert {'id':FACT['id'],'text':FACT['text']} in seen
-    assert not result.relevant
-    verifier._VERIFIER_CACHE.clear()
-
-
-@pytest.mark.parametrize('body,cited,passes',[
-    ('每人一支隨身氧氣瓶。',True,False),
-    ('5000公尺以下每人一支。',True,False),
-    ('５，０００公尺以上景點每人一支。',True,True),
-    ('您好。',False,True),
-])
-def test_reviewed_fact_conditions_are_enforced_even_when_model_audits_pass(monkeypatch,body,cited,passes):
-    from app.reception_v2.runtime import _verify
-    from app.deepseek_evaluation import EvaluationDecision
-    from app.reply_fact_verification import FactVerification
-    fact={**FACT,'answer_requirements':[{'label':'適用於5000公尺以上景點',
-        'any_of':['5000公尺以上','5000米以上']}]}
-    monkeypatch.setattr('app.reception_v2.runtime.call_reply_fact_verifier',lambda *a:(FactVerification(True),[],''))
-    decision=EvaluationDecision('reply','peach_9d','other',reply=body,route_variant='peach_9d_2027',
-        evidence_refs=[FACT['id']] if cited else [])
-    result,_,_=_verify({'global_knowledge_facts':[fact]},decision)
-    assert result.relevant==passes
-
-
 def test_playground_service_publication_does_not_enter_live_v2_tool(session_factory):
     from app.web_knowledge import install_curated_global_library, publish_revision, enrich_context_with_web_knowledge
     payload={'modules':[{'kind':'knowledge_module','key':'official_contact','title':'Contact',
@@ -130,7 +69,6 @@ def test_service_fact_reaches_generator_auditor_and_outer_reference_validation(m
         assert FACT in context['global_knowledge_facts']
         return FactVerification(True),[],''
     monkeypatch.setattr(runtime,'_call',call)
-    monkeypatch.setattr(runtime,'_verify',verify)
     decision,_,_,trace=generate_decision({'module':'reply','engine_version':'v2',
         'customer_text':'怎麼聯繫你們？','route_variant':'peach_9d_2027',
         'global_knowledge_version':'published-test',

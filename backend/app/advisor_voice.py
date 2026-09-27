@@ -2,22 +2,6 @@
 from __future__ import annotations
 
 import re
-from opencc import OpenCC
-
-_V2_TAIWAN_CONVERTER = OpenCC('s2tw')
-
-
-def normalize_v2_customer_copy(value: str) -> str:
-    """Convert display copy only; preserve literal URLs and opaque identifiers."""
-    from app.reply_generation import _normalize_taiwan_service_terms
-    parts=re.split(r'(https?://[^\s<>]+)',value)
-    result=''.join(part if re.match(r'https?://',part) else
-        _normalize_taiwan_service_terms(_V2_TAIWAN_CONVERTER.convert(part)).replace('2人一標間拼住', '2人一間雙人房') for part in parts)
-    # Remove only empty, standalone evidence-bookkeeping clauses. Never remove
-    # a clause containing the actual rule, qualification or unknown subject.
-    return re.sub(r'(^|[，,；;。])(?:這點|這部分|目前)?資料(?:上)?(?:還|仍|尚)?(?:沒有|未)(?:明確|確認)([，,；;。]|$)',
-                  lambda m:m.group(1) if m.group(1) else '',result)
-
 
 ADVISOR_VOICE_VERSION = "china2go-taiwan-advisor-voice-v15"
 ADVISOR_VOICE_EVIDENCE = "human-advisor-style-summary-20260906"
@@ -34,23 +18,6 @@ def taiwan_copy_violation(value: str) -> str | None:
     match = TAIWAN_COPY_BLOCKLIST.search(value)
     if not match:
         match = GENERIC_MAINLAND_HOTEL_PATTERN.search(value)
-    return match.group(0) if match else None
-
-
-def v2_internal_copy_violation(value: str) -> str | None:
-    """Reject internal evidence bookkeeping, not ordinary document discussion."""
-    match = re.search(r'(?:文件|資料|资料)(?:上|裡|里|中)?(?:沒有|没有|沒|未)(?:明確|明确)?(?:寫|写|列|說明|说明)'
-                      r'|我(?:這邊|这边)?(?:就|先)?不(?:先)?(?:幫|帮|替)您(?:計算|计算|算|推算)'
-                      r'|不能(?:直接|先)?(?:說|说)(?:不用|沒有|没有|免交)'
-                      r'|(?:業務|业务)(?:反饋|回饋|反馈|口徑|口径|確認價|确认价)'
-                      r'|(?:尚無|尚无|沒有|没有)(?:已)?公布資料'
-                      r'|(?:目前|當前|当前)批准的(?:配置|安排|路線|路线|產品|产品|行程)'
-                      r'|(?:資料|资料)(?:上)?(?:還|还|仍|尚)?(?:沒有|没有|未)(?:明確|明确)?(?:公布|確認|确认)'
-                      r'|(?:資料|资料)(?:上)?(?:沒有|没有|沒|未)(?:明確|明确|清楚)'
-                      r'|(?:我這邊|我这边|我)?不能(?:直接|先)?(?:說|说|判定)(?:一定)?(?:要或不用|要或不要|需要或免交)'
-                      r'|我(?:這邊|这边)?(?:先)?不(?:隨意|随意)(?:報價|报价)'
-                      r'|我(?:這邊|这边)(?:還|还|尚)?(?:沒有|没有|未)(?:公布|公佈)'
-                      r'|(?:公司)?大[團团](?:客[製制])?[門门][檻槛]', value)
     return match.group(0) if match else None
 
 

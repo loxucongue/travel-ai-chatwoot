@@ -288,7 +288,7 @@ class EvaluationDecision:
     v2_delivery_sections: list[dict] = field(default_factory=list)
 
     @classmethod
-    def parse(cls, value: object, *, infer_route_references: bool = True) -> "EvaluationDecision":
+    def parse(cls, value: object, *, infer_route_references: bool = True, validate_copy: bool = True) -> "EvaluationDecision":
         if not isinstance(value, dict):
             raise ValueError("deepseek_invalid_json_shape")
         action = value.get("action")
@@ -303,9 +303,9 @@ class EvaluationDecision:
             raise ValueError("deepseek_reply_missing")
         reply = str(value.get("reply") or "").strip()
         reply_policy = JOURNEY_POLICY["reply_style"]
-        if action == "reply" and len(reply) > int(reply_policy["max_characters"]):
+        if validate_copy and action == "reply" and len(reply) > int(reply_policy["max_characters"]):
             raise ValueError("deepseek_reply_too_long")
-        if action == "reply" and sum(reply.count(mark) for mark in ("?", "？")) > 1:
+        if validate_copy and action == "reply" and sum(reply.count(mark) for mark in ("?", "？")) > 1:
             raise ValueError("deepseek_multiple_followup_questions")
         for key in ("missing_slots", "evidence_refs", "safety_flags", "material_keys", "covered_content_groups"):
             if not isinstance(value.get(key, []), list):

@@ -154,25 +154,25 @@ def test_route_material_manifest_uses_high_resolution_originals():
     assert {image["mime_type"] for image in images} <= {"image/jpeg", "image/png"}
 
 
-def test_route_package_rejects_mainland_or_internal_customer_copy():
+def test_route_package_preserves_operator_copy_without_style_gate():
     package = deepcopy(ROUTE_PACKAGES["peach_9d_2027"])
     package.pop("source_path", None)
     package.pop("runtime_sop", None)
     package["content_groups"]["hotel_reference"]["approved_text"] = (
         "客戶詢問設備時再發對應實景。"
     )
-    with pytest.raises(RoutePackageError, match="route_package_group_taiwan_copy_invalid"):
-        _validate(package, Path("test-route-package.json"))
+    validated = _validate(package, Path("test-route-package.json"))
+    assert validated['content_groups']['hotel_reference']['approved_text'] == '客戶詢問設備時再發對應實景。'
 
 
-def test_route_package_rejects_mainland_fixed_answer_copy():
+def test_route_package_preserves_fixed_answer_without_word_substitution():
     package = deepcopy(ROUTE_PACKAGES["peach_9d_2027"])
     package.pop("source_path", None)
     package.pop("runtime_sop", None)
     package["fixed_answers"][0]["answer_text"] = "我先把酒店照片發您看。"
     package["fixed_answers"][0]["answer_origin"] = "operator_approved"
-    with pytest.raises(RoutePackageError, match="route_package_fixed_answer_taiwan_copy_invalid"):
-        _validate(package, Path("test-route-package.json"))
+    validated = _validate(package, Path("test-route-package.json"))
+    assert validated['fixed_answers'][0]['answer_text'] == '我先把酒店照片發您看。'
 
 
 def test_website_fixed_answers_are_single_source_verbatim_copy():

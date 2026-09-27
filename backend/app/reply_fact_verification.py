@@ -1,17 +1,11 @@
-"""Narrow semantic verifier for generated customer-facing factual claims."""
+"""Legacy V1 reply verification; the V2 runtime does not use this module."""
 from __future__ import annotations
-from app.turn_context import conversation_snapshot
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from collections import OrderedDict
-from copy import deepcopy
 import hashlib
 import json
-import re
-from concurrent.futures import TimeoutError as FutureTimeout
-from contextvars import copy_context
 from threading import Lock
-from app.reception_v2.verification_pool import ScopeVerificationPool
 
 from app.decision_knowledge import FACTS
 from app.config import settings
@@ -31,9 +25,7 @@ FACT_VERIFIER_REPAIR_PROMPT = (
 _VERIFIER_CACHE: OrderedDict[str, tuple["FactVerification", str]] = OrderedDict()
 _VERIFIER_CACHE_LIMIT = 128
 _VERIFIER_CACHE_LOCK = Lock()
-# Bounded, process-lifetime workers reuse their own HTTP transports. Scope and
-# factual proof are independent; both must finish before a reply is approved.
-_SCOPE_POOL = ScopeVerificationPool()
+
 
 
 @dataclass(frozen=True)
@@ -44,9 +36,6 @@ class FactVerification:
     unanswered_questions: list[str] = field(default_factory=list)
     confirmation_questions: list[str] = field(default_factory=list)
     contract_violations: list[str] = field(default_factory=list)
-    claim_checks: list[dict] = field(default_factory=list)
-    scope_check: dict = field(default_factory=dict)
-    verified_fact_ids: list[str] = field(default_factory=list)
 
 
 def _system_prompt() -> str:
@@ -153,236 +142,71 @@ def _parse(value: dict) -> FactVerification:
                             violations)
 
 
-def _parse_v2(value: dict) -> FactVerification:
-    """Require explicit claim/scope checks rather than an unexamined pass flag."""
-    checks, scope = value.get('claim_checks'), value.get('scope_check')
-    if not isinstance(checks, list) or not isinstance(scope, dict):
-        raise ValueError('v2_verification_audit_missing')
-    unsupported = []
-    for item in checks:
-        if (not isinstance(item, dict) or not isinstance(item.get('claim'), str)
-                or not isinstance(item.get('supported'), bool) or not isinstance(item.get('evidence'), str)):
-            raise ValueError('v2_claim_check_invalid')
-        if not item['supported']:
-            unsupported.append(item['claim'])
-    unrelated, missing, confirmations = (scope.get(k) for k in ('unrelated_claims','missing_answers','consultant_tasks'))
-    if (not isinstance(scope.get('current_request'), str) or
-            any(not isinstance(a,list) or any(not isinstance(v,str) for v in a) for a in (unrelated,missing,confirmations))):
-        raise ValueError('v2_scope_check_invalid')
-    merged = dict(value)
-    merged['unsupported_claims'] = list(dict.fromkeys([*(value.get('unsupported_claims') or []), *unsupported]))
-    merged['supported'] = not merged['unsupported_claims']
-    merged['unanswered_questions'] = list(dict.fromkeys([*(value.get('unanswered_questions') or []), *missing]))
-    merged['relevant'] = not merged['unanswered_questions']
-    merged['contract_violations'] = list(dict.fromkeys([*(value.get('contract_violations') or []), *unrelated]))
-    merged['confirmation_questions'] = list(dict.fromkeys([*(value.get('confirmation_questions') or []), *confirmations]))
-    return replace(_parse(merged), claim_checks=checks, scope_check=scope)
-
-
 def call_reply_fact_verifier(context: dict, plan: ReplyPlan, generated: GeneratedReply):
+    """Legacy V1 verification. V2 sends its final model output directly."""
     system_prompt = _system_prompt()
-    is_v2 = context.get('engine_version') == 'v2'
-    if is_v2:
-        from app.reception_v2.fact_proof import FACT_PROOF_PROMPT, fact_proof_input
-        system_prompt = FACT_PROOF_PROMPT
-    facts = {fact["id"]: fact["text"] for fact in FACTS}
-    facts.update({key: value["text"] for key, value in context_fact_map(context).items()})
-    supplied_ids = set(context.get('v2_available_fact_ids') or []) if is_v2 else set()
-    proof_ids = list(dict.fromkeys([*generated.used_fact_ids, *sorted(supplied_ids)]))
-    if is_v2 and context.get('module') in {'silence_touch','wakeup'}:
-        # Previously provided approved facts remain valid evidence. The separate
-        # proactive contract still limits which facts count as NEW value; its
-        # candidate set must not hide route inclusion/exception evidence here.
-        proof_ids=list(dict.fromkeys([*proof_ids,*[fact['id'] for fact in FACTS
-            if not fact.get('branches') or plan.branch in fact['branches']]]))
-    validated_customer_facts = dict(
-        (context.get("journey") or {}).get("customer_profile") or {}
-    )
-    validated_customer_facts.update(plan.slots)
-    from app.reception_v2.fact_proof import calendar_facts
-    from app.customer_contact_policy import current_contact_refusals, V2_OPT_OUT_RECEIPT, current_contact_appointments, V2_APPOINTMENT_RECEIPT
+    facts = {fact['id']: fact['text'] for fact in FACTS}
+    web_facts = context_fact_map(context)
+    facts.update({key: value['text'] for key, value in web_facts.items()})
+    profile = dict((context.get('journey') or {}).get('customer_profile') or {})
+    profile.update(plan.slots)
+    policy = (context.get('reception_policy_views') or {}).get('decision_policy', {})
+    operator = (context.get('reception_policy') or {}).get('operator_configuration', {})
     input_data = {
-        'request_reference_facts': ([{'id':f['id'],'text':facts[f['id']]} for f in FACTS
-            if f['id'] in facts and (not f.get('branches') or plan.branch in f.get('branches', []))]
-            + [{'id':key,'text':fact['text']} for key,fact in context_fact_map(context).items()]) if is_v2 else [],
-        'calendar_facts': calendar_facts(validated_customer_facts,ROUTES.get(plan.route_variant,{}).get('name','')) if is_v2 else [],
-        'compiled_material_captions': [
-            {'text':group['text'],'kind':{'itinerary_overview':'itinerary','hotel_reference':'hotel','rongbuk_reference':'hotel','vehicle_reference':'vehicle'}.get(key,key)}
-            for key,group in ROUTES.get(plan.route_variant,{}).get('groups',{}).items()
-            if group.get('assets') and set(group['assets'])<=set(generated.asset_ids)
-            and group.get('text') and group['text'] in (generated.body or '')] if is_v2 else [],
-        'event':'silence_due' if context.get('module') in {'silence_touch','wakeup'} else 'customer_message',
-        'selected_route':plan.route_variant,
-        'trusted_bound_route':context.get('route_variant') or (context.get('journey') or {}).get('route_variant') or '',
-        'delivered_materials':{'asset_keys':(context.get('journey') or {}).get('sent_asset_keys',[]),
-                               'content_groups':(context.get('journey') or {}).get('sent_content_groups',[])},
-        'proactive_contract':{'candidate_fact_ids':context.get('v2_proactive_candidate_fact_ids',[]),
-                              'delivered_fact_ids':context.get('v2_delivered_fact_ids',[])},
-        'recent_conversation': conversation_snapshot(context) if context.get('engine_version') == 'v2' else [],
-        'source_message_ids': context.get('source_message_ids') or [context.get('source_message_id')],
-        'trigger_customer_at': context.get('trigger_customer_at'),
-        "operator_lead_policy": (context.get('reception_policy_views') or {}).get('decision_policy', {}).get('lead_capture', {})
-            or (context.get('reception_policy') or {}).get('operator_configuration', {}).get('lead_capture', {}),
-        "customer_contact_preferences": ((context.get('journey') or {}).get('slots') or {}).get('_v2_state', {}),
-        "v2_events": context.get('v2_events', []) if context.get('engine_version') == 'v2' else [],
-        "ordered_delivery_sections": context.get('v2_delivery_sections', []) if context.get('engine_version') == 'v2' else [],
-        "current_time": context.get('now') or context.get('virtual_now'),
-        "route_applicability_facts": [fact for fact in ROUTES.get(plan.route_variant, {}).get('knowledge_facts', [])
-            if context.get('engine_version') == 'v2' and fact['id'].endswith(('.applicability', '.departure'))],
-        "question_details": context.get("question_details") or [],
-        "discussion_subject": context.get("discussion_subject") or "",
-        "customer_message": str(context.get("customer_text") or "") if context.get("module", "reply") not in {"silence_touch", "wakeup"} else "",
-        "proposed_body": generated.body,
-        "planned_follow_up": plan.follow_up.question if plan.follow_up else "",
-        "server_clarification": context.get("v2_server_clarification") if context.get("engine_version")=="v2" else None,
-        "selected_asset_ids": list(generated.asset_ids),
-        "comparison_reference_facts": [
-            {"id": key, "text": facts[key]} for key in ("route.9.days", "route.11.days")
-            if context.get("engine_version") == "v2" and key in facts
+        'operator_lead_policy': policy.get('lead_capture') or operator.get('lead_capture', {}),
+        'customer_contact_preferences': ((context.get('journey') or {}).get('slots') or {}).get('_v2_state', {}),
+        'current_time': context.get('now') or context.get('virtual_now'),
+        'event': 'silence_due' if context.get('module') in {'silence_touch', 'wakeup'} else 'customer_message',
+        'selected_route': plan.route_variant,
+        'trusted_bound_route': context.get('route_variant') or (context.get('journey') or {}).get('route_variant') or '',
+        'question_details': context.get('question_details') or [],
+        'discussion_subject': context.get('discussion_subject') or '',
+        'customer_message': str(context.get('customer_text') or '') if context.get('module', 'reply') not in {'silence_touch', 'wakeup'} else '',
+        'proposed_body': generated.body,
+        'planned_follow_up': plan.follow_up.question if plan.follow_up else '',
+        'selected_asset_ids': list(generated.asset_ids),
+        'allowed_facts': [{'id': key, 'text': facts[key], 'source': web_facts.get(key, {}).get('source', '')}
+                          for key in dict.fromkeys(generated.used_fact_ids) if key in facts],
+        'allowed_asset_claims': selected_asset_claims(context, generated.asset_ids),
+        'validated_customer_facts': profile,
+        'current_profile_updates': {'slots': dict(plan.slots), 'evidence': dict(plan.slot_evidence)},
+        'catalog_scope': [
+            {'route_variant': key, 'name': ROUTES[key]['name'], 'selection_title': ROUTES[key]['selection_title']}
+            for key in dict.fromkeys([plan.route_variant, *policy.get('route_switch', {}).get('allowed_routes', [])])
+            if key in ROUTES
         ],
-        "allowed_facts": [
-            {"id": fact_id, "text": facts[fact_id],
-             "source": context_fact_map(context).get(fact_id, {}).get("source", "")}
-            for fact_id in proof_ids
-            if fact_id in facts
-        ],
-        "allowed_asset_claims": selected_asset_claims(context, generated.asset_ids),
-        "validated_customer_facts": validated_customer_facts,
-        "current_profile_updates": {"slots": dict(plan.slots), "evidence": dict(plan.slot_evidence)},
-        "catalog_scope": [
-            {
-                "route_variant": route_id,
-                "name": ROUTES[route_id]["name"],
-                "selection_title": ROUTES[route_id]["selection_title"],
-            }
-            for route_id in dict.fromkeys([plan.route_variant, *(
-                context.get("reception_policy_views", {})
-                .get("decision_policy", {})
-                .get("route_switch", {})
-                .get("allowed_routes", [])
-            )])
-            if route_id in ROUTES
-        ],
-        "planned_system_action": {
-            "handoff_policy": (context.get('reception_policy_views') or {}).get('decision_policy', {}).get('handoff', {})
-                or (context.get('reception_policy') or {}).get('operator_configuration', {}).get('handoff', {}),
-            "delivery_phase": "initial_greeting" if plan.allowed_content_group_keys == ["advisor_greeting"] else "answer",
-            "action": plan.action,
-            "handoff_reason": plan.handoff_reason,
-            **({'contact_refusals':current_contact_refusals(context)} if is_v2 else {}),
-            **({'contact_appointments':current_contact_appointments(context)} if is_v2 else {}),
-            "lead_action": plan.lead_action,
-            "pending_materials": [flag.split(':',1)[1] for flag in plan.safety_flags
-                                  if flag.startswith('pending_material:')],
-            "reply_goal": plan.reply_goal,
-            "contact_collection_channel": plan.follow_up.field if plan.follow_up and plan.follow_up.type == "contact" else "",
+        'planned_system_action': {
+            'handoff_policy': policy.get('handoff') or operator.get('handoff', {}),
+            'delivery_phase': 'initial_greeting' if plan.allowed_content_group_keys == ['advisor_greeting'] else 'answer',
+            'action': plan.action, 'handoff_reason': plan.handoff_reason, 'lead_action': plan.lead_action,
+            'pending_materials': [flag.split(':', 1)[1] for flag in plan.safety_flags if flag.startswith('pending_material:')],
+            'reply_goal': plan.reply_goal,
+            'contact_collection_channel': plan.follow_up.field if plan.follow_up and plan.follow_up.type == 'contact' else '',
         },
     }
-    from app.reception_v2.reply_scope import SCOPE_PROMPT, verify_scope
     cache_key = hashlib.sha256(json.dumps(
-        {"prompt": system_prompt, "scope_prompt": SCOPE_PROMPT if is_v2 else "", "input": input_data,
-         'model': settings.deepseek_model,
-         'verification_policy':'parallel_scope_evidence_first' if is_v2 else 'v1',
-         'final_fact_recheck':context.get('v2_final_fact_recheck') is True},
+        {'prompt': system_prompt, 'input': input_data, 'model': settings.deepseek_model},
         ensure_ascii=False, sort_keys=True, default=str,
-    ).encode("utf-8")).hexdigest()
+    ).encode('utf-8')).hexdigest()
     with _VERIFIER_CACHE_LOCK:
         cached = _VERIFIER_CACHE.get(cache_key)
         if cached is not None:
             _VERIFIER_CACHE.move_to_end(cache_key)
     if cached is not None:
         result, digest = cached
-        return result, [{"duration_ms": 0, "status": "cached", "cache_key": cache_key,
-                         "supported": result.supported, "relevant": result.relevant,
-                         "unsupported_claims": result.unsupported_claims,
-                         "unanswered_questions": result.unanswered_questions,
-                         "contract_violations": result.contract_violations,
-                         'claim_checks':result.claim_checks,'scope_check':result.scope_check}], digest
-    scope, scope_logs, scope_digest = {}, [], ''
-    scope_future = _SCOPE_POOL.submit(copy_context().run, verify_scope, input_data) if is_v2 else None
-    def parse_facts(value):
-        if (is_v2 and plan.handoff_reason=='customer_contact_outside_window'
-                and current_contact_appointments(context)
-                and generated.body.endswith(V2_APPOINTMENT_RECEIPT)):
-            value=deepcopy(value)
-            proven=[]
-            for check in value.get('claim_checks',[]):
-                claim=check.get('claim','').strip('。！？!? ')
-                if claim and claim in V2_APPOINTMENT_RECEIPT:
-                    check.update(supported=True,evidence='planned_system_action.contact_appointments',
-                        reason='Exact server-owned appointment receipt; temporary wait, not permanent opt-out.')
-                    proven.append(check['claim'])
-            value['unsupported_claims']=[claim for claim in value.get('unsupported_claims',[]) if claim not in proven]
-        if (is_v2 and {'scope':'all'} in current_contact_refusals(context)
-                and generated.body==V2_OPT_OUT_RECEIPT):
-            # This fixed receipt describes a server-owned execution, not a
-            # model-generated product claim. Independent scope still proves
-            # the customer's refusal before the response can be accepted.
-            value=deepcopy(value)
-            proven=[]
-            for check in value.get('claim_checks',[]):
-                claim=check.get('claim','').strip('。！？!? ')
-                if claim and claim in V2_OPT_OUT_RECEIPT:
-                    check.update(supported=True,evidence='planned_system_action.contact_refusals: all',reason='Exact server-owned opt-out receipt.')
-                    proven.append(check['claim'])
-            value['unsupported_claims']=[claim for claim in value.get('unsupported_claims',[]) if claim not in proven]
-            value['supported']=not value['unsupported_claims'] and all(c.get('supported') for c in value.get('claim_checks',[]))
-        parsed = _parse_v2({**value, 'scope_check':{'current_request':'','unrelated_claims':[],
-            'missing_answers':[],'consultant_tasks':[]}})
-        resolved = [fact_id for fact_id in proof_ids if fact_id in facts and any(
-            check.get('supported') and re.search(r'(?<![\w.])' + re.escape(fact_id) + r'(?![\w.])',
-                                                check.get('evidence', ''))
-            for check in parsed.claim_checks)]
-        return replace(parsed, verified_fact_ids=list(dict.fromkeys(resolved)))
-    try:
-        result, logs, digest = call_json_node(
-            node="reply_fact_verification", system_prompt=system_prompt, input_data=fact_proof_input(input_data) if is_v2 else input_data,
-            parser=parse_facts if is_v2 else _parse, max_tokens=1800 if is_v2 else 400,
-            repair_prompt=FACT_VERIFIER_REPAIR_PROMPT + (' V2须保留完整claim_checks。' if is_v2 else ''),
-        )
-        if scope_future is not None:
-            from app.reception_v2.budget import remaining
-            scope, scope_logs, scope_digest = scope_future.result(timeout=remaining(30))
-        if (is_v2 and context.get('v2_final_fact_recheck') is True and not result.supported
-                and not any(scope[k] for k in ('unwanted_parts','event_errors','missing_answers'))):
-            # Re-read the same evidence independently before rejecting an answer.
-            # This resolves shallow false negatives without adding reasoning
-            # latency to every ordinary, supported reply. The shared turn deadline
-            # still applies; an inconclusive/late audit never approves delivery.
-            first_audit = result
-            rejection={'node':'v2_fact_initial_rejection','duration_ms':0,
-                'unsupported_claims':first_audit.unsupported_claims,'claim_checks':first_audit.claim_checks}
-            from app.deepseek_evaluation import EvaluationCallError
-            try:
-                result, recheck_logs, recheck_digest = call_json_node(
-                    node='v2_fact_recheck', system_prompt=system_prompt, input_data=fact_proof_input(input_data) if is_v2 else input_data,
-                    parser=parse_facts, max_tokens=3000, reasoning_effort='low',
-                    reasoning_timeout_seconds=6.0, reasoning_fallback_tokens=1800,
-                    repair_prompt=FACT_VERIFIER_REPAIR_PROMPT+' V2须保留完整claim_checks。')
-            except EvaluationCallError as exc:
-                raise EvaluationCallError(exc.code,[*scope_logs,*logs,rejection,*exc.logs],exc.digest) from exc
-            logs = [*logs,rejection,*recheck_logs]
-            digest = hashlib.sha256((digest+recheck_digest).encode()).hexdigest()
-    except FutureTimeout as exc:
-        from app.deepseek_evaluation import EvaluationCallError
-        raise EvaluationCallError('v2_scope_timeout', [], '') from exc
-    finally:
-        if scope_future is not None:
-            scope_future.cancel()
-    if is_v2:
-        violations = list(dict.fromkeys([*result.contract_violations,*scope['unwanted_parts'],*scope['event_errors'],
-                                        *scope.get('task_scope_errors',[])]))
-        missing = list(dict.fromkeys([*result.unanswered_questions,*scope['missing_answers']]))
-        result = replace(result, confirmation_questions=scope['consultant_tasks'], scope_check=scope,
-            relevant=result.relevant and not violations and not missing,
-            contract_violations=violations, unanswered_questions=missing)
-        digest = hashlib.sha256((scope_digest + digest).encode()).hexdigest()
-    logs = scope_logs + logs
-    logs = [{**row, "supported": result.supported, "relevant": result.relevant,
-             "unsupported_claims": row.get('unsupported_claims',result.unsupported_claims),
-             "unanswered_questions": result.unanswered_questions,
-             "contract_violations": result.contract_violations,
-             'claim_checks':row.get('claim_checks',result.claim_checks),'scope_check':result.scope_check} for row in logs]
+        return result, [{'duration_ms': 0, 'status': 'cached', 'cache_key': cache_key,
+                         'supported': result.supported, 'relevant': result.relevant,
+                         'unsupported_claims': result.unsupported_claims,
+                         'unanswered_questions': result.unanswered_questions,
+                         'contract_violations': result.contract_violations}], digest
+    result, logs, digest = call_json_node(
+        node='reply_fact_verification', system_prompt=system_prompt, input_data=input_data,
+        parser=_parse, max_tokens=400, repair_prompt=FACT_VERIFIER_REPAIR_PROMPT,
+    )
+    logs = [{**row, 'supported': result.supported, 'relevant': result.relevant,
+             'unsupported_claims': result.unsupported_claims,
+             'unanswered_questions': result.unanswered_questions,
+             'contract_violations': result.contract_violations} for row in logs]
     with _VERIFIER_CACHE_LOCK:
         _VERIFIER_CACHE[cache_key] = (result, digest)
         _VERIFIER_CACHE.move_to_end(cache_key)

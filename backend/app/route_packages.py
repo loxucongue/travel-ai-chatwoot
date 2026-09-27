@@ -13,7 +13,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from app.advisor_voice import taiwan_copy_violation
 
 
 PACKAGE_ROOT = (
@@ -222,11 +221,6 @@ def _validate(package: dict, source: Path) -> dict:
     for key, group in groups.items():
         if not isinstance(group, dict) or not str(group.get("approved_text") or "").strip():
             raise RoutePackageError(f"route_package_group_text_missing:{route_id}:{key}")
-        copy_violation = taiwan_copy_violation(str(group["approved_text"]))
-        if copy_violation:
-            raise RoutePackageError(
-                f"route_package_group_taiwan_copy_invalid:{route_id}:{key}:{copy_violation}"
-            )
         for field in ("asset_keys", "evidence_refs"):
             if not isinstance(group.get(field, []), list):
                 raise RoutePackageError(f"route_package_group_invalid:{route_id}:{key}:{field}")
@@ -278,11 +272,6 @@ def _validate(package: dict, source: Path) -> dict:
             raise RoutePackageError(f"route_package_fixed_answer_status_invalid:{route_id}:{answer_id}")
         if answer.get("answer_origin") not in {"website_verbatim", "operator_approved"}:
             raise RoutePackageError(f"route_package_fixed_answer_origin_invalid:{route_id}:{answer_id}")
-        copy_violation = taiwan_copy_violation(str(answer["answer_text"]))
-        if copy_violation and answer.get("answer_origin") != "website_verbatim":
-            raise RoutePackageError(
-                f"route_package_fixed_answer_taiwan_copy_invalid:{route_id}:{answer_id}:{copy_violation}"
-            )
         if answer["content_group_key"] not in groups:
             raise RoutePackageError(f"route_package_fixed_answer_group_invalid:{route_id}:{answer_id}")
         for field in ("topics", "fact_ids", "asset_ids", "positive_examples", "negative_examples"):
@@ -346,12 +335,6 @@ def _validate(package: dict, source: Path) -> dict:
             content_type = message.get("content_type", "text")
             if content_type == "text" and not str(message.get("content") or "").strip():
                 raise RoutePackageError(f"route_package_sop_text_missing:{route_id}:{key}")
-            if content_type == "text":
-                copy_violation = taiwan_copy_violation(str(message["content"]))
-                if copy_violation:
-                    raise RoutePackageError(
-                        f"route_package_sop_taiwan_copy_invalid:{route_id}:{key}:{copy_violation}"
-                    )
             if content_type != "text" and message.get("asset_key") not in {
                 asset for group in groups.values() for asset in group.get("asset_keys", [])
             }:

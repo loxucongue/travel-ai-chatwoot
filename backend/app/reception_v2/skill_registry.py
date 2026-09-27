@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,7 +54,28 @@ class SkillRegistry:
         skill = self._skills.get(name)
         if skill is None:
             raise ValueError("v2_skill_not_found")
-        return {"name": skill.name, "instructions": skill.body, "digest": skill.digest}
+        result = {"name": skill.name, "instructions": skill.body, "digest": skill.digest}
+        if skill.route_variant:
+            # Use the same published route snapshot as facts and delivery.
+            # Business edits belong in the route configuration, not SKILL.md.
+            from app.route_packages import ROUTES, ROUTE_PACKAGES
+            route = ROUTES.get(skill.route_variant, {})
+            result['route_variant'] = skill.route_variant
+            result['scripts'] = deepcopy([
+                item for item in route.get('fixed_answers', [])
+                if item.get('status') == 'active'
+            ])
+            result['evidence_refs'] = list(dict.fromkeys(
+                ref for item in result['scripts'] for ref in item.get('fact_ids', [])
+            ))
+            result['introduction'] = [
+                {'group_key': key, 'text': group.get('text', ''),
+                 'asset_keys': list(group.get('assets', [])),
+                 'evidence_refs': list(group.get('evidence', []))}
+                for key in ROUTE_PACKAGES.get(skill.route_variant, {}).get('content_sequence', route.get('sequence', []))
+                if (group := route.get('groups', {}).get(key))
+            ]
+        return result
 
     def release_digest(self) -> str:
         value = "\n".join(f"{item.name}:{item.digest}" for item in self._skills.values())

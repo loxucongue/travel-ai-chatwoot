@@ -90,44 +90,38 @@ def test_prefetch_keeps_tools_available_for_route_switch_and_materials(monkeypat
                 'reply': '每人人民幣9,980元。', 'route_variant': 'peach_9d_2027',
                 'evidence_refs': ['route.9.price'], 'reception_flow': 'route_detail'})}, {'duration_ms': 0}
     monkeypatch.setattr(runtime, '_call', call)
-    monkeypatch.setattr(runtime, '_verify', lambda *args: (None, [], ''))
     decision, _, _, trace = run_v2_agent({'module': 'reply', 'customer_text': '價格', 'route_variant': 'peach_9d_2027'})
     assert payloads[0]['tools']
     assert trace['prefetched_fact_ids']
 
 
-def test_contract_violation_is_repaired_even_if_facts_are_supported(monkeypatch):
+def test_model_extension_is_sent_without_scope_rewrite(monkeypatch):
     import json
     import app.reception_v2.runtime as runtime
-    from app.reply_fact_verification import FactVerification
     monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
     replies = iter(['我們在林芝集合，還會去布達拉宮。', '我們在林芝集合，第一天安排接機。'])
     def call(payload, index):
         return {'content': json.dumps({'action': 'reply', 'branch': 'peach_9d', 'intent': 'other', 'v2_events': [],
             'reply': next(replies), 'route_variant': 'peach_9d_2027', 'evidence_refs': ['service.peach_arrival']})}, {'duration_ms': 0}
-    checks = iter([FactVerification(True, contract_violations=['不要展开未问景点']), FactVerification(True)])
     monkeypatch.setattr(runtime, '_call', call)
-    monkeypatch.setattr(runtime, '_verify', lambda *args: (next(checks), [], ''))
     decision, logs, _, _ = run_v2_agent({'module': 'reply', 'customer_text': '集合', 'route_variant': 'peach_9d_2027'})
-    assert '布達拉宮' not in decision.reply
-    assert len(logs) == 2
+    assert decision.reply == '我們在林芝集合，還會去布達拉宮。'
+    assert len(logs) == 1
 
 
 def test_special_arrangement_confirmation_creates_handoff_decision(monkeypatch):
     import json
     import app.reception_v2.runtime as runtime
-    from app.reply_fact_verification import FactVerification
     monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
     monkeypatch.setattr(runtime, '_call', lambda *args: ({'content': json.dumps({
         'action': 'reply', 'branch': 'peach_9d', 'intent': 'other', 'reply': '重慶交付入藏函需要由顧問核對。', 'v2_events': [],
+        'handoff_reason': 'knowledge_confirmation_required',
         'route_variant': 'peach_9d_2027', 'evidence_refs': ['service.peach_permit']})}, {'duration_ms': 0}))
-    monkeypatch.setattr(runtime, '_verify', lambda *args: (FactVerification(True,
-        confirmation_questions=['重慶交付入藏函是否可行']), [], ''))
     decision, _, _, trace = run_v2_agent({'module': 'reply', 'customer_text': '入藏函在重慶拿嗎', 'route_variant': 'peach_9d_2027'})
     assert decision.action == 'handoff'
     assert decision.handoff_reason == 'knowledge_confirmation_required'
     assert decision.wakeup_action == 'skip'
-    assert trace['confirmation_questions'] == ['重慶交付入藏函是否可行']
+    assert 'confirmation_questions' not in trace
 
 
 @pytest.mark.parametrize('delivered,expected', [(False, []), (True, ['route.shared.peach_highlights', 'route.shared.landmarks', 'route.shared.zhaji'])])
@@ -153,7 +147,6 @@ def test_proactive_generation_is_scoped_to_unsent_value(monkeypatch, asset, allo
         'action': 'reply', 'branch': 'peach_9d', 'intent': 'other', 'reply': '這張是沿線桃花景點照片。', 'v2_events': [],
         'route_variant': 'peach_9d_2027', 'evidence_refs': ['route.shared.peach_highlights'],
         'content_group_key': 'peach_highlights', 'material_keys': [asset], 'wakeup_action': 'generate'})}, {'duration_ms': 0}))
-    monkeypatch.setattr(runtime, '_verify', lambda *args: (None, [], ''))
     context = {'module': 'silence_touch', 'customer_text': '行程', 'route_variant': 'peach_9d_2027',
         'available_materials': [{'key': 'routes12-pabongka'}, {'key': 'routes12-potala'}],
         'journey': {'stage': 'value_building', 'content_progress': {'itinerary_overview': {

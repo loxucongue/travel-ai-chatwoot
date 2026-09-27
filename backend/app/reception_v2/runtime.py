@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from functools import lru_cache
 from typing import Any
-from dataclasses import replace, asdict
+from dataclasses import asdict
 from datetime import datetime, timezone, timedelta
 
 import httpx
@@ -27,13 +27,10 @@ from app.reception_v2.journey_state_machine import guard_decision_stage
 from app.reception_v2.tools import TOOL_NAMES, execute_tool, tool_specs
 from app.route_packages import ROUTES
 from app.decision_knowledge import FACTS
-from app.reply_fact_verification import call_reply_fact_verifier
-from app.reply_generation import GeneratedReply
-from app.reply_planning import FollowUp, ReplyPlan
 from app.reception_policy_views import views_for_context
 from app.reception_v2.events import validate_events
 from app.reception_v2.budget import bounded_turn, remaining
-from app.advisor_voice import v2_advisor_voice_contract, taiwan_copy_violation, v2_internal_copy_violation
+from app.advisor_voice import v2_advisor_voice_contract
 
 
 PROMPT_VERSION = "reception-v2-agent-orchestration-20260927"
@@ -97,81 +94,6 @@ def _simple_ack(context: dict, skill_digest: str):
     return decision, [], hashlib.sha256(current.encode()).hexdigest(), trace
 
 
-_OPENING_SPECIFIC_MARKERS = (
-    "9日", "9天", "11日", "11天", "價格", "价钱", "多少", "費用", "费用",
-    "行程", "线路", "線路", "桃花", "珠峰", "住宿", "飯店", "酒店", "供氧", "氧氣", "集合", "接機",
-    "日期", "幾位", "几位", "人同行", "高反", "纳木错", "納木錯", "布達拉宮",
-)
-
-
-def _is_fresh_generic_opening(context: dict) -> bool:
-    """Recognise only a new, route-unselected greeting before any model call.
-
-    The operator opening is a deterministic delivery contract. Specific product
-    questions must continue through V2 so they are answered rather than replaced
-    by a greeting.
-    """
-    if context.get("module") != "reply":
-        return False
-    journey = context.get("journey") or {}
-    if context.get("route_variant") or journey.get("route_variant"):
-        return False
-    if any(
-        item.get("role") == "assistant" or item.get("direction") == "outgoing"
-        for item in context.get("context_messages", [])
-        if isinstance(item, dict)
-    ):
-        return False
-    text = "".join(str(context.get("customer_text") or "").lower().split())
-    normalized = re.sub(r"[，,。.!！?？~～、:：]", "", text)
-    if not text or len(text) > 40 or any(marker.lower() in normalized for marker in _OPENING_SPECIFIC_MARKERS):
-        return False
-    return bool(re.fullmatch(
-        r"(?:你好|您好|嗨|哈囉|hello|hi|在嗎|在吗|你好呀|您好呀|想了解(?:一下)?|想咨询(?:一下)?|想咨詢(?:一下)?|先了解一下|看看你們|看看你们|介紹一下|介绍一下|(?:你好|您好|嗨|哈囉)(?:呀)?(?:我)?想(?:了解|咨询|咨詢)(?:一下)?)",
-        normalized,
-    ))
-
-
-_OPENING_DIRECT_MARKERS = (
-    "9\u65e5", "9\u5929", "11\u65e5", "11\u5929", "\u6843\u82b1", "\u73e0\u5cf0", "\u7eb3\u6728\u9519", "\u7d0d\u6728\u932f",
-    "\u5e03\u8fbe\u62c9\u5bab", "\u5e03\u9054\u62c9\u5bae", "\u4ef7\u683c", "\u50f9\u683c", "\u4ef7\u94b1", "\u50f9\u9322", "\u8d39\u7528", "\u8cbb\u7528", "\u591a\u5c11\u94b1", "\u591a\u5c11\u9322",
-    "\u9884\u7b97", "\u9810\u7b97", "\u4f4f\u5bbf", "\u996d\u5e97", "\u98ef\u5e97", "\u9152\u5e97", "\u4f9b\u6c27", "\u6c27\u6c14", "\u6c27\u6c23", "\u96c6\u5408", "\u63a5\u673a", "\u63a5\u6a5f",
-    "\u65e5\u671f", "\u51e0\u4f4d", "\u5e7e\u4f4d", "\u9ad8\u53cd", "\u94c1\u8def", "\u9435\u8def", "\u5165\u85cf\u51fd", "\u5929\u6c14", "\u5929\u6c23", "\u5e74\u9f84", "\u5e74\u9f61",
-    "\u600e\u4e48\u5b89\u6392", "\u600e\u9ebc\u5b89\u6392", "\u5982\u4f55\u5b89\u6392", "\u5305\u542b\u4ec0\u4e48", "\u5305\u542b\u4ec0\u9ebc", "\u6709\u6ca1\u6709", "\u6709\u6c92\u6709",
-    "\u4ec0\u4e48\u65f6\u5019", "\u4ec0\u9ebc\u6642\u5019", "\u54ea\u4e00\u5929",
-)
-
-
-def _is_fresh_generic_opening_v2(context: dict) -> bool:
-    """Accept broad first-contact trip inquiries while preserving direct answers."""
-    if context.get("module") != "reply":
-        return False
-    journey = context.get("journey") or {}
-    if context.get("route_variant") or journey.get("route_variant"):
-        return False
-    if any(
-        item.get("role") == "assistant" or item.get("direction") == "outgoing"
-        for item in context.get("context_messages", [])
-        if isinstance(item, dict)
-    ):
-        return False
-    text = "".join(str(context.get("customer_text") or "").lower().split())
-    normalized = re.sub(r"[，,。.!！?？~～、:：]", "", text)
-    if not normalized or len(normalized) > 60:
-        return False
-    if any(marker.lower() in normalized for marker in _OPENING_DIRECT_MARKERS):
-        return False
-    if re.search(r"(?:请|請|给|給|发|發|傳|传|看|要).*(?:完整|詳細|详细)?.*(?:行程|路線|线路)", normalized):
-        return False
-    return bool(re.fullmatch(
-        r"(?:你好|您好|嗨|哈囉|hello|hi)(?:呀)?(?:我)?想(?:了解|咨询|咨詢)(?:一下)?"
-        r"(?:旅行|旅遊)?(?:行程|路線|线路)?"
-        r"|(?:想了解|想咨询|想咨詢|先了解一下|看看|看一下|介绍一下|介紹一下)"
-        r"(?:你们|你們)?(?:的)?(?:旅行|旅遊)?(?:行程|路線|线路)?",
-        normalized,
-    ))
-
-
 def _is_first_customer_message(context: dict) -> bool:
     """Opening is a conversation-entry contract, not a keyword classifier."""
     if context.get("module") != "reply":
@@ -186,16 +108,8 @@ def _is_first_customer_message(context: dict) -> bool:
         if isinstance(item, dict)
         and (item.get("direction") == "incoming" or item.get("role") == "user")
     ]
-    if not incoming:
-        return True
-    current = "".join(str(context.get("customer_text") or "").split())
-    if len(incoming) == 1 and "".join(str(incoming[0].get("content") or "").split()) == current:
-        return True
-    return not any(
-        item.get("direction") == "incoming" or item.get("role") == "user"
-        for item in history
-        if isinstance(item, dict)
-    )
+    # Both real and rehearsal contexts contain only messages before this turn.
+    return not incoming
 
 
 def _configured_opening(context: dict, skill_digest: str):
@@ -226,10 +140,10 @@ def _configured_opening(context: dict, skill_digest: str):
         "prompt_version": PROMPT_VERSION, "skill_release_digest": skill_digest,
         "tools": [], "loaded_skills": [], "available_fact_ids": [],
         "total_ms": 0, "request_count": 0, "model_http_request_count": 0,
-        "fact_verification_passed": True, "fast_path": "configured_opening",
-        "outbound": False, "flow": flow.name, "flow_reason": "fresh_generic_opening",
+        "output_mode": "configured_opening", "fast_path": "configured_opening",
+        "outbound": False, "flow": flow.name, "flow_reason": "first_customer_message",
         "decision_contract": build_decision_contract(
-            context, decision, flow=flow.name, flow_reason="fresh_generic_opening",
+            context, decision, flow=flow.name, flow_reason="first_customer_message",
         ),
     }
     return decision, [], hashlib.sha256((messages[0] + skill_digest).encode()).hexdigest(), trace
@@ -238,6 +152,9 @@ def _configured_opening(context: dict, skill_digest: str):
 SYSTEM_PROMPT = """你是 China2Go 的旅游接待顾问。你的任务是先解决客户本轮问题，再在确有具体价值时自然推进。
 
 工作方式：
+- 线路 Skill 中的 scripts 是后台配置的话术。优先沿用适用话术原文；根据客户本轮问题组合相关段落、调整称呼和衔接，不机械复制不适用的人数、日期或前提。价格和适用条件依据当前事实，不自行改动。
+- positive_examples/negative_examples 用于理解适用场景，不是关键词匹配表。使用话术附带图片时引用 asset_ids，只能引用当前 available_material_keys 中的素材，不生成图片地址。
+- 对普通问题，你的最终正文直接用于发送，没有后续模型审核或改写。完整介绍的固定段落和素材由配置编排；需要核实的事项请直接在 handoff_reason 中说明。
 - 只选择回答当前问题必需的事实点，不编造答案再用相近事实作依据。
 - 先理解客户现在要完成的事。不要把每轮都变成人数、日期或联系方式收集。
 - 已预载的Skill不重复加载；线路问题只使用服务端已提供或get_route_facts返回的批准事实。仅在当前事实不足、切换产品时调用工具，不为形式重复调用。
@@ -391,7 +308,7 @@ def _messages(context: dict, registry: SkillRegistry) -> list[dict]:
     return [{"role": "system", "content": system}, *history]
 
 
-def _request(messages: list[dict], *, tools: bool, reasoning: bool = False) -> dict:
+def _request(messages: list[dict], *, tools: bool) -> dict:
     payload: dict[str, Any] = {
         "model": settings.deepseek_model,
         "messages": messages,
@@ -406,9 +323,6 @@ def _request(messages: list[dict], *, tools: bool, reasoning: bool = False) -> d
         payload["tool_choice"] = "auto"
     else:
         payload["response_format"] = {"type": "json_object"}
-    if reasoning:
-        payload.update(thinking={'type':'enabled'},reasoning_effort='low',max_tokens=4000)
-        payload.pop('temperature',None)
     return payload
 
 
@@ -641,8 +555,7 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
         raise ValueError('v2_slot_unknown_field: invalid=' + ','.join(sorted(set(slots)-ALLOWED_MEMORY_SLOTS))
                          + '; allowed=' + ','.join(sorted(ALLOWED_MEMORY_SLOTS)))
     # Historical values repeated by the generator are not new customer updates.
-    # Keep only current evidence; the independent profile audit below rejects
-    # any actual current update omitted here and requests a full state repair.
+    # Persist only values with evidence in the current customer message.
     raw["slots"] = {key: value for key, value in slots.items()
                     if key in ALLOWED_MEMORY_SLOTS and isinstance(evidence.get(key), str)
                     and evidence[key].strip() and evidence[key] in customer_text}
@@ -673,7 +586,7 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
             and any(e.get('material_kind') == 'itinerary' for e in events)
             and not any(e['type'] == 'question' for e in events)):
         # A plain itinerary request is fulfilled by the approved image/caption.
-        # Extra customer questions still use the model answer and scope audit.
+        # Extra customer questions retain the model's answer.
         group = ROUTES[route_id]['groups'].get('itinerary_overview')
         if group:
             raw['reply'] = raw['reply_body'] = group['text']
@@ -697,27 +610,12 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
                                    if isinstance(key,str) and key in registered_groups]
     if raw.get('content_group_key') not in registered_groups:
         raw['content_group_key']=''
-    # The published opening is compiled by the server, just like a full
-    # introduction. Materialize its first text before the generic reply parser.
-    # Event/route/history constraints and the independent question audit remain.
-    if (raw.get('action')=='reply' and raw.get('delivery_intent')=='opening'
-            and not route_id and not events
-            and not any(m.get('role')=='assistant' or m.get('direction')=='outgoing'
-                        for m in (context or {}).get('context_messages',[]))):
-        from app.opening_messages import delivery_items
-        opening_policy=views_for_context(context or {})['decision_policy']
-        opening_texts=opening_policy.get('opening_messages') or ([opening_policy['opening_message']]
-            if opening_policy.get('opening_message') else [])
-        opening_items=delivery_items(opening_policy.get('opening_items'),opening_texts)
-        opening_text=next((item['content'] for item in opening_items if item.get('content')),None)
-        if opening_text:
-            raw['reply']=raw['reply_body']=opening_text
     if not str(raw.get('reply') or '').strip() and isinstance(raw.get('reply_body'),str):
         raw['reply']=raw['reply_body']
     if ((context or {}).get('module') not in {'silence_touch','wakeup'}
             and customer_text.strip() and raw.get('action')=='no_action'):
         raise ValueError('v2_customer_reply_required')
-    decision = EvaluationDecision.parse(raw, infer_route_references=False)
+    decision = EvaluationDecision.parse(raw, infer_route_references=False, validate_copy=False)
     _normalize_presentations(decision, available_facts, available_materials)
     if decision.lead_action == 'captured':
         from app.lead_capture import model_contacts
@@ -726,219 +624,12 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
             raise ValueError('v2_contact_value_without_current_evidence')
     if (context or {}).get('module') not in {'silence_touch', 'wakeup'} and decision.action in {'reply','handoff'} and not decision.reply:
         raise ValueError('v2_customer_reply_required')
-    from app.advisor_voice import normalize_v2_customer_copy
-    if decision.reply:
-        decision.reply = normalize_v2_customer_copy(decision.reply)
-    if decision.reply_body:
-        decision.reply_body = normalize_v2_customer_copy(decision.reply_body)
-    if decision.follow_up_question:
-        decision.follow_up_question = normalize_v2_customer_copy(decision.follow_up_question)
     decision.v2_events = events
     for event in decision.v2_events:
         event['route_variant'] = decision.route_variant
     decision.reception_flow = str(raw.get("reception_flow") or "")
     decision.delivery_intent = str(raw.get("delivery_intent") or "none")
-    if decision.action == "reply" and decision.reply and ("？" in decision.reply or "?" in decision.reply):
-        match = re.search(r"([^。！？?\n]*[？?])\s*$", decision.reply)
-        if match and match.start() > 0:
-            decision.reply_body = decision.reply[:match.start()].strip()
-            decision.follow_up_type = "clarification"
-            decision.follow_up_field = "topic"
-            decision.follow_up_question = match.group(1).strip()
     return decision
-
-
-def _verify(context: dict, decision: EvaluationDecision):
-    if decision.action not in {"reply", "handoff"} or not decision.reply:
-        return None, [], ""
-    if context.get('module') not in {'silence_touch','wakeup'} and decision.route_variant in ROUTES:
-        # The independent proof reader may retrieve the selected approved product
-        # even when the generator learned a fact from its Skill and omitted a tool
-        # citation. Never broaden published web knowledge or proactive candidates.
-        branch=ROUTES[decision.route_variant]['branch']
-        approved_ids=[f['id'] for f in FACTS if not f.get('branches') or branch in f['branches']]
-        context={**context,'v2_available_fact_ids':sorted(set(approved_ids)
-            | set(context.get('v2_available_fact_ids') or []))}
-    follow_up = FollowUp(decision.follow_up_type, decision.follow_up_field, decision.follow_up_question) if decision.follow_up_question else None
-    section_question = next((s for s in decision.v2_delivery_sections if s['group_key'] == 'party_question'), None)
-    if section_question:
-        follow_up = FollowUp('clarification', 'party_size', section_question['text'])
-    plan = ReplyPlan(
-        action=decision.action, intent=decision.intent, route_variant=decision.route_variant,
-        branch=decision.branch, next_stage=decision.journey_stage,
-        reply_goal=("本轮是客户沉默后的主动跟进，没有新客户问题。选择尚未提供的相关价值，不能重答历史问题。按沉默跟进而非单点答疑核验，提供新的相关住宿或车辆等价值是允许的。"
-                    if context.get('module') in {'silence_touch', 'wakeup'} else
-                    "客户明确索要资料：按ordered_delivery_sections交付整套所请求的图文；若同时提出事实问题，也须回答。品牌、行程亮点、酒店、车辆均属本轮请求内容，不能当成无关重复。"
-                    if decision.v2_delivery_sections else
-                    "只回答客户当前明确问题；不延伸讲未问到的每日行程、其他业务主题，不主动追加营销式追问，不向客户解释内部校验规则。"),
-        follow_up=follow_up, allowed_fact_ids=decision.evidence_refs, allowed_content_group_keys=[],
-        allowed_asset_ids=decision.material_keys, reply_options=[], slots=decision.slots,
-        slot_evidence=decision.slot_evidence, missing_slots=decision.missing_slots,
-        handoff_reason=decision.handoff_reason, lead_action=decision.lead_action,
-        contact_values=decision.contact_values, route_evidence=decision.route_evidence,
-        confidence=decision.confidence, safety_flags=decision.safety_flags,
-    )
-    verification_body = ('\n\n'.join(section['text'] for section in decision.v2_delivery_sections
-                                    if section is not section_question)
-                         if decision.v2_delivery_sections else decision.reply_body or decision.reply)
-    generated = GeneratedReply(verification_body, None, decision.evidence_refs, decision.material_keys)
-    structured_types = {str(item.get("type")) for item in getattr(decision, "presentations", []) or []}
-    structured_grounded = (
-        context.get("engine_version") == "v2"
-        and context.get("module") not in {"silence_touch", "wakeup"}
-        and decision.action == "reply"
-        and structured_types
-        and structured_types <= {"route_comparison", "route_details", "suggestions"}
-        and bool(decision.evidence_refs)
-        and not decision.material_keys
-        and not decision.v2_delivery_sections
-        and not decision.v2_events
-        and not decision.handoff_reason
-        and not context.get("v2_final_fact_recheck")
-    )
-    if structured_grounded:
-        # The presentation was hydrated from a read-only route tool. Its
-        # values and evidence have already been checked by the server, so a
-        # second semantic model call would only re-audit the same packet.
-        from app.reply_fact_verification import FactVerification
-        checked = FactVerification(
-            supported=True,
-            relevant=True,
-            claim_checks=[{"claim": "structured_route_presentation", "supported": True,
-                            "evidence": ",".join(decision.evidence_refs)}],
-            scope_check={"current_request": str(context.get("customer_text") or "")},
-            verified_fact_ids=list(decision.evidence_refs),
-        )
-        logs = [{"node": "v2_structured_grounded_verification", "status": "completed", "duration_ms": 0}]
-        digest = hashlib.sha256((verification_body + ",".join(decision.evidence_refs)).encode()).hexdigest()
-    else:
-        checked, logs, digest = call_reply_fact_verifier({**context,
-            'v2_server_clarification':({'question':section_question['text'],'field':'party_size','reason':'requested_full_intro_missing_party'} if section_question else None),
-            'v2_events': decision.v2_events,
-            'v2_delivery_sections': [s for s in decision.v2_delivery_sections if s is not section_question]}, plan, generated)
-    # Audit against the approved packet actually supplied to this turn. A missed
-    # citation need not cause repeated rewrites of a fact that is already known.
-    resolved_refs = [ref for ref in checked.verified_fact_ids
-                     if ref in set(context.get('v2_available_fact_ids') or [])]
-    if checked.supported and resolved_refs:
-        decision.evidence_refs = list(dict.fromkeys([*decision.evidence_refs, *resolved_refs]))
-    violations = list(checked.contract_violations)
-    if decision.handoff_reason=='customer_contact_outside_window':
-        from app.customer_contact_policy import current_contact_appointments
-        if not current_contact_appointments({**context,'v2_events':decision.v2_events}):
-            violations.append('预约人工转交必须有本轮原文支持的未来contact_agreed事件；不能只写handoff_reason而遗漏预约状态。')
-    from app.reception_v2.claim_guards import unsupported_prevention_label, unsupported_certificate_waiver, missing_hotel_exceptions, unsupported_oxygen_effect, unsupported_certificate_difference
-    if unsupported_prevention_label(verification_body):
-        violations.append('不能将红景天等产品一并称为预防高反的药来暗示疗效；改称产品，效果、适用性和用法交医师评估。拒绝给剂量不能抵消前面的疗效分类。')
-    if unsupported_certificate_difference(verification_body):
-        violations.append('证件要求未知不能推断与台湾规则不同；只说明该旅客的实际证明要求需要核对。')
-    if unsupported_oxygen_effect(verification_body):
-        violations.append('供氧配置不能证明舒适或健康效果；仅说明实际设备，风险及用法交医师评估。')
-    if unsupported_certificate_waiver(verification_body):
-        violations.append('批准事实没有健康证明豁免；删除不用提交或这部分不用等豁免断言。回答最低年龄疑问不需要引入其他年龄段的证明条件。')
-    hotel_caption=ROUTES.get(decision.route_variant,{}).get('groups',{}).get('hotel_reference',{}).get('text','')
-    missing_exceptions=missing_hotel_exceptions(verification_body,hotel_caption)
-    if missing_exceptions:
-        violations.append('其余地区/全程希尔顿的概括遗漏批准例外：'+ '、'.join(missing_exceptions)
-                          +'。若只问特定一晚住宿，删除无请求的全程品牌概括；确实介绍全程时保留全部例外。')
-    # Preserve an applicable published eligibility condition for each traveler,
-    # including mixed-age parties. This validates facts, never chooses a flow.
-    travelers=(checked.scope_check or {}).get('traveler_age_checks',[])
-    if 'service.peach_age' in decision.evidence_refs:
-        if (any(t['taiwan_traveler'] and 65<=t['age']<=75 for t in travelers)
-                and not re.search(r'健康[證证]明',verification_body)):
-            violations.append('台湾65至75岁旅客可以参加的答复必须保留健康证明条件；混合年龄同行时也不可遗漏其中适用旅客的条件。')
-        if any(t['age']>75 for t in travelers) and not re.search(r'(?:不建[議议]|建[議议](?:先)?(?:不要|不|別|别))[^。！？!?]{0,8}(?:報名|报名|參加|参加)',verification_body):
-            violations.append('超过75岁旅客必须明确不建议报名，不能仅保留个案核对。')
-    # A known cross-product qualification must not disappear even if the
-    # semantic proof reader incorrectly narrows an explicitly broad draft.
-    if ('route.shared.hotel_reference' in decision.evidence_refs
-            and re.search(r'(?:11|十一)\s*(?:日|天)',verification_body)
-            and re.search(r'希[爾尔]頓|希尔顿|Hilton',verification_body,re.I)
-            and not re.search(r'珠[峰峯]|[絨绒]布|Everest|Rongbuk',verification_body,re.I)):
-        violations.append('住宿说明涉及11日及希尔顿，必须保留珠峰/绒布段也是希尔顿例外；若本轮只问9日，删除无关的11日扩展。')
-    # Reviewed applicability conditions must survive paraphrasing even when both
-    # semantic auditors overlook an omitted qualifier. This never routes intent.
-    import unicodedata
-    from app.web_knowledge import context_fact_map, fact_answer_requirements
-    def normalized_condition(value):
-        return re.sub(r'[\s,，]', '', unicodedata.normalize('NFKC', value))
-    normalized_body = normalized_condition(verification_body)
-    from app.fact_conditions import missing_answer_conditions
-    for package in ROUTES.values():
-        for fact in package.get('knowledge_facts', []):
-            if fact['id'] in decision.evidence_refs:
-                for label in missing_answer_conditions(verification_body, fact):
-                    violation='引用事实' + fact['id'] + '必须明确保留适用条件：' + label
-                    if violation not in violations:
-                        violations.append(violation)
-    for fact_id, fact in context_fact_map(context).items():
-        if fact_id not in decision.evidence_refs:
-            continue
-        for requirement in fact_answer_requirements(fact):
-            if not any(normalized_condition(term) in normalized_body for term in requirement['any_of']):
-                violations.append('引用事实' + fact_id + '必须明确保留适用条件：' + requirement['label'])
-    views = views_for_context(context)
-    routing = views['decision_policy']['route_switch']
-    allowed_routes = routing.get('allowed_routes', list(ROUTES))
-    bound = context.get('route_variant') or (context.get('journey') or {}).get('route_variant')
-    if decision.route_variant and decision.route_variant not in allowed_routes:
-        violations.append('该线路已被运营停用，不得选择或推荐；使用已启用线路，无法满足时说明业务边界。')
-    if routing.get('enabled') is False and bound and decision.route_variant not in ('', bound):
-        violations.append('当前配置不允许自动切线，保留原线路，由顾问确认新线路需求。')
-    lead = views['decision_policy']['lead_capture']
-    if decision.lead_action == 'ask' and lead.get('enabled') is False:
-        violations.append('运营已关闭主动留资，不索要联系方式，lead_action=none。')
-    if not decision.v2_delivery_sections and len(decision.material_keys) > views['runtime_policy']['reply_limits']['max_images_per_turn']:
-        violations.append('超过本轮运营配置图片上限；不能承诺交付无法发送的图片，必要时转顾问处理。')
-    if context.get('module') in {'silence_touch', 'wakeup'}:
-        if ('v2_proactive_candidate_fact_ids' in context
-                and not set(decision.evidence_refs).intersection(context['v2_proactive_candidate_fact_ids'])):
-            violations.append('主动跟进未提供本次候选中的新价值；重新选择一个尚未交付的批准事实，不催问是否收到历史资料。')
-        scoped_assets = {asset for group in ROUTES.get(decision.route_variant, {}).get('groups', {}).values()
-                         if set(decision.evidence_refs).intersection(group.get('evidence', []))
-                         for asset in group.get('assets', [])}
-        if not set(decision.material_keys) <= scoped_assets:
-            violations.append('照片必须对应本轮所引用的事实，不能用桃花照片配布达拉宫等其他景点。参照素材事实映射重选。')
-    bad_copy = taiwan_copy_violation(decision.reply or '')
-    if re.search(r'適航評估|适航评估',verification_body):
-        bad_copy = '適航評估；高原健康問題應直接說健康證明不保證安全，個人適宜性由醫師評估'
-    if decision.v2_delivery_sections and re.search(r'[？?]', re.sub(r'https?://\S+', '', verification_body)):
-        violations.append('资料介绍的答疑正文不得夹带追问。只保留客户本轮问题的答案；人数问题由服务端在未知人数时单独追加，不另问日期或联系方式。')
-    if decision.handoff_reason == 'knowledge_confirmation_required' and not checked.confirmation_questions:
-        # A repaired answer may no longer contain the invented checking promise.
-        # Compile the action from the final audited task list, rather than keep
-        # the draft's obsolete handoff. Never undo explicit customer/service work.
-        protected = (decision.contact_values or decision.lead_action == 'captured'
-            or any(e.get('type') in {'human_requested', 'contact_agreed'} for e in decision.v2_events)
-            or (context.get('journey') or {}).get('stage') in {'captured', 'handoff'})
-        if (checked.scope_check and checked.supported and checked.relevant
-                and not violations and not protected):
-            decision.action = 'reply'
-            decision.handoff_reason = None
-            if decision.journey_stage in {'handoff', 'captured'}:
-                decision.journey_stage = (context.get('journey') or {}).get('stage') or (
-                    'value_building' if decision.route_variant else 'route_selection')
-            guard_decision_stage(decision, (context.get('journey') or {}).get('stage'))
-            decision.reception_flow = 'route_detail' if decision.route_variant else 'route_selection'
-            decision.lead_action = 'none'
-            logs = [*logs, {'node':'v2_handoff_reconciliation','status':'completed','duration_ms':0,
-                           'reason':'final_audit_has_no_consultant_task'}]
-        else:
-            violations.append('客户没有需要旅行顾问实际核对的事项，删除额外核对承诺并保持action=reply、handoff_reason=null；不要把普通已知答案转人工。')
-    if bad_copy:
-        violations.append('不使用业务禁用表达：' + bad_copy)
-    internal_copy = v2_internal_copy_violation(verification_body)
-    if internal_copy:
-        violations.append('删除内部资料核验或自我约束的解释「'+internal_copy+'」，自然说明具体安排需顾问核对即可，不说文件未写或自己不能说/不能算。')
-    policy_limit = views_for_context(context)['runtime_policy']['reply_limits']['max_characters']
-    if len(decision.reply or '') > policy_limit:
-        violations.append(f'超过运营配置正文上限{policy_limit}字')
-    if violations:
-        checked = replace(checked, relevant=False, contract_violations=list(dict.fromkeys(violations)))
-        logs = [*logs, {'node': 'v2_delivery_contract', 'status': 'rejected', 'duration_ms': 0,
-                       'contract_violations': checked.contract_violations, 'rejected_reply': decision.reply}]
-    return checked, logs, digest
 
 
 def _enforce_delivery_contract(context: dict, decision: EvaluationDecision) -> None:
@@ -946,7 +637,7 @@ def _enforce_delivery_contract(context: dict, decision: EvaluationDecision) -> N
         _compile_delivery_contract(context, decision)
     except ValueError as exc:
         if not str(exc).startswith(('v2_requested_itinerary_unavailable', 'v2_introduction_material_unavailable',
-                                    'v2_introduction_group_unavailable', 'v2_introduction_exceeds_published')):
+                                    'v2_introduction_group_unavailable')):
             raise
         _missing_material_handoff(decision, str(exc))
 
@@ -973,7 +664,7 @@ def _missing_material_handoff(decision, reason):
 
 
 def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> None:
-    """Combine explicit material requests before the final independent audit."""
+    """Resolve configured content groups and material references into delivery items."""
     _apply_contact_window(context, decision)
     kinds = {e.get('material_kind') for e in decision.v2_events if e.get('type') == 'material_requested'}
     if (context.get('module') in {'silence_touch', 'wakeup'} or not decision.route_variant
@@ -1031,9 +722,6 @@ def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> N
     seen = set()
     for section in sections:
         section['asset_keys'] = [k for k in section['asset_keys'] if k not in seen and not seen.add(k)]
-    limits = views_for_context(context)['runtime_policy']['reply_limits']
-    if any(len(s['text']) > limits['max_characters'] or len(s['asset_keys']) > limits['max_images_per_turn'] for s in sections):
-        raise ValueError('v2_introduction_exceeds_published_section_limits')
     decision.v2_delivery_sections = sections
     decision.material_keys = [k for s in sections for k in s['asset_keys']]
     decision.covered_content_groups = list(dict.fromkeys(s['group_key'] for s in sections if s['group_key']))
@@ -1101,9 +789,6 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
                 sections.insert(0,{'group_key':guide_key,'text':decision.reply_body or decision.reply,
                     'asset_keys':[],'evidence_refs':list(decision.evidence_refs),
                     'delivery_mode':'text_only','answers_customer_question':True})
-                limits=views_for_context(context)['runtime_policy']['reply_limits']
-                if any(len(s['text'])>limits['max_characters'] or len(s['asset_keys'])>limits['max_images_per_turn'] for s in sections):
-                    raise ValueError('v2_introduction_exceeds_published_section_limits')
                 decision.v2_delivery_sections=sections
                 decision.reply=decision.reply_body=sections[0]['text']
             else:
@@ -1124,22 +809,6 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
         _missing_material_handoff(decision, 'v2_requested_attachment_unavailable')
         return
     policy = views_for_context(context)['decision_policy']
-    if (getattr(decision, 'delivery_intent', '') == 'opening' and not decision.route_variant and not decision.v2_events
-            and not any(m.get('role') == 'assistant' or m.get('direction') == 'outgoing'
-                        for m in context.get('context_messages', []))):
-        from app.opening_messages import delivery_items
-        texts = policy.get('opening_messages') or ([policy['opening_message']] if policy.get('opening_message') else [])
-        items = delivery_items(policy.get('opening_items'), texts)
-        if items:
-            decision.opening_items = items if policy.get('opening_items') else []
-            decision.opening_messages = [item['content'] for item in items if item.get('content')]
-            decision.opening_interval_seconds = policy.get('opening_interval_seconds', 2)
-            decision.reply = decision.reply_body = decision.opening_messages[0]
-            decision.reply_options = [ROUTES[r]['selection_title'] for r in
-                policy['route_switch'].get('allowed_routes', list(ROUTES)) if r in ROUTES]
-            decision.lead_action = 'none'
-            decision.follow_up_question = ''
-            return
     contact = next((e for e in decision.v2_events if e['type'] == 'contact_agreed'), None)
     if contact:
         raw_anchor = context.get('trigger_customer_at') if 'trigger_customer_at' in context else context.get('now') or context.get('virtual_now')
@@ -1177,9 +846,6 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
                 'text': decision.reply_body or decision.reply, 'asset_keys': [],
                 'evidence_refs': list(decision.evidence_refs), 'delivery_mode': 'text_only',
                 'answers_customer_question': True})
-        limits = views_for_context(context)['runtime_policy']['reply_limits']
-        if any(len(s['text']) > limits['max_characters'] or len(s['asset_keys']) > limits['max_images_per_turn'] for s in sections):
-            raise ValueError('v2_introduction_exceeds_published_section_limits')
         decision.v2_delivery_sections = sections
         decision.material_keys = [key for s in sections for key in s['asset_keys']]
         decision.covered_content_groups = keys
@@ -1202,10 +868,6 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
                 'text': decision.reply_body or decision.reply, 'asset_keys': [],
                 'evidence_refs': list(decision.evidence_refs), 'delivery_mode': 'text_only',
                 'answers_customer_question': True})
-        limits = views_for_context(context)['runtime_policy']['reply_limits']
-        if any(len(s['text']) > limits['max_characters']
-               or len(s['asset_keys']) > limits['max_images_per_turn'] for s in sections):
-            raise ValueError('v2_introduction_exceeds_published_section_limits')
         decision.v2_delivery_sections = sections
         decision.material_keys = list(dict.fromkeys(key for item in sections for key in item['asset_keys']))
         decision.covered_content_groups = [item['group_key'] for item in sections]
@@ -1239,12 +901,12 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
     registry = SkillRegistry()
     if registry.release_digest() != SKILL_RELEASE_DIGEST:
         raise ValueError("v2_skill_release_changed")
-    acknowledgement = _simple_ack(context, registry.release_digest())
-    if acknowledgement is not None:
-        return acknowledgement
     configured_opening = _configured_opening(context, registry.release_digest())
     if configured_opening is not None:
         return configured_opening
+    acknowledgement = _simple_ack(context, registry.release_digest())
+    if acknowledgement is not None:
+        return acknowledgement
     journey_memory = build_journey_memory(context)
     proactive = evaluate_proactive_eligibility(context, journey_memory)
     if context.get("module") in {"silence_touch", "wakeup"} and not proactive.eligible:
@@ -1436,58 +1098,26 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
     try:
         decision = _validated_decision(final_message, available_facts, available_materials, context)
     except ValueError as exc:
-        if not isinstance(exc, json.JSONDecodeError) and not str(exc).startswith(('v2_invalid_event', 'v2_event_', 'v2_contact_', 'v2_slot_')) and str(exc) not in {"deepseek_invalid_enum", "deepseek_reply_missing", "deepseek_reply_too_long", "deepseek_multiple_followup_questions", "deepseek_invalid_content_group", "deepseek_invalid_covered_content_groups", "deepseek_invalid_journey_stage", "deepseek_invalid_contact_values", "deepseek_contact_values_missing", "deepseek_contact_values_without_capture", "v2_unknown_evidence_reference", "v2_unknown_material_reference", "v2_customer_reply_required"}:
-            raise EvaluationCallError(str(exc)[:120], logs, "") from exc
-        logs.append({'node':'v2_schema_rejected','status':'rejected','duration_ms':0,
-            'error_code':str(exc),'rejected_reply':_parse_json(final_message.get('content')).get('reply','')
-                if not isinstance(exc,json.JSONDecodeError) else ''})
-        if str(exc)=='deepseek_multiple_followup_questions':
-            from app.reception_v2.reply_shape import repair_question_shape
-            raw, shape_logs, _ = repair_question_shape(_parse_json(final_message.get('content')),context)
-            final_message={'content':json.dumps(raw,ensure_ascii=False)}
-            logs.extend(shape_logs)
-            schema_repair_ms=sum(int(log.get('duration_ms') or 0) for log in shape_logs)
-        else:
-            final_message, repair_log = _call(_request([
-                *messages, {"role": "assistant", "content": final_message.get("content")},
-                {"role":"system", "content": "Valid evidence_refs and material_keys only: " + json.dumps({"evidence_refs":sorted(available_facts), "material_keys":sorted(available_materials)})},
-                {"role": "system", "content": "slots只允许party_size/departure_window/budget/destination；日期必须写departure_window，禁止departure_date/date/travel_date。当前客户消息必须用reply或handoff并提供简短承接，no_action仅用于沉默到期事件。格式校验失败：" + str(exc) + "。action为必填字段，只能reply/handoff/no_action，不可省略。contact_values只允许line/wechat/phone/email/whatsapp字符串，没有号码填{}；不能放日期。contact_agreed只用于约定未来时间并必须有ISO contact_at；只是提供联系方式请顾问联系应为human_requested，lead_action=captured。只输出完整修复JSON，不调用工具。quote必须逐字复制下面current_customer_text中的文字，不能包含历史消息或自行改写。仅保留本轮事件。journey_stage只允许route_selection/needs_discovery/value_building/objection_handling/contact_ready/contact_requested/considering/captured/handoff；不知道时用value_building，不使用route_detail等Flow名称。正文遵守已发布reply_limits的字数上限、最多一个问题，content_group_key无匹配留空。current_customer_text=" + json.dumps(context.get('customer_text',''), ensure_ascii=False)},
-            ], tools=False), len(logs))
-            logs.append(repair_log)
-            schema_repair_ms = int(repair_log.get("duration_ms") or 0)
+        # One structural retry for malformed JSON/references. No copy audit,
+        # phrase replacement, scope review, or model-driven rewrite follows it.
+        logs.append({'node': 'v2_schema_rejected', 'status': 'rejected',
+                     'duration_ms': 0, 'error_code': str(exc)})
+        final_message, repair_log = _call(_request([
+            *messages,
+            {'role': 'assistant', 'content': final_message.get('content')},
+            {'role': 'system', 'content': '只修复 JSON 字段、枚举、引用和事件原文证据；保留客户可见正文，不改写语气或裁剪内容。错误：'
+             + str(exc) + '\n可用引用：' + json.dumps({
+                 'evidence_refs': sorted(available_facts),
+                 'material_keys': sorted(available_materials),
+                 'current_customer_text': context.get('customer_text', ''),
+             }, ensure_ascii=False)},
+        ], tools=False), len(logs))
+        logs.append(repair_log)
+        schema_repair_ms = int(repair_log.get('duration_ms') or 0)
         try:
             decision = _validated_decision(final_message, available_facts, available_materials, context)
-        except json.JSONDecodeError as repaired_exc:
-            # A malformed schema-repair response is not a business decision.
-            # One final syntax-only attempt remains inside the same turn budget.
-            final_message, syntax_log = _call(_request([
-                *messages,
-                {'role':'assistant','content':final_message.get('content')},
-                {'role':'system','content':'只修复上条JSON语法，不改变字段值或业务判断，不调用工具。错误：'+str(repaired_exc)}
-            ],tools=False),len(logs))
-            logs.append(syntax_log)
-            schema_repair_ms += int(syntax_log.get('duration_ms') or 0)
-            try:
-                decision=_validated_decision(final_message,available_facts,available_materials,context)
-            except Exception as syntax_exc:
-                raise EvaluationCallError(str(syntax_exc)[:120],logs,'') from syntax_exc
-        except Exception as repaired_exc:
-            if str(repaired_exc)!='deepseek_multiple_followup_questions':
-                raise EvaluationCallError(str(repaired_exc)[:120], logs, "") from repaired_exc
-            # Syntax/enum repair can expose a separate copy-shape defect. Do
-            # not discard an otherwise grounded turn or recreate its state.
-            from app.reception_v2.reply_shape import repair_question_shape
-            logs.append({'node':'v2_schema_rejected','status':'rejected','duration_ms':0,
-                'error_code':str(repaired_exc),
-                'rejected_reply':_parse_json(final_message.get('content')).get('reply','')})
-            try:
-                raw,shape_logs,_=repair_question_shape(_parse_json(final_message.get('content')),context)
-                final_message={'content':json.dumps(raw,ensure_ascii=False)}
-                logs.extend(shape_logs)
-                schema_repair_ms+=sum(int(log.get('duration_ms') or 0) for log in shape_logs)
-                decision=_validated_decision(final_message,available_facts,available_materials,context)
-            except Exception as shape_exc:
-                raise EvaluationCallError(str(shape_exc)[:120],logs,'') from shape_exc
+        except ValueError as repaired_exc:
+            raise EvaluationCallError(str(repaired_exc)[:120], logs, '') from repaired_exc
     initial_draft = asdict(decision)
     initial_draft['contact_values'] = {key: '[captured]' for key in initial_draft.get('contact_values', {})}
     try:
@@ -1496,107 +1126,15 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
         transition_flag = guard_decision_stage(decision, current_stage)
     except Exception as exc:
         raise EvaluationCallError(str(exc)[:120], logs, "") from exc
-    # The independent auditor can establish omitted citations from the approved
-    # route packet. Subsequent copy repair must accept that same evidence pool.
-    if context.get('module') not in {'silence_touch','wakeup'} and decision.route_variant in ROUTES:
-        branch=ROUTES[decision.route_variant]['branch']
-        available_facts.update(f['id'] for f in FACTS if not f.get('branches') or branch in f['branches'])
-    context = {**context, 'v2_available_fact_ids': sorted(available_facts)}
-    def review_snapshot(value):
-        snapshot = asdict(value)
-        snapshot['contact_values'] = {key: '[captured]' for key in snapshot.get('contact_values', {})}
-        return snapshot
-    decision_revisions = [{'stage': 'initial_draft', 'decision': initial_draft},
-                          {'stage': 'initial_review', 'decision': review_snapshot(decision)}]
-    verification_started = time.monotonic()
-    try:
-        verification, verification_logs, verification_digest = _verify(context, decision)
-    except EvaluationCallError as exc:
-        raise EvaluationCallError(exc.code, [*logs,*exc.logs], exc.digest) from exc
-    logs.extend(verification_logs)
-    verification_ms = int((time.monotonic()-verification_started)*1000)
-    repair_ms = schema_repair_ms
-    # Two generative repairs, then at most one deterministic cleanup.
-    # The final cleanup may only remove audited spans or apply grounded state;
-    # it cannot ask a model to invent another reply and must pass a fresh audit.
-    for repair_attempt in range(3):
-        from app.reception_v2.state_revision import revise_grounded_state
-        state_revision=(revise_grounded_state(context,_parse_json(final_message.get('content')),decision,verification)
-                        if verification else None)
-        if not verification or (verification.supported and verification.relevant
-                                and not verification.contract_violations and state_revision is None):
-            break
-        if remaining(30) < 4:
-            break
-        from app.reception_v2.reply_revision import can_revise_copy, revise_copy, prune_copy, scope_revision_context
-        feedback = {
-            "unsupported_claims": verification.unsupported_claims,
-            "claim_checks": verification.claim_checks,
-            "unanswered_questions": verification.unanswered_questions if verification.supported else [],
-            "contract_violations": getattr(verification, "contract_violations", []),
-            "scope_check": scope_revision_context(verification),
-            "unwanted_parts": (getattr(verification, 'scope_check', {}) or {}).get('unwanted_parts', []),
-            "actual_delivery_sections": decision.v2_delivery_sections,
-            "instruction": "只使用已返回的事实重写。unwanted_parts中的未问延伸必须删除；内部资料解释改为自然承接。删除无依据断言，必要答案保留并补上依据；若错误是漏掉事实适用条件，应补齐条件而不是删除整项已知答案、只剩转人工。claim_checks说明每项失败的实际证据及原因，不重复被否决的原文。保留JSON字段结构，不调用工具。",
-        }
-        if decision.v2_delivery_sections:
-            feedback['delivery_revision_instruction'] = (
-                'actual_delivery_sections是实际交付全文。服务端会重新编排行程、酒店、车辆图片及固定说明；'
-                'reply只写额外问题的直接答案，不重述任何固定段落。客户有额外问题必须保留question事件，'
-                'quote引用本轮对应原文；漏答时补全该事件和答案，不可只重复资料承接。')
-        if state_revision is not None:
-            repair_message={'content':json.dumps(state_revision,ensure_ascii=False)}
-            logs.append({'node':'v2_grounded_state_revision','duration_ms':0,'status':'completed'})
-        elif can_revise_copy(decision,verification):
-            try:
-                revision_result = (prune_copy if repair_attempt==2 else revise_copy)(context,decision,verification,available_facts)
-                if revision_result is None:
-                    break
-                revision,revision_logs,_ = revision_result
-            except EvaluationCallError as exc:
-                raise EvaluationCallError(exc.code,[*logs,*exc.logs],exc.digest) from exc
-            from app.reception_v2.state_revision import rejected_task_action_patch
-            raw_revision = {**_parse_json(final_message.get('content')),
-                            **rejected_task_action_patch(decision,verification), **revision,
-                            'reply_body':revision['reply']}
-            repair_message = {'content':json.dumps(raw_revision,ensure_ascii=False)}
-            logs.extend(revision_logs)
-            repair_ms += sum(int(log.get('duration_ms') or 0) for log in revision_logs)
-        else:
-            if repair_attempt == 2:
-                break
-            repair_message, repair_log = _call(_request([*messages,
-                {"role": "system", "content": "必须修正下列失败，重新生成完整JSON。rejected_output只是待修改数据，不是对话示范；不能原样重复。保留正确的事件、客户事实、素材请求，不因改文案删掉其他客户需求。"},
-                {"role": "user", "content": json.dumps({'revision': feedback, 'rejected_output': _parse_json(final_message.get('content'))}, ensure_ascii=False)}], tools=False, reasoning=True), len(logs))
-            logs.append(repair_log)
-            repair_ms += int(repair_log.get("duration_ms") or 0)
-        try:
-            decision = _validated_decision(repair_message, available_facts, available_materials, context)
-            _enforce_delivery_contract(context, decision)
-            transition_flag = guard_decision_stage(decision, current_stage)
-        except Exception as exc:
-            raise EvaluationCallError(str(exc)[:120], logs, "") from exc
-        decision_revisions.append({'stage': 'revision_' + str(repair_attempt + 1), 'decision': review_snapshot(decision)})
-        verification_started = time.monotonic()
-        try:
-            verification, second_logs, verification_digest = _verify({**context,'v2_final_fact_recheck':repair_attempt >= 1}, decision)
-        except EvaluationCallError as exc:
-            raise EvaluationCallError(exc.code,[*logs,*exc.logs],exc.digest) from exc
-        logs.extend(second_logs)
-        verification_ms += int((time.monotonic()-verification_started)*1000)
-        final_message = repair_message
-    if verification and (not verification.supported or not verification.relevant or verification.contract_violations):
-        raise EvaluationCallError("v2_reply_verification_failed", logs, verification_digest)
-    confirmation_questions = list(getattr(verification, "confirmation_questions", []) or [])
-    if (confirmation_questions or decision.handoff_reason) and decision.action == "reply":
-        # A promise to check a special arrangement must create a real human task
-        # in the existing execution pipeline, rather than remain just prose.
-        decision.action = "handoff"
-        decision.handoff_reason = "knowledge_confirmation_required"
-        decision.journey_stage = "handoff"
-        decision.wakeup_action = "skip"
-        decision.lead_action = "none"
-        decision.reception_flow = "lead_handoff"
+    if decision.handoff_reason and decision.action == 'reply':
+        decision.action = 'handoff'
+        decision.journey_stage = 'handoff'
+        decision.wakeup_action = 'skip'
+        decision.reception_flow = 'lead_handoff'
+    final_delivery = asdict(decision)
+    final_delivery['contact_values'] = {key: '[captured]' for key in final_delivery.get('contact_values', {})}
+    decision_revisions = [{'stage': 'model_output', 'decision': initial_draft},
+                          {'stage': 'delivery_plan', 'decision': final_delivery}]
     digest = hashlib.sha256(json.dumps(messages, ensure_ascii=True, sort_keys=True, default=str).encode()).hexdigest()
     if context.get("module") in {"silence_touch", "wakeup"} and decision.action == "reply":
         if decision.route_variant != bound_route:
@@ -1611,7 +1149,7 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
     trace = {
         "engine_version": ENGINE_VERSION,
         "decision_revisions": decision_revisions,
-        "reviewed_delivery_sections": deepcopy(decision.v2_delivery_sections),
+        "delivery_sections": deepcopy(decision.v2_delivery_sections),
         "effective_model": settings.deepseek_model,
         "environment": settings.app_profile,
         "engine_release_id": ENGINE_RELEASE_ID,
@@ -1640,12 +1178,10 @@ def run_v2_agent(context: dict) -> tuple[EvaluationDecision, list[dict], str, di
             "\n".join(f"- {item['name']}: {item['description']}" for item in registry.index()),
             context.get("module") in {"silence_touch", "wakeup"},
         ).encode()).hexdigest(),
-        "verification_ms": verification_ms,
-        "repair_ms": repair_ms,
+        "schema_repair_ms": schema_repair_ms,
+        "output_mode": "direct_model_output",
         "request_count": len(logs),
-        "fact_verification_passed": None if verification is None else verification.supported and verification.relevant,
         "journey_stage_transition": transition_flag,
-        "confirmation_questions": confirmation_questions,
         "outbound": False,
         "flow": getattr(decision, "reception_flow", "") or flow.name,
         "suggested_flow": flow.name,

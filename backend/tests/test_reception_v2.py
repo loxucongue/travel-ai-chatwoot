@@ -64,7 +64,7 @@ def test_fresh_generic_greeting_uses_operator_opening_without_model_call(monkeyp
     result = runtime.run_v2_agent({
         "module": "reply",
         "customer_text": "您好",
-        "context_messages": [{"direction": "incoming", "content": "您好"}],
+        "context_messages": [],
         "reception_policy": {
             "operator_configuration": {
                 "opening_messages": ["您好～這裡是已配置的開場。", "想先了解哪條行程呢？"],
@@ -88,7 +88,7 @@ def test_generic_opening_accepts_polite_greeting_variants(monkeypatch, text):
         AssertionError("generic opening must not call the model")))
     decision, logs, _, trace = runtime.run_v2_agent({
         "module": "reply", "customer_text": text,
-        "context_messages": [{"direction": "incoming", "content": text}],
+        "context_messages": [],
         "reception_policy": {"operator_configuration": {"opening_message": "配置開場"}},
     })
     assert decision.reply == "配置開場"
@@ -325,26 +325,6 @@ def test_bound_route_does_not_run_unnecessary_route_prefetch():
     assert runtime._prefetch_route_backend("compare routes", "peach_9d_2027") == []
 
 
-def test_structured_route_comparison_uses_grounded_verification_without_second_model_call(monkeypatch):
-    from app.reception_v2 import runtime
-
-    monkeypatch.setattr(runtime, "call_reply_fact_verifier",
-                        lambda *_args, **_kwargs: pytest.fail("structured route output is already grounded"))
-    decision = runtime.EvaluationDecision(
-        action="reply", branch="peach_9d", intent="other", route_variant="peach_9d_2027",
-        reply="Recommend the 9-day route based on your requested pace and hotel.",
-        evidence_refs=["route.9.scope"],
-        presentations=[{"type": "route_comparison", "route_ids": ["peach_9d_2027", "peach_11d_2027"],
-                        "criteria": ["duration", "hotel"]}],
-    )
-    audit, logs, digest = runtime._verify({
-        "engine_version": "v2", "module": "reply", "customer_text": "compare routes",
-    }, decision)
-    assert audit.supported and audit.relevant
-    assert logs[0]["node"] == "v2_structured_grounded_verification"
-    assert digest
-
-
 def test_v2_trace_contains_latency_breakdown(monkeypatch):
     import app.reception_v2.runtime as runtime
 
@@ -354,14 +334,14 @@ def test_v2_trace_contains_latency_breakdown(monkeypatch):
         next(replies), {"attempt": 1, "round": 0, "duration_ms": 7,
                         "status": "completed", "response_meta": {}}
     ))
-    monkeypatch.setattr(runtime, "_verify", lambda _context, _decision: (None, [], ""))
     _, _, _, trace = runtime.run_v2_agent({
         "module": "reply", "customer_text": "price",
         "route_variant": "peach_9d_2027", "context_messages": [],
     })
     assert trace["model_request_ms"] == 7
-    assert trace["verification_ms"] == 0
-    assert trace["repair_ms"] == 0
+    assert trace["output_mode"] == "direct_model_output"
+    assert "verification_ms" not in trace
+    assert trace["schema_repair_ms"] == 0
 
 
 def test_fact_tool_reads_approved_route_data():
@@ -409,7 +389,6 @@ def test_v2_agent_loads_skill_and_facts_before_answer(monkeypatch):
 
     monkeypatch.setattr(runtime.settings, "deepseek_api_key", "test")
     monkeypatch.setattr(runtime, "_call", fake_call)
-    monkeypatch.setattr(runtime, "_verify", lambda _context, _decision: (None, [], ""))
     decision, logs, _digest, trace = runtime.run_v2_agent({"module": "reply", "customer_text": "9日多少錢？", "context_messages": []})
     assert decision.reply == "9日行程目前是人民幣9,980元／人。"
     assert trace["loaded_skills"] == ["peach-9d-2027"]
@@ -423,7 +402,6 @@ def test_invalid_optional_coverage_hint_is_discarded_without_regenerating_answer
     monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
     monkeypatch.setattr(runtime, '_call', lambda _payload, index: (next(replies), {
         'attempt': index + 1, 'duration_ms': 1, 'status': 'completed'}))
-    monkeypatch.setattr(runtime, '_verify', lambda *args: (None, [], ''))
     decision, logs, _, _ = runtime.run_v2_agent({'module': 'reply', 'customer_text': '9日多少钱？',
                                                'route_variant': 'peach_9d_2027'})
     assert len(logs) == 1
@@ -436,11 +414,10 @@ def test_model_handoff_reason_cannot_remain_a_reply_without_handoff(monkeypatch)
     monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
     monkeypatch.setattr(runtime, '_call', lambda *_: (_final(handoff_reason='special_discount_requires_advisor'),
         {'attempt': 1, 'duration_ms': 1, 'status': 'completed'}))
-    monkeypatch.setattr(runtime, '_verify', lambda *args: (None, [], ''))
     decision, _, _, _ = runtime.run_v2_agent({'module': 'reply', 'customer_text': '9日多人折扣多少钱？',
                                             'route_variant': 'peach_9d_2027'})
     assert decision.action == 'handoff'
-    assert decision.handoff_reason == 'knowledge_confirmation_required'
+    assert decision.handoff_reason == 'special_discount_requires_advisor'
     assert decision.journey_stage == 'handoff'
     assert decision.wakeup_action == 'skip'
 
@@ -450,26 +427,8 @@ def test_v2_agent_rejects_fact_reference_not_returned(monkeypatch):
 
     monkeypatch.setattr(runtime.settings, "deepseek_api_key", "test")
     monkeypatch.setattr(runtime, "_call", lambda _payload, round_index: (_final(evidence_refs=["route.11.price"]), {"attempt": 1, "duration_ms": 1, "status": "completed", "error_code": None, "response_meta": {}}))
-    monkeypatch.setattr(runtime, "_verify", lambda _context, _decision: (None, [], ""))
     with pytest.raises(EvaluationCallError, match="v2_unknown_evidence_reference"):
         runtime.run_v2_agent({"module": "reply", "customer_text": "價格？", "context_messages": []})
-
-
-def test_freeform_service_promise_is_sent_to_verifier(monkeypatch):
-    import app.reception_v2.runtime as runtime
-    from app.reply_fact_verification import FactVerification
-
-    checked = []
-    monkeypatch.setattr(runtime, "call_reply_fact_verifier", lambda context, plan, generated: (
-        checked.append(generated.body) or FactVerification(True), [], "verified"
-    ))
-    decision = runtime.EvaluationDecision(
-        action="reply", branch="unclassified", intent="other",
-        reply="已經替您預訂好座位。",
-    )
-    verification, _, _ = runtime._verify({}, decision)
-    assert verification is not None
-    assert checked == ["已經替您預訂好座位。"]
 
 
 def test_simple_considering_reply_needs_no_model_call(monkeypatch):

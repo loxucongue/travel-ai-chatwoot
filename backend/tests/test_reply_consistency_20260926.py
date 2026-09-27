@@ -1,11 +1,7 @@
-from copy import deepcopy
-from dataclasses import asdict
-from datetime import timedelta
 import json
 import pytest
 from sqlalchemy import select
 
-from app.advisor_voice import normalize_v2_customer_copy, taiwan_copy_violation
 from app.decision_service import _explicit_stop_request, generate_decision
 from app.deepseek_evaluation import EvaluationDecision, EvaluationCallError
 from app.reception_v2.events import validate_events, merge_events
@@ -13,7 +9,7 @@ from app.reception_v2.runtime import _compile_delivery_contract
 from app.route_packages import ROUTES
 from app.reply_failures import classify_reply_failure
 from app.customer_contact_policy import current_contact_refusals, contact_constraint
-from app.models import ConversationState, ConversationJourney, HandoffTask, WebhookEvent, utcnow
+from app.models import ConversationState, HandoffTask, WebhookEvent, utcnow
 from app.live_reply_models import LiveReplyJob
 from test_live_reply import setup
 import app.live_reply as live
@@ -22,12 +18,6 @@ import app.live_reply as live
 @pytest.mark.parametrize('text', ['我不是說不要再聯絡，只是想先問價格', '他說「不要再聯絡」，我想問價格', '不要用WhatsApp聯絡我'])
 def test_stop_candidate_does_not_misclassify(text):
     assert not _explicit_stop_request(text)
-
-
-def test_normalizer_preserves_comparison_verb():
-    text=normalize_v2_customer_copy('我帮您比较两条行程。')
-    assert text == '我幫您比較兩條行程。'
-    assert taiwan_copy_violation(text) is None
 
 
 @pytest.mark.parametrize('channel',['WhatsApp','whatsapp','LINE'])
@@ -192,17 +182,3 @@ def test_failed_old_turn_does_not_create_task_after_customer_interrupts(session_
     with session_factory() as db:
         assert db.scalar(select(HandoffTask)) is None
         assert db.get(LiveReplyJob,1).status=='cancelled'
-
-
-def test_rejected_discount_opener_can_be_removed_without_rewriting_correct_conditions():
-    from app.reply_fact_verification import FactVerification
-    from app.reception_v2.reply_revision import prune_copy
-    correct='每人人民幣11,480元，2人一間雙人房。臺灣旅客75歲可以報名，需提交健康證明。'
-    decision=EvaluationDecision('reply','peach_11d','price',reply='11日6人同行有優惠，'+correct,
-        route_variant='peach_11d_2027',evidence_refs=['route.11.price','service.peach_age'])
-    audit=FactVerification(supported=False,unsupported_claims=['11日6人同行有優惠'],claim_checks=[
-        {'claim':'每人人民幣11,480元','supported':True,'evidence':'route.11.price'},
-        {'claim':'需提交健康證明','supported':True,'evidence':'service.peach_age'}])
-    result=prune_copy({'module':'reply'},decision,audit,set(decision.evidence_refs))
-    assert result[0]['reply']==correct
-    assert result[1][0]['node']=='v2_exact_sentence_revision'
