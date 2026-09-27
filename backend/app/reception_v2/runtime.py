@@ -470,6 +470,9 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
         raise ValueError("v2_unknown_material_reference")
     route_materials = {key for group in ROUTES.get(route_id, {}).get("groups", {}).values()
                        for key in group.get("assets", [])}
+    if not route_id:
+        route_materials = {key for route in ROUTES.values()
+                           for key in route['groups'].get('itinerary_overview', {}).get('assets', [])}
     if any(item not in route_materials for item in requested_materials):
         raise ValueError("v2_material_wrong_route")
     events = validate_events(raw.get('v2_events'), context or {})
@@ -547,14 +550,15 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
     if (context or {}).get('module') not in {'silence_touch', 'wakeup'} and decision.action in {'reply','handoff'} and not decision.reply:
         raise ValueError('v2_customer_reply_required')
     decision.v2_events = events
-    if events and all(e['type'] in {'considering', 'contact_scheduled'} for e in events):
+    if events and (all(e['type'] in {'considering', 'contact_scheduled'} for e in events)
+                   or (decision.wakeup_action == 'defer' and decision.defer_minutes)):
         # An acknowledgement of future delivery is not a receipt for that topic.
         decision.evidence_refs = []
         decision.covered_content_groups = []
         decision.content_group_key = ''
     for event in decision.v2_events:
         event['route_variant'] = decision.route_variant
-        if event['type'] == 'considering' and decision.wakeup_action == 'defer' and decision.defer_minutes:
+        if event['type'] in {'considering', 'material_requested'} and decision.wakeup_action == 'defer' and decision.defer_minutes:
             event['reevaluate_at'] = (datetime.fromisoformat(event['occurred_at'].replace('Z', '+00:00'))
                                       + timedelta(minutes=decision.defer_minutes)).isoformat()
     decision.reception_flow = str(raw.get("reception_flow") or "")
@@ -639,7 +643,16 @@ def _missing_material_handoff(decision, reason):
 def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> None:
     """Resolve configured content groups and material references into delivery items."""
     _apply_contact_window(context, decision)
+    if decision.wakeup_action == 'defer' and decision.defer_minutes and decision.action == 'reply':
+        decision.material_keys = []
+        decision.v2_delivery_sections = []
+        decision.introduction_delivery = False
+        return
     kinds = {e.get('material_kind') for e in decision.v2_events if e.get('type') == 'material_requested'}
+    if kinds and context.get('module', 'reply') == 'reply':
+        # A current explicit material request must be fulfilled even when the
+        # same photo appeared earlier in the fixed introduction.
+        decision.allow_material_resend = True
     if (context.get('module') in {'silence_touch', 'wakeup'} or not decision.route_variant
             or not kinds or decision.action not in {'reply', 'handoff'}
             or (len(kinds) == 1 and decision.lead_action != 'captured'
@@ -659,8 +672,11 @@ def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> N
                  ('hotel', 'hotel_reference'), ('vehicle', 'vehicle_reference')] if kind in kinds]
         if 'vehicle' in kinds and 'vehicle_oxygen' in spec['groups']:
             keys.append('vehicle_oxygen')
-    if 'altitude' in kinds or decision.lead_action == 'captured':
-        keys.append(spec.get('policies', {}).get('post_capture_material_group') or 'altitude_guide')
+    guide_key = spec.get('policies', {}).get('post_capture_material_group') or 'altitude_guide'
+    guide_assets = set(spec['groups'].get(guide_key, {}).get('assets', []))
+    guide_sent = guide_assets and guide_assets <= set((context.get('journey') or {}).get('sent_asset_keys', []))
+    if 'altitude' in kinds or (decision.lead_action == 'captured' and not guide_sent):
+        keys.append(guide_key)
     sections, missing = [], []
     for key in dict.fromkeys(keys):
         group = spec['groups'].get(key)
@@ -742,6 +758,17 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
     route_spec = ROUTES.get(decision.route_variant, {})
     guide_key = (route_spec.get('policies') or {}).get('post_capture_material_group')
     guide = route_spec.get('groups', {}).get(guide_key, {})
+    guide_assets = set(guide.get('assets', []))
+    if (decision.lead_action == 'captured' and 'altitude' not in kinds and guide_assets
+            and guide_assets <= set((context.get('journey') or {}).get('sent_asset_keys', []))):
+        decision.material_keys = [key for key in decision.material_keys if key not in guide_assets]
+        decision.reply = decision.reply_body = _reply_with_service_receipt(decision,
+            '聯絡方式已收到，我會請顧問接續協助。')
+        decision.handoff_reason = 'lead_captured'
+        return
+    if not decision.route_variant:
+        # Comparing route maps does not select a route or start its SOP.
+        return
     if ('altitude' in kinds or decision.lead_action == 'captured') and guide:
         expected = list(guide.get('assets') or [])
         available = {item.get('key') for item in context.get('available_materials', [])}

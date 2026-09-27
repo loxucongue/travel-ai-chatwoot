@@ -23,6 +23,15 @@ def validate_events(raw, context: dict) -> list[dict]:
             raise ValueError('v2_invalid_event_type: allowed=' + ','.join(sorted(EVENT_TYPES)))
         quote = item.get('quote')
         if not isinstance(quote, str) or not quote.strip() or quote not in text:
+            # A model may repeat an already known customer event. Discard that
+            # historical annotation; do not replay it or lose the current reply.
+            if isinstance(quote, str) and quote.strip() and any(
+                quote in str(message.get('content') or '')
+                for message in context.get('context_messages', [])
+                if isinstance(message, dict)
+                and (message.get('role') or message.get('direction')) in {'user', 'customer', 'incoming'}
+            ):
+                continue
             raise ValueError('v2_event_evidence_missing')
         event = {'type': item['type'], 'quote': quote,
                  'source_message_id': context.get('source_message_id') or
@@ -41,7 +50,7 @@ def validate_events(raw, context: dict) -> list[dict]:
                 raise ValueError('v2_event_material_kind_required')
             event['material_kind'] = kind
         if item['type'] == 'contact_refused':
-            scope = refusal_scope(item.get('scope'))
+            scope = refusal_scope(item.get('scope') or item.get('topic'))
             if scope is None:
                 raise ValueError('v2_contact_refusal_scope_required')
             event['scope'] = scope
@@ -97,6 +106,9 @@ def merge_events(slots: dict, events: list[dict]) -> dict:
             identity = (event['source_message_id'], event['quote'])
             if not any((q['source_message_id'], q['quote']) == identity for q in questions):
                 questions.append({**event, 'status': 'pending'})
+        if event.get('reevaluate_at'):
+            state['reevaluate_at'] = event['reevaluate_at']
+            state['waiting_reason'] = 'deferred_request'
     state['events'] = state['events'][-100:]
     return {**slots, '_v2_state': state}
 

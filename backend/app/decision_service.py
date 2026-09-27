@@ -99,7 +99,9 @@ def _validated_route_references(decision, context: dict) -> tuple[list[str], lis
             for asset in group.get("assets", [])
         }
     else:
-        route_assets = set()
+        route_assets = ({key for spec in ROUTES.values()
+                         for key in spec['groups'].get('itinerary_overview', {}).get('assets', [])}
+                        if context.get('engine_version') == 'v2' else set())
     covered_groups = {
         group for group in (decision.covered_content_groups or [])
         if route and group in ROUTES[route]["groups"]

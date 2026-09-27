@@ -46,6 +46,18 @@ def test_pdf_topic_alias_combines_with_vehicle():
     guide = route['groups'][route['policies']['post_capture_material_group']]
     assert set(guide['assets']) <= set(decision.material_keys)
     assert set(route['groups']['vehicle_reference']['assets']) <= set(decision.material_keys)
+    assert decision.allow_material_resend
+
+
+def test_capture_does_not_automatically_resend_an_already_delivered_guide():
+    route = ROUTES['peach_9d_2027']
+    guide = route['groups'][route['policies']['post_capture_material_group']]
+    decision = EvaluationDecision('handoff', route['branch'], 'contact', reply='收到微信。',
+        route_variant='peach_9d_2027', lead_action='captured', contact_values={'wechat': 'test_guest'})
+    runtime._compile_delivery_contract({'module': 'reply', 'journey': {'sent_asset_keys': guide['assets']},
+        'available_materials': [{'key': key} for key in guide['assets']]}, decision)
+    assert not decision.material_keys
+    assert '附給您' not in decision.reply
 
 
 def test_topic_hint_does_not_remove_a_second_requested_attachment():
@@ -191,6 +203,50 @@ def test_future_hotel_acknowledgement_does_not_mark_hotel_delivered():
         'v2_events': [{'type': 'considering', 'quote': '5分鐘後', 'topic': 'hotel'}],
     })}, {'route.shared.hotel_reference'}, set(), {'module': 'reply', 'customer_text': '5分鐘後再介紹住宿。'})
     assert not decision.evidence_refs and not decision.covered_content_groups
+
+
+def test_deferred_material_request_does_not_compile_immediate_photos():
+    decision = runtime._validated_decision({'content': json.dumps({
+        'action': 'reply', 'route_variant': 'peach_11d_2027', 'reply': '5分鐘後再介紹住宿。',
+        'wakeup_action': 'defer', 'defer_minutes': 5,
+        'v2_events': [{'type': 'material_requested', 'material_kind': 'hotel', 'quote': '5分鐘後'}],
+    })}, set(), set(), {'module': 'reply', 'customer_text': '5分鐘後再介紹住宿。'})
+    runtime._compile_delivery_contract({'module': 'reply'}, decision)
+    state = merge_events({}, decision.v2_events)['_v2_state']
+    assert state['reevaluate_at']
+    assert not decision.material_keys and not decision.v2_delivery_sections
+    assert decision.reply == '5分鐘後再介紹住宿。'
+
+
+def test_historical_profile_annotation_does_not_block_current_contact():
+    events = validate_events([
+        {'type': 'profile_updated', 'quote': '改成3位'},
+        {'type': 'human_requested', 'quote': '請真人接手'},
+    ], {'customer_text': '請真人接手，我的LINE是test_guest。',
+        'context_messages': [{'direction': 'incoming', 'content': '我們改成3位，還是11日。'}]})
+    assert [e['type'] for e in events] == ['human_requested']
+
+
+@pytest.mark.parametrize('topic', ['all', 'LINE', 'WhatsApp'])
+def test_refusal_accepts_explicit_scope_in_topic(topic):
+    events = validate_events([{'type': 'contact_refused', 'quote': '先不要聯絡', 'topic': topic}],
+                             {'customer_text': '先不要聯絡'})
+    assert events[0]['scope']
+
+
+def test_comparison_can_deliver_both_maps_without_selecting_a_route():
+    from app.decision_service import _validated_route_references
+    keys = [key for route in ROUTES.values() for key in route['groups']['itinerary_overview']['assets']]
+    context = {'module': 'reply', 'engine_version': 'v2', 'customer_text': '先比較，還沒選定。',
+               'available_materials': [{'key': key} for key in keys]}
+    decision = runtime._validated_decision({'content': json.dumps({
+        'action': 'reply', 'reply': '兩條行程圖給您對照。', 'route_variant': None,
+        'material_keys': keys, 'v2_events': [{'type': 'route_comparison', 'quote': '先比較'}],
+    })}, set(), set(keys), context)
+    runtime._compile_delivery_contract(context, decision)
+    _, materials, _, flags = _validated_route_references(decision, context)
+    assert materials == keys and not flags
+    assert not decision.route_variant and not decision.introduction_delivery
 
 
 def test_rehearsal_queues_multiple_questions_across_outgoing_messages(session_factory, monkeypatch):
