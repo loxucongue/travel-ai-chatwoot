@@ -140,6 +140,33 @@ def test_comparing_another_route_preserves_actual_selection(bound):
     assert not decision.introduction_delivery
 
 
+@pytest.mark.parametrize('explicit', [False, True])
+def test_passive_question_after_stopped_intro_does_not_restart_it(explicit):
+    route_id = 'peach_9d_2027'
+    events = [{'type': 'material_requested', 'material_kind': 'full_introduction'}] if explicit else [{'type': 'question'}]
+    decision = EvaluationDecision('reply', ROUTES[route_id]['branch'], 'other', reply='小費不含在團費。',
+        route_variant=route_id, v2_events=events)
+    runtime._prepare_route_introduction({'module': 'reply', 'route_variant': route_id,
+        'journey': {'slots': {'party_size': 2, '_v2_state': {'proactive_opt_out': True}},
+                    'content_progress': {'itinerary_overview': {'asset_keys': ['routes12-9d-itinerary']}}}}, decision)
+    assert decision.introduction_delivery is explicit
+    assert decision.reply == '小費不含在團費。'
+
+
+def test_route_selection_uses_party_size_already_saved_before_matching():
+    route_id = 'peach_9d_2027'
+    route = ROUTES[route_id]
+    context = {'module': 'reply', 'memory': {'party_size': {'value': 2, 'quote': '兩位'}},
+        'journey': {'slots': {'_v2_state': {}}},
+        'available_materials': [{'key': k} for g in route['groups'].values() for k in g['assets']]}
+    decision = EvaluationDecision('reply', route['branch'], 'other', reply='選9日',
+        route_variant=route_id, v2_events=[{'type': 'route_selected'}])
+    runtime._prepare_route_introduction(context, decision)
+    runtime._enforce_delivery_contract(context, decision)
+    assert decision.introduction_delivery
+    assert decision.v2_delivery_sections[0]['group_key'] == 'party_intro_small'
+
+
 @pytest.mark.parametrize('control,expected_count', [('queue', 3), ('stop', 1), ('switch', 1), ('handoff', 1)])
 def test_live_intro_queues_questions_but_interrupts_control(session_factory, monkeypatch, control, expected_count):
     import app.live_reply as live

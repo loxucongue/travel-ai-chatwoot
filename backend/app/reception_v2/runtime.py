@@ -578,6 +578,13 @@ def _validated_decision(message: dict, available_facts: set[str], available_mate
     return decision
 
 
+def _customer_slots(context: dict, decision: EvaluationDecision) -> dict:
+    values = {**(context.get('memory') or {}),
+              **((context.get('journey') or {}).get('slots') or {}), **decision.slots}
+    return {key: value.get('value') if isinstance(value, dict) and 'value' in value else value
+            for key, value in values.items()}
+
+
 def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> None:
     if context.get('module') != 'reply' or decision.action != 'reply' or not decision.route_variant:
         return
@@ -592,6 +599,10 @@ def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> 
         decision.route_variant = str(context.get('route_variant') or journey.get('route_variant') or '')
         decision.branch = ROUTES[decision.route_variant]['branch'] if decision.route_variant in ROUTES else 'unclassified'
         return
+    preferences = ((journey.get('slots') or context.get('memory') or {}).get('_v2_state') or {})
+    if preferences.get('proactive_opt_out') and not explicit:
+        # A new question resumes answering, not the introduction the customer stopped.
+        return
     if any(e['type'] in {'considering', 'contact_refused', 'human_requested', 'contact_scheduled', 'route_comparison'}
            for e in decision.v2_events):
         return
@@ -602,7 +613,7 @@ def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> 
         decision.v2_events = [e for e in decision.v2_events if e.get('material_kind') != 'full_introduction']
         decision.delivery_intent = 'none'
         return
-    slots = {**(journey.get('slots') or context.get('memory') or {}), **decision.slots}
+    slots = _customer_slots(context, decision)
     route = ROUTES.get(decision.route_variant, {})
     if not slots.get('party_size'):
         question = route.get('groups', {}).get('entry_question', {}).get('text', '')
@@ -678,7 +689,7 @@ def _compile_delivery_contract(context: dict, decision: EvaluationDecision) -> N
     from app.reception_v2.material_delivery import introduction_group_keys, sections_for_groups
     spec = ROUTES[decision.route_variant]
     available = {m.get('key') for m in context.get('available_materials', [])}
-    slots = {**((context.get('journey') or {}).get('slots') or {}), **decision.slots}
+    slots = _customer_slots(context, decision)
     keys = []
     if 'full_introduction' in kinds:
         decision.introduction_delivery = True
@@ -874,8 +885,7 @@ def _compile_single_delivery_contract(context: dict, decision: EvaluationDecisio
             e.get('material_kind') == 'full_introduction' for e in decision.v2_events)):
         decision.introduction_delivery = True
         from app.reception_v2.material_delivery import introduction_sections
-        slots = {**((context.get('journey') or {}).get('slots') or context.get('memory') or {}),
-                 **decision.slots}
+        slots = _customer_slots(context, decision)
         sections = introduction_sections(ROUTES.get(decision.route_variant, {}),
             {item.get('key') for item in context.get('available_materials', [])}, slots)
         if any(e['type'] == 'question' for e in decision.v2_events) and decision.reply:
