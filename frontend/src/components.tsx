@@ -32,7 +32,7 @@ export function PageHeader({ title, description, eyebrow, actions }: { title: st
       <div>
         {eyebrow ? <div className="eyebrow">{eyebrow}</div> : null}
         <h1>{title}</h1>
-        <p>{description}</p>
+        {description ? <p>{description}</p> : null}
       </div>
       {actions ? <div className="page-actions">{actions}</div> : null}
     </header>

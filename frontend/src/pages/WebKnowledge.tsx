@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity, Ban, BookOpenText, CheckCircle2, ExternalLink, FileSearch, Globe2,
+  Activity, BookOpenText, ExternalLink, FileSearch,
   RefreshCw, Search, ShieldCheck,
 } from 'lucide-react';
 import { api, ApiError } from '../api';
@@ -65,6 +65,7 @@ export default function WebKnowledge() {
   const queryClient = useQueryClient();
   const [view, setView] = useState<View>('modules');
   const [search, setSearch] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState('');
   const sources = useQuery({
     queryKey: ['web-knowledge-sources'],
     queryFn: () => api<SourcesResponse>('/knowledge/web-sources'),
@@ -107,8 +108,9 @@ export default function WebKnowledge() {
   const filteredModules = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return modules;
-    return modules.filter(item => `${item.title} ${item.summary} ${item.topics.join(' ')} ${item.facts.map(fact => fact.text).join(' ')}`.toLowerCase().includes(query));
+    return modules.filter(item => `${item.title} ${item.summary} ${item.topics.join(' ')} ${item.facts.map(fact => fact.text).join(' ')} ${item.fixed_answers?.map(answer => `${answer.name} ${answer.answer_text} ${answer.positive_examples.join(' ')}`).join(' ')}`.toLowerCase().includes(query));
   }, [modules, search]);
+  const selectedModule = filteredModules.find(item => item.key === selectedTopic) ?? filteredModules[0];
   const error = sources.error || revision.error || runtimeModules.error;
   const knowledgeEnabled = !!source?.ai_enabled && source.runtime_scope !== 'disabled';
   const [usageScope, setUsageScope] = useState<'playground' | 'live'>('live');
@@ -120,31 +122,20 @@ export default function WebKnowledge() {
 
   return <div className="page-content web-knowledge-page global-library-page">
     <PageHeader
-      eyebrow="GLOBAL KNOWLEDGE"
-      title="全局官网知识库"
-      description="从 China2Go 官网整理、核对并分模块保存的共用文字知识。线路价格、团期、行程与图片仍在线路管理中维护。"
+      eyebrow=""
+      title="通用知识"
+      description=""
       actions={<div className="knowledge-disabled-actions">
-        <select aria-label="知识使用范围" value={usageScope} onChange={event => setUsageScope(event.target.value as 'live' | 'playground')}><option value="live">真实接待与演练</option><option value="playground">仅演练</option></select>
+        <select aria-label="官网知识使用范围" value={usageScope} onChange={event => setUsageScope(event.target.value as 'live' | 'playground')}><option value="live">真实接待与演练</option><option value="playground">仅演练</option></select>
         {knowledgeEnabled && usageScope !== source?.runtime_scope && <button className="primary-button" onClick={() => changeUsage.mutate('enable')}>保存范围</button>}
-        <button className={knowledgeEnabled ? 'secondary-button' : 'primary-button'} disabled={!source || changeUsage.isPending || (!knowledgeEnabled && !sources.data?.capabilities.publish_enabled)} onClick={() => changeUsage.mutate(knowledgeEnabled ? 'disable' : 'enable')}><BookOpenText size={15} />{changeUsage.isPending ? '处理中…' : knowledgeEnabled ? '停止使用' : '启用知识'}</button>
+        <button className={knowledgeEnabled ? 'secondary-button' : 'primary-button'} disabled={!source || changeUsage.isPending || (!knowledgeEnabled && !sources.data?.capabilities.publish_enabled)} onClick={() => changeUsage.mutate(knowledgeEnabled ? 'disable' : 'enable')}><BookOpenText size={15} />{changeUsage.isPending ? '处理中…' : knowledgeEnabled ? '停用官网知识' : '启用官网知识'}</button>
       </div>}
     />
 
-    <div className="knowledge-library-meta"><Badge tone={knowledgeEnabled ? 'green' : 'neutral'}>{knowledgeEnabled ? source?.runtime_scope === 'live' ? '真实接待与演练使用中' : '仅演练使用中' : '已停用'}</Badge><span>已发布版本 {source?.published_revision?.revision_number ?? '—'}</span></div>
+    <div className="knowledge-library-meta"><Badge tone={knowledgeEnabled ? 'green' : 'neutral'}>{knowledgeEnabled ? source?.runtime_scope === 'live' ? '官网知识已启用' : '官网知识仅演练' : '官网知识已停用'}</Badge><span>已发布版本 {source?.published_revision?.revision_number ?? '—'}</span></div>
     {changeUsage.error ? <div className="config-error"><ShieldCheck size={16} />{(changeUsage.error as Error).message}</div> : null}
     {error ? <div className="config-error"><ShieldCheck size={16} />{(error as ApiError).message}</div> : null}
-    {sources.isLoading || (revisionId && revision.isLoading) ? <EmptyState type="loading" title="正在读取全局知识" description="" /> : !source || !revision.data ? <EmptyState title="尚未建立全局知识" description="当前没有可检查的官网知识版本。" /> : <>
-      <section className="knowledge-library-summary">
-        <div className="knowledge-library-source"><span className="knowledge-library-icon"><Globe2 size={21} /></span><div><strong>{source.name}</strong><a href="https://china2go.com/" target="_blank" rel="noreferrer">https://china2go.com/ <ExternalLink size={11} /></a><small>{source.description}</small></div><Badge tone={knowledgeEnabled ? 'blue' : 'amber'}>{knowledgeEnabled ? (source.runtime_scope === 'live' ? '真实接待与演练' : '仅演练') : '未启用'}</Badge></div>
-        <div className="knowledge-library-stats">
-          <article><span>知识模块</span><strong>{modules.length}</strong><small>{runtimeModules.data?.summary.modules ?? 0} 个运行核心模块</small></article>
-          <article><span>已核对事实</span><strong>{revision.data.fact_count + (runtimeModules.data?.summary.facts ?? 0)}</strong><small>每条保留来源与范围</small></article>
-          <article><span>全站页面</span><strong>{inventory.length}</strong><small>{inventory.filter(item => item.status === 'fetched').length} 页读取成功</small></article>
-          <article><span>AI 状态</span><strong>{knowledgeEnabled ? (source.runtime_scope === 'live' ? '已启用' : '仅演练') : '关闭'}</strong><small>{knowledgeEnabled ? (source.runtime_scope === 'live' ? '真实接待与演练读取' : '真实接待不读取') : '不参与回答'}</small></article>
-        </div>
-        <div className="knowledge-library-meta"><span>最近整理：{formatTime(source.last_checked_at)}</span><span>内容指纹：{revision.data.content_hash.slice(0, 16)}</span><span>来源语言：繁体中文</span></div>
-      </section>
-
+    {sources.isLoading || (revisionId && revision.isLoading) ? <EmptyState type="loading" title="正在读取全局知识" description="" /> : !modules.length ? <EmptyState title="尚未建立全局知识" description="当前没有可检查的官网知识版本。" /> : <>
       <nav className="knowledge-library-tabs" aria-label="知识库视图">
         <button className={view === 'modules' ? 'active' : ''} onClick={() => setView('modules')}><BookOpenText size={15} />知识模块</button>
         <button className={view === 'usage' ? 'active' : ''} onClick={() => setView('usage')}><Activity size={15} />使用记录</button>
@@ -153,14 +144,16 @@ export default function WebKnowledge() {
       </nav>
 
       {view === 'modules' ? <section className="knowledge-modules-section">
-        <div className="knowledge-module-toolbar"><div className="route-search"><Search size={15} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索知识主题或客户问题" /></div><span>{filteredModules.length} 个模块</span></div>
-        <div className="knowledge-module-list">{filteredModules.map(module => <article key={module.key}>
-          <header><div><h2>{module.title}</h2><p>{module.summary}</p></div><Badge tone={module.runtime_scope ? 'blue' : 'green'}>{module.runtime_scope ? '真实与演练均使用' : '官网已核对'}</Badge></header>
-          <div className="knowledge-topic-list">{module.topics.map(topic => <span key={topic}>{topic}</span>)}</div>
-          {module.runtime_scope ? <p>运行核心内容随审核版本发布，不受官网资料停用按钮控制；真实发送仍须通过接待门禁。</p> : null}
-          {module.fixed_answers?.map(answer => <details key={answer.id}><summary>{answer.name} · {answer.status === 'active' ? '已审核启用' : '未启用'}</summary><p>{answer.answer_text}</p><small>来源：{answer.source_ref} · 问法：{answer.positive_examples.join('、')}</small></details>)}
-          <div className="knowledge-fact-list">{module.facts.map((fact, index) => <div key={fact.id ?? `${module.key}-${index}`}><CheckCircle2 size={15} /><div><p>{fact.text}</p>{fact.source_url ? <a href={fact.source_url} target="_blank" rel="noreferrer">查看来源依据 <ExternalLink size={10} /></a> : <span>平台已审核规则</span>}<small>核对日期：{fact.verified_at}{module.version ? ` · ${module.version}` : ''}</small></div></div>)}</div>
-        </article>)}</div>
+        <div className="knowledge-module-toolbar"><div className="route-search"><Search size={15} /><input value={search} onChange={event => setSearch(event.target.value)} aria-label="搜索知识" placeholder="搜索主题、问题或内容" /></div><span>{filteredModules.length} 个模块</span></div>
+        {selectedModule ? <div className="knowledge-browser">
+          <nav className="knowledge-topic-nav" aria-label="知识主题">{filteredModules.map(module => <button key={module.key} aria-pressed={selectedModule.key === module.key} onClick={() => setSelectedTopic(module.key)}><span>{module.title}</span><small>{module.facts.length}</small></button>)}</nav>
+          <label className="knowledge-topic-select">知识主题<select value={selectedModule.key} onChange={event => setSelectedTopic(event.target.value)}>{filteredModules.map(module => <option key={module.key} value={module.key}>{module.title}</option>)}</select></label>
+          <article className="knowledge-reader" key={selectedModule.key}>
+            <header><h2>{selectedModule.title}</h2><Badge>{selectedModule.runtime_scope ? '内置资料 · 始终启用' : knowledgeEnabled ? (source?.runtime_scope === 'live' ? '官网资料 · 已启用' : '官网资料 · 仅演练') : '官网资料 · 已停用'}</Badge></header>
+            {selectedModule.fixed_answers?.map(answer => <details className="knowledge-answer" key={answer.id}><summary>{answer.name} · {answer.status === 'active' ? '已启用' : '未启用'}</summary><p>{answer.answer_text}</p><small>客户问法：{answer.positive_examples.join('、')}</small></details>)}
+            <ol>{selectedModule.facts.map((fact, index) => <li key={fact.id ?? index}><p>{fact.text}</p><details><summary>查看来源</summary>{fact.source_url ? <a href={fact.source_url} target="_blank" rel="noreferrer">官网原文 <ExternalLink size={12} /></a> : <span>内置接待资料</span>}{fact.source_quote && <p>{fact.source_quote}</p>}<small>更新日期：{fact.verified_at || '未记录'}</small></details></li>)}</ol>
+          </article>
+        </div> : <EmptyState title="没有匹配的知识" description="换个关键词试试。" />}
       </section> : null}
 
       {view === 'usage' ? <section className="knowledge-usage-section">

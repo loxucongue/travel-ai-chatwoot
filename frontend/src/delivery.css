@@ -1,4 +1,4 @@
-.delivery-details { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; max-width: 100%; font-size: 11px; line-height: 1.6; }
+.delivery-details { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; max-width: 100%; font-size: 12px; line-height: 1.6; }
 .delivery-details > span { min-width: 0; overflow-wrap: anywhere; }
 .delivery-details .badge { white-space: normal; overflow-wrap: anywhere; }
 .message-meta:has(.delivery-details), .rehearsal-message footer:has(.delivery-details) { flex-wrap: wrap; }
@@ -7,6 +7,6 @@
 .rehearsal-message footer .delivery-details { display: flex; flex-wrap: wrap; }
 .rehearsal-message footer .delivery-details > span { display: block; }
 .delivery-audit details { padding: 8px 0; border-bottom: 1px solid #e3e5e6; min-width: 0; }
-.delivery-audit summary { display: flex; flex-wrap: wrap; gap: 6px; cursor: pointer; font-size: 11px; }
+.delivery-audit summary { display: flex; flex-wrap: wrap; gap: 6px; cursor: pointer; font-size: 12px; }
 .delivery-audit summary > span, .delivery-audit p { min-width: 0; overflow-wrap: anywhere; }
 .delivery-audit .badge { white-space: normal; }

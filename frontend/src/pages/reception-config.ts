@@ -95,7 +95,7 @@ export const groupLabels: Record<string, string> = {
   vehicle_reference: '车辆', price_reference: '价格', contact_request: '索取联系方式',
   entry_question: '询问人数', party_question: '询问人数', departure_question: '询问时间',
   departure_reference: '出发安排', accommodation_summary: '住宿补充', landmarks: '经典景点',
-  spring_weather: '冷暖与穿衣',
+  spring_weather: '冷暖与穿衣', vehicle_oxygen: '移动供氧配置', no_shopping: '零购物承诺',
   zhaji: '人文景点', read_check: '沉默承接', contact_transition: '留资过渡',
   price_deferral: '价格承接', party_intro_solo: '单人承接', party_intro_small: '小团承接',
   party_intro_group: '多人承接', summit_reference: '珠峰安排', summit_accommodation: '珠峰住宿',

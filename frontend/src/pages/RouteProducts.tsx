@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertTriangle, ArrowLeft, BookOpenText, CheckCircle2, ChevronDown, ChevronRight,
-  ChevronUp, Clock3, ExternalLink, FileCheck2, Image as ImageIcon, Import, ListOrdered,
+  AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, ChevronRight,
+  ChevronUp, Clock3, ExternalLink, FileCheck2, Image as ImageIcon, Import,
   MapPinned, Plus, RefreshCw, Save, Search, ShieldCheck, Tags, Trash2, Upload, X,
 } from 'lucide-react';
 import { api, API_BASE, ApiError } from '../api';
@@ -178,7 +178,7 @@ function RouteDetail({ product, content, tab, setTab, enabled, dirty, publishing
   return <>
     <header className="route-detail-head panel">
       <div><button className="back-link" onClick={onBack}><ArrowLeft size={15} />返回线路列表</button><div className="route-detail-title"><h1>{content.name}</h1><ProductStatus product={product} enabled={enabled} />{dirty ? <Badge tone="amber">有未发布修改</Badge> : null}</div><p><code>{product.route_variant}</code><span>线上版本 {product.package_version}</span></p></div>
-      <div className="route-detail-actions"><button className="primary-button" disabled={!dirty || publishing || !content.name.trim() || !content.selection_title.trim()} onClick={onPublish}><Save size={15} />{publishing ? '发布中…' : '校验并发布'}</button></div>
+      <div className="route-detail-actions"><button className="primary-button" disabled={!dirty || publishing || !content.name.trim() || !content.selection_title.trim()} onClick={onPublish}><Save size={15} />{publishing ? '发布中…' : '发布修改'}</button></div>
     </header>
     <nav className="route-detail-tabs panel">{tabs.map(([key, label]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>)}</nav>
     <section className="route-detail-panel panel">
@@ -220,11 +220,12 @@ function Readiness({ product }: { product: RouteProduct }) {
 
 function PriceTab({ facts, patch }: { facts: ProductFact[]; patch: (updater: (value: ContentDraft) => void) => void }) {
   const indexes = facts.map((fact, index) => ({ fact, index })).filter(({ fact }) => isPriceOrSchedule(fact));
-  return <div className="route-section-stack"><header className="detail-section-intro"><div><h2>价格与可售档期</h2><p>这里直接维护价格、有效期和出发安排，AI 回复与沉默跟进使用同一份数据。</p></div></header>{indexes.length ? <div className="fact-table-editor">{indexes.map(({ fact, index }) => <FactRow key={fact.id} fact={fact} onChange={(field, value) => patch(draft => { draft.knowledge_facts[index][field] = value; })} />)}</div> : <EmptyState title="暂无价格或档期资料" description="请在线路资料的对应内容模块中新增。" />}</div>;
+  return <div className="route-section-stack"><header className="detail-section-intro"><div><h2>价格与可售档期</h2></div></header>{indexes.length ? <div className="fact-table-editor">{indexes.map(({ fact, index }) => <FactRow key={fact.id} fact={fact} onChange={(field, value) => patch(draft => { draft.knowledge_facts[index][field] = value; })} />)}</div> : <EmptyState title="暂无价格或档期资料" description="请在线路资料的对应内容模块中新增。" />}</div>;
 }
 
 function ContentTab({ product, content, patch }: { product: RouteProduct; content: ContentDraft; patch: (updater: (value: ContentDraft) => void) => void }) {
   const [editingKey, setEditingKey] = useState('');
+  const [query, setQuery] = useState('');
   const [adding, setAdding] = useState(false);
   const [purpose, setPurpose] = useState('');
   const [text, setText] = useState('');
@@ -274,18 +275,20 @@ function ContentTab({ product, content, patch }: { product: RouteProduct; conten
   const factsById = new Map(content.knowledge_facts.map(fact => [fact.id, fact]));
 
   return <div className="route-section-stack route-library-page">
-    <header className="detail-section-intro"><div><h2>线路资料</h2><p>这里就是 AI 可用的线路内容。实时回复与沉默跟进共用这些资料，不再维护两套内容。</p></div><button type="button" className="text-button" disabled={content.content_groups.length >= 100} onClick={() => setAdding(true)}><Plus size={16} />新增内容组</button></header>
+    <header className="detail-section-intro"><div><h2>线路资料</h2></div><button type="button" className="text-button" disabled={content.content_groups.length >= 100} onClick={() => setAdding(true)}><Plus size={16} />新增内容组</button></header>
     {groupError ? <p role="alert">{groupError}</p> : null}
     {adding ? <form className="route-guidance-editor" style={{ gridTemplateColumns: 'minmax(0, 1fr)' }} onSubmit={addGroup}><label>名称与用途<input style={{ width: '100%', minWidth: 0 }} required maxLength={500} value={purpose} onChange={event => setPurpose(event.target.value)} /></label><label>参考内容<textarea required rows={4} maxLength={10000} value={text} onChange={event => setText(event.target.value)} /></label><label style={{ display: 'flex', alignItems: 'center' }}><input type="checkbox" checked={inSequence} onChange={event => setInSequence(event.target.checked)} />加入主线发送顺序</label><button type="submit" className="primary-button" disabled={!purpose.trim() || !text.trim()}><Plus size={16} />添加</button><button type="button" className="text-button" onClick={() => setAdding(false)}>取消</button></form> : null}
-    <div className="route-guidance-editor"><ShieldCheck size={18} /><label><strong>这条线路的接待重点</strong><span>只填写这条线路独有的说明，全局语气和留资规则仍在“AI 接待策略”维护。</span><textarea rows={3} maxLength={3000} value={content.ai_guidance} onChange={event => patch(value => { value.ai_guidance = event.target.value; })} /></label></div>
-    <div className="route-module-grid">{groups.map(group => {
+    <details className="route-guidance-details"><summary>线路接待说明</summary><textarea aria-label="线路接待说明" rows={3} maxLength={3000} value={content.ai_guidance} onChange={event => patch(value => { value.ai_guidance = event.target.value; })} /></details>
+    <div className="route-search content-search"><Search size={16} /><input aria-label="搜索线路资料" placeholder="搜索名称或内容" value={query} onChange={event => setQuery(event.target.value)} /></div>
+    <div className="route-module-grid">{groups.filter(group => `${contentGroupLabel(group)} ${group.purpose} ${group.approved_text}`.toLowerCase().includes(query.trim().toLowerCase())).map(group => {
       const position = mainlineOrder.get(group.key);
       return <button type="button" key={group.key} className="route-module-card" onClick={() => setEditingKey(group.key)}>
-        <span className="route-module-icon">{position === undefined ? <BookOpenText size={18} /> : <ListOrdered size={18} />}</span>
-        <span className="route-module-copy" style={{ overflowWrap: 'anywhere' }}><strong>{contentGroupLabel(group)}</strong><small>{group.purpose}</small><em>{position === undefined ? '按客户问题使用' : `主线第 ${position + 1} 步`} · {group.asset_keys.length} 张图片 · {group.evidence_refs.length} 项资料</em></span>
+        <span className="route-module-copy"><strong>{contentGroupLabel(group)}</strong><small>{group.approved_text || group.purpose}</small></span>
+        <span className="route-module-meta">{position === undefined ? '问答资料' : `第 ${position + 1} 步`} · {group.asset_keys.length} 个附件</span>
         <ChevronRight size={18} />
       </button>;
     })}</div>
+    {!groups.some(group => `${contentGroupLabel(group)} ${group.purpose} ${group.approved_text}`.toLowerCase().includes(query.trim().toLowerCase())) && <EmptyState title="没有匹配资料" description="换个关键词试试。" />}
     {editing ? <ContentDrawer
       key={editing.key}
       product={product}
@@ -299,7 +302,7 @@ function ContentTab({ product, content, patch }: { product: RouteProduct; conten
   </div>;
 }
 
-function contentGroupLabel(group: ContentGroup) { return groupLabels[group.key] ?? (group.purpose.trim() || '未命名内容组'); }
+function contentGroupLabel(group: ContentGroup) { return (groupLabels[group.key] ?? (/[\u3400-\u9fff]/.test(group.purpose) ? group.purpose.trim() : group.approved_text.trim().split(/[\n。！？]/)[0].slice(0, 24))) || '未命名资料'; }
 
 function referencesGroup(value: unknown, key: string): boolean {
   if (typeof value === 'string') return value === key;
@@ -436,7 +439,9 @@ function FixedAnswerDrawer({ product, content, answer, patch, onClose }: { produ
 }
 
 function FactRow({ fact, onChange, onDelete }: { fact: ProductFact; onChange: (field: 'text' | 'source_ref', value: string) => void; onDelete?: () => void }) {
-  return <article><div><strong>价格或档期资料</strong>{onDelete ? <button className="icon-button danger-icon" title="删除资料" onClick={onDelete}><Trash2 size={14} /></button> : null}</div><textarea rows={3} maxLength={4000} value={fact.text} onChange={event => onChange('text', event.target.value)} /><label>资料来源<input value={fact.source_ref} maxLength={500} onChange={event => onChange('source_ref', event.target.value)} /></label></article>;
+  const label = /departure|出[發发]|[團团]期/.test(`${fact.id} ${fact.source_ref}`) ? '出发日期与班期'
+    : /price|[價价]格/.test(fact.id) ? '团费与费用说明' : /applicability/.test(fact.id) ? '适用人数与条件' : '费用与出发补充';
+  return <article><label><strong>{label}</strong><textarea rows={Math.min(12, Math.max(3, fact.text.split('\n').length + 1))} maxLength={4000} value={fact.text} onChange={event => onChange('text', event.target.value)} /></label><details><summary>资料来源</summary><input aria-label={`${label}的资料来源`} value={fact.source_ref} maxLength={500} onChange={event => onChange('source_ref', event.target.value)} /></details>{onDelete ? <button className="text-button" onClick={onDelete}><Trash2 size={14} />删除资料</button> : null}</article>;
 }
 
 function AssetsTab({ routeVariant, assets, busy, onSave, onReplace }: { routeVariant: string; assets: ProductAsset[]; busy: boolean; onSave: (asset: ProductAsset, values: AssetNarrativeDraft) => void; onReplace: (asset: ProductAsset, file: File) => void }) {
