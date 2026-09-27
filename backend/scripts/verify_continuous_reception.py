@@ -128,6 +128,14 @@ def main():
     def emit(kind, **values):
         with (out / 'events.jsonl').open('a', encoding='utf-8') as f:
             f.write(json.dumps({'wall': utcnow(), 'kind': kind, **values}, ensure_ascii=False, default=str) + '\n')
+    from app.reception_v2 import runtime
+    validate_decision = runtime._validated_decision
+    def record_decision(message, *a, **kw):
+        # Synthetic acceptance inputs only; preserve failed drafts for diagnosis.
+        with (out / 'model-drafts.jsonl').open('a', encoding='utf-8') as f:
+            f.write(json.dumps(message, ensure_ascii=False) + '\n')
+        return validate_decision(message, *a, **kw)
+    runtime._validated_decision = record_decision
     with SessionLocal() as db:
         db.add(User(id=1, email='acceptance@example.invalid', display_name='连续验收', role='super_admin', password_hash='unused'))
         db.get(AppSetting, 'global_message_sending').value = {'enabled': False}

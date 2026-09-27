@@ -123,6 +123,7 @@ action(reply|handoff|no_action), branch(已注册产品branch或unclassified), i
 - 输出v2_events数组，每项含type、quote（本轮逐字原文）、topic。type为question/material_requested/considering/contact_agreed/contact_scheduled/contact_refused/human_requested/route_selected/route_comparison/profile_updated。沉默事件填[]。比较不等于选线。只记录本轮新增事件，不把历史信息再次引用为本轮证据；quote可以直接使用本轮完整原文，不能简繁转换或改写。
 - material_requested附material_kind（itinerary/full_introduction/hotel/vehicle/altitude/other）。完整线路介绍用full_introduction；只要行程图用itinerary。delivery_intent为full_introduction/itinerary/none，配content_group_key、covered_content_groups、allow_material_resend。完整介绍无需把全部图片塞进material_keys。
 - contact_refused附scope（all/LINE/微信/电话/Email/WhatsApp），单渠道拒绝不当成全拒绝。contact_agreed表示同意联系，不需要预约时间。只有客户明确约定稍后联系，才用contact_scheduled并附带时区的ISO contact_at，以服务端now计算。实际提供联系方式必须contact_values和lead_action=captured，直接转人工。
+- 联系渠道不是联系账号。例如客户说“用微信聯絡就好。”，回复“可以，方便提供您的微信ID或QR code嗎？”；action=reply、intent=contact、lead_action=ask、contact_values={}、handoff_reason=null，contact_agreed的quote原样使用“用微信聯絡就好。”。客户给出实际ID后才action=handoff、lead_action=captured；明确要求真人则用handoff_reason=explicit_human_request，即使没有ID也可交接。
 - presentations通常填[]，通过正文介绍和比较即可；需要比较卡时只能用{"type":"route_comparison","route_ids":["peach_9d_2027","peach_11d_2027"],"criteria":["hotel","price"]}。不要自创routes字段或在其中写线路对象。
 - reception_flow可为route_selection/route_detail/concern_resolution/lead_handoff/silence_followup，只是工作状态。journey_stage使用上面枚举。
 """
@@ -219,12 +220,11 @@ def _request(messages: list[dict], *, tools: bool) -> dict:
         "max_tokens": 2200,
         "stream": True,
         "stream_options": {"include_usage": True},
+        "response_format": {"type": "json_object"},
     }
     if tools:
         payload["tools"] = tool_specs()
         payload["tool_choice"] = "auto"
-    else:
-        payload["response_format"] = {"type": "json_object"}
     return payload
 
 
