@@ -422,6 +422,7 @@ def test_missing_action_is_repaired_once_instead_of_silently_inferred(monkeypatc
     import json
     import app.reception_v2.runtime as runtime
     from app.reply_fact_verification import FactVerification
+    monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
     calls=[]
     def model(payload,round_index):
         calls.append(payload)

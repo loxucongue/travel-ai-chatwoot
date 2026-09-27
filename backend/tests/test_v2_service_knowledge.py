@@ -112,6 +112,7 @@ def test_service_fact_reaches_generator_auditor_and_outer_reference_validation(m
     import app.reception_v2.runtime as runtime
     from app.reply_fact_verification import FactVerification
     from app.decision_service import generate_decision
+    monkeypatch.setattr(runtime.settings, 'deepseek_api_key', 'test')
     calls=[]
     def call(payload,round_index):
         calls.append(payload)
