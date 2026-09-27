@@ -160,10 +160,6 @@ def group_requirements_from_values(
     return mode != "assets_only", set() if mode == "text_only" else set(group.get("assets") or [])
 
 
-def _group_requirements(route_variant: str, group_key: str, slots: dict | None = None):
-    return group_requirements_from_values(route_variant, slots, group_key)
-
-
 def content_progress_from_values(
     route_variant: str,
     slots: dict | None,

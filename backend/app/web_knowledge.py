@@ -525,26 +525,6 @@ def _tokens(value: str) -> set[str]:
     return latin | {chinese[i:i + 2] for i in range(max(0, len(chinese) - 1))}
 
 
-def _chunks(content: str, limit: int = 900) -> list[str]:
-    parts = [item.strip() for item in re.split(r"\n{2,}", content) if item.strip()]
-    chunks: list[str] = []
-    current = ""
-    for part in parts:
-        if current and len(current) + len(part) + 2 > limit:
-            chunks.append(current)
-            current = ""
-        if len(part) > limit:
-            if current:
-                chunks.append(current)
-                current = ""
-            chunks.extend(part[i:i + limit] for i in range(0, len(part), limit))
-        else:
-            current = f"{current}\n\n{part}".strip()
-    if current:
-        chunks.append(current)
-    return chunks
-
-
 def revision_knowledge_modules(revision: WebKnowledgeRevision) -> list[dict]:
     """Return only reviewed, structured modules; legacy scraped blocks are ignored."""
     modules = []

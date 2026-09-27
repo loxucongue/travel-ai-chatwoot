@@ -1,6 +1,8 @@
 # China2Go AI Operations
 
-当前回复质量的业务目标、台湾表达诊断与分层设计，见 [AI 回复质量设计草案（2026-09-26）](docs/product/ai-reply-quality-design-20260926.md)。
+当前 V2 使用线路 Skill 和后台话术配置，普通回复直接使用主模型输出。线路内容以官网第一、二条线路为准，见 [当前完整 Skills](docs/product/current-reception-skills-20260927.md) 与 [官网话术上线记录](docs/development/website-route-scripts-20260927.md)。
+
+旧的审核式 V2 验收、临时部署与覆盖话术脚本已经移除，当前发布入口为 `scripts/deploy_reply_consistency_20260926.py`。旧设计文档保留作历史记录，不作为当前实现说明。
 
 仓库提交范围、私有运行资料与新环境复现限制，见 [代码仓库管理说明](docs/development/repository-management-20260926.md)。
 

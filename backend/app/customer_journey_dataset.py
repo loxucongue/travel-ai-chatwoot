@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import json
 from pathlib import Path
 from typing import Callable, Iterable
@@ -8,7 +7,6 @@ from typing import Callable, Iterable
 from sqlalchemy.orm import Session
 
 from app.automation_api import safe_text
-from app.config import settings
 from app.decision_service import VALIDATOR_VERSION, generate_decision
 from app.deepseek_evaluation import EvaluationCallError, EvaluationDecision
 from app.realtime_reply_pipeline import REALTIME_REPLY_PROMPT_VERSION
@@ -176,21 +174,6 @@ def _control_block(case: dict) -> str | None:
     if controls.get("contact_state_unknown") is True:
         return "contact_state_unknown"
     return None
-
-
-def _low_intent_customer_message(case: dict) -> bool:
-    text = str(_customer_message(case).get("content") or "")
-    explicit_opt_out = any(
-        term in text
-        for term in ("不要打扰", "不要打擾", "勿需打扰", "勿需打擾", "不要联系", "不要聯絡", "停止", "封锁", "封鎖", "黑名单", "黑名單", "退订", "退訂")
-    )
-    return (
-        not explicit_opt_out
-        and any(
-            term in text
-            for term in ("按错", "按錯", "误按", "誤按", "先看看", "参考一下", "參考一下", "列入參考", "列入参考", "暂时没需求", "暫時沒需求", "目前沒有規劃", "目前没有规划", "尚未决定", "尚未決定", "還沒決定", "还没决定", "确定参加再", "確定參加再", "以后再说", "以後再說", "需要再联系", "需要再聯絡", "已找别家", "已找別家")
-        )
-    )
 
 
 def _sop_preview(
@@ -485,7 +468,3 @@ def run_dataset_cases(
         },
         "results": results,
     }
-
-
-def decision_to_dict(decision: EvaluationDecision) -> dict:
-    return asdict(decision)

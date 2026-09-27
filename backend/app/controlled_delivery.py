@@ -1,10 +1,10 @@
 """Future live delivery boundary. Rehearsal callers must never invoke this path."""
 from datetime import timedelta
-from sqlalchemy import select, update
+from sqlalchemy import select
 from app.config import settings
 from app.chatwoot import ChatwootError
 from app.automation_models import TouchReservation
-from app.automation_service import reserve_touch, dt, iso, BLOCK_LABELS
+from app.automation_service import reserve_touch, dt, BLOCK_LABELS
 from app.models import OutboundMessage, ConversationState, HandoffTask, utcnow
 from app.outbound_control import global_message_sending_enabled
 from app.conversation_policy import has_ai_label
@@ -71,16 +71,3 @@ def submit_once(db, client, conversation_id: int, business_key: str, content: st
         if reservation:reservation.status="submission_unknown"
     db.commit()
     return row
-
-
-def reconcile_known(db, client, outbound_id: int):
-    row=db.get(OutboundMessage,outbound_id)
-    if not row or not row.chatwoot_message_id:return {"status":"manual_reconciliation_required"}
-    conversation=db.get(ConversationState,row.conversation_state_id)
-    db.commit()
-    payload=client.get_messages(conversation.chatwoot_conversation_id)
-    match=next((m for m in payload.get("payload",[]) if m.get("id")==row.chatwoot_message_id),None)
-    if match and match.get("status") in ("delivered","read","failed"):
-        row.status=match["status"]
-        db.commit()
-    return {"id":row.id,"status":row.status}

@@ -213,23 +213,6 @@ def _customer_asks_refund_or_cancel(text: str) -> bool:
     )
 
 
-def _customer_explicit_opt_out(text: str) -> bool:
-    return any(
-        term in text
-        for term in ("不要打扰", "不要打擾", "勿需打扰", "勿需打擾", "不要联系", "不要聯絡", "停止", "封锁", "封鎖", "黑名单", "黑名單", "退订", "退訂")
-    )
-
-
-def _customer_low_intent(text: str) -> bool:
-    return (
-        not _customer_explicit_opt_out(text)
-        and any(
-            term in text
-            for term in ("按错", "按錯", "误按", "誤按", "先看看", "参考一下", "參考一下", "列入參考", "列入参考", "暂时没需求", "暫時沒需求", "目前沒有規劃", "目前没有规划", "尚未决定", "尚未決定", "還沒決定", "还没决定", "确定参加再", "確定參加再", "以后再说", "以後再說", "需要再联系", "需要再聯絡", "已找别家", "已找別家")
-        )
-    )
-
-
 def _reply_requests_contact_value(text: str | None) -> bool:
     value = str(text or "")
     return bool(
@@ -500,12 +483,6 @@ class EvaluationDecision:
             touch_reason=touch_reason,
             profile_updates=profile_updates,
         )
-
-
-def normalize_intent(value: str) -> str:
-    if value not in ALLOWED_INTENTS:
-        raise ValueError("deepseek_invalid_intent")
-    return value
 
 
 def _system_prompt() -> str:

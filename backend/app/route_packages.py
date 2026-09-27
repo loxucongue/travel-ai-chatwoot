@@ -635,15 +635,3 @@ def route_quick_reply_titles() -> list[str]:
         ROUTES[route_id]["selection_title"]
         for route_id in sorted(ROUTES, key=_natural_key)
     ]
-
-
-def route_variant_for_quick_reply(title: str) -> str:
-    normalized = str(title or "").strip()
-    return next(
-        (
-            route_variant
-            for route_variant, route in ROUTES.items()
-            if route["selection_title"] == normalized
-        ),
-        "",
-    )

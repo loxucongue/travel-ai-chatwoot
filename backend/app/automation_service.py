@@ -8,14 +8,14 @@ from pathlib import Path
 import secrets
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select, update, or_
+from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
 from app.automation_models import (AutomationSession, AutomationRun, ReplyPolicy, SopVersion,
     RehearsalEnrollment, RehearsalJob, WakeupPolicy, SilenceCycle, TouchReservation)
-from app.models import ConversationState, MessageEvent, SopDefinition, StoredMedia, MaterialAsset, InboxBinding, Tenant, User, utcnow
-from app.route_reply import resolve_journey_payload, automatic_content_already_covered
+from app.models import ConversationState, SopDefinition, StoredMedia, InboxBinding, Tenant, User, utcnow
+from app.route_reply import automatic_content_already_covered
 from app.decision_service import generate_decision
 from app.deepseek_evaluation import EvaluationCallError
 from app.delivery_plan import DELIVERY_PLAN_VERSION, delivery_mode_for, ordered_delivery_parts, expand_static_delivery_nodes
@@ -1325,11 +1325,6 @@ def confirm_draft(db: Session, session: AutomationSession, message_id: str, *, d
     # the standalone reply playground and must not create a second timer here.
     if session.mode != "journey" and run.module != "wakeup":
         create_cycle(db, session)
-
-
-def explicit_material_resend(_question: str) -> bool:
-    """Deprecated compatibility shim; resend intent is owned by the model contract."""
-    return False
 
 
 def enroll_detected_journey_route(

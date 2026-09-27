@@ -158,13 +158,6 @@ def _strip_unstructured_follow_up(body: str, follow_up: GeneratedFollowUp) -> st
     return "".join(kept).strip().rstrip(" ,，;；")
 
 
-def _strip_question_sentences(body: str) -> str:
-    return "".join(
-        part for part in re.split(r"(?<=[。！!？?])\s*", body)
-        if "?" not in part and "？" not in part
-    ).strip().rstrip(" ,，;；")
-
-
 def _strip_contact_benefit_duplication(body: str) -> str:
     """Keep the code-owned contact reason as the only customer-facing copy."""
     kept: list[str] = []
@@ -185,34 +178,6 @@ def _strip_contact_benefit_duplication(body: str) -> str:
         ):
             continue
         kept.append(sentence)
-    return "".join(kept).strip()
-
-
-def _strip_model_handoff_transition(body: str, reason: str) -> str:
-    """Keep product value while code owns the handoff transition copy."""
-    clauses = re.split(r"(?<=[。！？!?])\s*", body)
-    kept: list[str] = []
-    for clause in clauses:
-        normalized = clause.strip()
-        if not normalized:
-            continue
-        mentions_consultant = re.search(r"(?:顧問|顾问|人工|專人|专人)", normalized)
-        transition_action = re.search(
-            r"(?:安排|跟進|跟进|聯繫|联系|接續|继续處理|继续处理|規劃|规划)",
-            normalized,
-        )
-        contact_receipt = (
-            reason == "lead_captured"
-            and re.search(r"(?:收到|記錄|记录)", normalized)
-            and re.search(
-                r"(?:聯絡方式|联络方式|联系方式|微信|LINE)",
-                normalized,
-                re.IGNORECASE,
-            )
-        )
-        if (mentions_consultant and transition_action) or contact_receipt:
-            continue
-        kept.append(normalized)
     return "".join(kept).strip()
 
 
@@ -238,28 +203,6 @@ class GeneratedReply:
 
     def to_dict(self) -> dict:
         return asdict(self)
-
-
-def remove_verifier_rejected_claims(
-    generated: GeneratedReply,
-    unsupported_claims: list[str],
-) -> GeneratedReply:
-    """Remove only verifier-identified text; never invent replacement facts."""
-    body = generated.body
-    for claim in unsupported_claims:
-        candidate = str(claim or "").strip()
-        if candidate:
-            body = body.replace(candidate, "")
-    body = re.sub(r"\s*([，；。！？])(?:\s*[，；。！？])+", r"\1", body)
-    body = body.strip(" ，；。！？")
-    if not body:
-        body = "好的～我先幫您整理。"
-    return GeneratedReply(
-        body=body,
-        follow_up=generated.follow_up,
-        used_fact_ids=generated.used_fact_ids,
-        asset_ids=generated.asset_ids,
-    )
 
 
 def deterministic_system_reply(plan: ReplyPlan) -> GeneratedReply | None:
@@ -586,28 +529,6 @@ def _validate_customer_visible_body(body: str) -> None:
         raise ValueError("reply_unsupported_derived_benefit")
     if re.search(r"(?:很多客人|大多數客人|大家通常|通常是.{0,12}最關心)", body):
         raise ValueError("reply_unapproved_social_proof")
-
-
-def _remove_unsupported_benefit_clauses(body: str) -> str:
-    """Drop subjective benefit clauses that are never product facts."""
-    blocked = re.compile(
-        r"(?:讓(?:您|家人)?|會讓(?:您|家人)?|可以讓(?:您|家人)?)?"
-        r"(?:住起來|坐起來|旅途中|出發前)?"
-        r"(?:更)?(?:安心|放心|踏實|安全|舒適)|"
-        r"休息(?:更)?有保障|適合(?:初次|第一次)進藏|"
-        r"很適合(?:我們)?(?:的)?(?:精緻)?小團|走起來(?:也)?輕鬆"
-    )
-    pieces = re.split(r"([，；。！？])", body)
-    kept: list[str] = []
-    for index in range(0, len(pieces), 2):
-        clause = pieces[index].strip()
-        punctuation = pieces[index + 1] if index + 1 < len(pieces) else ""
-        if not clause:
-            continue
-        cleaned = blocked.sub("", clause).strip(" ，；、")
-        if cleaned:
-            kept.append(cleaned + punctuation)
-    return "".join(kept).strip()
 
 
 def _normalize_taiwan_service_terms(body: str) -> str:

@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 
 SERVICES = ['china2go-worker', 'china2go-api', 'china2go-playground']
 LIVE = Path('/opt/china2go-ai')
-RELEASE_PATHS = ('backend/app', 'frontend/dist', 'data/knowledge/china2go/route-packages')
+RELEASE_PATHS = ('backend/app', 'backend/scripts', 'scripts', 'frontend/dist', 'data/knowledge/china2go/route-packages')
 
 
 def digest(path):
@@ -231,8 +231,12 @@ def main():
         if args.phase == 'stage':
             name = 'reply-consistency-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
             stage = (LIVE / 'releases' / name).as_posix()
-            files = [p for rel in RELEASE_PATHS for p in (root / rel).rglob('*')
-                     if p.is_file() and '__pycache__' not in p.parts]
+            # Ship tracked source only; local analysis scripts never enter releases.
+            tracked = subprocess.check_output(['git', 'ls-files'], cwd=root, text=True).splitlines()
+            files = [root / name for name in tracked
+                     if any(name.startswith(rel + '/') for rel in RELEASE_PATHS)
+                     and (root / name).is_file()]
+            files += [p for p in (root / 'frontend/dist').rglob('*') if p.is_file()]
             files += [root / 'backend/pyproject.toml']
             manifest = {'git_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
                         'files': {p.relative_to(root).as_posix(): digest(p) for p in files}}

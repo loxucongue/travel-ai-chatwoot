@@ -16,7 +16,6 @@ from app.conversation_policy import AI_CONTROL_LABEL, compute_state, observe_ai_
 from app.db import get_db
 from app.models import (
     AiRun,
-    AppSetting,
     AppSession,
     AuditLog,
     ChatwootAgent,
@@ -832,13 +831,6 @@ def pause_sop(sop_id: int, user: User = Depends(manager_csrf), db: Session = Dep
     audit(db, user, "sop.pause", "sop", row.id)
     db.commit()
     return sop_json(db, row)
-
-
-def schedule_for(node: dict, base: datetime, previous: datetime) -> datetime:
-    if node.get("schedule_type") == "fixed":
-        return datetime.fromisoformat(node["fixed_at"].replace("Z", "+00:00"))
-    basis = previous if node.get("basis") == "previous_node" else base
-    return basis + timedelta(minutes=int(node.get("delay_minutes") or 0))
 
 
 @router.post("/sops/{sop_id}/enroll")

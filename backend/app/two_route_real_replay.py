@@ -23,9 +23,8 @@ from app.config import settings
 from app.decision_service import generate_decision
 from app.deepseek_evaluation import EvaluationCallError
 from app.realtime_reply_pipeline import REALTIME_REPLY_PROMPT_VERSION
-from app.material_library import candidate_materials
 from app.lead_capture import CONTACT_ACKNOWLEDGEMENT, bind_lead_request, model_contacts
-from app.models import ConversationState, InboxBinding, MessageEvent, OutboundMessage, Tenant
+from app.models import ConversationState, InboxBinding, MessageEvent, OutboundMessage
 from app.route_packages import JOURNEY_POLICY, KNOWLEDGE_VERSION, ROUTE_PACKAGES, ROUTES
 from app.route_reply import journey_context_from_values, playbook_prompt, prepare_route_reply_values
 
@@ -477,26 +476,6 @@ def _expected_group(turn: RealTurn, route: str, sent_groups: list[str], stage: s
     return None
 
 
-def _months_in_text(text: str) -> set[int]:
-    months = {int(value) for value in re.findall(r"(?<!\d)(1[0-2]|[1-9])\s*月", text)}
-    months.update(int(value) for value in re.findall(r"(?<!\d)(1[0-2]|[1-9])\s*[/.-]\s*(?:[0-3]?\d)(?!\d)", text))
-    chinese_months = {
-        value: number
-        for number, value in enumerate(("一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"), 1)
-    }
-    months.update(
-        chinese_months[value]
-        for value in re.findall(r"(?<![一二三四五六七八九十])(十二|十一|十|[一二三四五六七八九])\s*月", text)
-    )
-    return months
-
-
-def _outside_reference_window(text: str) -> bool:
-    months = _months_in_text(text)
-    explicitly_other_time = any(term in text for term in ("其他時間", "其他时间", "別的時間", "别的时间", "過年", "过年", "春節", "春节"))
-    return explicitly_other_time or bool(months and not months.issubset({3, 4}))
-
-
 def _requires_handoff(text: str, categories: list[str]) -> bool:
     del categories
     return any(term in text for term in (
@@ -535,22 +514,6 @@ def _explicit_current_route(text: str) -> str | None:
     if selects_9d == selects_11d:
         return None
     return "peach_9d_2027" if selects_9d else "peach_11d_2027"
-
-
-def _historical_departure_outside(turn: RealTurn) -> bool:
-    latest: set[int] | None = None
-    messages = [
-        *(item["content"] for item in turn.context_messages if item["direction"] == "incoming"),
-        turn.customer_text,
-    ]
-    for message in messages:
-        for line in str(message or "").splitlines():
-            months = _months_in_text(line)
-            if months:
-                latest = months
-            if any(term in line for term in ("其他時間", "其他时间", "別的時間", "别的时间")):
-                latest = {-1}
-    return bool(latest and not latest.issubset({3, 4}))
 
 
 def _turn_requires_handoff(turn: RealTurn) -> bool:
