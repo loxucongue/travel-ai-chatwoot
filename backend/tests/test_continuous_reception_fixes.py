@@ -131,6 +131,15 @@ def test_first_selected_route_asks_configured_party_question():
     assert not decision.evidence_refs and not decision.covered_content_groups
 
 
+@pytest.mark.parametrize('bound', ['', 'peach_9d_2027'])
+def test_comparing_another_route_preserves_actual_selection(bound):
+    decision = EvaluationDecision('reply', ROUTES['peach_11d_2027']['branch'], 'other', reply='住宿比較',
+        route_variant='peach_11d_2027', v2_events=[{'type': 'route_comparison'}])
+    runtime._prepare_route_introduction({'module': 'reply', 'route_variant': bound}, decision)
+    assert decision.route_variant == bound
+    assert not decision.introduction_delivery
+
+
 @pytest.mark.parametrize('control,expected_count', [('queue', 3), ('stop', 1), ('switch', 1), ('handoff', 1)])
 def test_live_intro_queues_questions_but_interrupts_control(session_factory, monkeypatch, control, expected_count):
     import app.live_reply as live
