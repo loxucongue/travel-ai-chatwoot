@@ -92,9 +92,12 @@ def main():
             raise RuntimeError('acceptance_network_blocked')
         return original(client, request, *a, **kw)
     httpx.Client.send = send
-    async def blocked(*args, **kwargs):
-        raise RuntimeError('acceptance_async_network_blocked')
-    httpx.AsyncClient.send = blocked
+    original_async = httpx.AsyncClient.send
+    async def send_async(client, request, *a, **kw):
+        if str(request.url) != settings.deepseek_base_url.rstrip('/') + '/chat/completions' or request.method != 'POST':
+            raise RuntimeError('acceptance_async_network_blocked')
+        return await original_async(client, request, *a, **kw)
+    httpx.AsyncClient.send = send_async
     from app.main import app
     from app.db import Base, engine, SessionLocal
     from app.models import User, AppSetting, InboxBinding, OutboundMessage, utcnow
