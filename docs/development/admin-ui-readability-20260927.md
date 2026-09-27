@@ -24,4 +24,11 @@
 
 ## 发布
 
-待填写部署结果。
+- 已提交并推送：`98701a7`。
+- 已部署：`reply-consistency-20260927T132642Z`。
+- 回滚备份：`/opt/china2go-ai/backups/reply-consistency-20260927T132642Z`。
+- API、正式回复 Worker、演练 Worker 均 active，部署健康检查通过。
+- 部署前后 settings_hash / env_hash 一致；出站记录 45 → 45。
+- 回复引擎未改变：`reception-v2-agent-20260927-95e3cb8cafe0138c`。
+- 只读复核：原开场两段、间隔 1 秒、真实沉默开关关闭、官网资料 live / revision 4 保持原值。
+
