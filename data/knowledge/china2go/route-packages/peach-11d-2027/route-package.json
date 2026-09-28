@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-09-28-effect-iteration1-11d",
+  "package_version": "2026-09-28-effect-iteration2-11d",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_11d_2027",
   "branch": "peach_11d",
@@ -368,7 +368,7 @@
     },
     "contact_transition": {
       "purpose": "提供价值后的留资承接",
-      "approved_text": "感謝您認真幫我看>”<！您有沒有微信或是Line的QR code，我安排顧問傳更詳細資料給您介紹",
+      "approved_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -378,7 +378,7 @@
     },
     "contact_request": {
       "purpose": "满足留资前置条件后询问一种联系方式",
-      "approved_text": "您有沒有微信或是Line的QR code，我安排顧問傳更詳細資料給您介紹",
+      "approved_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -554,7 +554,8 @@
         "客製",
         "客制",
         "只去"
-      ]
+      ],
+      "usage_note": ""
     },
     {
       "id": "route_overview",
@@ -587,7 +588,8 @@
         "多少錢",
         "住哪裡",
         "用什麼車"
-      ]
+      ],
+      "usage_note": ""
     },
     {
       "id": "peach_highlights",
@@ -615,7 +617,8 @@
         "桃花景點有哪些",
         "除了桃花還看什麼"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "hotel",
@@ -647,7 +650,8 @@
       "negative_examples": [
         "珠峰住哪裡",
         "絨布旅館"
-      ]
+      ],
+      "usage_note": ""
     },
     {
       "id": "vehicle",
@@ -668,14 +672,15 @@
         "routes12-vehicle"
       ],
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "坐什麼車",
         "車上有氧氣嗎",
         "用車舒服嗎",
         "可以看車子照片嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "price",
@@ -742,7 +747,8 @@
         "今天還有位子嗎",
         "現在幾個人報名",
         "一定會出團嗎"
-      ]
+      ],
+      "usage_note": ""
     },
     {
       "id": "spring_weather",
@@ -780,7 +786,8 @@
         "即時天氣",
         "近期天氣",
         "明天天氣"
-      ]
+      ],
+      "usage_note": ""
     },
     {
       "id": "documents",
@@ -805,7 +812,8 @@
         "需要辦什麼證件",
         "台灣旅客要準備什麼"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "solo_guest",
@@ -831,7 +839,8 @@
         "只有一位能參加嗎",
         "一人能報名嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "small_party",
@@ -856,7 +865,8 @@
         "三個人能參加嗎",
         "2到3人怎麼安排"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "group_party",
@@ -881,7 +891,8 @@
         "我們6個人怎麼安排",
         "7位可以參加嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "lhasa_landmarks",
@@ -909,7 +920,8 @@
         "會去八廓街嗎",
         "拉薩有哪些景點"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "zhaji_temple",
@@ -936,7 +948,8 @@
         "有財神廟嗎",
         "還有哪些寺廟"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "more_accommodation",
@@ -963,7 +976,8 @@
         "可以再看住宿照片嗎",
         "想多看一張房間"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "no_shopping_contract_claim",
@@ -988,7 +1002,8 @@
         "會帶去購物站嗎",
         "無購物會寫進合約嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "senior_health_document",
@@ -1014,7 +1029,8 @@
         "長輩去西藏要準備什麼",
         "老人家可以辦入藏函嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "age_75_entry_claim",
@@ -1039,7 +1055,8 @@
         "75歲能辦入藏函嗎",
         "老人有年齡限制嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "young_child_suitability",
@@ -1064,7 +1081,8 @@
         "幼兒適合西藏嗎",
         "小朋友有年齡限制嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "ticket_refund_claim",
@@ -1089,7 +1107,8 @@
         "小孩門票有優惠嗎",
         "優惠門票怎麼退"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "hotel_oxygen_concentration_claim",
@@ -1115,7 +1134,8 @@
         "飯店全天供氧嗎",
         "房間供氧幾小時"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "mobile_oxygen_cabin_claim",
@@ -1143,7 +1163,8 @@
         "車內氧氣有什麼效果",
         "車上有醫療氧氣嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "vehicle_model_year_claim",
@@ -1162,13 +1183,14 @@
       ],
       "asset_ids": [],
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md#L79",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "是2025新車嗎",
         "車子是哪一年的",
         "一定是最新車嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "rongbuk_hotel",
@@ -1196,7 +1218,8 @@
         "絨布旅館有衛浴嗎",
         "珠峰晚上住帳篷嗎"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "contact_request",
@@ -1215,7 +1238,7 @@
       ],
       "asset_ids": [],
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "客户已了解且认可安排，明确希望进一步确认或询问下一步"
       ],
@@ -1245,7 +1268,7 @@
       ],
       "asset_ids": [],
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "客户已了解且认可安排，明确希望进一步确认或询问下一步"
       ],
@@ -1279,7 +1302,8 @@
       "positive_examples": [
         "客戶尚未提供時間，且日期影響下一步安排"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "travel_companions",
@@ -1302,7 +1326,8 @@
       "positive_examples": [
         "同行關係尚不明，會影響旅遊安排"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "family_seniors_children",
@@ -1325,7 +1350,8 @@
       "positive_examples": [
         "客戶明確表示與家人同行"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "friends_seniors_children",
@@ -1348,7 +1374,8 @@
       "positive_examples": [
         "客戶明確表示與朋友同行"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "clarify_senior_or_child",
@@ -1371,7 +1398,8 @@
       "positive_examples": [
         "上一輪問有沒有長輩或孩童，客戶只回答有"
       ],
-      "negative_examples": []
+      "negative_examples": [],
+      "usage_note": ""
     },
     {
       "id": "default_intro",
@@ -1394,7 +1422,8 @@
       ],
       "negative_examples": [],
       "party_size_min": null,
-      "party_size_max": null
+      "party_size_max": null,
+      "usage_note": ""
     },
     {
       "id": "rongbuk_upgrade",
@@ -1415,7 +1444,8 @@
       "positive_examples": [],
       "negative_examples": [],
       "party_size_min": null,
-      "party_size_max": null
+      "party_size_max": null,
+      "usage_note": ""
     },
     {
       "id": "peach_culture",
@@ -1436,7 +1466,8 @@
       "positive_examples": [],
       "negative_examples": [],
       "party_size_min": null,
-      "party_size_max": null
+      "party_size_max": null,
+      "usage_note": ""
     },
     {
       "id": "read_check",
@@ -1457,7 +1488,8 @@
       "positive_examples": [],
       "negative_examples": [],
       "party_size_min": null,
-      "party_size_max": null
+      "party_size_max": null,
+      "usage_note": ""
     },
     {
       "id": "entry_question",
@@ -1478,7 +1510,8 @@
       "positive_examples": [],
       "negative_examples": [],
       "party_size_min": null,
-      "party_size_max": null
+      "party_size_max": null,
+      "usage_note": ""
     }
   ],
   "match_keywords": [

@@ -185,6 +185,7 @@ class RouteFixedAnswerInput(BaseModel):
     answer_origin: Literal["website_verbatim", "operator_approved"] = "operator_approved"
     positive_examples: list[str] = Field(default_factory=list, max_length=50)
     negative_examples: list[str] = Field(default_factory=list, max_length=50)
+    usage_note: str = Field(default="", max_length=3000)
 
 
 class RouteContentUpdate(BaseModel):

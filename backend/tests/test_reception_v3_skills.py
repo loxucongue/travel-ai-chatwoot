@@ -48,8 +48,9 @@ def test_selected_route_preloads_only_its_complete_config(monkeypatch):
     request = json.dumps(requests[0], ensure_ascii=False)
     for marker in ('PRICE_ONLY_9', 'INTRO_ONLY_9', 'FACT_ONLY_9'):
         assert marker in request
-    for marker in ('PRICE_ONLY_11', 'INTRO_ONLY_11', 'FACT_ONLY_11'):
+    for marker in ('PRICE_ONLY_11', 'INTRO_ONLY_11'):
         assert marker not in request
+    assert 'FACT_ONLY_11' in request
     assert 'WEB_ONLY' in request
     assert set(logs[-1]['loaded_skills']) == {'tibet-reception', 'peach-9d-2027'}
     assert decision['messages'][0]['text'] == '回答原稿'
@@ -72,9 +73,25 @@ def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
 def test_active_website_facts_are_visible_before_a_tool_call(monkeypatch):
     requests = model(monkeypatch, [{'content': '', 'tool_calls': [tool('get_service_facts', {})]}, final()])
     runtime.run_agent(context('peach_11d_2027'))
-    current = json.loads(requests[0]['messages'][1]['content'])
+    current = json.loads(requests[0]['messages'][1]['content'].split('\n', 1)[1])
     assert current['service_knowledge'] == {'version': 'site-2', 'facts': [{'text': 'WEB_ONLY'}]}
     assert 'WEB_ONLY' in json.dumps(requests[1])
+
+
+def test_dialogue_keeps_roles_without_transport_noise(monkeypatch):
+    c = context('peach_9d_2027')
+    c['messages'] = [
+        {'direction': 'incoming', 'content': '兩位，時間還沒定', 'id': 'transport-id'},
+        {'direction': 'outgoing', 'content': '可以先了解，不急著決定。'},
+        {'direction': 'incoming', 'content': '先不留LINE，想問住宿'},
+    ]
+    requests = model(monkeypatch, [final(messages=[{'text': '住宿回答'}])])
+    runtime.run_agent(c)
+    messages = requests[0]['messages']
+    assert [m['role'] for m in messages[1:4]] == ['user', 'assistant', 'user']
+    assert messages[3]['content'] == '先不留LINE，想問住宿'
+    assert 'transport-id' not in json.dumps(messages, ensure_ascii=False)
+    assert '本轮运行上下文' in messages[-1]['content']
 
 
 def test_live_configuration_changes_loaded_text_and_digest():
