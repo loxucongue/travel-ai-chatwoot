@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-09-28.advisor-entry-9d-1",
+  "package_version": "2026-09-28.reception-entry-9d-2",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_9d_2027",
   "branch": "peach_9d",
@@ -159,8 +159,8 @@
       "initial_delivery": false
     },
     "advisor_greeting": {
-      "purpose": "顾问问候并说明接下来会整理线路重点",
-      "approved_text": "您好~我是China2Go國旅環球，先給您看一下我們的行程",
+      "purpose": "承接已选的9日线路并开始完整介绍",
+      "approved_text": "接下來帶您看桃花9日、不上珠峰的完整行程～",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -1556,21 +1556,21 @@
     },
     {
       "id": "default_intro",
-      "name": "default_intro",
+      "name": "9日线路介绍承接",
       "status": "active",
       "priority": 100,
       "topics": [
         "other"
       ],
       "content_group_key": "advisor_greeting",
-      "answer_text": "您好~我是China2Go國旅環球，先給您看一下我們的行程",
+      "answer_text": "接下來帶您看桃花9日、不上珠峰的完整行程～",
       "fact_ids": [
         "service.requirements"
       ],
       "asset_ids": [],
-      "source_ref": "website-7693-full/02-peach-9d/content.md",
-      "answer_origin": "website_verbatim",
-      "positive_examples": [],
+      "source_ref": "reception-entry-20260928",
+      "answer_origin": "operator_approved",
+      "positive_examples": ["全局开场已发送，客户已选9日，尚未开始完整介绍"],
       "negative_examples": [],
       "party_size_min": null,
       "party_size_max": null

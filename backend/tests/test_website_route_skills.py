@@ -14,11 +14,13 @@ def test_entire_website_branch_is_loaded_with_resolvable_images(days,directory):
     route=ROUTES[f'peach_{days}d_2027']
     skill=SkillRegistry().load(f'peach-{days}d-2027')
     source=(PACKAGE_ROOT.parent/'website-7693-full'/directory/'content.md').read_text(encoding='utf-8')
-    # These three source instructions were superseded by the advisor-entry fix.
+    # Entry routing and the duplicate identity greeting were superseded by
+    # the configured global opening and the route-specific introduction.
     replaced_entry_lines = {
         'Q．預計幾位一起去？',
         '依人數答案分流：自己一人→文01-2／2-3人→文01-3／4-6人或6人以上→文01-1／逾1分鐘無回應或系統未能判斷 → 直接播放文01',
         '文 01（僅限1分鐘無回應或系統未判斷出人數答案時，跳轉至此）',
+        '您好~我是China2Go國旅環球，先給您看一下我們的行程',
     }
     assert replaced_entry_lines <= set(source.splitlines())
     for line in source.splitlines():
