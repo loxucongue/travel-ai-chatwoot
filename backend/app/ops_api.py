@@ -1,3 +1,4 @@
+import errno
 import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -643,8 +644,16 @@ async def upload_media(file: UploadFile = File(...), user: User = Depends(manage
     tenant = db.scalar(select(Tenant))
     safe_name = f"{secrets.token_hex(12)}{Path(file.filename or 'file').suffix.lower()}"
     target = Path(settings.upload_dir) / safe_name
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(content)
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+    except OSError as exc:
+        if exc.errno not in {errno.ENOSPC, errno.EDQUOT}:
+            raise
+        target.unlink(missing_ok=True)
+        raise HTTPException(507, detail={
+            "code": "media_storage_full", "message": "服务器存储空间不足，暂时无法上传，请联系管理员。",
+        }) from exc
     row = StoredMedia(tenant_id=tenant.id, original_name=file.filename or safe_name, media_type=media_type, mime_type=mime, file_size=len(content), storage_path=str(target.resolve()), created_by=user.id)
     db.add(row)
     audit(db, user, "media.upload", "media", details={"name": row.original_name, "size": row.file_size})

@@ -1,4 +1,6 @@
 from io import BytesIO
+import errno
+from pathlib import Path
 
 import pytest
 from PIL import Image
@@ -16,6 +18,27 @@ def png():
     output = BytesIO()
     Image.new('RGB', (32, 32), 'green').save(output, format='PNG')
     return output.getvalue()
+
+
+@pytest.mark.parametrize('error_number', [errno.ENOSPC, errno.EDQUOT])
+def test_full_upload_storage_reports_error_without_partial_media(authenticated, session_factory, tmp_path, monkeypatch, error_number):
+    client, csrf = authenticated
+    monkeypatch.setattr(settings, 'upload_dir', str(tmp_path))
+    write_bytes = Path.write_bytes
+
+    def full_storage(path, data):
+        write_bytes(path, data[:8])
+        raise OSError(error_number, 'storage unavailable')
+
+    monkeypatch.setattr(Path, 'write_bytes', full_storage)
+    response = client.post('/v1/media', files={'file': ('opening.png', png(), 'image/png')},
+                           headers={'X-CSRF-Token': csrf, 'Origin': settings.origins[0]})
+    assert response.status_code == 507
+    assert response.json()['error']['code'] == 'media_storage_full'
+    assert response.headers['access-control-allow-origin'] == settings.origins[0]
+    assert not list(tmp_path.iterdir())
+    with session_factory() as db:
+        assert db.scalar(select(StoredMedia)) is None
 
 
 def media(db, tmp_path, kind='image'):

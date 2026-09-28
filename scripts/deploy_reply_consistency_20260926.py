@@ -94,8 +94,14 @@ with SessionLocal() as db:
  assert config['reply']['opening_items'] or config['reply']['opening_messages']
 print(json.dumps({'release':ENGINE_RELEASE_ID,'schema_compatible':True,'dependency_mismatches':incompatible,'outbound':False}))
 '''
-    result = subprocess.run([str(LIVE / 'venv/bin/python'), '-c', code], cwd=stage / 'backend', env=env,
-                            capture_output=True, text=True)
+    try:
+        result = subprocess.run([str(LIVE / 'venv/bin/python'), '-c', code], cwd=stage / 'backend', env=env,
+                                capture_output=True, text=True)
+    finally:
+        # Preflight data is an expendable copy, not the release rollback backup.
+        copied_data = stage / 'backend/data'
+        assert copied_data.resolve().is_relative_to((LIVE / 'releases').resolve())
+        shutil.rmtree(copied_data)
     if result.returncode:
         print(result.stderr)
         raise RuntimeError('isolated_preflight_failed')
