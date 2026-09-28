@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-09-28.reception-entry-11d-2",
+  "package_version": "2026-09-28-effect-iteration1-11d",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_11d_2027",
   "branch": "peach_11d",
@@ -82,7 +82,7 @@
     },
     {
       "id": "route.shared.vehicle_reference",
-      "text": "因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空母車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕\n然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】",
+      "text": "因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕\n然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】",
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md"
     },
     {
@@ -288,7 +288,7 @@
     },
     "vehicle_reference": {
       "purpose": "介绍车辆与车载供氧",
-      "approved_text": "因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空母車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕",
+      "approved_text": "因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕",
       "asset_keys": [
         "routes12-vehicle"
       ],
@@ -660,7 +660,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "vehicle_reference",
-      "answer_text": "因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空母車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕",
+      "answer_text": "因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕",
       "fact_ids": [
         "route.shared.vehicle_reference"
       ],
@@ -709,7 +709,8 @@
         "今天還有位子嗎",
         "現在幾個人報名",
         "一定會出團嗎"
-      ]
+      ],
+      "usage_note": "按客户当前所问线路选段。询问几人合计时，计算每人团费乘已知人数并明确合计，保留房型和不含项；不要只贴单人报价。单问房差或团期只答对应段。"
     },
     {
       "id": "departure",
@@ -1155,7 +1156,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "vehicle_reference",
-      "answer_text": "車型則是2025年最新車，用VIP航空母車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕",
+      "answer_text": "車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕",
       "fact_ids": [
         "route.shared.vehicle_reference"
       ],
@@ -1208,7 +1209,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_request",
-      "answer_text": "您有沒有微信或是Line的QR code，我安排顧問傳更詳細資料給您介紹",
+      "answer_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
       "fact_ids": [
         "service.requirements"
       ],
@@ -1216,10 +1217,16 @@
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md",
       "answer_origin": "website_verbatim",
       "positive_examples": [
-        "介紹已完成，客戶對行程有興趣",
-        "想進一步確認出發安排"
+        "客户已了解且认可安排，明确希望进一步确认或询问下一步"
       ],
-      "negative_examples": []
+      "negative_examples": [
+        "已经问过联系方式但客户未回应",
+        "客户只继续问产品问题",
+        "先不加好友或不留号码",
+        "先看看或和家人商量",
+        "尚在比较线路或尚有未回答的顾虑"
+      ],
+      "usage_note": "一次邀请；已有邀请未回应不重复。仅客户明确准备推进或主动询问联系时再次承接。LINE仅是示例，按客户偏好及后台允许渠道选一种，不能列多个。资料已发过，不用重发完整资料作为理由。"
     },
     {
       "id": "contact_after_read",
@@ -1232,7 +1239,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_transition",
-      "answer_text": "感謝您認真幫我看>”<！您有沒有微信或是Line的QR code，我安排顧問傳更詳細資料給您介紹",
+      "answer_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
       "fact_ids": [
         "service.requirements"
       ],
@@ -1240,9 +1247,16 @@
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md",
       "answer_origin": "website_verbatim",
       "positive_examples": [
-        "客戶明確說有看過行程，並想繼續了解"
+        "客户已了解且认可安排，明确希望进一步确认或询问下一步"
       ],
-      "negative_examples": []
+      "negative_examples": [
+        "已经问过联系方式但客户未回应",
+        "客户只继续问产品问题",
+        "先不加好友或不留号码",
+        "先看看或和家人商量",
+        "尚在比较线路或尚有未回答的顾虑"
+      ],
+      "usage_note": "一次邀请；已有邀请未回应不重复。仅客户明确准备推进或主动询问联系时再次承接。LINE仅是示例，按客户偏好及后台允许渠道选一种，不能列多个。资料已发过，不用重发完整资料作为理由。"
     },
     {
       "id": "departure_question",

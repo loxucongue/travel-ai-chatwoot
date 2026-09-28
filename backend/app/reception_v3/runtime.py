@@ -55,6 +55,14 @@ def run_agent(context: dict):
               + '\n通用接待 Skill：\n' + common['instructions'])
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials')}
+    # These are already the active, scoped facts selected by the service. Make
+    # their short text visible before the model decides something is unknown;
+    # the read tool still exposes the complete records and provenance.
+    current['service_knowledge'] = {
+        'version': context.get('website_version'),
+        'facts': [{key: fact[key] for key in ('id', 'text', 'source') if key in fact}
+                  for fact in context.get('website_facts', [])],
+    }
     messages = [{'role': 'system', 'content': prompt},
                 {'role': 'user', 'content': json.dumps(current, ensure_ascii=False)}]
     tools = [

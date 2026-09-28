@@ -48,8 +48,9 @@ def test_selected_route_preloads_only_its_complete_config(monkeypatch):
     request = json.dumps(requests[0], ensure_ascii=False)
     for marker in ('PRICE_ONLY_9', 'INTRO_ONLY_9', 'FACT_ONLY_9'):
         assert marker in request
-    for marker in ('PRICE_ONLY_11', 'INTRO_ONLY_11', 'FACT_ONLY_11', 'WEB_ONLY'):
+    for marker in ('PRICE_ONLY_11', 'INTRO_ONLY_11', 'FACT_ONLY_11'):
         assert marker not in request
+    assert 'WEB_ONLY' in request
     assert set(logs[-1]['loaded_skills']) == {'tibet-reception', 'peach-9d-2027'}
     assert decision['messages'][0]['text'] == '回答原稿'
 
@@ -68,10 +69,11 @@ def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
     assert len(logs[-1]['loaded_skills']) == 3
 
 
-def test_website_is_only_loaded_when_requested(monkeypatch):
+def test_active_website_facts_are_visible_before_a_tool_call(monkeypatch):
     requests = model(monkeypatch, [{'content': '', 'tool_calls': [tool('get_service_facts', {})]}, final()])
     runtime.run_agent(context('peach_11d_2027'))
-    assert 'WEB_ONLY' not in json.dumps(requests[0])
+    current = json.loads(requests[0]['messages'][1]['content'])
+    assert current['service_knowledge'] == {'version': 'site-2', 'facts': [{'text': 'WEB_ONLY'}]}
     assert 'WEB_ONLY' in json.dumps(requests[1])
 
 
