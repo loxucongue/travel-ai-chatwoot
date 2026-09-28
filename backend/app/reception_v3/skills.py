@@ -19,7 +19,10 @@ def compile_skills(db):
         routes[key] = {
             'name': route['name'], 'aliases': route.get('selection_aliases', []),
             'facts': deepcopy(route['knowledge_facts']),
-            'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids', 'positive_examples', 'status') if k in s}
+            'guidance': route.get('ai_guidance', ''),
+            'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
+                         'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
+                         'topics', 'usage_note', 'status') if k in s}
                         for s in route.get('fixed_answers', []) if s.get('status') == 'active'],
             'groups': deepcopy(route['groups']),
             'introduction_sequence': [k for k in route['introduction_sequence']
@@ -75,13 +78,26 @@ class SkillRegistry:
         route = self.bundle['routes'].get(route_id)
         body = item['body']
         if name == 'tibet-reception':
-            common = {k: self.bundle.get(k) for k in ('reply', 'silence', 'lead_capture')}
+            # Only settings used by V3 reasoning belong in the model context.
+            # Opening content and delivery limits are executed by the service;
+            # legacy topic-count triggers must not compete with the Skill.
+            fields = {
+                'reply': ('tone', 'tone_guidance', 'custom_guidance'),
+                'silence': ('enabled', 'intervals_minutes'),
+                'lead_capture': ('enabled', 'channels', 'require_supported_route',
+                                 'require_party_size', 'require_departure_window'),
+            }
+            common = {section: {key: self.bundle.get(section, {}).get(key)
+                                for key in keys if key in self.bundle.get(section, {})}
+                      for section, keys in fields.items()}
             body += '\n\n## 当前接待配置\n' + json.dumps(common, ensure_ascii=False)
             body += '\n\n## 通用场景原话\n' + '\n\n'.join(
-                f"### {s.get('name', s['id'])} [{s['id']}]\n{s.get('text', '')}"
+                f"### {s.get('name', s['id'])} [{s['id']}]\n适用场景：{s.get('scenario', '')}\n原话：\n{s.get('text', '')}"
                 for s in self.bundle.get('common_scripts', []) if s.get('enabled', True))
         elif route is not None:
             body += f"\n\n## 当前线路\nID：{route_id}\n版本：{route['version']}"
+            if route.get('guidance'):
+                body += '\n接待说明：' + route['guidance']
             body += f"\n\n## 完整介绍原文\n逐条间隔：{route['interval_seconds']} 秒\n"
             for index, key in enumerate(route['introduction_sequence'], 1):
                 group = route['groups'][key]
@@ -91,6 +107,9 @@ class SkillRegistry:
             body += '\n## 场景原话\n' + '\n\n'.join(
                 f"### {s.get('name', s['id'])} [{s['id']}]\n"
                 + '适用场景：' + json.dumps(s.get('positive_examples', []), ensure_ascii=False)
+                + '\n不适用示例：' + json.dumps(s.get('negative_examples', []), ensure_ascii=False)
+                + '\n使用条件：' + json.dumps({k: s[k] for k in
+                    ('party_size_min', 'party_size_max', 'topics', 'usage_note') if k in s}, ensure_ascii=False)
                 + '\n' + s['answer_text'] + '\n素材：' + json.dumps(s.get('asset_ids', []), ensure_ascii=False)
                 for s in route.get('scripts', []))
             body += '\n\n## 线路事实\n' + '\n'.join(

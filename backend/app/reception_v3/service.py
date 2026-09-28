@@ -117,7 +117,7 @@ def parts_for(db, row, bundle, decision):
         if message['script_id'] and not message['text'] and script is None:
             raise ValueError('v3_unknown_script')
         add(message['text'] or (script['text'] if script else ''),
-            message['asset_keys'] or (script['assets'] if script else []))
+            message['asset_keys'])
     if decision['start_introduction']:
         if not route:
             raise ValueError('v3_introduction_requires_route')

@@ -42,6 +42,24 @@ def delivered(row):
     return [m['content'] for m in row.messages if m.get('status') == 'simulated_delivered']
 
 
+def test_script_reference_never_implicitly_attaches_images(session_factory, monkeypatch):
+    spec = bundle()
+    spec['routes']['nine']['scripts'] = [{'id': 'hotel', 'status': 'active',
+        'answer_text': '完整住宿原话', 'asset_ids': ['room']}]
+    monkeypatch.setattr(service, 'resolve_materials', lambda *a: [{'content_type': 'image', 'asset_key': 'room'}])
+    monkeypatch.setattr(service, 'tenant_for_session', lambda *a: None)
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        for text in ('只答獨立衛浴。', ''):
+            decision = Decision(route_variant='nine', messages=[{'text': text, 'script_id': 'hotel'}]).model_dump()
+            _, parts = service.parts_for(db, row, spec, decision)
+            assert [p['content_type'] for p in parts] == ['text']
+            assert parts[0]['content'] == (text or '完整住宿原话')
+        decision['messages'][0]['asset_keys'] = ['room']
+        _, parts = service.parts_for(db, row, spec, decision)
+        assert [p['content_type'] for p in parts] == ['text', 'image']
+
+
 def test_complete_intro_then_answer_queued_and_ask_at_end(session_factory, monkeypatch):
     events = []
     def model(context):

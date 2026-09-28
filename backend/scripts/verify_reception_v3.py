@@ -64,6 +64,14 @@ def main():
         with (out / 'events.jsonl').open('a', encoding='utf-8') as f:
             f.write(json.dumps({'wall': utcnow(), 'kind': kind, **values}, ensure_ascii=False, default=str) + '\n')
     with SessionLocal() as db:
+        if args.natural:
+            # Change only the copied test configuration. Wait real 3 + 5
+            # minutes without a customer appointment or synthetic timer event.
+            from app.reception_config import get_reception_configuration, SETTING_KEY
+            from app.operations import save_setting
+            config = get_reception_configuration(db)
+            config['silence'].update(enabled=True, intervals_minutes=[3, 5])
+            save_setting(db, SETTING_KEY, config)
         db.add(User(id=1, email='v3-test@example.invalid', display_name='V3验收', role='super_admin', password_hash='unused'))
         inbox = db.scalar(select(InboxBinding).order_by(InboxBinding.id))
         row = AutomationSession(owner_id=1, inbox_binding_id=inbox.id, engine_version='v3', mode='journey',
@@ -87,7 +95,10 @@ def main():
              f'我先和家人討論，請{minutes}分鐘後再問我確認出發日期，現在先不要追問。',
              {'wait': minutes * 60 + 20}, '確定3月28日，請幫我找顧問核對余位。我的微信是 v3acceptance0928。']
     if args.natural:
-        steps = [{'wait': 80}, '我們兩位，明年3月28日，請顧問加我的微信 v3natural0928 接手。']
+        steps = ['我們兩位，三月底出發。', '那一位自己住，要加多少？',
+                 '我先跟家人商量，主要擔心住宿，不想再看照片。',
+                 {'wait': 520}, '可以用微信嗎？',
+                 '我的微信是 v3natural0928，請顧問接手。']
     index, inserted, seen, seen_runs, waiting = 0, False, set(), set(), None
     preamble = ['9日和11日有什么不同？先比较一下，不用发完整介绍。',
                 f'那就选桃花{args.days}日，请发完整介绍。'] if args.explore else []

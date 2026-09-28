@@ -9,6 +9,7 @@ from app.config import settings
 from app.deepseek_evaluation import _post_with_deadline, _call_log, EvaluationCallError
 from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
+from app.reception_v3.prompt import SYSTEM_PROMPT
 
 
 class Message(BaseModel):
@@ -47,14 +48,11 @@ def run_agent(context: dict):
         preloaded.append(load(selected))
     catalog = [{'id': key, 'name': route['name'], 'aliases': route.get('aliases', [])}
                for key, route in context['skills']['routes'].items()]
-    prompt = ('你是 China2Go 西藏旅游接待 Agent。按 Skill 完成本轮任务。\n'
+    prompt = (SYSTEM_PROMPT + '\n'
               'Skill 索引：\n' + json.dumps(registry.index(), ensure_ascii=False)
               + '\n线路目录（仅用于识别，不是完整产品资料）：\n' + json.dumps(catalog, ensure_ascii=False)
               + '\n已加载线路 Skill：\n' + json.dumps(preloaded, ensure_ascii=False)
-              + '\n通用接待 Skill：\n' + common['instructions']
-              + '\n需要未加载线路的原话、事实或完整介绍时先调用 load_skill。'
-                '官网补充知识用 get_service_facts。可以同轮调用多个工具。'
-                '工具读取资料，不发送客户消息；最后输出 JSON 决策，不解释内部加载过程。')
+              + '\n通用接待 Skill：\n' + common['instructions'])
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials')}
     messages = [{'role': 'system', 'content': prompt},

@@ -84,6 +84,40 @@ def test_live_configuration_changes_loaded_text_and_digest():
     assert before['digest'] != after['digest']
 
 
+def test_common_scenario_and_only_v3_reasoning_settings_reach_model(monkeypatch):
+    c = context()
+    c['skills']['common_scripts'] = [{'id': 'common', 'name': '示例',
+        'scenario': '客户询问证件交付方式', 'text': '当前通用原话', 'enabled': True}]
+    c['skills']['reply'] = {'tone_guidance': '当前语气', 'opening_message': '开场由发送层执行'}
+    c['skills']['lead_capture'] = {'enabled': False, 'channels': ['微信'], 'ask_after_answered_topics': 2}
+    requests = model(monkeypatch, [final()])
+    runtime.run_agent(c)
+    prompt = requests[0]['messages'][0]['content']
+    assert '客户询问证件交付方式' in prompt and '当前通用原话' in prompt
+    assert '当前语气' in prompt and '"enabled": false' in prompt
+    assert 'ask_after_answered_topics' not in prompt
+    assert '开场由发送层执行' not in prompt
+    assert prompt.count('## 执行协议') == 1
+
+
+def test_route_applicability_survives_compilation_and_loading(monkeypatch):
+    from app.reception_v3 import skills
+    source = {'name': '线路', 'package_version': 'v1', 'knowledge_facts': [],
+              'initial_delivery_interval_seconds': 2, 'introduction_sequence': [], 'groups': {},
+              'ai_guidance': '这条线路专属接待说明',
+              'fixed_answers': [{'id': 'group', 'name': '人数', 'status': 'active',
+                'answer_text': '原话', 'positive_examples': ['小团'], 'negative_examples': ['包团'],
+                'party_size_min': 4, 'party_size_max': 6, 'usage_note': '报价不等于已成团',
+                'topics': ['price']} ]}
+    monkeypatch.setattr(skills, 'ROUTES', {'peach_9d_2027': source})
+    monkeypatch.setattr(skills, 'ensure_route_packages_current', lambda: None)
+    monkeypatch.setattr(skills, 'get_reception_configuration', lambda db: context()['skills'])
+    body = skills.SkillRegistry(skills.compile_skills(None)).load('peach-9d-2027')['instructions']
+    for marker in ('这条线路专属接待说明', '包团', '"party_size_min": 4',
+                   '"party_size_max": 6', '报价不等于已成团'):
+        assert marker in body
+
+
 def test_standard_metadata_and_bad_skill_error(tmp_path):
     registry = SkillRegistry(context()['skills'])
     assert len(registry.index()) == 3
