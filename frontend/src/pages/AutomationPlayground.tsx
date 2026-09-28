@@ -25,6 +25,7 @@ import { sopReason } from './sop-reasons';
 
 import { DeliveryDetails, DeliveryStatus, RuntimeDetails } from '../DeliveryDetails';
 import { customerTranscriptMessage, deliveryStates, type RuntimeEvidence } from '../delivery';
+import type { ConfigResponse, RouteProduct } from './reception-config';
 
 type RouteVariant = string;
 type OptionItem = { title?: string; value?: string };
@@ -320,13 +321,22 @@ function ReceptionPlayground() {
   const [inboxId, setInboxId] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [entryMessage, setEntryMessage] = useState('你好，我想咨询旅行行程');
   const streamRef = useRef<HTMLDivElement>(null);
 
   const inboxes = useQuery({
     queryKey: ['inboxes'],
     queryFn: () => api<{ id: number; name: string; chatwoot_inbox_id: number }[]>('/settings/inboxes'),
   });
+  const products = useQuery({
+    queryKey: ['route-products'],
+    queryFn: () => api<{ items: RouteProduct[] }>('/automation/route-products'),
+  });
+  const receptionConfig = useQuery({
+    queryKey: ['reception-config'],
+    queryFn: () => api<ConfigResponse>('/automation/reception-config'),
+  });
+  const entryRoutes = (products.data?.items ?? []).filter(route =>
+    receptionConfig.data?.config.routing.enabled_route_variants.includes(route.route_variant));
   const sessionList = useQuery({
     queryKey: ['playground-sessions'],
     queryFn: () => api<{ items: SessionSummary[] }>('/playground/sessions'),
@@ -375,8 +385,8 @@ function ReceptionPlayground() {
     },
   });
 
-  const createJourney = () => {
-    if (!inboxId) return;
+  const createJourney = (route: RouteProduct) => {
+    if (!inboxId || mutateSession.isPending) return;
     mutateSession.mutate({
       path: '/playground/sessions',
       body: {
@@ -384,7 +394,7 @@ function ReceptionPlayground() {
         inbox_binding_id: inboxId,
         duration_minutes: 525600,
         speed_multiplier: 1,
-        entry_message: entryMessage,
+        entry_message: route.name,
         engine_version: 'v3',
       },
     });
@@ -409,7 +419,7 @@ function ReceptionPlayground() {
     sendCustomerText(draft);
   };
 
-  const error = mutateSession.error || deleteSession.error || session.error || inboxes.error;
+  const error = mutateSession.error || deleteSession.error || session.error || inboxes.error || products.error || receptionConfig.error;
   const current = session.data;
   const processing = Boolean(current?.pending || current?.runs.some(run => ['pending', 'processing'].includes(run.status)));
   const journeySessions = (sessionList.data?.items ?? []).filter(item => item.mode === 'journey');
@@ -436,11 +446,10 @@ function ReceptionPlayground() {
       {current?.reception_state?.can_retry ? <div className="automation-error" role="alert">本轮生成失败，客户问题已保留。<button className="text-button" disabled={mutateSession.isPending} onClick={() => mutateSession.mutate({ path: `/playground/sessions/${current.id}/retry` })}>重试本轮</button></div> : null}
       {!current ? <ChatHome
         inboxName={inboxes.data?.find(item => item.id === inboxId)?.name}
-        loading={inboxes.isLoading || mutateSession.isPending}
+        loading={inboxes.isLoading || products.isLoading || receptionConfig.isLoading || mutateSession.isPending}
         onCreate={createJourney}
         onOpenHistory={() => setHistoryOpen(true)}
-        entryMessage={entryMessage}
-        onEntryChange={setEntryMessage}
+        routes={entryRoutes}
       /> : <RehearsalRunner
         session={current}
         processing={processing}
@@ -489,7 +498,7 @@ function PlaygroundSidebar(props: {
   </aside>;
 }
 
-function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () => void; onOpenHistory: () => void; entryMessage: string; onEntryChange: (value: string) => void }) {
+function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: (route: RouteProduct) => void; onOpenHistory: () => void; routes: RouteProduct[] }) {
   return <div className="ai-chat-home">
     <header className="ai-chat-topbar">
       <button className="ai-chat-mobile-menu" onClick={props.onOpenHistory} aria-label="打开会话列表"><Menu size={20} /></button>
@@ -498,11 +507,12 @@ function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () =>
     </header>
     <section className="ai-chat-empty">
       <div className="ai-chat-orb"><Sparkles size={30} /></div>
-      <h1>模拟一个新客户</h1>
-      <p>点击开始后，AI 会像真实客服一样开场、识别线路、回答问题，并在客户沉默时继续跟进，直到取得联系方式或转人工。</p>
-      <label>客户首条消息<textarea value={props.entryMessage} onChange={event => props.onEntryChange(event.target.value)} rows={3} /></label>
-
-      <button disabled={props.loading || !props.inboxName} onClick={props.onCreate}><Plus size={18} />{props.loading ? '正在准备...' : '开始新客户演练'}</button>
+      <h1>选择客户咨询的线路</h1>
+      <p>点击线路开始演练，线路名称将作为客户的第一条消息。</p>
+      <div className="ai-chat-entry-routes" aria-label="选择线路开始演练">
+        {props.routes.map(route => <button key={route.route_variant} disabled={props.loading || !props.inboxName} onClick={() => props.onCreate(route)}>{route.name}<Send size={16} /></button>)}
+      </div>
+      {!props.routes.length ? <p role="status">{props.loading ? '正在读取线路…' : '暂无启用的线路，请先在线路管理中启用。'}</p> : null}
       <small>{props.inboxName || '正在读取渠道'} · 沙盒演练，不联系真实客户</small>
     </section>
   </div>;
