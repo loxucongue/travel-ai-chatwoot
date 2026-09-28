@@ -1103,7 +1103,7 @@ def replace_route_asset(
 
 @router.get("/playground/sessions")
 def sessions(user:User=Depends(manager),db:Session=Depends(get_db)):
-    q=select(AutomationSession).where(AutomationSession.owner_id==user.id, AutomationSession.environment == "playground")
+    q=select(AutomationSession).where(AutomationSession.owner_id==user.id, AutomationSession.environment == "playground", AutomationSession.engine_version == "v3")
     allowed=allowed_inbox_ids(db,user)
     if allowed is not None:q=q.where(AutomationSession.inbox_binding_id.in_(allowed))
     return {"items":[{"id":x.id,"mode":x.mode,"created_at":x.created_at,"virtual_now":x.virtual_now,"engine_version":x.engine_version,
