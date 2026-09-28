@@ -1,19 +1,24 @@
 from __future__ import annotations
 
+
 import hashlib
 
+
 import pytest
+
+
 from sqlalchemy import select
 
-from app.decision_knowledge import evidence_packet
-from app.decision_service import generate_decision
-from app.deepseek_evaluation import EvaluationDecision
+
 from app.models import WebKnowledgeRevision, WebKnowledgeSource
+
+
 from app.automation_models import AutomationRun, AutomationSession
-from app.reply_generation import _facts
-from app.reply_planning import build_reply_plan
-from app.reply_understanding import CustomerUnderstanding
-from app.route_packages import JOURNEY_POLICY
+
+
+
+
+
 from app.web_knowledge import (
     FetchedPage,
     WebKnowledgeError,
@@ -25,6 +30,8 @@ from app.web_knowledge import (
     refresh_source,
     install_curated_global_library,
 )
+
+
 from app.security import encrypt_secret
 
 
@@ -64,106 +71,6 @@ def test_extracts_readable_html_without_scripts_or_navigation():
     assert "ignore" not in content
 
 
-def test_runtime_knowledge_modules_show_live_service_facts(authenticated):
-    client, _ = authenticated
-    response = client.get("/v1/knowledge/runtime-modules")
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["summary"]["scope"] == "live_and_playground"
-    facts = {
-        fact["id"]: fact
-        for module in payload["items"]
-        for fact in module["facts"]
-    }
-    assert "service.website_medication_precautions" in facts
-    assert "應先諮詢醫師" in facts["service.website_medication_precautions"]["text"]
-    assert facts["service.medical_support"]["source_url"].startswith("https://china2go.com/")
-
-
-def test_manual_refresh_review_publish_and_runtime_retrieval(authenticated, session_factory, monkeypatch):
-    client, csrf = authenticated
-    monkeypatch.setattr("app.automation_api.web_knowledge_refresh_enabled", lambda: True)
-    monkeypatch.setattr("app.automation_api.web_knowledge_publish_enabled", lambda: True)
-    monkeypatch.setattr("app.automation_api.normalize_public_url", lambda value: value.strip())
-    body = "高原旅行健康说明\n\n有慢性疾病或健康疑虑时，请在出发前咨询专业医师，并依个人健康状况评估。"
-    monkeypatch.setattr("app.web_knowledge.fetch_website", lambda url: FetchedPage(
-        title="高原旅行健康说明",
-        final_url=url,
-        content=body,
-        content_hash=hashlib.sha256(body.encode()).hexdigest(),
-        script_blocks=[{
-            "kind": "knowledge_module",
-            "key": "health",
-            "title": "health",
-            "summary": "health",
-            "topics": ["health"],
-            "facts": [{"text": body, "source_url": url, "verified_at": "2026-09-10"}],
-        }],
-    ))
-
-    created = client.post("/v1/knowledge/web-sources", headers={"X-CSRF-Token": csrf}, json={
-        "name": "官网健康说明",
-        "url": "https://china2go.example/health",
-        "description": "回答高原健康与医师咨询问题",
-        "match_keywords": ["高原", "健康", "医师"],
-    })
-    assert created.status_code == 200
-    source_id = created.json()["id"]
-
-    refreshed = client.post(
-        f"/v1/knowledge/web-sources/{source_id}/refresh",
-        headers={"X-CSRF-Token": csrf},
-    )
-    assert refreshed.status_code == 200
-    source = refreshed.json()["source"]
-    assert source["latest_revision"]["status"] == "pending_review"
-    assert source["published_revision"] is None
-
-    with session_factory() as db:
-        facts, _ = active_web_facts(db, 1, "高原健康要咨询医师吗", environment="playground")
-        assert facts == []
-
-    revision_id = source["latest_revision"]["id"]
-    published = client.post(
-        f"/v1/knowledge/web-sources/{source_id}/revisions/{revision_id}/publish",
-        headers={"X-CSRF-Token": csrf},
-    )
-    assert published.status_code == 200
-    assert published.json()["published_revision"]["status"] == "active"
-    assert published.json()["runtime_scope"] == "playground"
-
-    detail = client.get(f"/v1/knowledge/web-revisions/{revision_id}")
-    assert detail.status_code == 200
-    assert detail.json()["knowledge_modules"][0]["facts"][0]["text"] == body
-
-    with session_factory() as db:
-        facts, version = active_web_facts(db, 1, "高原健康要咨询医师吗", environment="playground")
-        assert len(facts) == 1
-        assert facts[0]["id"].startswith(f"web.{source_id}.{revision_id}.")
-        assert "专业医师" in facts[0]["text"]
-        assert version
-        packet = evidence_packet(facts, version)
-        assert packet["version"].endswith(f"web:{version}")
-        assert any(item["id"] == facts[0]["id"] for item in packet["facts"])
-        assert context_fact_map({"global_knowledge_facts": facts})[facts[0]["id"]]["text"] == facts[0]["text"]
-
-        live_facts, live_version = active_web_facts(db, 1, "高原健康要咨询医师吗", environment="live")
-        assert live_facts == []
-        assert live_version == ""
-
-    disabled = client.post(
-        f"/v1/knowledge/web-sources/{source_id}/disable",
-        headers={"X-CSRF-Token": csrf},
-    )
-    assert disabled.status_code == 200
-    assert disabled.json()["runtime_scope"] == "disabled"
-    assert disabled.json()["ai_enabled"] is False
-    assert disabled.json()["published_revision"]["id"] == revision_id
-
-    with session_factory() as db:
-        facts, version = active_web_facts(db, 1, "高原健康要咨询医师吗", environment="playground")
-        assert facts == []
-        assert version == ""
 
 
 def test_paused_source_is_not_retrieved(session_factory):
@@ -218,101 +125,6 @@ def test_protected_source_falls_back_to_browser_and_keeps_password_secret(sessio
         assert captured["password"] == "test-secret"
         assert revision.script_blocks[0]["title"] == "行程"
         assert revision.image_candidates[0]["quality"] == "low_resolution"
-
-
-def test_validated_direct_web_question_avoids_unrelated_route_choice():
-    fact = {
-        "id": "web.1.2.0",
-        "text": "有健康疑虑时，请在出发前咨询专业医师。",
-        "source": "https://example.com/health#revision-1",
-        "branches": [],
-    }
-    context = {
-        "customer_text": "高原健康问题要问医师吗",
-        "context_messages": [],
-        "route_variant": "",
-        "memory": {},
-        "journey": {"sent_content_groups": [], "customer_profile": {}},
-        "lead_capture": {"status": "not_started"},
-        "available_materials": [],
-        "reception_policy": JOURNEY_POLICY,
-        "global_knowledge_facts": [fact],
-    }
-    understanding = CustomerUnderstanding(intent="other", customer_questions=["other"], confidence=0.9)
-    context["question_details"] = [{"topic": "other", "question": context["customer_text"], "evidence_quote": context["customer_text"]}]
-    plan = build_reply_plan(context, understanding)
-    assert plan.allowed_fact_ids == [fact["id"]]
-    assert plan.reply_options == []
-    assert plan.follow_up is None
-    assert _facts(plan.allowed_fact_ids, context) == [{"id": fact["id"], "text": fact["text"], "source": fact["source"]}]
-
-
-def test_dynamic_web_evidence_survives_final_validation_and_trace():
-    fact = {
-        "id": "web.4.8.0",
-        "text": "Reviewed public website fact.",
-        "source": "https://example.com/page#revision-8",
-        "branches": [],
-    }
-    captured = {}
-
-    def model_call(packet):
-        captured.update(packet["knowledge"])
-        return EvaluationDecision(
-            action="reply",
-            branch="unclassified",
-            intent="other",
-            reply="Reviewed public website fact.",
-            evidence_refs=[fact["id"]],
-        ), [], "digest"
-
-    decision, _, _, trace = generate_decision({
-        "customer_text": "What does the public website say?",
-        "context_messages": [],
-        "global_knowledge_facts": [fact],
-        "global_knowledge_version": "revision-set-8",
-    }, model_call=model_call)
-
-    assert decision.evidence_refs == [fact["id"]]
-    assert captured["version"].endswith("web:revision-set-8")
-    assert trace["knowledge_version"].endswith("web:revision-set-8")
-    assert trace["knowledge_usage"] == {
-        "status": "used",
-        "active": True,
-        "version": "revision-set-8",
-        "retrieved_fact_count": 1,
-        "retrieved_fact_ids": [fact["id"]],
-        "used_fact_count": 1,
-        "used_fact_ids": [fact["id"]],
-        "source_urls": [fact["source"]],
-        "verification_passed": None,
-        "response_source": "none",
-    }
-
-
-def test_reviewed_web_fact_resolves_unfamiliar_direct_question():
-    fact = {
-        "id": "web.1.2.0",
-        "text": "China2Go is part of the CITS inbound travel service system.",
-        "source": "https://china2go.com/cits-china2go/",
-        "branches": [],
-    }
-    context = {
-        "customer_text": "What is the relationship between China2Go and CITS?",
-        "context_messages": [], "route_variant": "", "memory": {},
-        "journey": {"sent_content_groups": [], "customer_profile": {}},
-        "lead_capture": {"status": "not_started"}, "available_materials": [],
-        "reception_policy": JOURNEY_POLICY, "global_knowledge_facts": [fact],
-    }
-    understanding = CustomerUnderstanding(
-        intent="other", customer_questions=["other"],
-        semantic_signals=["unresolved_direct_question"], confidence=0.9,
-    )
-    context["question_details"] = [{"topic": "other", "question": context["customer_text"], "evidence_quote": context["customer_text"]}]
-    plan = build_reply_plan(context, understanding)
-    assert plan.allowed_fact_ids == [fact["id"]]
-    assert "unresolved_question_requires_clarification" not in plan.safety_flags
-    assert plan.follow_up is None
 
 
 def test_usage_endpoint_reports_each_persisted_reply(authenticated, session_factory):

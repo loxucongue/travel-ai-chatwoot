@@ -62,7 +62,7 @@ export default function OpeningItemsEditor({ config, patch, uploading, errors, d
             update(item.key, { content_type: event.target.value as OpeningItem['content_type'], media_id: null, media_hash: undefined, media_name: undefined });
             clearError(item.key);
           }}><option value="text">文字</option><option value="image">图片</option><option value="video">视频</option></select>
-          <span>{Array.from(item.content).length} / {config.reply.max_characters}</span>
+          <span>{Array.from(item.content).length} / {config.reply.opening_character_limit}</span>
           <button type="button" className="icon-button" title="上移消息" aria-label={`上移消息 ${index + 1}`} disabled={disabled || index === 0} onClick={() => move(item.key, -1)}><ArrowUp size={16} /></button>
           <button type="button" className="icon-button" title="下移消息" aria-label={`下移消息 ${index + 1}`} disabled={disabled || index === items.length - 1} onClick={() => move(item.key, 1)}><ArrowDown size={16} /></button>
           <button type="button" className="icon-button" title="删除消息" aria-label={`删除消息 ${index + 1}`} disabled={disabled || busy || items.length === 1} onClick={() => {

@@ -12,10 +12,10 @@ from app.chatwoot_service import client_for, payload_dict, string_payload
 from app.config import settings
 from app.conversation_policy import AI_CONTROL_LABEL, compute_state, observe_ai_label
 from app.db import get_db
-from app.automation_service import dt
+from app.runtime_settings import dt
 from app.history_sync import attachment_placeholder, message_timestamp, sync_conversation_history
 from app.live_reply_models import LiveReplyJob
-from app.lead_capture import capture_json
+from app.conversation_views import capture_json
 from app.lead_capture_models import LeadCaptureState
 from app.models import (
     AppSession,
@@ -37,7 +37,7 @@ from app.models import (
 )
 from app.operations import audit
 from app.outbound_control import global_message_sending_enabled
-from app.route_reply import journey_context
+from app.conversation_views import journey_context
 from app.route_packages import route_quick_reply_titles
 from app.schemas import (
     ChatwootConfigRequest,
@@ -501,6 +501,25 @@ def conversation_detail(conversation_id: int, user: User = Depends(current_user)
         "next_content_group": None,
         "allowed_content_groups": [],
     }
+    from app.reception_v3.live import session_for
+    from app.reception_v3.service import state as v3_state
+    from app.automation_models import AutomationRun
+    session = session_for(db, row.id)
+    if session:
+        value = v3_state(session)
+        result['route_journey'] = {
+            'route_variant': session.controls.get('route_variant', ''),
+            'stage': 'handoff' if value.get('handoff') else value.get('delivery_kind') or 'consulting',
+            'slots': session.memory if can_view_pii else {},
+            'sent_content_groups': [], 'next_content_group': None, 'allowed_content_groups': [],
+        }
+        run = db.scalar(select(AutomationRun).where(AutomationRun.session_id == session.id)
+                        .order_by(AutomationRun.id.desc()))
+        result['latest_ai_reply'] = None if run is None else {
+            'status': run.status, 'created_at': run.created_at, 'completed_at': run.completed_at,
+            'model_ms': run.trace.get('total_ms'), 'model_http_request_count': run.trace.get('model_http_request_count'),
+            'engine_version': 'v3', 'engine_release_id': session.engine_release_id,
+        }
     return result
 
 
@@ -787,6 +806,15 @@ def update_conversation_ai_mode(
         result = string_payload(client.set_conversation_labels(conversation_id, final))
         final_labels = result or final
         sync_local_labels(db, row, final_labels, source="platform")
+        from app.reception_v3.live import session_for
+        from app.reception_v3 import service as v3_service
+        session = session_for(db, row.id)
+        if session:
+            value = v3_service.state(session)
+            if payload.enabled and not value.get('handoff'):
+                v3_service.control(session, 'resume')
+            elif not payload.enabled:
+                v3_service.control(session, 'stop')
         audit(db, user, "conversation.ai_mode.update", "conversation", conversation_id, {
             "enabled": payload.enabled,
             "sync_status": row.ai_sync_status,

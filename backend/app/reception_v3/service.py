@@ -1,7 +1,8 @@
-"""Durable V3 playground transport. No V2 decision or copy-processing calls."""
+"""Shared durable V3 reception and delivery state."""
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, update
 
@@ -48,6 +49,8 @@ def add_message(db, row, content, client_key, content_type='text'):
         return
     value = state(row)
     row.generation += 1
+    for key in ('failed_event', 'attempts', 'retry_at', 'last_error'):
+        value.pop(key, None)
     incoming = {'id': client_key, 'client_key': client_key, 'direction': 'incoming',
                 'content': content, 'content_type': content_type, 'created_at': row.virtual_now,
                 'timeline_sequence': len(row.messages) + 1}
@@ -79,14 +82,16 @@ def add_message(db, row, content, client_key, content_type='text'):
 def append_plan(row, value, parts, kind, interval, run_id=None):
     if not parts:
         return
+    plan_id = uuid4().hex
     messages = list(row.messages)
     for index, part in enumerate(parts):
         messages.append({**part, 'id': f'v3-{uuid4().hex}', 'direction': 'outgoing',
                          'status': 'draft', 'created_at': row.virtual_now,
                          'timeline_sequence': len(messages) + 1, 'run_id': run_id,
-                         'v3_kind': kind, 'preserve_delivery_timing': True})
+                         'v3_kind': kind, 'plan_id': plan_id, 'preserve_delivery_timing': True})
     row.messages = messages
     value['delivery_kind'] = kind
+    value['delivery_plan_id'] = plan_id
     value['delivery_interval'] = interval
     value['delivery_due_at'] = row.virtual_now
 
@@ -166,13 +171,37 @@ def apply_decision(db, row, run, bundle, decision):
         value['introduction_route'] = route
     interval = bundle['routes'].get(route, {}).get('interval_seconds', bundle['reply']['opening_interval_seconds'])
     append_plan(row, value, parts, kind, interval, run.id)
+    if run.input_snapshot.get('event') == 'silence_due':
+        row.messages = [{**m, 'proactive': True} if m.get('run_id') == run.id else m for m in row.messages]
     if not parts and value['next_check_minutes']:
         value['next_check_at'] = later(row.virtual_now, value['next_check_minutes'] * 60)
     save(row, value)
     row.due_at = None
 
 
-def advance(row, wall_now=None):
+def complete_delivery(row, target, status):
+    value = state(row)
+    part = next(m for m in row.messages if m.get('id') == target)
+    row.messages = [{**m, 'status': status, 'created_at': row.virtual_now,
+                     'confirmed_at': row.virtual_now} if m.get('id') == target else m for m in row.messages]
+    if part.get('plan_id') != value.get('delivery_plan_id'):
+        return
+    if any(m.get('status') == 'draft' for m in row.messages):
+        value['delivery_due_at'] = later(row.virtual_now, value['delivery_interval'])
+    else:
+        kind = value.pop('delivery_kind', None)
+        value['delivery_due_at'] = None
+        if kind == 'introduction':
+            value['completed_introductions'] = list(dict.fromkeys([
+                *value.get('completed_introductions', []), value.get('introduction_route')]))
+            value['pending_event'] = 'introduction_completed'
+            row.due_at = utcnow()
+        elif kind != 'opening' and value.get('next_check_minutes'):
+            value['next_check_at'] = later(row.virtual_now, value['next_check_minutes'] * 60)
+    save(row, value)
+
+
+def advance(row, wall_now=None, *, deliver=True):
     """Advance wall clock; deliver at most one message, never burst after a stall."""
     simulation = deepcopy(row.controls.get('simulation', {}))
     if simulation.get('status') != 'running':
@@ -188,23 +217,14 @@ def advance(row, wall_now=None):
     value = state(row)
     drafts = [m for m in row.messages if m.get('status') == 'draft']
     if drafts:
+        if not deliver:
+            save(row, value)
+            return True
         if date(value['delivery_due_at']) > date(row.virtual_now):
             return True
         target = drafts[0]['id']
-        row.messages = [{**m, 'status': 'simulated_delivered', 'created_at': row.virtual_now,
-                         'confirmed_at': row.virtual_now} if m.get('id') == target else m for m in row.messages]
-        if len(drafts) > 1:
-            value['delivery_due_at'] = later(row.virtual_now, value['delivery_interval'])
-        else:
-            kind = value.pop('delivery_kind', None)
-            value['delivery_due_at'] = None
-            if kind == 'introduction':
-                value['completed_introductions'] = list(dict.fromkeys([
-                    *value.get('completed_introductions', []), value.get('introduction_route')]))
-                value['pending_event'] = 'introduction_completed'
-                row.due_at = utcnow()
-            elif kind != 'opening' and value.get('next_check_minutes'):
-                value['next_check_at'] = later(row.virtual_now, value['next_check_minutes'] * 60)
+        complete_delivery(row, target, 'simulated_delivered')
+        value = state(row)
     elif value.get('next_check_at') and date(value['next_check_at']) <= date(row.virtual_now):
         value['next_check_at'] = None
         if not value.get('opt_out') and not value.get('handoff'):
@@ -238,18 +258,21 @@ def advance_next(row):
     advance(row)
 
 
-def tick(db, *, session_id=None, wall_now=None):
-    query = select(AutomationSession).where(AutomationSession.engine_version == 'v3', AutomationSession.environment == 'playground')
+def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment='playground'):
+    query = select(AutomationSession).where(AutomationSession.engine_version == 'v3', AutomationSession.environment == environment)
     if session_id is not None:
         query = query.where(AutomationSession.id == session_id)
     rows = db.scalars(query.order_by(AutomationSession.id)).all()
-    for row in rows:
-        advance(row, wall_now)
+    if advance_clock:
+        for row in rows:
+            advance(row, wall_now)
     db.commit()
     for row in rows:
         value = state(row)
         event = value.get('pending_event')
         if not event or row.controls.get('simulation', {}).get('status') != 'running':
+            continue
+        if value.get('failed_event') or (value.get('retry_at') and date(value['retry_at']) > date(utcnow())):
             continue
         # Opening is sent once, verbatim, before asking the model to continue.
         if value.get('delivery_kind') == 'opening':
@@ -260,31 +283,53 @@ def tick(db, *, session_id=None, wall_now=None):
         if active:
             active.status, active.error_code = 'cancelled', 'lease_expired'
         bundle = compile_skills(db)
+        if event == 'silence_due':
+            silence = bundle['silence']
+            if value.get('opt_out') or value.get('handoff') or not silence['enabled'] or (environment == 'live' and not silence.get('live_enabled')):
+                value.update(pending_event=None, next_check_at=None)
+                save(row, value)
+                db.commit()
+                continue
+            local = date(row.virtual_now).astimezone(ZoneInfo('Asia/Taipei'))
+            clock = local.strftime('%H:%M')
+            start, end = silence.get('active_start', '00:00'), silence.get('active_end', '23:59')
+            allowed = start <= clock < end if start < end else clock >= start or clock < end
+            today = {m.get('run_id') for m in row.messages if m.get('proactive') and m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')
+                     and date(m['created_at']).astimezone(ZoneInfo('Asia/Taipei')).date() == local.date()}
+            if not allowed or len(today) >= silence.get('max_proactive_messages_per_day', 6):
+                opening = local.replace(hour=int(start[:2]), minute=int(start[3:]), second=0, microsecond=0)
+                if opening <= local:
+                    opening += timedelta(days=1)
+                value.update(pending_event=None, next_check_at=opening.isoformat())
+                save(row, value)
+                db.commit()
+                continue
         context = {'event': event, 'now': row.virtual_now, 'route_variant': row.controls.get('route_variant', ''),
                    'skills': bundle, 'profile': row.memory, 'state': value,
-                   'messages': [m for m in row.messages if m.get('direction') == 'incoming' or m.get('status') == 'simulated_delivered'],
+                   'messages': [m for m in row.messages if m.get('direction') == 'incoming' or m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')],
                    'buffered_questions': [m for m in row.messages if m.get('id') in value.get('buffered_questions', [])],
                    'available_materials': candidate_materials(db, tenant_for_session(db, row))}
         context['website_facts'], context['website_version'] = active_web_facts(
             db, tenant_for_session(db, row), '\n'.join(m.get('content', '') for m in context['messages']
-                if m.get('direction') == 'incoming'), environment='playground', candidate_pool=True)
+                if m.get('direction') == 'incoming'), environment=environment, candidate_pool=True)
         run = AutomationRun(session_id=row.id, generation=row.generation, module='silence_touch' if event == 'silence_due' else 'reply',
                             idempotency_key=f'v3:{row.id}:{uuid4().hex}', status='processing', input_snapshot=context,
                             lease_until=later(utcnow(), 90))
         # Claim the session generation as well as the event. The API may add a
         # message while this model request is in flight.
         expected = deepcopy(row.controls)
+        generation = row.generation
         claimed_controls = {**expected, 'v3_lease': uuid4().hex}
         claimed = db.execute(update(AutomationSession).where(AutomationSession.id == row.id,
-            AutomationSession.generation == row.generation, AutomationSession.controls == expected)
-            .values(due_at=None, controls=claimed_controls).execution_options(synchronize_session=False))
+            AutomationSession.generation == generation, AutomationSession.revision == row.revision)
+            .values(due_at=None, controls=claimed_controls, revision=row.revision + 1).execution_options(synchronize_session=False))
         if not claimed.rowcount:
             db.rollback()
             continue
         db.add(run)
         db.commit()
         db.refresh(row)
-        run_id, generation = run.id, row.generation
+        run_id = run.id
         http_calls = []
         meter_token = calls.set(http_calls)
         decision, logs = None, []
@@ -300,8 +345,21 @@ def tick(db, *, session_id=None, wall_now=None):
             run.decision = decision
             if row.generation != generation or row.controls.get('simulation', {}).get('status') == 'stopped':
                 run.status, run.error_code = 'cancelled', 'superseded'
+            elif decision['action'] == 'queue' and context['state'].get('delivery_kind') == 'introduction' and state(row).get('delivery_kind') != 'introduction':
+                # Delivery can finish while this classification call is running.
+                # Keep the buffered questions for the completion turn.
+                row.memory = {**(row.memory or {}), **decision['profile']}
+                value = state(row)
+                value['pending_event'] = 'introduction_completed'
+                save(row, value)
+                row.due_at = utcnow()
+                run.status = 'completed'
             else:
                 apply_decision(db, row, run, bundle, decision)
+                value = state(row)
+                for key in ('last_error', 'retry_at', 'attempts', 'failed_event'):
+                    value.pop(key, None)
+                save(row, value)
                 run.status = 'completed'
         except Exception as exc:
             db.rollback()
@@ -313,10 +371,20 @@ def tick(db, *, session_id=None, wall_now=None):
                          'logs': logs or getattr(exc, 'calls', []), **metrics(http_calls)}
             if row.generation == generation:
                 value = state(row)
-                value['pending_event'] = None
                 value['last_error'] = str(exc)[:200]
+                value['attempts'] = value.get('attempts', 0) + 1
+                if value['attempts'] < 3:
+                    value['retry_at'] = later(utcnow(), 2 ** value['attempts'])
+                    row.due_at = value['retry_at']
+                else:
+                    value['failed_event'] = event
+                    row.due_at = None
+                    save(row, value)
+                    if environment == 'live':
+                        from app.reception_v3.live import handoff
+                        handoff(db, row, 'model_failed', str(exc)[:200])
+                        value = state(row)
                 save(row, value)
-                row.due_at = None
         finally:
             calls.reset(meter_token)
         run.completed_at, run.lease_until = utcnow(), None

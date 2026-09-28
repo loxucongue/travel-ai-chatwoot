@@ -82,10 +82,7 @@ export default function WebKnowledge() {
     queryFn: () => api<UsageResponse>(`/knowledge/web-sources/${source!.id}/usage?limit=100`),
     enabled: source?.id != null,
   });
-  const runtimeModules = useQuery({
-    queryKey: ['runtime-knowledge-modules'],
-    queryFn: () => api<RuntimeModulesResponse>('/knowledge/runtime-modules'),
-  });
+
   const changeUsage = useMutation({
     mutationFn: async (action: 'enable' | 'disable') => {
       if (!source) throw new Error('尚未建立官网知识');
@@ -102,7 +99,7 @@ export default function WebKnowledge() {
     },
   });
   const websiteModules = revision.data?.knowledge_modules ?? [];
-  const modules = [...(runtimeModules.data?.items ?? []), ...websiteModules];
+  const modules = websiteModules;
   const inventory = revision.data?.site_inventory ?? [];
   const excluded = revision.data?.excluded_items ?? [];
   const filteredModules = useMemo(() => {
@@ -111,7 +108,7 @@ export default function WebKnowledge() {
     return modules.filter(item => `${item.title} ${item.summary} ${item.topics.join(' ')} ${item.facts.map(fact => fact.text).join(' ')} ${item.fixed_answers?.map(answer => `${answer.name} ${answer.answer_text} ${answer.positive_examples.join(' ')}`).join(' ')}`.toLowerCase().includes(query));
   }, [modules, search]);
   const selectedModule = filteredModules.find(item => item.key === selectedTopic) ?? filteredModules[0];
-  const error = sources.error || revision.error || runtimeModules.error;
+  const error = sources.error || revision.error;
   const knowledgeEnabled = !!source?.ai_enabled && source.runtime_scope !== 'disabled';
   const [usageScope, setUsageScope] = useState<'playground' | 'live'>('live');
   useEffect(() => { if (source?.runtime_scope === 'playground' || source?.runtime_scope === 'live') setUsageScope(source.runtime_scope); }, [source?.runtime_scope]);

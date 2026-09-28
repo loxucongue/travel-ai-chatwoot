@@ -15,20 +15,8 @@ AI_RECEPTION_ROLLOUT_KEY = "ai_reception_rollout"
 
 
 def default_engine_assignment() -> dict[str, str]:
-    """Return the engine stamped on newly mirrored conversations.
-
-    Existing conversations keep their persisted engine, so V1/V2 can still be
-    selected per conversation while operations controls the default for new
-    traffic through AI_ENGINE_DEFAULT.
-    """
-    if settings.ai_engine_default == "v2":
-        from app.reception_v2 import ENGINE_RELEASE_ID
-
-        return {
-            "ai_engine_version": "v2",
-            "ai_engine_release_id": ENGINE_RELEASE_ID,
-        }
-    return {"ai_engine_version": "v1", "ai_engine_release_id": "v1"}
+    from app.reception_v3 import release_id
+    return {"ai_engine_version": "v3", "ai_engine_release_id": release_id()}
 
 
 @dataclass(frozen=True)

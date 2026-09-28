@@ -5,114 +5,62 @@ from copy import deepcopy
 from datetime import timedelta
 from pathlib import Path
 from typing import Literal
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select, update, func, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-
 from app.auth import current_user, require_csrf, require_super_admin_csrf
 from app.asset_narratives import normalized_asset_narrative
 from app.db import get_db
-from app.models import User, Tenant, InboxBinding, ConversationState, MessageEvent, SopDefinition, StoredMedia, MaterialAsset, KnowledgeVersion, AuditLog, WebKnowledgeSource, WebKnowledgeRevision, utcnow
+from app.models import User, Tenant, InboxBinding, ConversationState, MessageEvent, StoredMedia, MaterialAsset, KnowledgeVersion, AuditLog, WebKnowledgeSource, WebKnowledgeRevision, utcnow
 from app.automation_models import *
 from app.live_reply_models import LiveReplyJob
-from app.automation_service import (reply_policy, add_customer_message, cancel_generation, dt, iso, confirm_draft, create_cycle, queue_wakeup, enroll_rehearsal, advance_sops, sop_snapshot, apply_controls, trigger_sops, subject_key, start_journey, start_open_journey,
-    change_journey_status, simulation_state, set_simulation_state)
 from app.config import settings
-from app.decision_service import VALIDATOR_VERSION, generate_decision
-from app.deepseek_evaluation import EvaluationCallError
-from app.decision_knowledge import FACTS
-from app.realtime_reply_pipeline import REALTIME_REPLY_PROMPT_VERSION
-from app.material_library import candidate_materials, freeze_nodes, replace_asset_binding
+from app.material_library import replace_asset_binding
 from app.operations import allowed_inbox_ids, is_admin, audit
-from app.route_packages import (ROUTE_PACKAGES, RoutePackageError,
-                                RUNTIME_PACKAGE_ROOT, _validate, install_route_package,
-                                ensure_route_packages_current, remove_runtime_route_package,
-                                route_package_summary)
-from app.route_reply import ROUTES, journey_context_from_values, normalize_journey_stage, playbook_prompt, prepare_route_reply_values
+from app.route_packages import ROUTES, ROUTE_PACKAGES, RoutePackageError, RUNTIME_PACKAGE_ROOT, _validate, install_route_package, ensure_route_packages_current, remove_runtime_route_package, route_package_summary
 from app.security import encrypt_secret
-from app.service_knowledge import SERVICE_KNOWLEDGE, SERVICE_KNOWLEDGE_VERSION
-from app.reception_v2.proactive_policy import silence_schedule_templates
-from app.reception_config import (
-    ReceptionConfiguration,
-    live_silence_enabled,
-    configured_silence_nodes,
-    effective_reception_policy,
-    get_reception_configuration,
-    put_reception_configuration,
-    v2_silence_intervals,
-)
+from app.reception_config import ReceptionConfiguration, live_silence_enabled, get_reception_configuration, put_reception_configuration
 from app.reception_rollout import reception_rollout
-from app.reception_v2 import ENGINE_RELEASE_ID as V2_ENGINE_RELEASE_ID
-from app.web_knowledge import (
-    WebKnowledgeError,
-    enrich_context_with_web_knowledge,
-    normalize_public_url,
-    publish_revision,
-    refresh_source,
-    revision_knowledge_modules,
-    web_knowledge_publish_enabled,
-    web_knowledge_refresh_enabled,
-)
+from app.reception_v3 import release_id
+from app.reception_v3 import service
+from app.runtime_settings import reply_policy, dt, iso
+from app.web_knowledge import WebKnowledgeError, normalize_public_url, publish_revision, refresh_source, revision_knowledge_modules, web_knowledge_publish_enabled, web_knowledge_refresh_enabled
+def simulation_state(row): return row.controls.get('simulation', {})
+
+
+def session_json(db, row):
+    records = db.scalars(select(AutomationRun).where(AutomationRun.session_id == row.id)
+                         .order_by(AutomationRun.id.desc()).limit(30)).all()
+    value = service.state(row)
+    simulation = simulation_state(row)
+    if value.get('handoff'):
+        stage = 'handoff'
+    elif not row.controls.get('route_variant'):
+        stage = 'route_selection'
+    elif value.get('delivery_kind') == 'introduction':
+        stage = 'route_presentation'
+    elif not row.memory.get('party_size'):
+        stage = 'needs_discovery'
+    else:
+        stage = 'concern_resolution'
+    return {'id': row.id, 'mode': row.mode, 'environment': row.environment,
+            'engine_version': row.engine_version, 'engine_release_id': row.engine_release_id,
+            'generation': row.generation, 'virtual_now': row.virtual_now,
+            'messages': safe_text(row.messages), 'memory': safe_text({k: {'value': v} for k,v in row.memory.items()}),
+            'controls': safe_text(row.controls),
+            'simulation': {**simulation, 'next_event_at': value.get('delivery_due_at') or value.get('next_check_at'),
+                           'next_event_name': '线路介绍' if value.get('delivery_kind') == 'introduction' else '沉默评估'},
+            'reception_state': {'journey_stage': stage, 'customer_profile': safe_text(row.memory),
+                                'next_touch_at': value.get('next_check_at'), 'last_warning': value.get('last_error'),
+                                'can_retry': bool(value.get('failed_event'))},
+            'pending': bool(value.get('pending_event') and not value.get('failed_event')),
+            'runs': [run_json(x) for x in records], 'jobs': [], 'enrollments': [], 'cycles': [], 'outbound': False}
 
 router = APIRouter(prefix="/v1")
 
-
-def _runtime_knowledge_modules() -> list[dict]:
-    sources = {item["id"]: item for item in SERVICE_KNOWLEDGE.get("sources", [])}
-
-    def source_url(source_ref: str) -> str:
-        source_id = source_ref.split("#", 1)[0]
-        if source_id in sources:
-            return str(sources[source_id].get("url") or "")
-        return source_ref if source_ref.startswith("https://") else ""
-
-    def fact_json(fact: dict) -> dict:
-        source_ref = str(fact.get("source") or "")
-        source = sources.get(source_ref.split("#", 1)[0], {})
-        return {
-            "id": fact["id"],
-            "text": fact["text"],
-            "source_url": source_url(source_ref),
-            "source_quote": source_ref.split("#", 1)[1] if "#" in source_ref else "平台已审核规则",
-            "verified_at": str(source.get("fetched_at") or "").split("T", 1)[0] or "2026-09-12",
-        }
-
-    service_facts = [fact for fact in FACTS if str(fact.get("id") or "").startswith("service.")]
-    health_ids = {
-        "service.medical_preparedness", "service.medical_logistics",
-        "service.website_medication_precautions", "service.medical_support",
-        "service.altitude_symptoms", "service.altitude_response", "service.medication",
-    }
-    return [
-        {
-            "kind": "runtime_knowledge_module",
-            "key": "runtime_health_and_medical",
-            "title": "高原健康、用藥與就醫協助",
-            "summary": "跨兩條線路共用的健康邊界、導遊協助、正規就醫及用藥注意事項。",
-            "topics": ["高原反應", "隨隊醫師", "用藥", "送醫", "供氧邊界"],
-            "runtime_scope": "live_and_playground",
-            "version": SERVICE_KNOWLEDGE_VERSION,
-            "facts": [fact_json(fact) for fact in service_facts if fact["id"] in health_ids],
-            "fixed_answers": [
-                {key: answer.get(key) for key in ("id", "name", "status", "answer_text", "source_ref", "positive_examples")}
-                for answer in SERVICE_KNOWLEDGE.get("fixed_answers", [])
-            ],
-        },
-        {
-            "kind": "runtime_knowledge_module",
-            "key": "runtime_reception_boundaries",
-            "title": "接待、安全與即時核對邊界",
-            "summary": "限制留資、即時名額、天候、客製需求及醫療承諾的系統級規則。",
-            "topics": ["聯絡方式", "即時名額", "天候路況", "客製行程", "安全承諾"],
-            "runtime_scope": "live_and_playground",
-            "version": SERVICE_KNOWLEDGE_VERSION,
-            "facts": [fact_json(fact) for fact in service_facts if fact["id"] not in health_ids],
-        },
-    ]
 
 
 def manager(user: User = Depends(current_user)) -> User:
@@ -181,26 +129,6 @@ def _web_source_json(db: Session, row: WebKnowledgeSource, *, include_revisions:
     return value
 
 
-class RouteSimulationMessage(BaseModel):
-    role: Literal["customer", "assistant"] = "customer"
-    content: str = Field(min_length=1, max_length=4000)
-
-
-class RouteProductSimulationInput(BaseModel):
-    messages: list[RouteSimulationMessage] = Field(min_length=1, max_length=30)
-    scenario: Literal[
-        "normal",
-        "price_hotel",
-        "route_switch",
-        "large_group",
-        "eleven_people",
-        "other_destination",
-        "contact_channel",
-        "contact_value",
-        "attachment_question",
-    ] = "normal"
-
-
 class RoutePackageImportInput(BaseModel):
     package: dict
 
@@ -261,7 +189,6 @@ class RouteFixedAnswerInput(BaseModel):
 
 class RouteContentUpdate(BaseModel):
     base_package_version: str | None = Field(default=None, min_length=1, max_length=200)
-    delete_sop_group_keys: list[str] = Field(default_factory=list, max_length=100)
     name: str | None = Field(default=None, min_length=1, max_length=200)
     selection_title: str | None = Field(default=None, min_length=1, max_length=20)
     match_keywords: list[str] | None = Field(default=None, max_length=50)
@@ -311,19 +238,6 @@ def web_knowledge_sources(user: User = Depends(manager), db: Session = Depends(g
         "capabilities": {
             "refresh_enabled": web_knowledge_refresh_enabled(),
             "publish_enabled": web_knowledge_publish_enabled(),
-        },
-    }
-
-
-@router.get("/knowledge/runtime-modules")
-def runtime_knowledge_modules(user: User = Depends(manager)):
-    items = _runtime_knowledge_modules()
-    return {
-        "items": items,
-        "summary": {
-            "modules": len(items),
-            "facts": sum(len(item["facts"]) for item in items),
-            "scope": "live_and_playground",
         },
     }
 
@@ -606,48 +520,6 @@ def run_json(row):
     return {"id":row.id,"session_id":row.session_id,"module":row.module,"generation":row.generation,"status":row.status,"decision":safe_text(row.decision),"trace":safe_text(row.trace),"error_code":row.error_code,"created_at":row.created_at,"completed_at":row.completed_at,"outbound":False}
 
 
-def session_json(db,row):
-    runs = db.scalars(select(AutomationRun).where(AutomationRun.session_id==row.id).order_by(AutomationRun.id.desc()).limit(30)).all()
-    jobs = db.scalars(select(RehearsalJob).join(RehearsalEnrollment).where(RehearsalEnrollment.session_id==row.id).order_by(RehearsalJob.id)).all()
-    cycles = db.scalars(select(SilenceCycle).where(SilenceCycle.session_id==row.id).order_by(SilenceCycle.id.desc())).all()
-    enrollments = db.scalars(select(RehearsalEnrollment).where(RehearsalEnrollment.session_id == row.id)).all()
-    simulation = simulation_state(row)
-    start = dt(simulation["start_virtual_at"]) if simulation.get("start_virtual_at") else None
-    end = dt(simulation["end_virtual_at"]) if simulation.get("end_virtual_at") else None
-    elapsed = max(0, (dt(row.virtual_now) - start).total_seconds() / 60) if start else 0
-    duration = max(1, int(simulation.get("duration_minutes") or 1))
-    next_job = next((x for x in jobs if x.status in ("scheduled", "waiting_dependency")), None)
-    simulation_view = {
-        **simulation,
-        "elapsed_minutes": round(min(duration, elapsed), 2),
-        "progress_percent": round(min(100, elapsed / duration * 100), 1),
-        "next_event_at": next_job.scheduled_at if next_job else None,
-        "next_event_name": next_job.node_key if next_job else None,
-        "remaining_minutes": round(max(0, (end - dt(row.virtual_now)).total_seconds() / 60), 2) if end else None,
-    }
-    last_silence = next((x for x in runs if x.module == "silence_touch"), None)
-    next_touch = next((x for x in jobs if x.status in ("scheduled", "waiting_dependency", "model_pending")), None)
-    journey = dict((row.controls or {}).get("journey") or {})
-    reception_state = {
-        "journey_stage": normalize_journey_stage(journey.get("stage", "route_selection")),
-        "customer_profile": safe_text(row.memory),
-        "last_touch": safe_text(last_silence.decision) if last_silence else None,
-        "next_touch_at": next_touch.scheduled_at if next_touch else None,
-        "next_touch_status": next_touch.status if next_touch else None,
-        "last_warning": next((safe_text(x.get("content")) for x in reversed((row.controls or {}).get("timeline_events", [])) if x.get("event_type") == "silence_model_warning"), None),
-    }
-    if row.engine_version == 'v3':
-        v3 = row.controls.get('v3', {})
-        simulation_view.update(next_event_at=v3.get('delivery_due_at') or v3.get('next_check_at'),
-                               next_event_name='线路介绍' if v3.get('delivery_kind') == 'introduction' else '沉默评估')
-        reception_state.update(next_touch_at=v3.get('next_check_at'), last_warning=v3.get('last_error'),
-                               journey_stage='handoff' if v3.get('handoff') else 'value_building')
-        if last_silence:
-            reception_state['last_touch'] = {**safe_text(last_silence.decision), 'touch_goal': 'nurture',
-                                            'touch_reason': last_silence.decision.get('reason', '')}
-    return {"id":row.id,"mode":row.mode,"environment":row.environment,"engine_version":row.engine_version,"engine_release_id":row.engine_release_id,"generation":row.generation,"virtual_now":row.virtual_now,"messages":safe_text(row.messages),"memory":safe_text({k: v if isinstance(v, dict) and "value" in v else {"value": v} for k, v in (row.memory or {}).items()} if row.engine_version == "v3" else row.memory),"controls":safe_text(row.controls),"simulation":simulation_view,"reception_state":reception_state,"pending":bool(row.due_at),"runs":[run_json(x) for x in runs],"jobs":[{"id":x.id,"enrollment_id":x.enrollment_id,"node_key":x.node_key,"scheduled_at":x.scheduled_at,"status":x.status,"reason":x.reason,"confirmed_at":x.confirmed_at,"payload":safe_text(x.payload)} for x in jobs],"enrollments":[{"id":x.id,"sop_id":x.sop_id,"version_id":x.sop_version_id,"round_number":x.round_number,"status":x.status,"enrolled_at":x.enrolled_at} for x in enrollments],"cycles":[cycle_json(x) for x in cycles],"outbound":False}
-
-
 class ReplyConfig(BaseModel):
     version: int = Field(ge=1)
     inbox_binding_id: int | None = None
@@ -659,102 +531,6 @@ class ReplyConfig(BaseModel):
     def order(self):
         if self.merge_wait_seconds > self.merge_max_seconds: raise ValueError("merge_wait_exceeds_max")
         return self
-
-
-class ConversationEngineUpdate(BaseModel):
-    engine_version: Literal["v1", "v2"]
-    expected_version: int = Field(ge=1)
-
-
-@router.patch("/automation/conversations/{conversation_state_id}/engine")
-def update_conversation_engine(
-    conversation_state_id: int,
-    payload: ConversationEngineUpdate,
-    user: User = Depends(manager_write),
-    db: Session = Depends(get_db),
-):
-    state = db.get(ConversationState, conversation_state_id)
-    if not state:
-        fail("conversation_not_found", 404)
-    scope(db, user, state.inbox_binding_id)
-    if state.version != payload.expected_version:
-        fail("version_conflict", 409)
-    if state.ai_engine_version == payload.engine_version:
-        return {
-            "conversation_state_id": state.id,
-            "engine_version": state.ai_engine_version,
-            "engine_release_id": state.ai_engine_release_id,
-            "version": state.version,
-            "changed": False,
-        }
-
-    previous = state.ai_engine_version
-    now = utcnow()
-    release_id = V2_ENGINE_RELEASE_ID if payload.engine_version == "v2" else "v1"
-    changed = db.execute(update(ConversationState).where(
-        ConversationState.id == state.id,
-        ConversationState.version == payload.expected_version,
-        ConversationState.ai_engine_version == previous,
-    ).values(
-        ai_engine_version=payload.engine_version,
-        ai_engine_release_id=release_id,
-        version=ConversationState.version + 1,
-        updated_at=now,
-    ))
-    if changed.rowcount != 1:
-        db.rollback()
-        fail("version_conflict", 409)
-
-    reply_in_flight = db.scalar(select(LiveReplyJob.id).where(
-        LiveReplyJob.conversation_state_id == state.id,
-        LiveReplyJob.status.in_(["processing", "submission_unknown"]),
-    ))
-    sop_in_flight = db.scalar(
-        select(LiveSopJob.id).join(LiveSopEnrollment).where(
-            LiveSopEnrollment.conversation_state_id == state.id,
-            LiveSopJob.status.in_(["processing", "submission_unknown"]),
-        )
-    )
-    if reply_in_flight or sop_in_flight:
-        db.rollback()
-        fail("engine_switch_busy", 409)
-
-    db.execute(update(LiveReplyJob).where(
-        LiveReplyJob.conversation_state_id == state.id,
-        LiveReplyJob.status == "queued",
-    ).values(status="cancelled", error_code="engine_version_changed", completed_at=now))
-    enrollments = db.scalars(select(LiveSopEnrollment).where(
-        LiveSopEnrollment.conversation_state_id == state.id,
-        LiveSopEnrollment.status == "active",
-    )).all()
-    enrollment_ids = [row.id for row in enrollments]
-    if enrollment_ids:
-        db.execute(update(LiveSopJob).where(
-            LiveSopJob.enrollment_id.in_(enrollment_ids),
-            LiveSopJob.status.in_(["scheduled", "waiting_dependency"]),
-        ).values(status="cancelled", reason="engine_version_changed", completed_at=now))
-        for enrollment in enrollments:
-            enrollment.status = "stopped"
-            enrollment.exit_reason = "engine_version_changed"
-            enrollment.completed_at = now
-
-    from app.reception_v2.engine_projection import project_engine_state
-    projection = project_engine_state(db, state, previous, payload.engine_version, now)
-    db.refresh(state)
-    audit(db, user, "conversation.engine_changed", "conversation_state", state.id, {
-        "from": previous,
-        "to": state.ai_engine_version,
-        "cancelled_enrollment_ids": enrollment_ids,
-        "projection": projection,
-    })
-    db.commit()
-    return {
-        "conversation_state_id": state.id,
-        "engine_version": state.ai_engine_version,
-        "engine_release_id": state.ai_engine_release_id,
-        "version": state.version,
-        "changed": True,
-    }
 
 
 @router.get("/settings/reply-timing")
@@ -790,76 +566,6 @@ def runs(module:Literal["reply","wakeup"]|None=None,page:int=Query(1,ge=1),user:
     if module:q=q.where(AutomationRun.module==module)
     count=db.scalar(select(func.count()).select_from(q.subquery()))
     return {"items":[run_json(x) for x in db.scalars(q.order_by(AutomationRun.id.desc()).offset((page-1)*30).limit(30)).all()],"total":count,"page":page}
-
-
-class SessionCreate(BaseModel):
-    mode:Literal["reply","sop","wakeup","journey"]="reply"
-    inbox_binding_id:int|None=None
-    virtual_now:str|None=None
-    conversation_id:int|None=None
-    wakeup_policy_id:int|None=None
-    route_variant: str = Field(default="", max_length=80)
-    duration_minutes:int=Field(default=525600,ge=5,le=525600)
-    speed_multiplier:int=Field(default=1,ge=1,le=3600)
-    entry_message:str=Field(default="",max_length=4000)
-    sop_version_id:int|None=None
-    engine_version:Literal["v1","v2","v3"]=Field(
-        default_factory=lambda data: "v3" if data.get("mode") == "journey" else settings.ai_engine_default
-    )
-
-
-def journey_versions(db: Session, user: User, inbox_binding_id: int | None, route: str | None = None) -> list[tuple[SopVersion, SopDefinition]]:
-    scope(db, user, inbox_binding_id)
-    inbox = db.get(InboxBinding, inbox_binding_id) if inbox_binding_id else None
-    items = []
-    for sop in db.scalars(select(SopDefinition).where(SopDefinition.status == "running").order_by(SopDefinition.id)).all():
-        version = db.scalar(select(SopVersion).where(SopVersion.sop_id == sop.id).order_by(SopVersion.version.desc()).limit(1))
-        if not version:
-            continue
-        config = version.config or {}
-        if not config.get("route_variant") or (route and config.get("route_variant") != route):
-            continue
-        if config.get("inbox_ids") and (not inbox or inbox.chatwoot_inbox_id not in config["inbox_ids"]):
-            continue
-        try:
-            published_scope(db, user, config)
-        except HTTPException:
-            continue
-        items.append((version, sop))
-    package_sop_names = {package["sop"]["name"] for package in ROUTE_PACKAGES.values()}
-    return sorted(
-        items,
-        key=lambda item: (item[1].name in package_sop_names, item[0].version, item[0].id),
-        reverse=True,
-    )
-
-
-@router.get("/playground/options")
-def playground_options(inbox_binding_id:int|None=None,user:User=Depends(manager),db:Session=Depends(get_db)):
-    versions = journey_versions(db, user, inbox_binding_id)
-    strategies = [{
-        "version_id": version.id,
-        "sop_id": sop.id,
-        "name": version.config.get("name") or sop.name,
-        "version": version.version,
-        "route_variant": version.config.get("route_variant"),
-        "nodes": [{
-            "key": node.get("key"),
-            "schedule_type": node.get("schedule_type"),
-            "basis": node.get("basis"),
-            "delay_minutes": node.get("delay_minutes"),
-            "day_number": node.get("day_number"),
-            "message_count": len(node.get("messages") or [node]),
-        } for node in version.config.get("nodes", [])],
-    } for version, sop in versions]
-    return {
-        "routes": [{"id": key, "name": value["name"],
-                    "default_entry_message": value["default_entry_message"],
-                    "package_version": value["package_version"]}
-                   for key, value in ROUTES.items()],
-        "strategies": strategies,
-        "outbound": False,
-    }
 
 
 @router.get("/automation/route-products")
@@ -906,29 +612,8 @@ def route_products(user: User = Depends(manager), db: Session = Depends(get_db))
                 "preview_url": f"/media/{media.id}/preview" if available else None,
             })
 
-        sop_bindings = []
-        sops = db.scalars(select(SopDefinition).where(
-            SopDefinition.route_variant == key
-        ).order_by(SopDefinition.id.desc())).all()
-        for sop in sops:
-            published = db.scalar(select(SopVersion).where(
-                SopVersion.sop_id == sop.id
-            ).order_by(SopVersion.version.desc()).limit(1))
-            sop_bindings.append({
-                "id": sop.id,
-                "name": sop.name,
-                "status": sop.status,
-                "draft_version": sop.version,
-                "published_version": published.version if published else None,
-                "published_nodes": len((published.config or {}).get("nodes", [])) if published else 0,
-                "dry_run": sop.dry_run,
-                "live_enabled": sop.live_enabled,
-                "is_default": sop.name == package["runtime_sop"]["name"],
-            })
-
         source = package.get("source", {})
         missing_assets = [asset["key"] for asset in assets if not asset["available"]]
-        default_sop = next((sop for sop in sop_bindings if sop["is_default"]), None)
         items.append({
             **summaries[key],
             "managed_by": "versioned_route_package",
@@ -958,32 +643,14 @@ def route_products(user: User = Depends(manager), db: Session = Depends(get_db))
                 if group_key in package["content_sequence"] else None,
             } for group_key, group in package["content_groups"].items()],
             "fixed_answers": deepcopy(package.get("fixed_answers", [])),
-            "policies": package["policies"],
-            "journey_policy": effective_reception_policy(db),
             "assets": assets,
-            "default_sop": {
-                "name": package["runtime_sop"]["name"],
-                "description": package["runtime_sop"].get("description", ""),
-                "trigger_type": package["runtime_sop"].get("trigger_type", "manual"),
-                "trigger_labels": package["runtime_sop"].get("trigger_labels", []),
-                "exit_labels": package["runtime_sop"].get("exit_labels", []),
-                "stop_on_incoming": package["runtime_sop"]["stop_on_incoming"],
-                "frequency_hours": package["runtime_sop"].get("frequency_hours", 24),
-                "nodes": configured_silence_nodes(
-                    silence_schedule_templates(package["runtime_sop"]["nodes"]),
-                    v2_silence_intervals(db),
-                    silence_enabled=bool(get_reception_configuration(db)["silence"]["enabled"]),
-                ),
-            },
-            "sop_bindings": sop_bindings,
             "readiness": {
                 "knowledge_imported": version is not None,
                 "assets_ready": len(assets) - len(missing_assets),
                 "assets_total": len(assets),
                 "missing_assets": missing_assets,
-                "default_sop_published": bool(default_sop and default_sop["published_version"]),
                 "ai_reply_ready": version is not None and not missing_assets,
-                "sop_ready": bool(default_sop and default_sop["published_version"] and not missing_assets),
+                "sop_ready": not missing_assets,
             },
             "versions": [{
                 "version": package["package_version"],
@@ -1017,7 +684,7 @@ def reception_config(user: User = Depends(manager), db: Session = Depends(get_db
     return {
         "config": get_reception_configuration(db),
         "version": {
-            "label": V2_ENGINE_RELEASE_ID,
+            "label": release_id(),
             "status": "published",
             "published_at": history[0].created_at if history else None,
             "published_by": history[0].user_id if history else None,
@@ -1057,11 +724,11 @@ def update_reception_config(
 ):
     before = get_reception_configuration(db)
     editable = {
-        "reply": {"opening_items", "opening_interval_seconds", "goal", "tone", "tone_guidance", "custom_guidance", "max_characters", "max_images_per_turn"},
+        "reply": {"opening_items", "opening_interval_seconds", "goal", "tone", "tone_guidance", "custom_guidance", "opening_character_limit"},
         "lead_capture": {"enabled", "channels"},
         "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action"},
         "handoff": {"large_group_enabled", "large_group_minimum"},
-        "silence": {"enabled", "live_enabled", "v2_intervals_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
+        "silence": {"enabled", "live_enabled", "intervals_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
         "common_scripts": None,
     }
     value = deepcopy(before)
@@ -1079,11 +746,13 @@ def update_reception_config(
         candidate = ReceptionConfiguration.model_validate(value)
     except ValueError as exc:
         raise HTTPException(422, detail={"code": "configuration_invalid", "message": str(exc)}) from exc
-    value = put_reception_configuration(db, candidate)
+    try:
+        value = put_reception_configuration(db, candidate)
+    except ValueError as exc:
+        raise HTTPException(422, detail={'code': str(exc), 'message': str(exc)}) from exc
     audit(db, user, "reception_config.updated", "app_setting", "route_reception_config", {"before": before, "after": value})
     db.commit()
-    return {"config": value, "applies_to": "new_ai_decisions_and_new_sop_enrollments",
-            "existing_active_sop_rounds_unchanged": True, "outbound": False}
+    return {"config": value, "applies_to": "next_v3_turn_and_new_delivery_plan", "outbound": False}
 
 
 @router.post("/automation/route-products/import")
@@ -1143,50 +812,6 @@ def import_route_product_draft(
             ]))
             asset.metadata_json = metadata
         db.flush()
-        source = active_package["runtime_sop"]
-        nodes = freeze_nodes(db, source["nodes"], route_id, tenant.id)
-        inbox_ids = list(db.scalars(select(InboxBinding.chatwoot_inbox_id).where(
-            InboxBinding.tenant_id == tenant.id,
-            InboxBinding.ai_enabled.is_(True),
-        )).all())
-        values = {
-            "description": source.get("description", ""),
-            "status": "running",
-            "dry_run": False,
-            "live_enabled": True,
-            "trigger_type": source.get("trigger_type", "manual"),
-            "trigger_labels": source.get("trigger_labels", []),
-            "inbox_ids": inbox_ids,
-            "nodes": nodes,
-            "exit_labels": source.get("exit_labels", []),
-            "stop_on_incoming": bool(source.get("stop_on_incoming", True)),
-            "frequency_hours": int(source.get("frequency_hours", 24)),
-            "route_variant": route_id,
-            "test_conversation_ids": [],
-        }
-        sop = db.scalar(select(SopDefinition).where(
-            SopDefinition.tenant_id == tenant.id,
-            SopDefinition.name == source["name"],
-        ))
-        if sop is None:
-            sop = SopDefinition(
-                tenant_id=tenant.id,
-                name=source["name"],
-                version=1,
-                created_by=user.id,
-                **values,
-            )
-            db.add(sop)
-            db.flush()
-            sop_snapshot(db, sop, user.id)
-        else:
-            changed = any(getattr(sop, key) != value for key, value in values.items())
-            if changed:
-                for key, value in values.items():
-                    setattr(sop, key, value)
-                sop.version += 1
-                sop.updated_at = utcnow()
-                sop_snapshot(db, sop, user.id)
         current_config = get_reception_configuration(db)
         if route_id not in current_config["routing"]["enabled_route_variants"]:
             current_config["routing"]["enabled_route_variants"].append(route_id)
@@ -1206,7 +831,7 @@ def import_route_product_draft(
         "knowledge_version": package["knowledge_version"],
         "facts": len(package["knowledge_facts"]),
         "content_groups": len(package["content_groups"]),
-        "sop_nodes": len(package["sop"]["nodes"]),
+        "sop_nodes": len(package["content_sequence"]),
         "activation_supported": True,
         "status": "published",
     }
@@ -1236,10 +861,6 @@ def update_route_product_content(
         fail("route_content_group_duplicate", 422)
     removed = set(current["content_groups"]) - set(group_keys)
     added = set(group_keys) - set(current["content_groups"])
-    confirmed_sop_deletions = set(payload.delete_sop_group_keys)
-    if (len(confirmed_sop_deletions) != len(payload.delete_sop_group_keys)
-            or not confirmed_sop_deletions <= removed):
-        fail("route_content_sop_deletion_invalid", 422)
     if (payload.base_package_version is not None
             and payload.base_package_version != current["package_version"]):
         raise HTTPException(409, detail={
@@ -1303,36 +924,6 @@ def update_route_product_content(
     if payload.fixed_answers is not None:
         package["fixed_answers"] = [answer.model_dump() for answer in payload.fixed_answers]
 
-    def operator_node(key, group):
-        text = {"key": "text", "content_type": "text", "content": group["approved_text"]}
-        assets = [{"key": f"image_{index}", "content_type": "image", "content": "", "asset_key": asset}
-                  for index, asset in enumerate(group.get("asset_keys", []), 1)]
-        mode = group.get("delivery_mode", "text_only")
-        messages = ([text] if mode == "text_only" else assets if mode == "assets_only"
-                    else [text, *assets] if mode == "text_then_assets" else [*assets, text])
-        return {
-            "key": f"operator_content_{key}", "content_group_key": key,
-            "operator_managed": True, "schedule_type": "relative",
-            "basis": "previous_node", "delay_minutes": 0, "messages": messages,
-        }
-
-    # Native same-key source nodes require explicit, version-bound consent.
-    # Other SOP references remain protected; exact owned derivatives are rebuilt.
-    source_nodes = []
-    for node in package["sop"]["nodes"]:
-        key = node.get("content_group_key")
-        if key in confirmed_sop_deletions and node.get("key") == key:
-            continue
-        old_group = current["content_groups"].get(key, {})
-        if old_group.get("operator_managed") and node == operator_node(key, old_group):
-            continue
-        source_nodes.append(node)
-    referenced_groups = {node.get("content_group_key") for node in source_nodes}
-    for key in content_sequence:
-        group = package["content_groups"][key]
-        if group.get("operator_managed") and key not in referenced_groups:
-            source_nodes.append(operator_node(key, group))
-    package["sop"]["nodes"] = source_nodes
     remaining_assets = {asset for group in package["content_groups"].values()
                         for asset in group.get("asset_keys", [])}
     removed_assets = {asset for key in removed for asset in current["content_groups"][key].get("asset_keys", [])} - remaining_assets
@@ -1359,7 +950,7 @@ def update_route_product_content(
     if removed:
         for field, value in package.items():
             # Runtime SOP is derived on publication, never edited in place.
-            if field not in {"runtime_sop", "source_path", "fixed_answers"}:
+            if field not in {"sop", "policies", "journey_policy", "runtime_sop", "source_path", "fixed_answers"}:
                 find_removed_refs(value, field)
     if dependencies:
         raise HTTPException(422, detail={
@@ -1506,278 +1097,8 @@ def replace_route_asset(
     }
 
 
-class MaterialApproval(BaseModel):
-    expected_hash: str = Field(min_length=64, max_length=64)
-    review_notes: str = Field(min_length=10, max_length=2000)
 
 
-@router.post('/automation/route-products/{route_variant}/assets/{asset_key}/approve')
-def approve_route_asset(route_variant: str, asset_key: str, payload: MaterialApproval,
-                        user: User = Depends(manager_write), db: Session = Depends(get_db)):
-    import hashlib
-    _, asset = _route_asset(db, route_variant, asset_key)
-    path = Path(asset.source_path)
-    if not asset.available or not path.is_file():
-        fail('material_unavailable', 422)
-    if payload.expected_hash != asset.file_hash or hashlib.sha256(path.read_bytes()).hexdigest() != payload.expected_hash:
-        fail('material_changed_before_approval', 409)
-    before = deepcopy(asset.metadata_json or {})
-    approved = {**before, 'review_state':'evaluation_ready', 'live_approved':True,
-        'reviewed_by':user.id, 'reviewed_at':utcnow(), 'review_notes':payload.review_notes,
-        'approved_file_hash':payload.expected_hash}
-    statement = update(MaterialAsset).where(MaterialAsset.id == asset.id,
-        MaterialAsset.file_hash == payload.expected_hash, MaterialAsset.metadata_json == before,
-        MaterialAsset.source_path == str(path), MaterialAsset.available.is_(True)
-    ).values(metadata_json=approved).execution_options(synchronize_session=False)
-    with db.no_autoflush:
-        if db.execute(statement).rowcount != 1:
-            fail('material_changed_before_approval', 409)
-    db.refresh(asset)
-    audit(db,user,'route_asset.approved','asset',asset.id,{'hash':payload.expected_hash,'review_notes':payload.review_notes})
-    db.commit()
-    return {'key':asset.asset_key,'approved':True,'outbound':False}
-
-
-def _simulation_customer_message(payload: RouteProductSimulationInput) -> RouteSimulationMessage:
-    for message in reversed(payload.messages):
-        if message.role == "customer":
-            return message
-    fail("customer_message_required", 422)
-
-
-def _simulation_history(payload: RouteProductSimulationInput) -> list[dict]:
-    rows = payload.messages[:-1] if payload.messages[-1].role == "customer" else payload.messages
-    return [
-        {
-            "direction": "incoming" if item.role == "customer" else "outgoing",
-            "content": item.content,
-            "content_type": "text",
-            "private": False,
-        }
-        for item in rows
-    ]
-
-
-def _simulation_attachments(payload: RouteProductSimulationInput) -> list[dict]:
-    if payload.scenario == "attachment_question":
-        return [{"file_type": "image", "extension": "jpg", "content_type": "image"}]
-    return []
-
-
-def _next_sop_preview(decision, progress: dict) -> dict:
-    route = progress.get("route_variant") or decision.route_variant
-    if decision.action != "reply" or route not in ROUTE_PACKAGES:
-        return {"will_enroll": False, "next_node": None, "after_minutes": None}
-    nodes = ROUTE_PACKAGES[route]["runtime_sop"]["nodes"]
-    if not nodes:
-        return {"will_enroll": False, "next_node": None, "after_minutes": None}
-    covered = set(progress.get("sent_content_groups") or []) | set(
-        decision.covered_content_groups or []
-    )
-    node = next(
-        (
-            item for item in nodes
-            if not item.get("content_group_key")
-            or item.get("content_group_key") not in covered
-        ),
-        None,
-    )
-    if not node:
-        return {"will_enroll": False, "next_node": None, "after_minutes": None}
-    return {
-        "will_enroll": True,
-        "next_node": node.get("journey_trigger") or node.get("key"),
-        "after_minutes": node.get("delay_minutes"),
-    }
-
-
-def _blocked_reason(decision) -> str | None:
-    if decision.action == "handoff":
-        return decision.handoff_reason or "handoff"
-    if decision.action == "no_action":
-        return "model_no_action"
-    return None
-
-
-@router.post("/automation/route-products/{route_variant}/simulate")
-def simulate_route_product(
-    route_variant: str,
-    payload: RouteProductSimulationInput,
-    user: User = Depends(manager_write),
-    db: Session = Depends(get_db),
-):
-    """Run the production model contract against a route scenario without writing Chatwoot."""
-    if route_variant not in ROUTE_PACKAGES:
-        fail("route_product_not_found", 404)
-    customer = _simulation_customer_message(payload)
-    tenant = db.scalar(select(Tenant).order_by(Tenant.id))
-    current_slots: dict = {}
-    sent_groups: list[str] = []
-    context = {
-        "module": "reply",
-        "customer_text": customer.content,
-        "context_messages": _simulation_history(payload),
-        "context_complete": True,
-        "route_variant": route_variant,
-        "memory": current_slots,
-        "journey": journey_context_from_values(route_variant, "route_selection", current_slots, sent_groups),
-        "route_playbook": playbook_prompt(),
-        "current_attachments": _simulation_attachments(payload),
-        "lead_capture": {
-            "status": "not_started",
-            "request_count": 0,
-            "captured_kinds": [],
-        },
-        "available_materials": candidate_materials(db, tenant.id if tenant else None),
-        "reception_policy": effective_reception_policy(db),
-    }
-    context = enrich_context_with_web_knowledge(
-        db, tenant.id if tenant else None, context, environment="playground"
-    )
-    try:
-        decision, logs, digest, trace = generate_decision(context)
-    except EvaluationCallError as exc:
-        raise HTTPException(503, detail={
-            "code": exc.code,
-            "message": exc.code,
-            "outbound": False,
-            "request_hash": exc.digest,
-            "attempts": len(exc.logs),
-        }) from exc
-    except ValueError as exc:
-        raise HTTPException(503, detail={
-            "code": str(exc),
-            "message": str(exc),
-            "outbound": False,
-        }) from exc
-
-    decision, progress = prepare_route_reply_values(
-        decision,
-        current_route=route_variant,
-        stage="route_selection",
-        slots=current_slots,
-        sent_groups=sent_groups,
-    )
-    return {
-        "action": decision.action,
-        "reply": safe_text(decision.reply),
-        "route_variant": decision.route_variant,
-        "slots": safe_text(decision.slots),
-        "missing_slots": safe_text(decision.missing_slots),
-        "lead_action": decision.lead_action,
-        "journey_stage": decision.journey_stage,
-        "touch_goal": decision.touch_goal,
-        "touch_reason": safe_text(decision.touch_reason),
-        "profile_updates": safe_text(decision.profile_updates),
-        "handoff_reason": safe_text(decision.handoff_reason),
-        "covered_content_groups": decision.covered_content_groups,
-        "content_group_key": decision.content_group_key,
-        "material_keys": decision.material_keys,
-        "reply_options": decision.reply_options,
-        "safety_flags": decision.safety_flags,
-        "next_sop_preview": _next_sop_preview(decision, progress),
-        "blocked_reason": _blocked_reason(decision),
-        "scenario": payload.scenario,
-        "prompt_version": trace.get("prompt_version", REALTIME_REPLY_PROMPT_VERSION),
-        "validator_version": VALIDATOR_VERSION,
-        "model": settings.deepseek_model,
-        "trace": trace,
-        "request_hash": digest,
-        "attempts": len(logs),
-        "outbound": False,
-    }
-
-
-def build_session(payload:SessionCreate,user:User,db:Session):
-    inbox_id=payload.inbox_binding_id
-    history=[]
-    conversation=None
-    controls={"can_reply":True,"ai_enabled":True,"channel":"facebook","labels":[],"human":False,"permission_source":"simulated", "history_complete": True, "history_source": "isolated_session"}
-    if payload.route_variant:
-        controls["route_variant"] = payload.route_variant
-    clock=iso(dt(payload.virtual_now)) if payload.virtual_now else utcnow()
-    if payload.conversation_id:
-        conversation=db.get(ConversationState,payload.conversation_id)
-        if not conversation:fail("conversation_not_found",404)
-        inbox_id=conversation.inbox_binding_id
-        scope(db,user,inbox_id)
-        history_query=select(MessageEvent).join(ConversationState).where(ConversationState.tenant_id==conversation.tenant_id,ConversationState.inbox_binding_id==inbox_id,MessageEvent.private.is_(False),MessageEvent.direction.in_(["incoming","outgoing"]),MessageEvent.created_at<=clock)
-        history_query=history_query.where(ConversationState.contact_id==conversation.contact_id) if conversation.contact_id else history_query.where(ConversationState.id==conversation.id)
-        rows=db.scalars(history_query.order_by(MessageEvent.created_at,MessageEvent.id)).all()
-        history=[{"id":x.chatwoot_message_id,"direction":x.direction,"content":x.content,"content_type":x.content_type,"status":x.status,"created_at":x.created_at} for x in rows]
-        controls.update({"can_reply":conversation.can_reply,"labels":conversation.labels,"channel":conversation.inbox.channel_type,"permission_source":"current_mirror_simulated_past", "history_complete": False, "history_source": "all_available_local_mirror"})
-        first_query = select(func.min(MessageEvent.created_at)).join(ConversationState).where(
-            ConversationState.inbox_binding_id == inbox_id, MessageEvent.direction == "incoming",
-            MessageEvent.private.is_(False), MessageEvent.created_at <= clock)
-        first_query = first_query.where(ConversationState.contact_id == conversation.contact_id) if conversation.contact_id else first_query.where(ConversationState.id == conversation.id)
-        controls.update({"customer_added_at": db.scalar(first_query), "customer_added_source": "first_public_customer_message_in_inbox"})
-    scope(db,user,inbox_id)
-    if inbox_id and not conversation:
-        controls["channel"]=db.get(InboxBinding,inbox_id).channel_type
-    if payload.wakeup_policy_id:
-        policy=db.get(WakeupPolicy,payload.wakeup_policy_id)
-        if not policy:fail("policy_not_found",404)
-        wake_scope(db,user,policy.config.get("inbox_ids",[]))
-        if policy.config.get("inbox_ids") and inbox_id not in policy.config["inbox_ids"]:fail("inbox_forbidden",403)
-        controls["wakeup_policy_id"]=policy.id
-    release_id = V2_ENGINE_RELEASE_ID if payload.engine_version == "v2" else "v1"
-    row=AutomationSession(owner_id=user.id,inbox_binding_id=inbox_id,conversation_state_id=conversation.id if conversation else None,mode=payload.mode,engine_version=payload.engine_version,engine_release_id=release_id,virtual_now=clock,controls=controls,messages=history)
-    db.add(row)
-    db.flush()
-    return row
-
-
-@router.post("/playground/sessions",status_code=201)
-def create_session(payload:SessionCreate,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    if payload.engine_version == 'v3' and (payload.mode != 'journey' or payload.conversation_id):
-        fail('v3_requires_independent_journey', 422)
-    row=build_session(payload,user,db)
-    if payload.engine_version == 'v3':
-        from app.reception_v3.service import start
-        start(db, row, payload.entry_message.strip() or (
-            ROUTES[payload.route_variant]['default_entry_message'] if payload.route_variant else '你好，我想咨询旅行行程'), payload.duration_minutes)
-        db.commit()
-        return session_json(db, row)
-    if payload.mode == "journey":
-        # A rehearsal represents wall-clock customer behaviour.  Keep this
-        # authoritative on the server so an old cached UI cannot silently turn
-        # one minute into a few milliseconds by posting a legacy multiplier.
-        journey_speed_multiplier = 1
-        if payload.route_variant:
-            candidates = journey_versions(db, user, row.inbox_binding_id, payload.route_variant)
-            if payload.sop_version_id:
-                selected = next((version for version, _ in candidates if version.id == payload.sop_version_id), None)
-                if not selected:
-                    fail("journey_sop_version_invalid", 422)
-            else:
-                selected = candidates[0][0] if candidates else None
-            if not selected:
-                fail("journey_sop_missing", 422)
-            entry = payload.entry_message.strip() or ROUTES[payload.route_variant]["default_entry_message"]
-            try:
-                start_journey(
-                    db,
-                    row,
-                    selected,
-                    duration_minutes=payload.duration_minutes,
-                    speed_multiplier=journey_speed_multiplier,
-                    entry_message=entry,
-                )
-            except ValueError as exc:
-                fail(str(exc), 422)
-        else:
-            try:
-                start_open_journey(
-                    db,
-                    row,
-                    duration_minutes=payload.duration_minutes,
-                    speed_multiplier=journey_speed_multiplier,
-                    entry_message=payload.entry_message.strip() or "你好，我想咨询旅行行程",
-                )
-            except ValueError as exc:
-                fail(str(exc), 422)
-    db.commit()
-    return session_json(db,row)
 
 
 @router.get("/playground/sessions")
@@ -1800,7 +1121,7 @@ def delete_session(session_id:int,user:User=Depends(manager_write),db:Session=De
     row = own_session(db, user, session_id)
     if row.environment != "playground":
         fail("session_not_deletable", 403)
-    key = subject_key(db, row)
+    key = f"playground:{row.id}"
     enrollment_ids = list(db.scalars(
         select(RehearsalEnrollment.id).where(RehearsalEnrollment.session_id == row.id)
     ).all())
@@ -1825,162 +1146,15 @@ class MessageInput(BaseModel):
 @router.post("/playground/sessions/{session_id}/messages",status_code=202)
 def message(session_id:int,payload:MessageInput,user:User=Depends(manager_write),db:Session=Depends(get_db)):
     row=own_session(db,user,session_id)
+    if row.engine_version != 'v3' or row.environment != 'playground':
+        fail('historical_session_read_only', 409)
     if row.environment == "shadow":fail("shadow_session_read_only",403)
     if row.mode == "journey" and simulation_state(row).get("status") != "running":
         fail("journey_not_running")
     if not payload.content.strip() and payload.content_type=="text":fail("text_required",422)
-    add_customer_message(db,row,payload.content,payload.client_key,payload.content_type)
+    service.add_message(db,row,payload.content,payload.client_key,payload.content_type)
     db.commit()
     return session_json(db,row)
-
-
-@router.post("/playground/sessions/{session_id}/control/{action}")
-def journey_action(session_id:int,action:Literal["pause","resume","stop"],user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    row=own_session(db,user,session_id)
-    if row.environment != "playground" or row.mode != "journey":
-        fail("journey_session_required", 422)
-    try:
-        if row.engine_version == 'v3':
-            from app.reception_v3.service import control
-            control(row, action)
-        else:
-            change_journey_status(db, row, action)
-    except ValueError as exc:
-        fail(str(exc))
-    db.commit()
-    return session_json(db,row)
-
-
-class AdvanceInput(BaseModel):
-    minutes:float=Field(default=0,ge=0,le=10080)
-    generation:int
-    labels:list[str]|None=Field(default=None,max_length=50)
-    human:bool|None=None
-    can_reply:bool|None=None
-    ai_enabled:bool|None=None
-
-
-@router.post("/playground/sessions/{session_id}/advance")
-def advance(session_id:int,payload:AdvanceInput,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    row=own_session(db,user,session_id)
-    if row.environment == "shadow":fail("shadow_session_read_only",403)
-    if row.mode == "journey":fail("journey_uses_automatic_clock",422)
-    if row.generation!=payload.generation:fail("version_conflict")
-    changes=payload.model_dump(exclude={"minutes","generation"},exclude_none=True)
-    if not db.execute(update(AutomationSession).where(AutomationSession.id==row.id,AutomationSession.generation==payload.generation,AutomationSession.virtual_now==row.virtual_now).values(virtual_now=iso(dt(row.virtual_now)+timedelta(minutes=payload.minutes)))).rowcount:fail("version_conflict")
-    added_labels = apply_controls(db, row, changes)
-    trigger_sops(db, row, added_labels=added_labels)
-    advance_sops(db,row)
-    cycle=create_cycle(db,row)
-    if cycle:queue_wakeup(db,row,cycle)
-    db.commit()
-    return session_json(db,row)
-
-
-@router.post("/playground/sessions/{session_id}/advance-next")
-def advance_journey_to_next_touch(session_id:int,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    """Fast-forward an isolated journey to its next scheduled silence node."""
-    row=own_session(db,user,session_id)
-    if row.environment != "playground" or row.mode != "journey":
-        fail("journey_playground_required",422)
-    state=simulation_state(row)
-    if state.get("status") != "running":
-        fail("journey_not_running",422)
-    if row.engine_version == 'v3':
-        from app.reception_v3.service import advance_next
-        try:
-            advance_next(row)
-        except ValueError as exc:
-            fail(str(exc), 409)
-        db.commit()
-        return session_json(db, row)
-    active_run=db.scalar(select(AutomationRun.id).where(
-        AutomationRun.session_id==row.id,
-        AutomationRun.status.in_(["pending","processing"]),
-    ))
-    if row.due_at or active_run:
-        fail("journey_busy",409)
-    next_due=db.scalar(select(RehearsalJob.scheduled_at).join(
-        RehearsalEnrollment,RehearsalJob.enrollment_id==RehearsalEnrollment.id,
-    ).where(
-        RehearsalEnrollment.session_id==row.id,
-        RehearsalEnrollment.status=="active",
-        RehearsalJob.status=="scheduled",
-        RehearsalJob.scheduled_at.is_not(None),
-    ).order_by(RehearsalJob.scheduled_at,RehearsalJob.id).limit(1))
-    if not next_due:
-        fail("journey_next_touch_missing",422)
-    row.virtual_now=next_due
-    state["last_wall_at"]=utcnow()
-    set_simulation_state(row,state)
-    advance_sops(db,row)
-    db.commit()
-    return session_json(db,row)
-
-
-@router.post("/playground/sessions/{session_id}/reset")
-def reset(session_id:int,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    row=own_session(db,user,session_id)
-    if row.environment == "shadow":fail("shadow_session_read_only",403)
-    cancel_generation(db,row,"session_reset")
-    row.generation+=1
-    row.messages,row.memory,row.due_at,row.batch_started_at=[],{},None,None
-    row.controls = {k: v for k, v in row.controls.items() if k not in ("customer_added_at", "customer_added_source", "v3")}
-    db.commit()
-    return session_json(db,row)
-
-
-class ConfirmInput(BaseModel):
-    message_id:str
-
-
-@router.post("/playground/sessions/{session_id}/confirm")
-def confirm(session_id:int,payload:ConfirmInput,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    row=own_session(db,user,session_id)
-    if row.environment == "shadow":fail("shadow_session_read_only",403)
-    try:confirm_draft(db,row,payload.message_id)
-    except ValueError as exc:fail(str(exc))
-    db.commit()
-    return session_json(db,row)
-
-
-class EnrollInput(BaseModel):
-    version_id:int
-    reenroll:bool=False
-    request_key:str|None=Field(default=None,min_length=1,max_length=80)
-
-
-@router.post("/playground/sessions/{session_id}/sop")
-def enroll(session_id:int,payload:EnrollInput,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    row=own_session(db,user,session_id)
-    if row.environment == "shadow":fail("shadow_session_read_only",403)
-    version=db.get(SopVersion,payload.version_id)
-    if not version:fail("version_not_found",404)
-    published_scope(db, user, version.config)
-    if db.get(SopDefinition,version.sop_id).status != "running":fail("sop_not_running")
-    if version.config.get("inbox_ids") and (not row.inbox_binding_id or db.get(InboxBinding,row.inbox_binding_id).chatwoot_inbox_id not in version.config["inbox_ids"]):fail("sop_inbox_mismatch",422)
-    try:
-        enroll_rehearsal(db,row,version,reenroll=payload.reenroll,request_key=payload.request_key)
-    except ValueError as exc:
-        fail(str(exc))
-    advance_sops(db,row)
-    db.commit()
-    return session_json(db,row)
-
-
-def published_scope(db,user,config):
-    allowed=allowed_inbox_ids(db,user)
-    if allowed is not None:
-        remote=set(db.scalars(select(InboxBinding.chatwoot_inbox_id).where(InboxBinding.id.in_(allowed))).all())
-        if not config.get("inbox_ids") or not set(config["inbox_ids"]).issubset(remote):fail("inbox_forbidden",403)
-
-
-def wake_scope(db,user,ids):
-    if not ids and not is_admin(user):fail("inbox_required",403)
-    for i in ids:scope(db,user,i)
-
-
-def cycle_json(x):return {"id":x.id,"session_id":x.session_id,"generation":x.generation,"policy_id":x.policy_id,"customer_at":x.customer_at,"reply_at":x.reply_at,"due_at":x.due_at,"expires_at":x.expires_at,"status":x.status,"reason":x.reason,"run_id":x.run_id,"evaluation_count":x.evaluation_count}
 
 
 @router.get("/media/{media_id}/preview")
@@ -2036,10 +1210,73 @@ def shared_materials(inbox_binding_id:int, route_variant:str="", user:User=Depen
     items=[]
     for asset in catalog_assets(db,inbox.tenant_id):
         meta=asset.metadata_json
-        ready=asset.available and meta.get("review_state")=="evaluation_ready" and Path(asset.source_path).is_file()
+        ready=asset.available and Path(asset.source_path).is_file()
         if route_variant and route_variant not in meta.get("route_variants",[]):continue
         items.append({"id":asset.id,"key":asset.asset_key,"name":asset.display_name,"topic":asset.usage,
             "media_id":meta.get("stored_media_id"),"media_hash":asset.file_hash,"content_type":asset.media_type,
             "content_family":meta.get("content_family"),"route_variants":meta.get("route_variants",[]),
             "ready":ready,"review_state":meta.get("review_state"),"notes":meta.get("review_notes","")})
     return {"items":items,"routes":ROUTES,"outbound":False}
+
+
+
+class SessionCreate(BaseModel):
+    mode: Literal['journey'] = 'journey'
+    engine_version: Literal['v3'] = 'v3'
+    inbox_binding_id: int | None = None
+    virtual_now: str | None = None
+    route_variant: str = ''
+    entry_message: str = Field(default='', max_length=4000)
+    duration_minutes: int = Field(default=525600, ge=5, le=525600)
+
+
+@router.post('/playground/sessions', status_code=201)
+def create_session(payload: SessionCreate, user: User = Depends(manager_write), db: Session = Depends(get_db)):
+    scope(db, user, payload.inbox_binding_id)
+    if payload.route_variant and payload.route_variant not in ROUTES:
+        fail('route_not_found', 422)
+    row = AutomationSession(owner_id=user.id, inbox_binding_id=payload.inbox_binding_id,
+                            environment='playground', mode='journey', engine_version='v3',
+                            engine_release_id=release_id(), virtual_now=iso(dt(payload.virtual_now)) if payload.virtual_now else utcnow(),
+                            controls={'route_variant': payload.route_variant}, messages=[], memory={})
+    db.add(row)
+    db.flush()
+    service.start(db, row, payload.entry_message.strip() or '你好，我想咨询旅行行程', payload.duration_minutes)
+    db.commit()
+    return session_json(db, row)
+
+
+@router.post('/playground/sessions/{session_id}/control/{action}')
+def journey_action(session_id: int, action: Literal['pause','resume','stop'],
+                   user: User = Depends(manager_write), db: Session = Depends(get_db)):
+    row = own_session(db, user, session_id)
+    service.control(row, action)
+    db.commit()
+    return session_json(db, row)
+
+
+@router.post('/playground/sessions/{session_id}/advance-next')
+def advance_journey_to_next_touch(session_id: int, user: User = Depends(manager_write), db: Session = Depends(get_db)):
+    row = own_session(db, user, session_id)
+    try:
+        service.advance_next(row)
+    except ValueError as exc:
+        fail(str(exc))
+    db.commit()
+    return session_json(db, row)
+
+
+@router.post('/playground/sessions/{session_id}/retry')
+def retry_session(session_id: int, user: User = Depends(manager_write), db: Session = Depends(get_db)):
+    row = own_session(db, user, session_id)
+    value = service.state(row)
+    if not value.get('failed_event'):
+        fail('session_not_failed')
+    value['pending_event'] = value.pop('failed_event')
+    for key in ('attempts', 'retry_at', 'last_error'):
+        value.pop(key, None)
+    row.generation += 1
+    service.save(row, value)
+    row.due_at = utcnow()
+    db.commit()
+    return session_json(db, row)

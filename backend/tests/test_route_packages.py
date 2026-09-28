@@ -1,116 +1,39 @@
 import hashlib
+
+
 import json
+
+
 from copy import deepcopy
+
+
 from pathlib import Path
+
 
 import pytest
 
+
 from sqlalchemy import select
 
-from app.deepseek_evaluation import EvaluationDecision
+
 from app.config import settings
+
+
 from app.models import KnowledgeVersion, MaterialAsset, SopDefinition, StoredMedia
+
+
 from app.route_packages import (
-    JOURNEY_POLICY, PACKAGE_ROOT, ROUTE_PACKAGES, RoutePackageError, _runtime_journey_sop, _validate,
+    PACKAGE_ROOT, ROUTE_PACKAGES, RoutePackageError, _validate,
 )
-from app.reception_config import configured_silence_nodes
-from app.route_reply import append_deferred_initial_follow_up, deferred_initial_follow_up
 
 
-def test_follow_up_is_appended_after_all_immediate_mainline_nodes():
-    decision = EvaluationDecision(
-        action="reply",
-        branch="peach_11d",
-        intent="route_intro",
-        route_variant="peach_11d_2027",
-        follow_up_type="slot",
-        follow_up_field="party_size",
-        follow_up_question="這次大概會有幾位一起來呢？",
-    )
-    deferred = deferred_initial_follow_up(decision, ["itinerary_overview"])
-    nodes = [
-        {"key": "initial_highlights", "initial_delivery": True},
-        {"key": "initial_hotel", "initial_delivery": True},
-        {"key": "initial_vehicle", "initial_delivery": True},
-        {"key": "silence_mainline", "journey_trigger": "silence_mainline"},
-    ]
-
-    result = append_deferred_initial_follow_up(nodes, decision.route_variant, deferred)
-
-    assert [node["key"] for node in result] == [
-        "initial_highlights",
-        "initial_hotel",
-        "initial_vehicle",
-        "initial_delivery_follow_up",
-        "silence_mainline",
-    ]
-    assert result[3]["messages"][0]["content"] == decision.follow_up_question
-    assert result[3]["basis"] == "previous_node"
 
 
-def test_follow_up_is_not_deferred_without_a_remaining_immediate_group():
-    decision = EvaluationDecision(
-        action="reply",
-        branch="peach_9d",
-        intent="route_intro",
-        route_variant="peach_9d_2027",
-        follow_up_question="這次大概會有幾位一起來呢？",
-    )
-    route = ROUTE_PACKAGES[decision.route_variant]
-    sent = [
-        key for key in route["content_sequence"]
-        if route["content_groups"][key].get("initial_delivery") is True
-    ]
-
-    assert deferred_initial_follow_up(decision, sent) is None
-    original = [{"key": "silence_mainline", "journey_trigger": "silence_mainline"}]
-    assert append_deferred_initial_follow_up(original, decision.route_variant, {
-        "question": decision.follow_up_question,
-    }) == original
 
 
-def test_only_two_reviewed_products_are_enabled():
-    assert set(ROUTE_PACKAGES) == {"peach_9d_2027", "peach_11d_2027"}
-    assert len(ROUTE_PACKAGES["peach_9d_2027"]["sop"]["nodes"]) == 10
-    assert len(ROUTE_PACKAGES["peach_11d_2027"]["sop"]["nodes"]) == 11
-    assert "不去珠峰" in ROUTE_PACKAGES["peach_9d_2027"]["match_keywords"]
-    assert "珠峰大本營" in ROUTE_PACKAGES["peach_11d_2027"]["match_keywords"]
-    assert all(
-        package["initial_delivery_interval_seconds"] == 2
-        for package in ROUTE_PACKAGES.values()
-    )
 
 
-def test_route_package_compiles_configured_initial_delivery_interval():
-    package = deepcopy(ROUTE_PACKAGES["peach_9d_2027"])
-    package.pop("source_path", None)
-    package.pop("runtime_sop", None)
-    package["initial_delivery_interval_seconds"] = 7
-    from app.route_packages import _runtime_journey_sop
 
-    runtime = _runtime_journey_sop(package, JOURNEY_POLICY)
-    initial = [node for node in runtime["nodes"] if node.get("initial_delivery") is True]
-    assert initial[0]["delay_seconds"] == 0
-    assert all(node["delivery_interval_seconds"] == 7 for node in initial)
-    assert all(node["delay_seconds"] == 7 for node in initial[1:])
-
-
-def test_initial_delivery_respects_all_delivery_modes():
-    package = deepcopy(ROUTE_PACKAGES["peach_9d_2027"])
-    package.pop("source_path", None)
-    package.pop("runtime_sop", None)
-    groups = package["content_groups"]
-    groups["advisor_greeting"]["delivery_mode"] = "text_only"
-    groups["brand_positioning"]["delivery_mode"] = "text_only"
-    groups["peach_highlights"]["delivery_mode"] = "text_then_assets"
-    groups["itinerary_overview"]["delivery_mode"] = "assets_then_text"
-    groups["hotel_reference"]["delivery_mode"] = "assets_only"
-    runtime = _runtime_journey_sop(package, JOURNEY_POLICY)
-    nodes = {node["content_group_key"]: node for node in runtime["nodes"] if node.get("initial_delivery")}
-    assert [item["content_type"] for item in nodes["advisor_greeting"]["messages"]] == ["text"]
-    assert [item["content_type"] for item in nodes["peach_highlights"]["messages"]] == ["text", "image", "image"]
-    assert [item["content_type"] for item in nodes["itinerary_overview"]["messages"]] == ["image", "text"]
-    assert [item["content_type"] for item in nodes["hotel_reference"]["messages"]] == ["image", "image"]
 
 
 def test_first_wave_order_follows_website_branches():
@@ -225,73 +148,12 @@ def test_legacy_fixed_answer_flags_are_normalized_to_one_status():
     assert "review_state" not in normalized
 
 
-def test_default_route_sops_wait_for_customer_silence_before_first_followup():
-    for package in ROUTE_PACKAGES.values():
-        first = package["sop"]["nodes"][0]
-        assert first["basis"] == "enrollment"
-        assert first["delay_minutes"] == 10
-        assert first["skip_if_slots_present"] == ["party_size"]
-        departure = next(node for node in package["sop"]["nodes"] if node["key"] == "departure_question")
-        assert departure["skip_if_slots_present"] == ["departure_window"]
 
 
-def test_runtime_journey_compiles_customer_silence_intervals():
-    assert JOURNEY_POLICY["reply_style"]["max_characters"] == 200
-    assert JOURNEY_POLICY["reply_style"]["max_questions_per_turn"] == 1
-    assert JOURNEY_POLICY["handoff"]["large_group"]["minimum_party_size"] == 8
-    for package in ROUTE_PACKAGES.values():
-        runtime = package["runtime_sop"]
-        initial = [node for node in runtime["nodes"] if node.get("initial_delivery") is True]
-        silence = [node for node in runtime["nodes"] if node.get("initial_delivery") is not True]
-        assert runtime["journey_policy_version"] == JOURNEY_POLICY["policy_version"]
-        assert [node["delay_minutes"] for node in silence] == [1, 3, 5, 10, 30, 60]
-        assert [node["basis"] for node in silence] == [
-            "enrollment", "previous_node", "previous_node", "previous_node", "previous_node", "previous_node"
-        ]
-        assert [node["journey_trigger"] for node in silence] == [
-            "silence_mainline", "wakeup", "wakeup", "wakeup", "wakeup", "wakeup"
-        ]
-        assert [node["content_group_key"] for node in initial] == [
-            key for key in package["content_sequence"]
-            if package["content_groups"][key].get("initial_delivery") is True
-        ]
-        assert all(node["delay_minutes"] == 0 for node in initial)
-        assert [node["delay_seconds"] for node in initial] == [
-            0,
-            *([2] * (len(initial) - 1)),
-        ]
-        assert all(node["delivery_interval_seconds"] == 2 for node in initial)
-        for node in silence:
-            candidate_keys = {item["content_group_key"] for item in node["content_group_candidates"]}
-            source_keys = {n.get('content_group_key') for n in package['sop']['nodes']}
-            assert candidate_keys == set(package["content_sequence"]) & source_keys
 
 
-def test_disabling_silence_keeps_only_checked_initial_delivery_nodes():
-    package = ROUTE_PACKAGES["peach_9d_2027"]
-    nodes = configured_silence_nodes(
-        package["runtime_sop"]["nodes"],
-        [1, 3, 5],
-        silence_enabled=False,
-    )
-    assert nodes
-    assert all(node.get("initial_delivery") is True for node in nodes)
-    assert [node["content_group_key"] for node in nodes] == [
-        key for key in package["content_sequence"]
-        if package["content_groups"][key].get("initial_delivery") is True
-    ]
 
 
-def test_human_followup_style_comes_from_real_chat_analysis():
-    style = JOURNEY_POLICY["human_followup_style"]
-    assert style["evidence_summary"]["silence_followups"] == 316
-    assert style["evidence_summary"]["generic_checkin_observed_response_rate"] < (
-        style["evidence_summary"]["single_need_question_observed_response_rate"]
-    )
-    assert len(style["touch_progression"]) == 6
-    assert style["touch_progression"][0]["touch_index"] == 1
-    assert style["touch_progression"][-1]["touch_index"] == 6
-    assert "行程看了嗎" in style["forbidden_default_openers"]
 
 
 def test_route_reference_copy_is_conversational_not_generic_read_check():
@@ -314,45 +176,10 @@ def test_hotel_copy_matches_the_room_and_oxygen_images_sent_as_one_group():
         assert "希爾頓" in hotel["approved_text"]
         assert "85-90%" in hotel["approved_text"]
         assert "客戶詢問" not in hotel["approved_text"]
-        node = next(item for item in package["sop"]["nodes"] if item["key"] == "hotel_reference")
-        text = next(item["content"] for item in node["messages"] if item.get("content_type", "text") == "text")
-        assert text == hotel["approved_text"]
 
 
-def test_product_policy_does_not_handoff_for_answerable_boundary_questions():
-    for package in ROUTE_PACKAGES.values():
-        topics = set(package["policies"]["handoff_topics"])
-        assert "availability" not in topics
-        assert "health_or_permit" not in topics
-        assert topics == {
-            "lead_captured",
-            "explicit_human_request",
-            "complaint",
-            "refund",
-            "contract_dispute",
-            "attachment_requires_vision",
-        }
 
 
-def test_every_sop_message_uses_reviewed_route_content_or_asset():
-    for package in ROUTE_PACKAGES.values():
-        groups = package["content_groups"]
-        fact_ids = {fact["id"] for fact in package["knowledge_facts"]} | {
-            "service.requirements", "service.safety"
-        }
-        reviewed_assets = {asset for group in groups.values() for asset in group.get("asset_keys", [])}
-        assert all(
-            evidence in fact_ids
-            for group in groups.values()
-            for evidence in group.get("evidence_refs", [])
-        )
-        for node in package["sop"]["nodes"]:
-            assert node["content_group_key"] in groups
-            for message in node["messages"]:
-                if message.get("content_type", "text") == "text":
-                    assert message["content"].strip()
-                else:
-                    assert message["asset_key"] in reviewed_assets
 
 
 def test_route_product_api_exposes_complete_read_only_configuration(authenticated):
@@ -381,15 +208,7 @@ def test_route_product_api_exposes_complete_read_only_configuration(authenticate
         assert all(answer["status"] in {"active", "pending_review", "disabled"} for answer in item["fixed_answers"])
         assert all(answer["answer_origin"] in {"website_verbatim", "operator_approved"} for answer in item["fixed_answers"])
         assert all("source_text" not in answer for answer in item["fixed_answers"])
-        assert item["policies"]["entry_group"]
-        assert item["journey_policy"]["policy_version"] == "2026-09-04.2"
-        assert item["journey_policy"]["source"]["message_count"] == 6108
-        assert item["default_sop"]["nodes"]
-        silence_nodes = [
-            node for node in item["default_sop"]["nodes"]
-            if node.get("initial_delivery") is not True
-        ]
-        assert [node["delay_minutes"] for node in silence_nodes] == [1, 120]
+        assert 'journey_policy' not in item and 'default_sop' not in item
         assert item["readiness"]["assets_total"] == len(item["assets"])
         for asset in item["assets"]:
             assert set(asset) >= {
@@ -400,107 +219,10 @@ def test_route_product_api_exposes_complete_read_only_configuration(authenticate
             assert isinstance(asset["avoid_claims"], list)
 
 
-def test_route_product_simulation_is_read_only_and_reports_sop_preview(authenticated, monkeypatch):
-    client, csrf = authenticated
-
-    def fake_generate_decision(packet):
-        assert packet["customer_text"] == "我想了解桃花9日行程"
-        assert packet["route_variant"] == "peach_9d_2027"
-        return EvaluationDecision.parse({
-            "action": "reply",
-            "branch": "peach_9d",
-            "intent": "route_intro",
-            "reply": "桃花9日會從林芝賞花開始，我先給您看行程重點。請問您預計幾位同行？",
-            "route_variant": "peach_9d_2027",
-            "content_group_key": "itinerary_overview",
-            "covered_content_groups": ["itinerary_overview", "entry_question"],
-            "lead_action": "none",
-            "slots": {},
-            "slot_evidence": {},
-            "evidence_refs": ["route.9.overview"],
-        }), [{"status": "completed", "input_tokens": 10, "output_tokens": 20}], "hash", {
-            "prompt_version": "split-realtime-reply-v8",
-        }
-
-    monkeypatch.setattr("app.automation_api.generate_decision", fake_generate_decision)
-    response = client.post(
-        "/v1/automation/route-products/peach_9d_2027/simulate",
-        headers={"X-CSRF-Token": csrf},
-        json={
-            "scenario": "normal",
-            "messages": [{"role": "customer", "content": "我想了解桃花9日行程"}],
-        },
-    )
-
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["outbound"] is False
-    assert payload["action"] == "reply"
-    assert payload["route_variant"] == "peach_9d_2027"
-    assert payload["covered_content_groups"] == ["itinerary_overview", "entry_question"]
-    assert payload["next_sop_preview"]["will_enroll"] is True
-    assert payload["next_sop_preview"]["next_node"] == "initial_delivery_advisor_greeting"
-
-
-def test_route_product_simulation_surfaces_handoff_without_sop(authenticated, monkeypatch):
-    client, csrf = authenticated
-
-    def fake_generate_decision(_packet):
-        return EvaluationDecision.parse({
-            "action": "handoff",
-            "branch": "peach_9d",
-            "intent": "other",
-            "reply": "",
-            "route_variant": "peach_9d_2027",
-            "handoff_reason": "large_group_custom_quote",
-            "lead_action": "none",
-        }), [{"status": "completed"}], "hash", {
-            "prompt_version": "split-realtime-reply-v8",
-        }
-
-    monkeypatch.setattr("app.automation_api.generate_decision", fake_generate_decision)
-    response = client.post(
-        "/v1/automation/route-products/peach_9d_2027/simulate",
-        headers={"X-CSRF-Token": csrf},
-        json={
-            "scenario": "large_group",
-            "messages": [{"role": "customer", "content": "我们12个人想包团"}],
-        },
-    )
-
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["outbound"] is False
-    assert payload["action"] == "handoff"
-    assert payload["blocked_reason"] == "large_group_custom_quote"
-    assert payload["next_sop_preview"]["will_enroll"] is False
-
-
-def test_reception_configuration_is_editable_and_returned_with_hard_guards(authenticated, monkeypatch):
-    from app.reception_v2 import ENGINE_RELEASE_ID
-    client, csrf = authenticated
-    monkeypatch.setattr(settings, "live_sop_scope", "allowlist")
-    payload = client.get("/v1/automation/reception-config").json()
-    assert payload["config"]["schema_version"] == 6
-    assert payload["version"]["label"] == ENGINE_RELEASE_ID
-    assert "model_nodes" not in payload
-    assert payload["hard_guards"]["require_ai_label"] is True
-    patch = {"reply":{"goal":"先完整回答，再取得一种联系方式", "tone_guidance":"像台灣真人旅遊顧問，語氣柔和自然。"},
-             "handoff":{"large_group_minimum":15}, "silence":{"v2_intervals_minutes":[2,4,8],"max_proactive_messages_per_day":3}}
-    updated = client.patch("/v1/automation/reception-config", headers={"X-CSRF-Token":csrf}, json=patch)
-    assert updated.status_code == 200, updated.text
-    assert updated.json()["existing_active_sop_rounds_unchanged"] is True
-    product = client.get("/v1/automation/route-products").json()["items"][0]
-    effective = product["journey_policy"]
-    assert effective["handoff"]["large_group"]["minimum_party_size"] == 15
-    assert effective["operator_configuration"]["tone_guidance"] == patch["reply"]["tone_guidance"]
-    assert [node["delay_minutes"] for node in product["default_sop"]["nodes"]] == [2,4,8]
-
-
 def test_reception_configuration_rejects_more_than_twenty_silence_nodes(authenticated):
     client, csrf = authenticated
     response = client.patch("/v1/automation/reception-config", headers={"X-CSRF-Token":csrf},
-                            json={"silence":{"v2_intervals_minutes":list(range(1,22))}})
+                            json={"silence":{"intervals_minutes":list(range(1,22))}})
     assert response.status_code == 422
 
 
@@ -664,7 +386,6 @@ def test_route_package_import_publishes_validated_route(
     authenticated, session_factory, monkeypatch, tmp_path
 ):
     import app.automation_api as automation_api
-    import app.automation_service as automation_service
     import app.route_packages as route_packages
 
     client, csrf = authenticated
@@ -674,12 +395,9 @@ def test_route_package_import_publishes_validated_route(
     package["branch"] = "spring_lhasa_7d"
     package["name"] = "春季拉萨7日"
     package["selection_title"] = "春季拉萨7日"
-    package["sop"]["name"] = "春季拉萨7日默认SOP"
     original_root = route_packages.RUNTIME_PACKAGE_ROOT
     monkeypatch.setattr(route_packages, "RUNTIME_PACKAGE_ROOT", tmp_path / "routes")
     monkeypatch.setattr(automation_api, "RUNTIME_PACKAGE_ROOT", tmp_path / "routes")
-    monkeypatch.setattr(automation_api, "freeze_nodes", lambda _db, nodes, _route, _tenant: nodes)
-    monkeypatch.setattr(automation_service, "freeze_nodes", lambda _db, nodes, _route, _tenant: nodes)
     route_packages.reload_route_packages()
     with session_factory() as db:
         version = KnowledgeVersion(
@@ -716,11 +434,6 @@ def test_route_package_import_publishes_validated_route(
         assert result["draft"]["status"] == "published"
         assert (tmp_path / "routes" / "spring_lhasa_7d_2027" / "route-package.json").is_file()
         assert "spring_lhasa_7d_2027" in route_packages.ROUTE_PACKAGES
-        with session_factory() as db:
-            sop = db.query(SopDefinition).filter_by(
-                tenant_id=1, route_variant="spring_lhasa_7d_2027", status="running"
-            ).one()
-            assert sop.live_enabled is True
         config = client.get("/v1/automation/reception-config").json()
         assert config["draft_imports"] == []
     finally:

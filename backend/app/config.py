@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     chatwoot_write_enabled: bool = False
     live_reply_account_id: int = 180474
     live_reply_inbox_id: int = 128859
-    ai_engine_default: str = "v1"
+    ai_engine_default: str = "v3"
     live_sop_enabled: bool = False
     live_sop_scope: str = "allowlist"
     live_sop_conversation_ids: str = ""
@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     business_materials_dir: str = r"E:\AI\codexproject\ai_chatwoot\給ai"
     worker_poll_interval_seconds: float = 1
     worker_lease_seconds: int = 60
-    live_reply_concurrency: int = Field(default=2, ge=1, le=4)
+    live_reply_concurrency: int = Field(default=4, ge=1, le=8)
     worker_stale_seconds: int = Field(default=120, ge=30, le=600)
     relay_base_url: str = ""
     relay_api_token: str = ""
@@ -75,8 +75,7 @@ class Settings(BaseSettings):
             raise ValueError("invalid_outbound_mode")
         if self.live_sop_scope not in {"allowlist", "ai_label"}:
             raise ValueError("invalid_live_sop_scope")
-        if self.ai_engine_default not in {"v1", "v2"}:
-            raise ValueError("invalid_ai_engine_default")
+        self.ai_engine_default = "v3"
         if self.app_profile == "evaluation" and self.outbound_enabled:
             raise ValueError("evaluation_profile_cannot_enable_outbound")
         if self.live_sop_enabled and not self.outbound_enabled:

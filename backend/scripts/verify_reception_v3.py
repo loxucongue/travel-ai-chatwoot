@@ -70,7 +70,7 @@ def main():
             from app.reception_config import get_reception_configuration, SETTING_KEY
             from app.operations import save_setting
             config = get_reception_configuration(db)
-            config['silence'].update(enabled=True, intervals_minutes=[3, 5])
+            config['silence'].update(enabled=True, intervals_minutes=[3, 5], active_start="00:00", active_end="23:59")
             save_setting(db, SETTING_KEY, config)
         db.add(User(id=1, email='v3-test@example.invalid', display_name='V3验收', role='super_admin', password_hash='unused'))
         inbox = db.scalar(select(InboxBinding).order_by(InboxBinding.id))

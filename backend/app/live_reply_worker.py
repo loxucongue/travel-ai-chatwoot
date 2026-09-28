@@ -1,22 +1,16 @@
-"""Single-machine worker for passive replies and explicitly allowlisted SOP tests."""
 import logging
-from pathlib import Path
 import time
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-
 from sqlalchemy import select
-
 from app.config import settings
-from app.reception_config import live_silence_enabled
 from app.db import SessionLocal
 from app.delivery_status import reconcile_live_delivery
-from app.live_reply import assert_worker_ready, mirror_event, process_job, recover_jobs
-from app.live_reply_models import LiveReplyJob
+from app.live_reply import assert_worker_ready, mirror_event
 from app.models import WebhookEvent, WorkerHeartbeat, utcnow
 from app.relay import RelayClient, poll_relay_once
-
-logger = logging.getLogger("live_reply")
-
+from app.reception_v3.worker import Scheduler
+logger=logging.getLogger(__name__)
 
 def heartbeat(worker_id):
     with SessionLocal() as db:
@@ -24,61 +18,6 @@ def heartbeat(worker_id):
         beat.last_seen_at = utcnow()
         db.add(beat)
         db.commit()
-
-
-class ConversationScheduler:
-    """Bounded work, one in-flight task per conversation across replies and SOPs.
-
-    Only the observing thread mutates this map. The process lock remains required;
-    SQL claims protect jobs, while this map also protects *different* jobs for one
-    conversation. Sessions and network clients are created inside each task.
-    """
-    def __init__(self, executor, capacity):
-        self.executor, self.capacity = executor, capacity
-        self.active = {}
-
-    def reap(self):
-        for conversation_id, future in list(self.active.items()):
-            if future.done():
-                del self.active[conversation_id]
-                try:
-                    future.result()
-                except Exception as exc:
-                    logger.warning("conversation_task_failed code=%s", type(exc).__name__)
-
-    def submit(self, conversation_id, fn, job_id):
-        if conversation_id in self.active or len(self.active) >= self.capacity:
-            return False
-        self.active[conversation_id] = self.executor.submit(fn, job_id)
-        return True
-
-
-def dispatch_due(scheduler):
-    from app.automation_models import LiveSopEnrollment, LiveSopJob
-    from app.live_sop import process_due_live_sop
-    scheduler.reap()
-    while len(scheduler.active) < scheduler.capacity:
-        excluded = list(scheduler.active)
-        with SessionLocal() as db:
-            reply = db.scalar(select(LiveReplyJob).where(
-                LiveReplyJob.status == "queued", LiveReplyJob.due_at <= utcnow(),
-                LiveReplyJob.conversation_state_id.not_in(excluded)
-            ).order_by(LiveReplyJob.due_at, LiveReplyJob.id).limit(1))
-            sop = None
-            if live_silence_enabled(db):
-                sop = db.execute(select(LiveSopJob, LiveSopEnrollment.conversation_state_id).join(
-                    LiveSopEnrollment, LiveSopEnrollment.id == LiveSopJob.enrollment_id).where(
-                    LiveSopJob.status == "scheduled", LiveSopJob.scheduled_at <= utcnow(),
-                    LiveSopEnrollment.conversation_state_id.not_in(excluded)
-                ).order_by(LiveSopJob.scheduled_at, LiveSopJob.id).limit(1)).first()
-            # Both queues compete by due time; continuous replies cannot starve SOPs.
-            if sop and (not reply or sop[0].scheduled_at < reply.due_at):
-                candidate = (sop[1], process_due_live_sop, sop[0].id)
-            elif reply:
-                candidate = (reply.conversation_state_id, process_job, reply.id)
-            else:
-                return
-        scheduler.submit(*candidate)
 
 
 def maintenance_tick(receipts_checked, deadlines):
@@ -90,12 +29,6 @@ def maintenance_tick(receipts_checked, deadlines):
     if now >= deadlines.get("receipts", 0):
         tasks.append(("receipts", lambda: reconcile_live_delivery(receipts_checked)))
         deadlines["receipts"] = now + 30
-    with SessionLocal() as db:
-        silence_enabled = live_silence_enabled(db)
-    if silence_enabled and now >= deadlines.get("sops", 0):
-        from app.live_sop import reconcile_model_route_sops
-        tasks.append(("sops", reconcile_model_route_sops))
-        deadlines["sops"] = now + 30
     for name, task in tasks:
         try:
             task()
@@ -137,15 +70,9 @@ def run():
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     relay_client = RelayClient() if settings.relay_enabled else None
     try:
-        with SessionLocal() as db:
-            recover_jobs(db)
-            if live_silence_enabled(db):
-                from app.live_sop import recover_live_sop_jobs
-                recover_live_sop_jobs(db)
         logger.info("live_reply_started concurrency=%s", settings.live_reply_concurrency)
-        with ThreadPoolExecutor(max_workers=settings.live_reply_concurrency, thread_name_prefix="conversation") as replies, \
-                ThreadPoolExecutor(max_workers=1, thread_name_prefix="maintenance") as maintenance:
-            scheduler = ConversationScheduler(replies, settings.live_reply_concurrency)
+        with ThreadPoolExecutor(max_workers=1, thread_name_prefix="maintenance") as maintenance:
+            scheduler = Scheduler('live')
             receipts_checked, deadlines = {}, {}
             pending_maintenance = None
             next_poll, next_maintenance = 0, 0
@@ -170,9 +97,7 @@ def run():
                                 event.status = "dead" if event.attempts >= 5 else "retry"
                                 event.error_code = type(exc).__name__
                                 db.commit()
-                        from app.automation_shadow import advance_shadow_sops
-                        advance_shadow_sops(db)
-                    dispatch_due(scheduler)
+                    scheduler.tick()
                     if pending_maintenance is not None and pending_maintenance.done():
                         finished = pending_maintenance
                         pending_maintenance = None
@@ -188,10 +113,10 @@ def run():
     finally:
         if relay_client:
             relay_client.close()
+        if "scheduler" in locals():
+            scheduler.close()
         lock.close()
 
 
 if __name__ == "__main__":
     run()
-
-

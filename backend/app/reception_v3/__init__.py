@@ -1,4 +1,4 @@
-"""Independent, Skill-driven reception engine. Playground transport only."""
+"""Independent, Skill-driven reception engine. Shared by playground and Chatwoot delivery."""
 import hashlib
 from pathlib import Path
 

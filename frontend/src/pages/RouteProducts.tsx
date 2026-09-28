@@ -12,8 +12,8 @@ import {
   FixedAnswer, ProductAsset, ProductFact, productDraft, ReceptionConfig, RouteProduct as BaseRouteProduct,
 } from './reception-config';
 
-type ContentDraft = BaseContentDraft & { delete_sop_group_keys?: string[] };
-type RouteProduct = BaseRouteProduct & { policies?: Record<string, unknown> };
+type ContentDraft = BaseContentDraft;
+type RouteProduct = BaseRouteProduct;
 
 type RouteTab = 'base' | 'price' | 'content' | 'mainline' | 'answers' | 'assets' | 'versions';
 
@@ -153,7 +153,7 @@ export default function RouteProducts() {
       </section>
       <section className="panel route-list-panel">
         <div className="route-list-toolbar"><div className="route-search"><Search size={16} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索线路名称或编码" /></div><select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="all">全部状态</option><option value="enabled">允许接待</option><option value="disabled">已停用</option><option value="incomplete">资料不完整</option></select><button className="secondary-button compact" onClick={() => products.refetch()}><RefreshCw size={14} />刷新</button></div>
-        {!filtered.length ? <EmptyState title="没有匹配线路" description="调整搜索或筛选条件后重试。" /> : <div className="route-list-table-wrap"><table className="route-list-table"><thead><tr><th>线路</th><th>线上版本</th><th>资料完整度</th><th>AI 接待状态</th><th>沉默旅程</th><th>操作</th></tr></thead><tbody>{filtered.map(product => { const enabled = enabledRoutes.includes(product.route_variant); return <tr key={product.route_variant}><td><strong>{product.name}</strong><code>{product.route_variant}</code></td><td><Badge tone="blue">{product.package_version}</Badge></td><td><div className="route-readiness-line"><span>事实 {product.knowledge_facts.length}</span><span>图片 {product.readiness.assets_ready}/{product.readiness.assets_total}</span></div></td><td><ProductStatus product={product} enabled={enabled} /></td><td>{product.readiness.sop_ready ? <Badge tone="green">{product.default_sop.nodes.length} 个节点</Badge> : <Badge tone="amber">未就绪</Badge>}</td><td><button className="text-button" onClick={() => openProduct(product)}>配置 <ChevronRight size={14} /></button></td></tr>; })}</tbody></table></div>}
+        {!filtered.length ? <EmptyState title="没有匹配线路" description="调整搜索或筛选条件后重试。" /> : <div className="route-list-table-wrap"><table className="route-list-table"><thead><tr><th>线路</th><th>线上版本</th><th>资料完整度</th><th>AI 接待状态</th><th>沉默旅程</th><th>操作</th></tr></thead><tbody>{filtered.map(product => { const enabled = enabledRoutes.includes(product.route_variant); return <tr key={product.route_variant}><td><strong>{product.name}</strong><code>{product.route_variant}</code></td><td><Badge tone="blue">{product.package_version}</Badge></td><td><div className="route-readiness-line"><span>事实 {product.knowledge_facts.length}</span><span>图片 {product.readiness.assets_ready}/{product.readiness.assets_total}</span></div></td><td><ProductStatus product={product} enabled={enabled} /></td><td>{product.readiness.sop_ready ? <Badge tone="green">{product.content_groups.filter(group => group.initial_delivery).length} 个节点</Badge> : <Badge tone="amber">未就绪</Badge>}</td><td><button className="text-button" onClick={() => openProduct(product)}>配置 <ChevronRight size={14} /></button></td></tr>; })}</tbody></table></div>}
       </section>
     </> : <RouteDetail
       product={current} content={content} tab={tab} setTab={setTab}
@@ -242,11 +242,7 @@ function ContentTab({ product, content, patch }: { product: RouteProduct; conten
     });
     setAdding(false); setPurpose(''); setText(''); setInSequence(false); setGroupError(''); setEditingKey(key);
   }
-  function removeGroup(group: ContentGroup, deleteSop: boolean) {
-    if (referencesGroup(product.policies, group.key)) {
-      setGroupError('不能删除：此内容组仍被线路策略引用，请先处理策略依赖。');
-      return;
-    }
+  function removeGroup(group: ContentGroup) {
     const remainingAssets = new Set(content.content_groups.filter(item => item.key !== group.key).flatMap(item => item.asset_keys));
     const removedAssets = new Set(group.asset_keys.filter(key => !remainingAssets.has(key)));
     const answers = content.fixed_answers.filter(answer => answer.content_group_key === group.key || answer.asset_ids.some(key => removedAssets.has(key)));
@@ -255,13 +251,11 @@ function ContentTab({ product, content, patch }: { product: RouteProduct; conten
       return;
     }
     if (content.content_groups.length <= 1) { setGroupError('至少保留一个内容组。'); return; }
-    if (!window.confirm(`删除“${contentGroupLabel(group)}”？该组也会从发送顺序中移除。${deleteSop ? '同时删除该组同名的源 SOP 节点；旧版本快照不变。' : ''}保存发布后生效。`)) return;
+    if (!window.confirm(`删除“${contentGroupLabel(group)}”？该组也会从发送顺序中移除。保存发布后生效。`)) return;
     patch(value => {
       value.content_groups = value.content_groups.filter(item => item.key !== group.key);
       value.content_sequence = value.content_sequence.filter(key => key !== group.key);
-      if (deleteSop && product.content_groups.some(item => item.key === group.key)) {
-        value.delete_sop_group_keys = [...new Set([...(value.delete_sop_group_keys ?? []), group.key])];
-      }
+
     });
     setEditingKey(''); setGroupError('');
   }
@@ -295,7 +289,7 @@ function ContentTab({ product, content, patch }: { product: RouteProduct; conten
       group={editing}
       factsById={factsById}
       onClose={() => setEditingKey('')}
-      onDelete={deleteSop => removeGroup(editing, deleteSop)}
+      onDelete={() => removeGroup(editing)}
       deleteError={groupError}
       patch={patch}
     /> : null}
@@ -304,19 +298,12 @@ function ContentTab({ product, content, patch }: { product: RouteProduct; conten
 
 function contentGroupLabel(group: ContentGroup) { return (groupLabels[group.key] ?? (/[\u3400-\u9fff]/.test(group.purpose) ? group.purpose.trim() : group.approved_text.trim().split(/[\n。！？]/)[0].slice(0, 24))) || '未命名资料'; }
 
-function referencesGroup(value: unknown, key: string): boolean {
-  if (typeof value === 'string') return value === key;
-  if (Array.isArray(value)) return value.some(item => referencesGroup(item, key));
-  if (value && typeof value === 'object') return Object.entries(value).some(([field, child]) => field === key || referencesGroup(child, key));
-  return false;
-}
 
 function ContentDrawer({ product, group, factsById, onClose, onDelete, deleteError, patch }: {
   product: RouteProduct; group: ContentGroup; factsById: Map<string, ProductFact>;
   onClose: () => void; patch: (updater: (value: ContentDraft) => void) => void;
-  onDelete: (deleteSop: boolean) => void; deleteError: string;
+  onDelete: () => void; deleteError: string;
 }) {
-  const [deleteSop, setDeleteSop] = useState(false);
   const linkedFacts = group.evidence_refs.map(ref => factsById.get(ref)).filter((fact): fact is ProductFact => !!fact);
   const systemRefs = group.evidence_refs.filter(ref => !factsById.has(ref));
   function addFact() {
@@ -349,7 +336,7 @@ function ContentDrawer({ product, group, factsById, onClose, onDelete, deleteErr
         </section>
         <section className="drawer-linked-section"><div><h4>关联图片</h4><span>{group.asset_keys.length} 张</span></div>{group.asset_keys.length ? <div className="drawer-asset-list">{group.asset_keys.map(key => { const asset = product.assets.find(item => item.key === key); return <div key={key}>{asset?.preview_url ? <img src={`${API_BASE}${asset.preview_url}`} alt={asset.display_name} /> : <ImageIcon size={22} />}<span>{asset?.display_name ?? key}</span></div>; })}</div> : <p>这个内容模块没有配置图片。</p>}</section>
       </div>
-      <footer style={{ flexWrap: 'wrap' }}><label style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', fontSize: 13 }}><input type="checkbox" checked={deleteSop} onChange={event => setDeleteSop(event.target.checked)} />同时删除该组同名的源 SOP 节点</label><button type="button" className="text-button" onClick={() => onDelete(deleteSop)}><Trash2 size={16} />删除内容组</button><button className="primary-button" onClick={onClose}><CheckCircle2 size={16} />完成编辑</button></footer>
+      <footer style={{ flexWrap: 'wrap' }}><button type="button" className="text-button" onClick={onDelete}><Trash2 size={16} />删除内容组</button><button className="primary-button" onClick={onClose}><CheckCircle2 size={16} />完成编辑</button></footer>
     </aside>
   </div>;
 }
@@ -391,7 +378,7 @@ function FixedAnswersTab({ product, content, patch }: { product: RouteProduct; c
     setEditingId(id);
   }
   return <div className="route-section-stack fixed-answer-page">
-    <header className="detail-section-intro"><div><h2>场景话术</h2><p>V2 加载线路 Skill 时读取启用的话术，优先沿用原文，按客户的问题调整称呼、衔接或组合相关段落。</p></div><button className="secondary-button compact" onClick={addAnswer}><Plus size={14} />新增话术</button></header>
+    <header className="detail-section-intro"><div><h2>场景话术</h2><p>V3 加载线路 Skill 时读取启用的话术，优先沿用原文，按客户的问题调整称呼、衔接或组合相关段落。</p></div><button className="secondary-button compact" onClick={addAnswer}><Plus size={14} />新增话术</button></header>
     <div className="fixed-answer-accuracy"><ShieldCheck size={18} /><div><strong>写清适用场景，维护一份话术原文</strong><span>选择“已启用”并发布线路后，后续回复会读取更新内容。问法示例帮助 AI 理解场景，不要求客户逐字命中。</span></div></div>
     {!content.fixed_answers.length ? <EmptyState title="暂无场景话术" description="可从思维导图、官网或顾问回答中整理线路话术。" /> : <div className="fixed-answer-list">{[...content.fixed_answers].sort((a, b) => b.priority - a.priority).map(answer => <button type="button" key={answer.id} onClick={() => setEditingId(answer.id)}><span><strong>{answer.name}</strong><small>{answer.answer_origin === 'website_verbatim' ? '官网原话' : '运营维护'} · {answer.positive_examples.length} 个客户问法</small></span><span>{answer.status === 'active' ? <Badge tone="green">已启用</Badge> : answer.status === 'pending_review' ? <Badge tone="amber">草稿</Badge> : <Badge>已停用</Badge>}<ChevronRight size={16} /></span></button>)}</div>}
     {editing ? <FixedAnswerDrawer product={product} content={content} answer={editing} patch={patch} onClose={() => setEditingId('')} /> : null}
@@ -424,12 +411,12 @@ function FixedAnswerDrawer({ product, content, answer, patch, onClose }: { produ
     <aside className="route-content-drawer fixed-answer-drawer" role="dialog" aria-modal="true" aria-label={`编辑${answer.name}`}>
       <header><div><span>编辑场景话术</span><h3>{answer.name}</h3></div><button className="icon-button" title="关闭" onClick={onClose}><X size={19} /></button></header>
       <div className="route-drawer-body">
-        <div className="fixed-answer-enable"><div><strong>{answer.answer_origin === 'website_verbatim' ? '官网话术原文' : '场景话术原文'}</strong><span>V2 优先沿用下方原文，可按实际场景调整；模型最终正文直接发送，不再二次审核改写。</span></div><Badge tone={answer.answer_origin === 'website_verbatim' ? 'blue' : undefined}>{answer.answer_origin === 'website_verbatim' ? '官网来源' : '运营维护'}</Badge></div>
+        <div className="fixed-answer-enable"><div><strong>{answer.answer_origin === 'website_verbatim' ? '官网话术原文' : '场景话术原文'}</strong><span>V3 优先沿用下方原文，可按实际场景调整；模型最终正文直接发送，不再二次审核改写。</span></div><Badge tone={answer.answer_origin === 'website_verbatim' ? 'blue' : undefined}>{answer.answer_origin === 'website_verbatim' ? '官网来源' : '运营维护'}</Badge></div>
         <div className="route-field-grid"><label>问答名称<input value={answer.name} maxLength={200} onChange={event => update(item => { item.name = event.target.value; })} /></label><label>生效状态<select value={answer.status} onChange={event => update(item => { item.status = event.target.value as FixedAnswer['status']; })}><option value="active">已启用</option><option value="pending_review">草稿</option><option value="disabled">已停用</option></select><small>选择“已启用”并发布线路后立即生效。</small></label></div>
         <label>对应线路资料<select value={answer.content_group_key} onChange={event => update((item, draft) => { item.content_group_key = event.target.value; const group = draft.content_groups.find(value => value.key === event.target.value); item.topics = fixedAnswerTopicsByGroup[event.target.value] ?? ['other']; item.fact_ids = [...(group?.evidence_refs ?? [])];  })}>{content.content_groups.map(group => <option key={group.key} value={group.key}>{contentGroupLabel(group)}</option>)}</select></label>
         <label>客户可能会这样问（每行一个）<textarea rows={5} value={answer.positive_examples.join('\n')} onChange={event => update(item => { item.positive_examples = lines(event.target.value); })} /></label>
         <label>相似但不能命中的问法（每行一个）<textarea rows={4} value={answer.negative_examples.join('\n')} onChange={event => update(item => { item.negative_examples = lines(event.target.value); })} /></label>
-        <label>{answer.answer_origin === 'website_verbatim' ? '官网标准回答' : '优先使用的话术原文'}<textarea rows={10} maxLength={10000} value={answer.answer_text} onChange={event => update(item => { item.answer_text = event.target.value; if (item.answer_origin === 'website_verbatim') { item.answer_origin = 'operator_approved'; item.source_ref = 'operator.config'; } })} /><small>{answer.answer_text.length} 字，作为 V2 优先使用的话术。修改官网原话后，来源会自动改为“运营维护”。</small></label>
+        <label>{answer.answer_origin === 'website_verbatim' ? '官网标准回答' : '优先使用的话术原文'}<textarea rows={10} maxLength={10000} value={answer.answer_text} onChange={event => update(item => { item.answer_text = event.target.value; if (item.answer_origin === 'website_verbatim') { item.answer_origin = 'operator_approved'; item.source_ref = 'operator.config'; } })} /><small>{answer.answer_text.length} 字，作为 V3 优先使用的话术。修改官网原话后，来源会自动改为“运营维护”。</small></label>
         <section className="drawer-linked-section"><div><h4>关联线路素材（无需重复上传）</h4><span>{answer.asset_ids.length} 张</span></div>{routeAssetKeys.length ? <div className="fixed-answer-assets">{routeAssetKeys.map(key => { const asset = product.assets.find(item => item.key === key); return <label key={key}><input type="checkbox" checked={answer.asset_ids.includes(key)} onChange={event => update(item => { item.asset_ids = event.target.checked ? [...item.asset_ids, key] : item.asset_ids.filter(id => id !== key); })} />{asset?.preview_url ? <img src={`${API_BASE}${asset.preview_url}`} alt={asset.display_name} /> : <ImageIcon size={24} />}<span>{asset?.display_name ?? key}</span></label>; })}</div> : <p>本线路暂无素材，请先到“图片与文件”添加。</p>}</section>
         <div className="fixed-answer-source"><span>内容来源</span><strong>{answer.source_ref}</strong></div>
       </div>
@@ -445,7 +432,7 @@ function FactRow({ fact, onChange, onDelete }: { fact: ProductFact; onChange: (f
 }
 
 function AssetsTab({ routeVariant, assets, busy, onSave, onReplace }: { routeVariant: string; assets: ProductAsset[]; busy: boolean; onSave: (asset: ProductAsset, values: AssetNarrativeDraft) => void; onReplace: (asset: ProductAsset, file: File) => void }) {
-  return <div className="route-section-stack"><header className="detail-section-intro"><div><h2>图片与文件素材</h2><p>为素材填写准确说明。PDF 上传或更换后需重新审核批准，批准不会向客户发送消息。</p></div></header><div className="route-material-grid">{assets.map(asset => <MaterialCard key={`${asset.key}:${asset.media_id}`} routeVariant={routeVariant} asset={asset} busy={busy} onSave={values => onSave(asset, values)} onReplace={file => onReplace(asset, file)} />)}</div></div>;
+  return <div className="route-section-stack"><header className="detail-section-intro"><div><h2>图片与文件素材</h2><p>为素材填写准确说明。上传后可在话术中引用。</p></div></header><div className="route-material-grid">{assets.map(asset => <MaterialCard key={`${asset.key}:${asset.media_id}`} routeVariant={routeVariant} asset={asset} busy={busy} onSave={values => onSave(asset, values)} onReplace={file => onReplace(asset, file)} />)}</div></div>;
 }
 
 type AssetNarrativeDraft = {
@@ -467,15 +454,9 @@ function assetDraft(asset: ProductAsset): AssetNarrativeDraft {
   };
 }
 
-function MaterialCard({ routeVariant, asset, busy, onSave, onReplace }: { routeVariant: string; asset: ProductAsset; busy: boolean; onSave: (values: AssetNarrativeDraft) => void; onReplace: (file: File) => void }) {
+function MaterialCard({ asset, busy, onSave, onReplace }: { routeVariant: string; asset: ProductAsset; busy: boolean; onSave: (values: AssetNarrativeDraft) => void; onReplace: (file: File) => void }) {
   const [value, setValue] = useState<AssetNarrativeDraft>(() => assetDraft(asset));
-  const queryClient = useQueryClient();
-  const [reviewNotes, setReviewNotes] = useState('');
-  const isPdf = asset.media_type === 'file' || asset.key === 'china2go-altitude-guide-v1';
-  const approve = useMutation({
-    mutationFn: () => api(`/automation/route-products/${encodeURIComponent(routeVariant)}/assets/${encodeURIComponent(asset.key)}/approve`, { method: 'POST', body: JSON.stringify({ expected_hash: asset.file_hash, review_notes: reviewNotes }) }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['route-products'] }); setReviewNotes(''); },
-  });
+  const isPdf = asset.media_type === 'file';
   useEffect(() => { setValue(assetDraft(asset)); }, [
     asset.key, asset.media_id, asset.display_name, asset.usage, asset.what_it_shows,
     asset.customer_value, asset.recommended_caption,
@@ -489,7 +470,7 @@ function MaterialCard({ routeVariant, asset, busy, onSave, onReplace }: { routeV
     && lines(value.featurePoints).length <= 8 && value.customerValue.trim() && value.customerValue.length <= 1000
     && value.recommendedCaption.trim() && value.recommendedCaption.length <= 1200
     && lines(value.avoidClaims).length <= 12;
-  return <article className="route-material-card"><div className="route-material-preview">{asset.preview_url ? <a href={`${API_BASE}${asset.preview_url}`} target="_blank" rel="noreferrer">{isPdf ? <span><FileCheck2 size={28} />打开 PDF 审阅</span> : <img src={`${API_BASE}${asset.preview_url}`} alt={asset.display_name} />}</a> : <ImageIcon size={32} />}</div><div className="route-material-body"><div><Badge tone={asset.available && asset.live_approved ? 'green' : 'amber'}>{!asset.available ? '缺少文件' : asset.live_approved ? '已批准' : '待审核'}</Badge><code>{asset.key}</code></div><label>素材名称<input value={value.name} maxLength={200} onChange={event => patch('name', event.target.value)} /></label><label>内容主题<input value={value.usage} maxLength={1000} onChange={event => patch('usage', event.target.value)} /></label><label>素材包含什么<textarea rows={2} maxLength={1000} value={value.whatItShows} onChange={event => patch('whatItShows', event.target.value)} /></label><label>可以介绍的特色 <small>每行一项，最多 8 项</small><textarea rows={3} value={value.featurePoints} onChange={event => patch('featurePoints', event.target.value)} /></label><label>对客户的价值<textarea rows={2} maxLength={1000} value={value.customerValue} onChange={event => patch('customerValue', event.target.value)} /></label><label>推荐发送话术<textarea rows={3} maxLength={1200} value={value.recommendedCaption} onChange={event => patch('recommendedCaption', event.target.value)} /></label><label>禁止延伸的说法 <small>每行一项，最多 12 项</small><textarea rows={3} value={value.avoidClaims} onChange={event => patch('avoidClaims', event.target.value)} /></label><small>关联内容：{groupLabels[asset.content_group_key] ?? asset.content_group_key}</small><footer><button className="secondary-button compact" disabled={!dirty || busy || !valid} onClick={() => onSave(value)}><Save size={14} />保存说明</button><label className="primary-button compact"><Upload size={14} />重新上传<input type="file" hidden accept={isPdf ? "application/pdf" : "image/png,image/jpeg,image/webp,image/gif"} disabled={busy} onChange={event => { if (event.target.files?.[0]) onReplace(event.target.files[0]); event.target.value = ''; }} /></label></footer>{isPdf && asset.available && !asset.live_approved ? <div><label>审核记录<textarea value={reviewNotes} onChange={event => setReviewNotes(event.target.value)} maxLength={2000} placeholder="请先打开文件核对内容，再记录审核依据和适用范围。" /></label><button className="secondary-button compact" disabled={busy || approve.isPending || reviewNotes.trim().length < 10 || !asset.file_hash} onClick={() => approve.mutate()}><ShieldCheck size={14} />批准此版本</button>{approve.error ? <p role="alert">{approve.error.message}</p> : null}</div> : null}</div></article>;
+  return <article className="route-material-card"><div className="route-material-preview">{asset.preview_url ? <a href={`${API_BASE}${asset.preview_url}`} target="_blank" rel="noreferrer">{isPdf ? <span><FileCheck2 size={28} />打开 PDF</span> : <img src={`${API_BASE}${asset.preview_url}`} alt={asset.display_name} />}</a> : <ImageIcon size={32} />}</div><div className="route-material-body"><div><Badge tone={asset.available ? 'green' : 'amber'}>{asset.available ? '可用' : '缺少文件'}</Badge><code>{asset.key}</code></div><label>素材名称<input value={value.name} maxLength={200} onChange={event => patch('name', event.target.value)} /></label><label>内容主题<input value={value.usage} maxLength={1000} onChange={event => patch('usage', event.target.value)} /></label><label>素材包含什么<textarea rows={2} maxLength={1000} value={value.whatItShows} onChange={event => patch('whatItShows', event.target.value)} /></label><label>可以介绍的特色 <small>每行一项，最多 8 项</small><textarea rows={3} value={value.featurePoints} onChange={event => patch('featurePoints', event.target.value)} /></label><label>对客户的价值<textarea rows={2} maxLength={1000} value={value.customerValue} onChange={event => patch('customerValue', event.target.value)} /></label><label>推荐发送话术<textarea rows={3} maxLength={1200} value={value.recommendedCaption} onChange={event => patch('recommendedCaption', event.target.value)} /></label><label>禁止延伸的说法 <small>每行一项，最多 12 项</small><textarea rows={3} value={value.avoidClaims} onChange={event => patch('avoidClaims', event.target.value)} /></label><small>关联内容：{groupLabels[asset.content_group_key] ?? asset.content_group_key}</small><footer><button className="secondary-button compact" disabled={!dirty || busy || !valid} onClick={() => onSave(value)}><Save size={14} />保存说明</button><label className="primary-button compact"><Upload size={14} />重新上传<input type="file" hidden accept={isPdf ? "application/pdf" : "image/png,image/jpeg,image/webp,image/gif"} disabled={busy} onChange={event => { if (event.target.files?.[0]) onReplace(event.target.files[0]); event.target.value = ''; }} /></label></footer></div></article>;
 }
 
 function VersionsTab({ product }: { product: RouteProduct }) {

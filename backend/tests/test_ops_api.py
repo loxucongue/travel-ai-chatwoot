@@ -1,10 +1,16 @@
 from sqlalchemy import select
 
+
 from app.models import AppSetting, AuditLog, ChatwootConnection, ChatwootLabel, Contact, ConversationState, HandoffTask, InboxBinding, SopDefinition, SopEnrollment, SopJob, SyncJob, User, UserInboxScope
+
+
 from app.live_reply_models import LiveReplyJob
+
+
 from app.models import MessageEvent, utcnow
+
+
 from app.security import encrypt_secret, hash_password
-from app.worker_main import enroll_matching_sops
 
 
 class FakeChatwoot:
@@ -155,11 +161,9 @@ def test_narrowing_ai_reception_allowlist_cancels_outside_queued_replies(
         )
         db.add(message)
         db.flush()
-        db.add(LiveReplyJob(
-            conversation_state_id=conversation.id,
-            trigger_message_id=message.id,
-            due_at=utcnow(),
-        ))
+        from app.automation_models import AutomationSession
+        db.add(AutomationSession(owner_id=1, environment='live', engine_version='v3',
+            conversation_state_id=conversation.id, controls={'simulation':{'status':'running'}}, messages=[], memory={}))
         db.commit()
 
     response = client.patch(
@@ -170,9 +174,10 @@ def test_narrowing_ai_reception_allowlist_cancels_outside_queued_replies(
     assert response.status_code == 200
     assert response.json()["cancelled_reply_jobs"] == 1
     with session_factory() as db:
-        job = db.scalar(select(LiveReplyJob))
-        assert job.status == "cancelled"
-        assert job.error_code == "ai_reception_allowlist_changed"
+        job = db.scalar(select(AutomationSession))
+        assert job.controls['simulation']['status'] == 'stopped'
+        assert job.controls['v3']['last_reason'] == 'ai_reception_allowlist_changed'
+
 
 
 def test_user_creation_returns_temporary_password_once(authenticated, session_factory):
@@ -209,8 +214,6 @@ def test_manual_handoff_stops_ai_and_claim_assigns_chatwoot(authenticated, sessi
     assert conflict.status_code == 409
 
 
-
-
 def test_first_login_password_change(authenticated, session_factory):
     client, csrf = authenticated
     with session_factory() as db:
@@ -239,19 +242,6 @@ def test_agent_contact_data_is_masked_until_assigned(client, session_factory):
     visible = client.get("/v1/conversations/10").json()["contact"]
     assert visible["email"] == "customer@example.com"
     assert visible["pii_masked"] is False
-
-
-def test_label_trigger_enrolls_running_sop(session_factory):
-    seed(session_factory)
-    with session_factory() as db:
-        conversation = db.scalar(select(ConversationState))
-        sop = SopDefinition(tenant_id=1, created_by=1, name="Label SOP", status="running", trigger_type="label", trigger_labels=["意向客户"], nodes=[{"key": "step1", "delay_minutes": 0, "content": "hello"}])
-        db.add(sop)
-        db.flush()
-        enroll_matching_sops(db, conversation, {"意向客户"})
-        db.commit()
-        assert db.scalar(select(SopEnrollment)).conversation_state_id == conversation.id
-        assert db.scalar(select(SopJob)).status == "scheduled"
 
 
 def test_history_sync_can_pause(authenticated, session_factory):

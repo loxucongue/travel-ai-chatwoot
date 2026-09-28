@@ -39,8 +39,6 @@ class LabelMappings(BaseModel):
     contact_block_labels: list[str] = Field(default_factory=lambda: ["拒绝联系", "黑名单"])
     lead_labels: list[str] = Field(default_factory=lambda: ["已留资"])
     conversion_labels: list[str] = Field(default_factory=lambda: ["已成交"])
-    stage_labels: list[str] = Field(default_factory=list)
-    sop_whitelist_label: str = "SOP测试白名单"
 
 
 class NotificationSettings(BaseModel):

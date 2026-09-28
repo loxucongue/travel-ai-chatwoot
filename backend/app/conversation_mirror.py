@@ -8,43 +8,6 @@ from app.operations import audit, create_notification, ensure_handoff, setting_v
 from app.reception_rollout import default_engine_assignment
 
 
-def schedule_sop_enrollment(db, sop: SopDefinition, conversation: ConversationState) -> bool:
-    # Grouped SOPs use the versioned rehearsal scheduler, never this legacy sender.
-    if any(node.get("messages") or node.get("schedule_type") == "calendar_day" for node in sop.nodes):
-        return False
-    existing = db.scalar(select(SopEnrollment).where(SopEnrollment.sop_id == sop.id, SopEnrollment.conversation_state_id == conversation.id))
-    if existing:
-        return False
-    enrollment = SopEnrollment(sop_id=sop.id, conversation_state_id=conversation.id)
-    db.add(enrollment)
-    db.flush()
-    base = datetime.now(timezone.utc)
-    previous = base
-    for node in sop.nodes:
-        if node.get("schedule_type") == "fixed":
-            scheduled = datetime.fromisoformat(node["fixed_at"].replace("Z", "+00:00"))
-        else:
-            basis = previous if node.get("basis") == "previous_node" else base
-            scheduled = basis + timedelta(
-                minutes=int(node.get("delay_minutes") or 0),
-                seconds=int(node.get("delay_seconds") or 0),
-            )
-        db.add(SopJob(enrollment_id=enrollment.id, node_key=node["key"], scheduled_at=scheduled.astimezone(timezone.utc).isoformat()))
-        previous = scheduled
-    return True
-
-
-def enroll_matching_sops(db, conversation: ConversationState, added_labels: set[str]) -> None:
-    if not added_labels:
-        return
-    rows = db.scalars(select(SopDefinition).where(SopDefinition.status == "running", SopDefinition.trigger_type.in_(["label", "stage"]))).all()
-    for sop in rows:
-        if sop.inbox_ids and conversation.inbox.chatwoot_inbox_id not in sop.inbox_ids:
-            continue
-        if set(sop.trigger_labels or []) & added_labels:
-            schedule_sop_enrollment(db, sop, conversation)
-
-
 def unwrap(value):
     if isinstance(value, dict) and isinstance(value.get("payload"), dict):
         return value["payload"]
@@ -199,25 +162,14 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
         matched = next((label for label in row.labels if label in mappings.get("handoff_labels", [])), None)
         if matched:
             ensure_handoff(db, row, "label", f"Chatwoot 标签触发：{matched}", "P1" if matched == "客诉" else "P2")
-        enroll_matching_sops(db, row, added_labels)
         if previous_ai_label_present != row.ai_label_present:
             audit(db, None, "conversation.ai_mode.synced_from_chatwoot", "conversation", row.chatwoot_conversation_id, {
                 "enabled": row.ai_label_present,
                 "event": ctx["event"],
             })
             if previous_ai_label_present and not row.ai_label_present:
-                from app.live_reply_models import LiveReplyJob
-                from app.live_sop import cancel_live_sop_on_control_change
-
-                db.execute(update(LiveReplyJob).where(
-                    LiveReplyJob.conversation_state_id == row.id,
-                    LiveReplyJob.status.in_(["queued", "processing"]),
-                ).values(
-                    status="cancelled",
-                    error_code="ai_label_removed",
-                    completed_at=utcnow(),
-                ))
-                cancel_live_sop_on_control_change(db, row, "ai_label_removed")
+                from app.reception_v3.live import cancel
+                cancel(db, row.id, 'ai_label_removed')
                 create_notification(
                     db,
                     "ai.label_removed",
@@ -262,5 +214,3 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
             if outbound and ctx["message_status"] in ("sent", "delivered", "read", "failed"):
                 outbound.status = ctx["message_status"]
     return row, message, ctx, conversation_created
-
-

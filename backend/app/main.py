@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 
 from app.api import router
 from app.ops_api import router as ops_router
-from app.evaluation_api import router as evaluation_router
 from app.automation_api import router as automation_router
 from app.config import settings
 
@@ -35,5 +34,4 @@ async def http_error(request: Request, exc: HTTPException):
 
 app.include_router(router)
 app.include_router(ops_router)
-app.include_router(evaluation_router)
 app.include_router(automation_router)

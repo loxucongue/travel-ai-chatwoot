@@ -51,8 +51,6 @@ def ingest_payload(db: Session, connection: ChatwootConnection, payload: dict, r
     connection.last_webhook_at = utcnow()
     try:
         db.flush()
-        from app.automation_shadow import invalidate_shadow
-        invalidate_shadow(db, connection, payload)
         db.commit()
         return IngestResult(duplicate=False, event_id=row.id)
     except IntegrityError:

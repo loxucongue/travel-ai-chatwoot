@@ -121,6 +121,7 @@ type JourneySession = {
     next_touch_at?: string | null;
     next_touch_status?: string | null;
     last_warning?: string | null;
+    can_retry?: boolean;
   };
   messages: SessionMessage[];
   runs: RunRecord[];
@@ -319,7 +320,7 @@ function ReceptionPlayground() {
   const [inboxId, setInboxId] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [engineVersion, setEngineVersion] = useState<'v1' | 'v2' | 'v3'>('v3');
+  const [entryMessage, setEntryMessage] = useState('你好，我想咨询旅行行程');
   const streamRef = useRef<HTMLDivElement>(null);
 
   const inboxes = useQuery({
@@ -383,8 +384,8 @@ function ReceptionPlayground() {
         inbox_binding_id: inboxId,
         duration_minutes: 525600,
         speed_multiplier: 1,
-        entry_message: '你好，我想咨询旅行行程',
-        engine_version: engineVersion,
+        entry_message: entryMessage,
+        engine_version: 'v3',
       },
     });
   };
@@ -424,7 +425,7 @@ function ReceptionPlayground() {
       activeId={sessionId}
       open={historyOpen}
       busy={inboxes.isLoading || mutateSession.isPending || deleteSession.isPending}
-      onCreate={createJourney}
+      onCreate={() => { setSessionId(null); setParams({}); setHistoryOpen(false); }}
       onOpen={openSession}
       onDelete={id => deleteSession.mutate(id)}
       onClose={() => setHistoryOpen(false)}
@@ -432,13 +433,14 @@ function ReceptionPlayground() {
     {historyOpen ? <button className="ai-chat-sidebar-scrim" aria-label="关闭会话列表" onClick={() => setHistoryOpen(false)} /> : null}
     <main className="ai-chat-main">
       <Failure error={error} />
+      {current?.reception_state?.can_retry ? <div className="automation-error" role="alert">本轮生成失败，客户问题已保留。<button className="text-button" disabled={mutateSession.isPending} onClick={() => mutateSession.mutate({ path: `/playground/sessions/${current.id}/retry` })}>重试本轮</button></div> : null}
       {!current ? <ChatHome
         inboxName={inboxes.data?.find(item => item.id === inboxId)?.name}
         loading={inboxes.isLoading || mutateSession.isPending}
         onCreate={createJourney}
         onOpenHistory={() => setHistoryOpen(true)}
-        engineVersion={engineVersion}
-        onEngineChange={setEngineVersion}
+        entryMessage={entryMessage}
+        onEntryChange={setEntryMessage}
       /> : <RehearsalRunner
         session={current}
         processing={processing}
@@ -448,7 +450,7 @@ function ReceptionPlayground() {
         onSubmit={submit}
         onSendText={sendCustomerText}
         onDelete={() => deleteSession.mutate(current.id)}
-        onCreate={createJourney}
+        onCreate={() => { setSessionId(null); setParams({}); }}
         onOpenHistory={() => setHistoryOpen(true)}
         onAdvanceNext={advanceNextTouch}
         streamRef={streamRef}
@@ -487,7 +489,7 @@ function PlaygroundSidebar(props: {
   </aside>;
 }
 
-function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () => void; onOpenHistory: () => void; engineVersion: 'v1' | 'v2' | 'v3'; onEngineChange: (value: 'v1' | 'v2' | 'v3') => void }) {
+function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () => void; onOpenHistory: () => void; entryMessage: string; onEntryChange: (value: string) => void }) {
   return <div className="ai-chat-home">
     <header className="ai-chat-topbar">
       <button className="ai-chat-mobile-menu" onClick={props.onOpenHistory} aria-label="打开会话列表"><Menu size={20} /></button>
@@ -498,11 +500,8 @@ function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () =>
       <div className="ai-chat-orb"><Sparkles size={30} /></div>
       <h1>模拟一个新客户</h1>
       <p>点击开始后，AI 会像真实客服一样开场、识别线路、回答问题，并在客户沉默时继续跟进，直到取得联系方式或转人工。</p>
-      <div className="ai-chat-engine-choice" role="group" aria-label="回复引擎">
-        <button className={props.engineVersion === 'v3' ? 'active' : ''} onClick={() => props.onEngineChange('v3')}><strong>V3 独立版本</strong><small>线路 Skill 接待</small></button>
-        <button className={props.engineVersion === 'v2' ? 'active' : ''} onClick={() => props.onEngineChange('v2')}><strong>V2 当前版本</strong><small>按线路与客户需求回复</small></button>
-        <button className={props.engineVersion === 'v1' ? 'active' : ''} onClick={() => props.onEngineChange('v1')}><strong>V1 历史版本</strong><small>用于回看与对比测试</small></button>
-      </div>
+      <label>客户首条消息<textarea value={props.entryMessage} onChange={event => props.onEntryChange(event.target.value)} rows={3} /></label>
+
       <button disabled={props.loading || !props.inboxName} onClick={props.onCreate}><Plus size={18} />{props.loading ? '正在准备...' : '开始新客户演练'}</button>
       <small>{props.inboxName || '正在读取渠道'} · 沙盒演练，不联系真实客户</small>
     </section>

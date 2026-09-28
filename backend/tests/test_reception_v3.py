@@ -165,8 +165,7 @@ def test_restart_pause_and_no_burst(session_factory, monkeypatch):
         assert '住宿原文' not in delivered(row)
 
 
-def test_api_v3_isolated_and_legacy_worker_does_not_consume(authenticated, session_factory, monkeypatch):
-    from app.automation_service import queue_passive, process_automation_run, advance_running_playgrounds
+def test_api_only_creates_v3_journeys(authenticated, session_factory, monkeypatch):
     client, csrf = authenticated
     monkeypatch.setattr(service, 'compile_skills', lambda db: bundle())
     response = client.post('/v1/playground/sessions', json={'mode': 'journey'}, headers={'X-CSRF-Token': csrf})
@@ -174,21 +173,20 @@ def test_api_v3_isolated_and_legacy_worker_does_not_consume(authenticated, sessi
     data = response.json()
     assert data['engine_version'] == 'v3'
     assert data['engine_release_id'].startswith('reception-v3-')
-    with session_factory() as db:
-        assert not queue_passive(db)
-        assert not process_automation_run(db)
-        assert not advance_running_playgrounds(db)
     bad = client.post('/v1/playground/sessions', json={'engine_version': 'v3', 'mode': 'reply'}, headers={'X-CSRF-Token': csrf})
     assert bad.status_code == 422
 
 
-def test_journey_default_does_not_change_explicit_engines_or_other_modes():
+def test_retired_engines_cannot_be_started():
+    import pytest
     from app.automation_api import SessionCreate
     from app.config import settings
     assert SessionCreate(mode='journey').engine_version == 'v3'
-    for engine in ('v1', 'v2', 'v3'):
-        assert SessionCreate(mode='journey', engine_version=engine).engine_version == engine
-    assert SessionCreate(mode='reply').engine_version == settings.ai_engine_default
+    for engine in ('v1', 'v2'):
+        with pytest.raises(ValueError):
+            SessionCreate(mode='journey', engine_version=engine)
+    with pytest.raises(ValueError):
+        SessionCreate(mode='reply')
 
 
 def test_default_configured_timer_runs_without_model_delay(session_factory, monkeypatch):

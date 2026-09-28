@@ -22,7 +22,6 @@ export type FixedAnswer = {
 };
 
 export type ProductFact = { id: string; text: string; source_ref: string };
-export type SopNode = { key: string; delay_minutes?: number; delay_seconds?: number; delivery_interval_seconds?: number };
 export type ProductVersion = {
   version: string; status: 'current' | 'history'; summary: string;
   created_at: string | null; user_id: number | null;
@@ -36,13 +35,11 @@ export type RouteProduct = {
   source: { url?: string };
   knowledge_facts: ProductFact[];
   content_sequence: string[]; content_groups: ContentGroup[]; fixed_answers: FixedAnswer[];
-  journey_policy: { policy_version: string };
   assets: ProductAsset[];
-  default_sop: { nodes: SopNode[] };
   versions: ProductVersion[];
   readiness: {
     assets_ready: number; assets_total: number; missing_assets: string[];
-    ai_reply_ready: boolean; sop_ready: boolean; default_sop_published: boolean;
+    ai_reply_ready: boolean; sop_ready: boolean;
   };
 };
 
@@ -58,11 +55,11 @@ export type OpeningItem = {
 export type ReceptionConfig = {
   schema_version: number;
   common_scripts: {id: string; name: string; scenario: string; text: string; enabled: boolean}[];
-  reply: { opening_message: string; opening_messages: string[]; opening_items: OpeningItem[]; opening_interval_seconds: number; goal: string; tone: 'friendly_professional' | 'concise' | 'warm'; tone_guidance: string; max_characters: number; max_images_per_turn: number; custom_guidance: string };
+  reply: { opening_message: string; opening_messages: string[]; opening_items: OpeningItem[]; opening_interval_seconds: number; goal: string; tone: 'friendly_professional' | 'concise' | 'warm'; tone_guidance: string; opening_character_limit: number; custom_guidance: string };
   lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[] };
   routing: { enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' };
   handoff: { large_group_enabled: boolean; large_group_minimum: number };
-  silence: { live_enabled?: boolean | null; enabled: boolean; v2_intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
+  silence: { live_enabled?: boolean | null; enabled: boolean; intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
 };
 
 export type ReceptionVersion = {
@@ -106,7 +103,7 @@ export function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value))
 export function normalizeConfig(value: ReceptionConfig): ReceptionConfig {
   const result = clone(value);
   result.common_scripts ??= [];
-  result.silence.v2_intervals_minutes ??= [1,120];
+  result.silence.intervals_minutes ??= [1,120];
   result.reply.tone_guidance ??= '';
   result.reply.opening_message ??= '您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？';
   result.reply.opening_messages ??= [result.reply.opening_message];
@@ -137,7 +134,7 @@ export function configurationChanges(before: ReceptionConfig, after: ReceptionCo
     reply: ['opening_items','opening_interval_seconds','goal','tone','tone_guidance','custom_guidance'],
     lead_capture: ['enabled','channels'], routing: ['outside_catalog_action'],
     handoff: ['large_group_enabled','large_group_minimum'],
-    silence: ['enabled','live_enabled','v2_intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
+    silence: ['enabled','live_enabled','intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
   };
   const result: Record<string,unknown> = {};
   for (const [section, keys] of Object.entries(fields)) {

@@ -16,6 +16,8 @@ def compile_skills(db):
     config = get_reception_configuration(db)
     routes = {}
     for key, route in ROUTES.items():
+        if key not in config['routing']['enabled_route_variants']:
+            continue
         routes[key] = {
             'name': route['name'], 'aliases': route.get('selection_aliases', []),
             'facts': deepcopy(route['knowledge_facts']),
@@ -33,7 +35,7 @@ def compile_skills(db):
     bundle = {'routes': routes, 'common_scripts': config.get('common_scripts', []),
               'reply': config['reply'], 'silence': {k: v for k, v in config['silence'].items()
                                                   if not k.startswith('v2_')},
-              'lead_capture': config['lead_capture']}
+              'lead_capture': config['lead_capture'], 'routing': config['routing'], 'handoff': config['handoff']}
     bundle['digest'] = hashlib.sha256(json.dumps(bundle, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
     return bundle
 
@@ -64,7 +66,8 @@ class SkillRegistry:
             self.skills[name] = {'name': name, 'description': description, 'body': sections[2].strip()}
 
     def index(self):
-        return [{k: item[k] for k in ('name', 'description')} for item in self.skills.values()]
+        return [{k: item[k] for k in ('name', 'description')} for item in self.skills.values()
+                if item['name'] == 'tibet-reception' or item['name'].replace('-', '_') in self.bundle['routes']]
 
     def route_skill(self, route):
         name = route.replace('_', '-')
@@ -82,8 +85,10 @@ class SkillRegistry:
             # Opening content and delivery limits are executed by the service;
             # legacy topic-count triggers must not compete with the Skill.
             fields = {
-                'reply': ('tone', 'tone_guidance', 'custom_guidance'),
+                'reply': ('goal', 'tone', 'tone_guidance', 'custom_guidance'),
                 'silence': ('enabled', 'intervals_minutes'),
+                'handoff': ('large_group_enabled', 'large_group_minimum'),
+                'routing': ('enabled_route_variants', 'allow_route_switch', 'preserve_profile_on_switch', 'outside_catalog_action'),
                 'lead_capture': ('enabled', 'channels', 'require_supported_route',
                                  'require_party_size', 'require_departure_window'),
             }

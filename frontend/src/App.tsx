@@ -10,7 +10,6 @@ import { api, ApiError, DEMO_MODE } from './api';
 const Conversations = lazy(() => import('./pages/Conversations'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Overview = lazy(() => import('./pages/Overview'));
-const EvaluationReports = lazy(() => import('./pages/EvaluationReports'));
 const Handoff = lazy(() => import('./pages/Handoff'));
 const RouteProducts = lazy(() => import('./pages/RouteProducts'));
 const AiReceptionStrategy = lazy(() => import('./pages/AiReceptionStrategy'));
@@ -22,7 +21,6 @@ const navigation = [
   { id: 'playground', label: 'AI 演练场', icon: FlaskConical },
   { id: 'conversations', label: '会话控制台', icon: MessageCircleMore },
   { id: 'handoff', label: '人工接管', icon: Headphones },
-  { id: 'evaluation', label: '回放与资料', icon: FlaskConical },
   { id: 'products', label: '线路配置', icon: MapPinned },
   { id: 'ai-strategy', label: '公共接待', icon: Bot },
   { id: 'knowledge', label: '通用知识', icon: BookOpenText },
@@ -110,7 +108,6 @@ function AuthenticatedApp({ onLogout }: { onLogout: () => Promise<void> }) {
         <Route path="/settings" element={role === 'admin' ? <Settings notify={setToast} /> : <Navigate to="/conversations" replace />} />
         <Route path="/overview" element={role !== 'agent' ? <Overview onNavigate={go} /> : <Navigate to="/conversations" replace />} />
         <Route path="/playground" element={role !== 'agent' ? <AiPlayground /> : <Navigate to="/conversations" replace />} />
-        <Route path="/evaluation" element={<EvaluationReports />} />
         <Route path="/handoff" element={<Handoff notify={setToast} />} />
         <Route path="/products" element={role !== 'agent' ? <RouteProducts /> : <Navigate to="/conversations" replace />} />
         <Route path="/ai-strategy" element={role !== 'agent' ? <AiReceptionStrategy /> : <Navigate to="/conversations" replace />} />

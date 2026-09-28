@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 
 from app.config import settings
-from app.live_reply_models import LiveReplyJob
+from app.automation_models import AutomationRun, AutomationSession
 from app.models import ChatwootConnection, NotificationDelivery, WebhookEvent, WorkerHeartbeat
 from app.operations import setting_value
 from app.outbound_control import global_message_sending_enabled
@@ -24,7 +24,7 @@ def age_seconds(value):
 
 def runtime_health(db):
     required = (["live-reply-worker", "live-maintenance-worker"] if settings.app_profile == "live_reply"
-                else ["evaluation-worker"] if settings.app_profile == "evaluation" else [])
+                else ["playground-worker"] if settings.app_profile == "evaluation" else [])
     if settings.app_profile == "live_reply" and settings.relay_enabled:
         required.append("live-relay-worker")
     workers = {}
@@ -38,12 +38,15 @@ def runtime_health(db):
             reasons.append(f"worker_stale:{name}")
 
     def queue(model, statuses, time_column):
-        count, oldest = db.execute(select(func.count(), func.min(time_column)).select_from(model).where(model.status.in_(statuses))).one()
+        query = select(func.count(), func.min(time_column)).select_from(model).where(model.status.in_(statuses))
+        if model is AutomationRun:
+            query = query.where(AutomationRun.session_id.in_(select(AutomationSession.id).where(AutomationSession.environment == 'live')))
+        count, oldest = db.execute(query).one()
         return {"count": count, "oldest_age_seconds": age_seconds(oldest)}
 
     queues = {
         "events": queue(WebhookEvent, ["pending", "retry"], WebhookEvent.received_at),
-        "replies": queue(LiveReplyJob, ["queued", "processing"], LiveReplyJob.created_at),
+        "replies": queue(AutomationRun, ["processing"], AutomationRun.created_at),
         "notifications": queue(NotificationDelivery, ["pending", "retry"], NotificationDelivery.available_at),
     }
     failures = {

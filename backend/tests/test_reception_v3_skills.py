@@ -18,7 +18,8 @@ def context(route=''):
             'groups': {'map': {'text': f'INTRO_ONLY_{days}', 'assets': [f'map-{days}']}},
             'introduction_sequence': ['map'], 'facts': [{'id': 'price', 'text': f'FACT_ONLY_{days}'}]}
     return {'event': 'customer_message', 'route_variant': route, 'messages': [],
-            'skills': {'routes': routes, 'reply': {}, 'silence': {}, 'lead_capture': {}, 'common_scripts': []},
+            'skills': {'routes': routes, 'reply': {}, 'silence': {}, 'lead_capture': {}, 'common_scripts': [],
+                       'routing': {'enabled_route_variants': list(routes)}, 'handoff': {}},
             'website_facts': [{'text': 'WEB_ONLY'}], 'website_version': 'site-2',
             'available_materials': [{'key': f'map-{d}', 'routes': [f'peach_{d}d_2027']} for d in (9, 11)]}
 

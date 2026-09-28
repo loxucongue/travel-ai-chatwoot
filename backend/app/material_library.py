@@ -10,7 +10,7 @@ from sqlalchemy.dialects.sqlite import insert
 
 from app.models import MaterialAsset, KnowledgeVersion, StoredMedia, InboxBinding, utcnow
 from app.automation_models import MaterialDelivery
-from app.route_reply import KNOWLEDGE_VERSION as ROUTES_1_2_VERSION
+from app.route_packages import KNOWLEDGE_VERSION as ROUTES_1_2_VERSION
 from app.asset_narratives import normalized_asset_narrative
 
 CATALOG_VERSION = "materials-20260826-v1"
@@ -91,24 +91,6 @@ def _binding_revision(asset, media, digest, *, allow_current_hash_alias=False):
     return None
 
 
-def material_live_approved(db, asset, media, *, expected_hash=None):
-    """Check both current asset-wide permission and the exact revision's approval."""
-    if asset is None or media is None:
-        return False
-    db.refresh(asset)
-    version = db.get(KnowledgeVersion, asset.knowledge_version_id)
-    if not version or version.tenant_id != media.tenant_id or not Path(media.storage_path).is_file():
-        return False
-    digest = hashlib.sha256(Path(media.storage_path).read_bytes()).hexdigest()
-    revision = _binding_revision(asset, media, digest)
-    current = asset.metadata_json or {}
-    if expected_hash and digest != expected_hash:
-        return False
-    return bool(asset.available and current.get("review_state") == "evaluation_ready"
-                and current.get("live_approved") is True and revision
-                and revision.get("file_hash") == digest and revision.get("available")
-                and revision.get("metadata", {}).get("review_state") == "evaluation_ready"
-                and revision.get("metadata", {}).get("live_approved") is True)
 
 
 def catalog_assets(db, tenant_id=None):
@@ -177,14 +159,14 @@ def material_info(db, item, route="", tenant_id=None):
     if asset:
         db.refresh(asset)
         current_meta = asset.metadata_json or {}
-        if not asset.available or current_meta.get("review_state") != "evaluation_ready":
-            raise ValueError("material_review_required")
+        if not asset.available:
+            raise ValueError("material_unavailable")
         revision = _binding_revision(asset, media, digest, allow_current_hash_alias=not item.get("asset_key"))
         if revision is None:
             raise ValueError("material_binding_changed")
         meta = revision.get("metadata") or {}
-        if not revision.get("available") or meta.get("review_state") != "evaluation_ready":
-            raise ValueError("material_review_required")
+        if not revision.get("available"):
+            raise ValueError("material_unavailable")
         if digest != revision.get("file_hash"):
             raise ValueError("material_revision_changed")
         if revision.get("media_type") != media.media_type:
@@ -213,21 +195,6 @@ def material_info(db, item, route="", tenant_id=None):
             "content_type": media.media_type, "route_variant": effective_route if asset else route}
 
 
-def freeze_nodes(db, nodes, route, tenant_id):
-    from app.sop_schedule import content_items
-    frozen = []
-    for node in nodes:
-        items, families = [], set()
-        for item in content_items(node):
-            if item.get("content_type", "text") != "text":
-                info = material_info(db, item, route, tenant_id)
-                if info["content_family"] in families:
-                    raise ValueError("duplicate_material_in_group")
-                families.add(info["content_family"])
-                item = {**item, **info}
-            items.append(item)
-        frozen.append({**node, "messages": items} if node.get("messages") is not None else {**node, **items[0], "key": node["key"]})
-    return frozen
 
 
 def candidate_materials(db, tenant_id):
@@ -241,7 +208,7 @@ def candidate_materials(db, tenant_id):
              "content_group_key": a.metadata_json.get("content_group_key", ""),
              **normalized_asset_narrative(a.metadata_json)}
             for a in catalog_assets(db, tenant_id)
-            if a.available and a.metadata_json.get("review_state") == "evaluation_ready"
+            if a.available
             and Path(a.source_path).is_file()]
 
 
@@ -269,41 +236,4 @@ def resolve_materials(db, keys, route, tenant_id, *, snapshot=None):
         if info["content_family"] not in families:
             result.append(info)
             families.add(info["content_family"])
-    if len(result) > 2:
-        raise ValueError("too_many_materials")
     return result
-
-
-def same_content_group(asset: MaterialAsset | None, info: dict) -> bool:
-    """Match equivalent reviewed content even when AI and SOP use different files."""
-    if not asset or not info.get("content_group_key"):
-        return False
-    route, separator, group = str(info["content_group_key"]).partition(":")
-    if not separator or not group:
-        return False
-    metadata = asset.metadata_json or {}
-    return (metadata.get("content_group_key") == group
-            and route in (metadata.get("route_variants") or []))
-
-
-def claim_key(subject, family):
-    # Re-enrollment and route changes must not reset the same photo's history.
-    return hashlib.sha256(f"{subject}|{family}".encode()).hexdigest()
-
-
-def previous_delivery(db, subject, info, *, include_group=False):
-    # Families describe related pictures, not proof that these exact bytes were sent.
-    return db.scalar(select(MaterialDelivery).where(MaterialDelivery.subject_key == subject,
-        MaterialDelivery.asset_hash == info["media_hash"], MaterialDelivery.status == "simulated_delivered")
-        .order_by(MaterialDelivery.confirmed_at.desc()))
-
-
-def record_delivery(db, session, subject, info, business_key, source, route, *, resend=False):
-    key = claim_key(subject, f"sha256:{info['media_hash']}")
-    if resend:
-        key = hashlib.sha256(f"{key}|explicit:{business_key}".encode()).hexdigest()
-    result = db.execute(insert(MaterialDelivery).values(claim_key=key, subject_key=subject, session_id=session.id,
-        business_key=business_key, content_family=info["content_family"], content_group_key=info.get("content_group_key", ""), asset_hash=info["media_hash"],
-        media_id=info["media_id"], source=source, route_variant=route, status="simulated_delivered",
-        confirmed_at=session.virtual_now).on_conflict_do_nothing(index_elements=[MaterialDelivery.claim_key]))
-    return bool(result.rowcount)

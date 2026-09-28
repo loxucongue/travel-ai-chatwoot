@@ -121,17 +121,16 @@ export default function AiReceptionStrategy() {
     if (!items.length || items.length > 10) return '开场消息需包含 1 至 10 条。';
     if (items.some(item => !/^[a-zA-Z0-9_-]{1,80}$/.test(item.key)) || new Set(items.map(item => item.key)).size !== items.length) return '开场消息标识无效或重复，请重新读取配置。';
     if (items.some(item => !['text', 'image', 'video'].includes(item.content_type))) return '开场消息类型不支持。';
-    if (items.some(item => Array.from(item.content.trim()).length > draft.reply.max_characters || (item.content_type === 'text' ? !item.content.trim() : !Number.isInteger(item.media_id) || Number(item.media_id) <= 0))) return '请填写开场文字或上传附件，文字和附件说明不得超过回复字数上限。';
+    if (items.some(item => Array.from(item.content.trim()).length > draft.reply.opening_character_limit || (item.content_type === 'text' ? !item.content.trim() : !Number.isInteger(item.media_id) || Number(item.media_id) <= 0))) return '请填写开场文字或上传附件，文字和附件说明不得超过回复字数上限。';
     const media = items.filter(item => item.content_type !== 'text');
     if (new Set(media.map(item => item.media_id)).size !== media.length || new Set(media.filter(item => item.media_hash).map(item => item.media_hash)).size !== media.filter(item => item.media_hash).length) return '开场消息不能重复使用同一附件。';
     if (media.some(item => previewStatus[`${item.content_type}:${item.media_id}`] === 'error')) return '附件预览失败，请检查或重新上传后再发布。';
     if (media.some(item => item.content_type === 'video' && previewStatus[`video:${item.media_id}`] !== 'ready')) return '请等待视频预览就绪后再发布。';
     if (!Number.isInteger(draft.reply.opening_interval_seconds) || draft.reply.opening_interval_seconds < 1 || draft.reply.opening_interval_seconds > 30) return '开场消息间隔需为1至30秒。';
     if (draft.reply.custom_guidance.length > 40000) return '其他全局说明最多 40000 字。';
-    if (draft.reply.max_characters < 80 || draft.reply.max_characters > 200) return '单次回复上限必须在 80–200 字之间。';
-    if (draft.reply.max_images_per_turn < 0 || draft.reply.max_images_per_turn > 2) return '单次图片数量必须在 0–2 张之间。';
+    if (draft.reply.opening_character_limit < 80 || draft.reply.opening_character_limit > 200) return '单次回复上限必须在 80–200 字之间。';
     if (draft.lead_capture.enabled && !draft.lead_capture.channels.length) return '开启留资后，至少选择一种联系方式。';
-    const intervals = draft.silence.v2_intervals_minutes ?? [];
+    const intervals = draft.silence.intervals_minutes ?? [];
     if (!intervals.length || intervals.some(value => !Number.isInteger(value) || value < 1) || intervals.reduce((sum, value) => sum + value, 0) >= 1435) return '请填写有效的跟进间隔，总时长应少于 1435 分钟。';
     if (draft.common_scripts.some(item => !item.name.trim() || !item.scenario.trim() || !item.text.trim())) return '请补全话术名称、适用场景和正文。';
     return '';
@@ -176,8 +175,8 @@ export default function AiReceptionStrategy() {
           <div className="strategy-card-title"><h3>沉默跟进</h3><Switch checked={draft.silence.enabled} onChange={enabled => patch(config => {config.silence.enabled=enabled;})} /></div>
           <div className="strategy-card-title"><strong>用于真实客户</strong><Switch checked={draft.silence.live_enabled ?? configQuery.data.runtime.live_silence_enabled} disabled={!draft.silence.enabled} onChange={enabled => patch(config => {config.silence.live_enabled=enabled;})} /></div>
           <p>第一项从回复完成计算，后续从上一次跟进计算。</p>
-          {(draft.silence.v2_intervals_minutes ?? []).map((minutes,index) => <div className="strategy-field-grid" key={index}><label>第 {index+1} 次间隔（分钟）<input type="number" min={1} max={1434} value={minutes} onChange={event => patch(config => {config.silence.v2_intervals_minutes![index]=Number(event.target.value);})} /></label><button className="icon-button" aria-label={`删除第 ${index+1} 次跟进`} disabled={draft.silence.v2_intervals_minutes!.length===1} onClick={() => patch(config => {config.silence.v2_intervals_minutes!.splice(index,1);})}><Trash2 size={16} /></button></div>)}
-          <button className="secondary-button compact" disabled={(draft.silence.v2_intervals_minutes?.length ?? 0)>=20} onClick={() => patch(config => {config.silence.v2_intervals_minutes!.push(120);})}><Plus size={14} />添加跟进</button>
+          {(draft.silence.intervals_minutes ?? []).map((minutes,index) => <div className="strategy-field-grid" key={index}><label>第 {index+1} 次间隔（分钟）<input type="number" min={1} max={1434} value={minutes} onChange={event => patch(config => {config.silence.intervals_minutes![index]=Number(event.target.value);})} /></label><button className="icon-button" aria-label={`删除第 ${index+1} 次跟进`} disabled={draft.silence.intervals_minutes!.length===1} onClick={() => patch(config => {config.silence.intervals_minutes!.splice(index,1);})}><Trash2 size={16} /></button></div>)}
+          <button className="secondary-button compact" disabled={(draft.silence.intervals_minutes?.length ?? 0)>=20} onClick={() => patch(config => {config.silence.intervals_minutes!.push(120);})}><Plus size={14} />添加跟进</button>
           <div className="strategy-field-grid"><label>开始时间<input type="time" value={draft.silence.active_start} onChange={event => patch(config => {config.silence.active_start=event.target.value;})} /></label><label>结束时间<input type="time" value={draft.silence.active_end} onChange={event => patch(config => {config.silence.active_end=event.target.value;})} /></label><label>每日最多触达<input type="number" min={1} max={20} value={draft.silence.max_proactive_messages_per_day} onChange={event => patch(config => {config.silence.max_proactive_messages_per_day=Number(event.target.value);})} /></label></div>
         </div>}
       </section>

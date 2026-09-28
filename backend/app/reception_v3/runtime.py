@@ -6,7 +6,7 @@ import time
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import settings
-from app.deepseek_evaluation import _post_with_deadline, _call_log, EvaluationCallError
+from app.model_transport import _post_with_deadline, _call_log, EvaluationCallError
 from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
 from app.reception_v3.prompt import SYSTEM_PROMPT

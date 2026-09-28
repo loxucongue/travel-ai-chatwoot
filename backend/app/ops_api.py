@@ -29,9 +29,6 @@ from app.models import (
     Notification,
     NotificationRead,
     OutboundMessage,
-    SopDefinition,
-    SopEnrollment,
-    SopJob,
     StoredMedia,
     SyncJob,
     Tenant,
@@ -80,32 +77,15 @@ def set_global_message_sending(
 
     cancelled_replies = cancelled_sop_jobs = cancelled_enrollments = 0
     if not payload.enabled:
-        from app.automation_models import LiveSopEnrollment, LiveSopJob
-        from app.live_reply_models import LiveReplyJob
-
-        now = utcnow()
-        for job in db.scalars(select(LiveReplyJob).where(
-            LiveReplyJob.status.in_(["queued", "processing", "retry"])
-        )).all():
-            job.status = "cancelled"
-            job.error_code = "global_message_sending_disabled"
-            job.completed_at = now
-            cancelled_replies += 1
-        for enrollment in db.scalars(select(LiveSopEnrollment).where(
-            LiveSopEnrollment.status == "active"
-        )).all():
-            enrollment.status = "cancelled"
-            enrollment.exit_reason = "global_message_sending_disabled"
-            enrollment.completed_at = now
-            cancelled_enrollments += 1
-            for job in db.scalars(select(LiveSopJob).where(
-                LiveSopJob.enrollment_id == enrollment.id,
-                LiveSopJob.status.in_(["scheduled", "processing", "retry"]),
-            )).all():
-                job.status = "cancelled"
-                job.reason = "global_message_sending_disabled"
-                job.completed_at = now
-                cancelled_sop_jobs += 1
+        from app.automation_models import AutomationSession
+        from app.reception_v3 import service
+        for session in db.scalars(select(AutomationSession).where(AutomationSession.environment == 'live')):
+            if session.controls.get('simulation', {}).get('status') == 'running':
+                service.control(session, 'stop')
+                value = service.state(session)
+                value['last_reason'] = 'global_message_sending_disabled'
+                service.save(session, value)
+                cancelled_replies += 1
         db.commit()
 
     return {
@@ -159,37 +139,16 @@ def set_ai_reception_rollout(
 
     cancelled_replies = cancelled_enrollments = cancelled_sop_jobs = 0
     if payload.allowlist_enabled:
-        from app.automation_models import LiveSopEnrollment, LiveSopJob
-        from app.live_reply_models import LiveReplyJob
-
-        now = utcnow()
-        for job in db.scalars(select(LiveReplyJob).where(
-            LiveReplyJob.status.in_(["queued", "processing", "retry"])
-        )).all():
-            conversation = db.get(ConversationState, job.conversation_state_id)
+        from app.automation_models import AutomationSession
+        from app.reception_v3 import service
+        for session in db.scalars(select(AutomationSession).where(AutomationSession.environment == 'live')):
+            conversation = db.get(ConversationState, session.conversation_state_id)
             if conversation and conversation.chatwoot_conversation_id not in ids:
-                job.status = "cancelled"
-                job.error_code = "ai_reception_allowlist_changed"
-                job.completed_at = now
+                service.control(session, 'stop')
+                value = service.state(session)
+                value['last_reason'] = 'ai_reception_allowlist_changed'
+                service.save(session, value)
                 cancelled_replies += 1
-        for enrollment in db.scalars(select(LiveSopEnrollment).where(
-            LiveSopEnrollment.status == "active"
-        )).all():
-            conversation = db.get(ConversationState, enrollment.conversation_state_id)
-            if not conversation or conversation.chatwoot_conversation_id in ids:
-                continue
-            enrollment.status = "cancelled"
-            enrollment.exit_reason = "ai_reception_allowlist_changed"
-            enrollment.completed_at = now
-            cancelled_enrollments += 1
-            for job in db.scalars(select(LiveSopJob).where(
-                LiveSopJob.enrollment_id == enrollment.id,
-                LiveSopJob.status.in_(["scheduled", "waiting_dependency", "processing", "retry"]),
-            )).all():
-                job.status = "cancelled"
-                job.reason = "ai_reception_allowlist_changed"
-                job.completed_at = now
-                cancelled_sop_jobs += 1
         db.commit()
 
     rollout = reception_rollout(db)
@@ -591,44 +550,20 @@ def restore_ai(task_id: int, payload: HandoffVersion, user: User = Depends(manag
         conversation.ai_label_present,
     )
     conversation.version += 1
+    from app.reception_v3.live import session_for
+    from app.reception_v3 import service as v3_service
+    session = session_for(db, conversation.id)
+    if session:
+        v3_service.control(session, 'resume')
+        value = v3_service.state(session)
+        value.update(handoff=False, handoff_created=False, pending_event=None,
+                     next_check_at=None, failed_event=None, buffered_questions=[])
+        v3_service.save(session, value)
     audit(db, user, "handoff.restore_ai", "handoff", task.id)
     db.commit()
     return {"ok": True, "labels": final, "ai_state": conversation.effective_ai_state}
 
 
-def sop_json(db: Session, row: SopDefinition) -> dict:
-    enrollments = db.scalar(select(func.count()).select_from(SopEnrollment).where(SopEnrollment.sop_id == row.id)) or 0
-    sent = db.scalar(select(func.count()).select_from(SopJob).join(SopEnrollment, SopJob.enrollment_id == SopEnrollment.id).where(SopEnrollment.sop_id == row.id, SopJob.status.in_(["submitted", "delivered"]))) or 0
-    blocked = db.scalar(select(func.count()).select_from(SopJob).join(SopEnrollment, SopJob.enrollment_id == SopEnrollment.id).where(SopEnrollment.sop_id == row.id, SopJob.status == "skipped")) or 0
-    from app.automation_models import (LiveSopEnrollment, LiveSopJob, RehearsalEnrollment,
-                                       RehearsalJob, SopVersion)
-    simulated = select(RehearsalJob).join(RehearsalEnrollment).where(RehearsalEnrollment.sop_id == row.id)
-    simulated_enrolled = db.scalar(select(func.count()).select_from(RehearsalEnrollment).where(RehearsalEnrollment.sop_id == row.id)) or 0
-    simulated_sent = db.scalar(select(func.count()).select_from(simulated.where(RehearsalJob.status == "simulated_delivered").subquery())) or 0
-    simulated_blocked = db.scalar(select(func.count()).select_from(simulated.where(RehearsalJob.status.in_(["blocked", "skipped", "cancelled", "expired"])).subquery())) or 0
-    live_enrolled = db.scalar(select(func.count()).select_from(LiveSopEnrollment).where(LiveSopEnrollment.sop_id == row.id)) or 0
-    live_sent = db.scalar(select(func.count()).select_from(LiveSopJob).join(
-        LiveSopEnrollment, LiveSopJob.enrollment_id == LiveSopEnrollment.id).where(
-            LiveSopEnrollment.sop_id == row.id, LiveSopJob.status == "submitted")) or 0
-    live_blocked = db.scalar(select(func.count()).select_from(LiveSopJob).join(
-        LiveSopEnrollment, LiveSopJob.enrollment_id == LiveSopEnrollment.id).where(
-            LiveSopEnrollment.sop_id == row.id,
-            LiveSopJob.status.in_(["blocked", "cancelled", "failed", "submission_unknown"]))) or 0
-    published = db.scalar(select(SopVersion).where(SopVersion.sop_id == row.id).order_by(SopVersion.version.desc()))
-    return {"id": row.id, "name": row.name, "description": row.description, "status": row.status,
-            "version": row.version, "published_version": published.version if published else None,
-            "published_nodes": published.config.get("nodes", []) if published else [],
-            "published_at": published.created_at if published else None,
-            "has_unpublished_changes": not published or published.version != row.version,
-            "dry_run": row.dry_run, "live_enabled": row.live_enabled, "trigger_type": row.trigger_type,
-            "trigger_labels": row.trigger_labels, "inbox_ids": row.inbox_ids, "nodes": row.nodes,
-            "exit_labels": row.exit_labels, "stop_on_incoming": row.stop_on_incoming,
-            "frequency_hours": row.frequency_hours, "route_variant": row.route_variant,
-            "test_conversation_ids": row.test_conversation_ids, "enrolled": enrollments, "sent": sent,
-            "blocked": blocked, "rehearsal_enrolled": simulated_enrolled,
-            "rehearsal_sent": simulated_sent, "rehearsal_blocked": simulated_blocked,
-            "live_enrolled": live_enrolled, "live_sent": live_sent, "live_blocked": live_blocked,
-            "updated_at": row.updated_at}
 
 
 @router.post("/media")
@@ -727,14 +662,6 @@ def bi_handoff_reasons(days: int = 30, user: User = Depends(manager), db: Sessio
     return {"items": [{"reason": reason, "count": count} for reason, count in rows]}
 
 
-@router.get("/bi/sop-performance")
-def bi_sop_performance(user: User = Depends(manager), db: Session = Depends(get_db)):
-    rows = db.scalars(select(SopDefinition).order_by(SopDefinition.updated_at.desc())).all()
-    allowed = allowed_inbox_ids(db, user)
-    if allowed is not None:
-        chatwoot_ids = set(db.scalars(select(InboxBinding.chatwoot_inbox_id).where(InboxBinding.id.in_(allowed))).all())
-        rows = [row for row in rows if not row.inbox_ids or bool(set(row.inbox_ids) & chatwoot_ids)]
-    return {"items": [sop_json(db, row) for row in rows]}
 
 
 def notification_visibility(db: Session, user: User):

@@ -34,8 +34,6 @@ def apply_receipt(db, out, status):
     if message:
         message.status = final
         message.attribution = out.source_type
-    from app.delivery_tracking import record_delivery_progress
-    record_delivery_progress(db, out)
     if changed and final == "failed" and out.source_type in {"ai", "sop"}:
         pause_failed_delivery(db, out)
     return bool(changed)
@@ -43,36 +41,12 @@ def apply_receipt(db, out, status):
 
 def pause_failed_delivery(db, out):
     """Stop continuation without sending, retrying, or committing the caller's transaction."""
-    from app.automation_models import LiveSopEnrollment, LiveSopJob
-    from app.live_reply_models import LiveReplyJob
+    from app.reception_v3.live import cancel
     from app.operations import ensure_handoff
-
-    state = db.get(ConversationState, out.conversation_state_id)
-    if state is None:
-        return
-    now = utcnow()
-    reason = "channel_send_failed"
-    out.error_code = reason
-    db.execute(update(LiveReplyJob).where(
-        LiveReplyJob.conversation_state_id == state.id,
-        LiveReplyJob.status.in_(["queued", "processing"]),
-    ).values(status="blocked", error_code=reason, completed_at=now))
-    enrollments = db.scalars(select(LiveSopEnrollment).where(
-        LiveSopEnrollment.conversation_state_id == state.id,
-        LiveSopEnrollment.status == "active",
-    )).all()
-    for enrollment in enrollments:
-        enrollment.status = "attention_required"
-        enrollment.exit_reason = reason
-        enrollment.completed_at = now
-        db.execute(update(LiveSopJob).where(
-            LiveSopJob.enrollment_id == enrollment.id,
-            LiveSopJob.status.in_(["scheduled", "waiting_dependency", "processing"]),
-        ).values(status="blocked", reason=reason, completed_at=now))
-    ensure_handoff(
-        db, state, reason,
-        f"渠道报告消息发送失败（出站记录 #{out.id}）。自动接待已暂停，请核对实际送达情况后处理；系统不会自动重发。",
-    )
+    state=db.get(ConversationState,out.conversation_state_id)
+    if state:
+        cancel(db,state.id,'channel_send_failed')
+        ensure_handoff(db,state,'channel_send_failed','渠道报告发送失败，请人工核对。系统不会自动重发。')
 
 
 def reconcile_live_delivery(checked=None):

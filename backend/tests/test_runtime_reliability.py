@@ -1,3 +1,4 @@
+from app.runtime_settings import iso
 import json
 from concurrent.futures import ThreadPoolExecutor, Future
 from datetime import timedelta
@@ -17,7 +18,7 @@ from app.models import (AppSetting, ChatwootConnection, ConversationState, Hando
                         MessageEvent, Notification, NotificationDelivery, WorkerHeartbeat, utcnow)
 from app.operations import ensure_handoff, save_setting
 from app.runtime_health import runtime_health
-from test_live_reply import setup
+from live_fixture import setup
 from app.live_reply_models import LiveReplyJob
 from app.models import WebhookEvent
 
@@ -25,7 +26,7 @@ from app.models import WebhookEvent
 def test_readiness_requires_live_workers_not_playground(session_factory, monkeypatch, client):
     setup(session_factory, monkeypatch)
     with session_factory() as db:
-        db.add_all([WorkerHeartbeat(worker_id="live-reply-worker", last_seen_at=live.iso(live.dt(utcnow()) - timedelta(hours=2))),
+        db.add_all([WorkerHeartbeat(worker_id="live-reply-worker", last_seen_at=iso(live.dt(utcnow()) - timedelta(hours=2))),
                     WorkerHeartbeat(worker_id="playground-worker", last_seen_at=utcnow())])
         db.commit()
         result = runtime_health(db)
@@ -127,7 +128,7 @@ def test_webhook_retries_with_stable_idempotency_key(session_factory, monkeypatc
 def test_overdue_reminders_are_deduplicated(session_factory, monkeypatch):
     notification_setup(session_factory, monkeypatch)
     with session_factory() as db:
-        db.scalar(select(HandoffTask)).sla_due_at = live.iso(live.dt(utcnow()) - timedelta(minutes=1))
+        db.scalar(select(HandoffTask)).sla_due_at = iso(live.dt(utcnow()) - timedelta(minutes=1))
         db.commit()
     assert dispatch.process_handoff_overdue(session_factory)
     assert not dispatch.process_handoff_overdue(session_factory)
@@ -148,51 +149,8 @@ def test_public_send_switch_cannot_be_bypassed_by_non_boolean_private(monkeypatc
         client.close()
 
 
-@pytest.mark.parametrize("case", ["overdue", "before_activation", "answered", "newer", "paused", "inbox_off"])
-def test_stale_messages_escalate_only_unanswered_post_activation(session_factory, monkeypatch, case):
-    setup(session_factory, monkeypatch)
-    old = live.iso(live.dt(utcnow()) - timedelta(minutes=10))
-    with session_factory() as db:
-        state = db.get(ConversationState, 1)
-        state.labels = ["ai"]
-        if case == "paused":
-            state.ai_mode, state.ai_mode_source = "disabled", "platform"
-        if case == "inbox_off":
-            state.inbox.ai_enabled = False
-        message = db.get(MessageEvent, 1)
-        message.created_at = old
-        armed = live.iso(live.dt(old) - timedelta(minutes=1)) if case != "before_activation" else utcnow()
-        if case in {"answered", "newer"}:
-            db.add(MessageEvent(conversation_state_id=1, chatwoot_message_id=101,
-                                direction="outgoing" if case == "answered" else "incoming", content="reply"))
-            db.flush()
-        result = live.handoff_stale_message(db, state, message, armed_at=armed)
-        assert result is (case == "overdue")
-        if result:
-            live.handoff_stale_message(db, state, message, armed_at=armed)
-            assert db.scalar(select(func.count()).select_from(HandoffTask)) == 1
 
 
-def test_slow_customer_does_not_block_other_customer_and_same_conversation_is_serial():
-    release = Event()
-    started = Event()
-    second = Event()
-    def slow(_):
-        started.set()
-        assert release.wait(5)
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        scheduler = worker.ConversationScheduler(pool, 2)
-        try:
-            assert scheduler.submit(1, slow, 1)
-            assert started.wait(5)
-            assert not scheduler.submit(1, lambda _: None, 2)
-            assert scheduler.submit(2, lambda _: second.set(), 3)
-            assert second.wait(5)
-            assert not scheduler.submit(3, lambda _: None, 4)  # Capacity reclaimed only on reap.
-        finally:
-            release.set()
-    scheduler.reap()
-    assert not scheduler.active
 
 
 def test_maintenance_runs_all_tasks_even_when_one_fails(monkeypatch, session_factory):
@@ -236,9 +194,9 @@ def test_notification_settings_validate_and_preserve_destination(authenticated):
 
 def test_delayed_webhook_creates_handoff_without_automatic_reply(session_factory, monkeypatch):
     setup(session_factory, monkeypatch)
-    old = live.iso(live.dt(utcnow()) - timedelta(minutes=10))
+    old = iso(live.dt(utcnow()) - timedelta(minutes=10))
     with session_factory() as db:
-        save_setting(db, "live_reply", {"armed_at": live.iso(live.dt(old) - timedelta(minutes=1))})
+        save_setting(db, "live_reply", {"armed_at": iso(live.dt(old) - timedelta(minutes=1))})
         event = WebhookEvent(connection_id=1, event="message_created", account_id=180474,
             resource_id="101", idempotency_key="delayed", received_at=old, payload={
                 "event": "message_created", "id": 101, "message_type": "incoming", "content": "Help",
@@ -248,49 +206,12 @@ def test_delayed_webhook_creates_handoff_without_automatic_reply(session_factory
         db.flush()
         live.mirror_event(db, event)
         assert db.scalar(select(HandoffTask)).reason_code == "reply_queue_overdue"
-        assert db.scalar(select(func.count()).select_from(LiveReplyJob)) == 1  # Only the fixture's existing job.
+        assert db.scalar(select(func.count()).select_from(LiveReplyJob)) == 0  # Retired engine jobs are never created.
         assert event.status == "live_observed"
 
 
-def test_queued_reply_that_expires_creates_handoff_without_sending(session_factory, monkeypatch):
-    fake = setup(session_factory, monkeypatch)
-    old = live.iso(live.dt(utcnow()) - timedelta(minutes=10))
-    fake.messages[0]["created_at"] = old
-    with session_factory() as db:
-        db.get(MessageEvent, 1).created_at = old
-        save_setting(db, "live_reply", {"armed_at": live.iso(live.dt(old) - timedelta(minutes=1))})
-        db.commit()
-    live.process_job(1)
-    assert not fake.sent
-    with session_factory() as db:
-        assert db.scalar(select(HandoffTask)).reason_code == "reply_queue_overdue"
-        assert db.get(LiveReplyJob, 1).trace["manual_followup_created"] is True
 
 
-def test_dispatch_skips_busy_conversation_and_limits_capacity(session_factory, monkeypatch):
-    setup(session_factory, monkeypatch)
-    monkeypatch.setattr(worker, "SessionLocal", session_factory)
-    class Executor:
-        def __init__(self):
-            self.calls = []
-        def submit(self, fn, job_id):
-            self.calls.append(job_id)
-            return Future()
-    with session_factory() as db:
-        db.add(ConversationState(id=2, tenant_id=1, inbox_binding_id=1, chatwoot_conversation_id=27))
-        db.flush()
-        db.add_all([MessageEvent(id=2, conversation_state_id=1, chatwoot_message_id=101, direction="incoming"),
-                    MessageEvent(id=3, conversation_state_id=2, chatwoot_message_id=102, direction="incoming")])
-        db.flush()
-        db.add_all([LiveReplyJob(id=2, conversation_state_id=1, trigger_message_id=2, due_at=utcnow()),
-                    LiveReplyJob(id=3, conversation_state_id=2, trigger_message_id=3, due_at=utcnow())])
-        db.commit()
-    executor = Executor()
-    scheduler = worker.ConversationScheduler(executor, 2)
-    worker.dispatch_due(scheduler)
-    assert executor.calls == [1, 3]
-    worker.dispatch_due(scheduler)
-    assert executor.calls == [1, 3]
 
 
 def test_private_notification_webhook_does_not_reactivate_handoff(session_factory, monkeypatch):

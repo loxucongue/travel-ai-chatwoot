@@ -17,14 +17,18 @@ class ReplyPolicy(Base):
 
 class AutomationSession(Base):
     __tablename__ = "automation_sessions"
+    __table_args__ = (Index('uq_v3_live_conversation', 'conversation_state_id', unique=True,
+                           sqlite_where=text("environment = 'live'")),)
     id: Mapped[int] = mapped_column(primary_key=True)
+    revision: Mapped[int] = mapped_column(default=1, server_default="1")
+    __mapper_args__ = {"version_id_col": revision}
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     inbox_binding_id: Mapped[int | None] = mapped_column(ForeignKey("inbox_bindings.id"))
     conversation_state_id: Mapped[int | None] = mapped_column(ForeignKey("conversation_states.id"))
     mode: Mapped[str] = mapped_column(String(20), default="reply")
     environment: Mapped[str] = mapped_column(String(20), default="playground")
-    engine_version: Mapped[str] = mapped_column(String(20), default="v1")
-    engine_release_id: Mapped[str] = mapped_column(String(100), default="v1")
+    engine_version: Mapped[str] = mapped_column(String(20), default="v3")
+    engine_release_id: Mapped[str] = mapped_column(String(100), default="v3")
     generation: Mapped[int] = mapped_column(default=0)
     virtual_now: Mapped[str] = mapped_column(String(40), default=utcnow)
     messages: Mapped[list] = mapped_column(JSON, default=list)

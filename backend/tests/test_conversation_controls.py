@@ -1,8 +1,13 @@
 from sqlalchemy import select
 
+
 from app.config import settings
+
+
 from app.models import (AppSetting, ChatwootConnection, Contact, ConversationState, InboxBinding,
                         MessageEvent, OutboundMessage, utcnow)
+
+
 from app.security import encrypt_secret
 
 
@@ -265,33 +270,6 @@ def test_facebook_quick_reply_is_sent_once_and_persisted(authenticated, session_
         assert outbound.content_type == "input_select"
         assert outbound.content_attributes["items"][1]["title"] == "桃花+珠峰11日"
         assert message.content_attributes == outbound.content_attributes
-
-
-def test_facebook_quick_reply_rejects_closed_automatic_window(authenticated, session_factory, monkeypatch):
-    from datetime import timedelta
-    from app.automation_service import dt, iso
-
-    client, csrf = authenticated
-    seed_conversation(session_factory)
-    fake = FakeChatwoot()
-    fake.messages[0]["created_at"] = iso(dt(utcnow()) - timedelta(hours=25))
-    monkeypatch.setattr("app.api.client_for", lambda _connection: fake)
-
-    response = client.post(
-        "/v1/conversations/10/quick-replies",
-        headers={"X-CSRF-Token": csrf},
-        json={
-            "content": "请问您想咨询哪条线路？",
-            "options": ["桃花9日", "桃花+珠峰11日"],
-            "request_key": "route-selector-stale-1",
-        },
-    )
-
-    assert response.status_code == 409
-    assert response.json()["error"]["code"] == "automatic_window_closed"
-    assert fake.calls == []
-    with session_factory() as db:
-        assert db.scalar(select(OutboundMessage)) is None
 
 
 def test_route_quick_reply_options_are_bounded_for_messenger(authenticated):

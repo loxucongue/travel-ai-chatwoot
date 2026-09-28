@@ -32,112 +32,8 @@ class RoutePackageError(RuntimeError):
     pass
 
 
-def _load_journey_policy() -> dict:
-    if not JOURNEY_POLICY_PATH.is_file():
-        raise RoutePackageError(f"journey_policy_missing:{JOURNEY_POLICY_PATH}")
-    policy = json.loads(JOURNEY_POLICY_PATH.read_text(encoding="utf-8"))
-    if policy.get("schema_version") != 1 or not str(policy.get("policy_version") or ""):
-        raise RoutePackageError("journey_policy_invalid")
-    style = _require(policy, "reply_style", dict, JOURNEY_POLICY_PATH)
-    silence = _require(policy, "silence_journey", dict, JOURNEY_POLICY_PATH)
-    handoff = _require(policy, "handoff", dict, JOURNEY_POLICY_PATH)
-    if not 1 <= int(style.get("max_questions_per_turn", 0)) <= 1:
-        raise RoutePackageError("journey_policy_question_limit_invalid")
-    if int(style.get("max_messages_per_turn", 0)) < 1:
-        raise RoutePackageError("journey_policy_message_limit_invalid")
-    if int(silence.get("mainline_after_minutes", 0)) < 1:
-        raise RoutePackageError("journey_policy_silence_delay_invalid")
-    delays = silence.get("wakeup_after_minutes")
-    if not isinstance(delays, list) or delays != sorted(set(delays)):
-        raise RoutePackageError("journey_policy_wakeup_delays_invalid")
-    large_group = handoff.get("large_group") or {}
-    if large_group.get("enabled") and int(large_group.get("minimum_party_size", 0)) < 2:
-        raise RoutePackageError("journey_policy_large_group_invalid")
-    return policy
 
 
-def _runtime_journey_sop(package: dict, policy: dict) -> dict:
-    """Compile reviewed route content into silence-driven proactive touches."""
-    source = deepcopy(package["sop"])
-    source_nodes = {
-        node.get("content_group_key"): node
-        for node in source.get("nodes", [])
-        if node.get("content_group_key") in package["content_sequence"]
-    }
-    candidates = [{
-        "content_group_key": group_key,
-        "skip_if_materials_provided": True,
-        "messages": deepcopy(source_nodes[group_key]["messages"]),
-    } for group_key in package["content_sequence"] if group_key in source_nodes]
-    initial_nodes = []
-    interval_seconds = int(
-        package.get("initial_delivery_interval_seconds", DEFAULT_INITIAL_DELIVERY_INTERVAL_SECONDS)
-    )
-    for index, group_key in enumerate(package["content_sequence"]):
-        group = package["content_groups"][group_key]
-        if not group.get("initial_delivery"):
-            continue
-        delivery_mode = group.get("delivery_mode", "assets_then_text")
-        asset_messages = [
-            {
-                "key": f"image_{asset_index}",
-                "content_type": "image",
-                "content": "",
-                "asset_key": asset_key,
-            }
-            for asset_index, asset_key in enumerate(group.get("asset_keys", []), 1)
-        ]
-        text_message = {
-            "key": "text",
-            "content_type": "text",
-            "content": str(group["approved_text"]),
-        }
-        if delivery_mode == "text_only":
-            messages = [text_message]
-        elif delivery_mode == "assets_only":
-            messages = asset_messages
-        elif delivery_mode == "text_then_assets":
-            messages = [text_message, *asset_messages]
-        else:
-            messages = [*asset_messages, text_message]
-        initial_nodes.append({
-            "key": f"initial_delivery_{group_key}",
-            "content_group_key": group_key,
-            "schedule_type": "relative",
-            "basis": "enrollment" if not initial_nodes else "previous_node",
-            "delay_minutes": 0,
-            "delay_seconds": 0 if not initial_nodes else interval_seconds,
-            "delivery_interval_seconds": interval_seconds,
-            "initial_delivery": True,
-            "skip_if_materials_provided": True,
-            "delivery_mode": delivery_mode,
-            "messages": messages,
-        })
-    silence = policy["silence_journey"]
-    delays = [
-        ("silence_mainline", int(silence["mainline_after_minutes"]), "silence_mainline", "enrollment"),
-        *[
-            (f"wakeup_{index}", int(delay), "wakeup", "previous_node")
-            for index, delay in enumerate(silence["wakeup_after_minutes"], 1)
-        ],
-    ]
-    source.update({
-        "description": "AI 实时接待后的客户沉默旅程：按运营配置的时间节点逐次推进；客户回复立即结束当前轮次。",
-        "frequency_hours": 24,
-        "ttl_hours": max(73, int(silence["stop_after_minutes"]) / 60 + 1),
-        "journey_policy_version": policy["policy_version"],
-        "nodes": [*initial_nodes, *[{
-            "key": key,
-            "content_group_key": "",
-            "schedule_type": "relative",
-            "basis": basis,
-            "delay_minutes": delay,
-            "journey_trigger": trigger,
-            "content_group_candidates": deepcopy(candidates),
-            "messages": [],
-        } for key, delay, trigger, basis in delays]],
-    })
-    return source
 
 
 def _require(value: dict, key: str, expected: type, source: Path) -> Any:
@@ -196,8 +92,7 @@ def _validate(package: dict, source: Path) -> dict:
     facts = _require(package, "knowledge_facts", list, source)
     groups = _require(package, "content_groups", dict, source)
     sequence = _require(package, "content_sequence", list, source)
-    sop = _require(package, "sop", dict, source)
-    policies = _require(package, "policies", dict, source)
+
 
     if len(required_slots) != len(set(required_slots)):
         raise RoutePackageError(f"route_package_duplicate_slots:{route_id}")
@@ -292,53 +187,8 @@ def _validate(package: dict, source: Path) -> dict:
         if any(asset not in all_asset_keys for asset in answer.get("asset_ids", [])):
             raise RoutePackageError(f"route_package_fixed_answer_asset_invalid:{route_id}:{answer_id}")
 
-    price_after = policies.get("price_after_group")
-    if price_after and price_after not in sequence:
-        raise RoutePackageError(f"route_package_price_gate_invalid:{route_id}")
-    for field in (
-        "entry_group", "price_group", "price_deferral_group", "departure_group",
-        "party_question_group", "departure_question_group", "contact_transition_group",
-        "contact_request_group",
-    ):
-        if policies.get(field) not in groups:
-            raise RoutePackageError(f"route_package_policy_group_invalid:{route_id}:{field}")
-    for field in ("departure_after_group", "contact_ready_after_group"):
-        if policies.get(field) not in groups:
-            raise RoutePackageError(f"route_package_policy_group_invalid:{route_id}:{field}")
-    party_groups = policies.get("party_intro_groups")
-    if (not isinstance(party_groups, dict)
-            or set(party_groups) != {"solo", "small", "group"}
-            or any(group_key not in groups for group_key in party_groups.values())):
-        raise RoutePackageError(f"route_package_party_groups_invalid:{route_id}")
-
-    nodes = _require(sop, "nodes", list, source)
-    node_keys: set[str] = set()
-    for node in nodes:
-        key = str(node.get("key") or "")
-        if not key or key in node_keys:
-            raise RoutePackageError(f"route_package_sop_node_invalid:{route_id}:{key}")
-        node_keys.add(key)
-        if node.get("schedule_type") != "relative" or node.get("basis") not in {
-            "enrollment", "previous_node", "customer_added"
-        }:
-            raise RoutePackageError(f"route_package_sop_schedule_invalid:{route_id}:{key}")
-        if not isinstance(node.get("delay_minutes"), int) or node["delay_minutes"] < 0:
-            raise RoutePackageError(f"route_package_sop_delay_invalid:{route_id}:{key}")
-        if not isinstance(node.get("delay_seconds", 0), int) or not 0 <= node.get("delay_seconds", 0) <= 3600:
-            raise RoutePackageError(f"route_package_sop_delay_seconds_invalid:{route_id}:{key}")
-        if not isinstance(node.get("delivery_interval_seconds", 0), int) or not 0 <= node.get("delivery_interval_seconds", 0) <= 60:
-            raise RoutePackageError(f"route_package_sop_delivery_interval_invalid:{route_id}:{key}")
-        messages = node.get("messages")
-        if not isinstance(messages, list) or not messages:
-            raise RoutePackageError(f"route_package_sop_messages_missing:{route_id}:{key}")
-        for message in messages:
-            content_type = message.get("content_type", "text")
-            if content_type == "text" and not str(message.get("content") or "").strip():
-                raise RoutePackageError(f"route_package_sop_text_missing:{route_id}:{key}")
-            if content_type != "text" and message.get("asset_key") not in {
-                asset for group in groups.values() for asset in group.get("asset_keys", [])
-            }:
-                raise RoutePackageError(f"route_package_sop_asset_invalid:{route_id}:{key}")
+    for legacy in ('sop', 'runtime_sop', 'journey_policy', 'policies'):
+        package.pop(legacy, None)
     return package
 
 
@@ -374,7 +224,7 @@ def load_route_packages() -> dict[str, dict]:
     return packages
 
 
-JOURNEY_POLICY = _load_journey_policy()
+
 ROUTE_PACKAGES: dict[str, dict] = {}
 ROUTE_BRANCH: dict[str, str] = {}
 _ROUTE_VIEW: ContextVar[dict | None] = ContextVar("route_catalog_view", default=None)
@@ -424,33 +274,6 @@ class RouteCatalog(MutableMapping):
 ROUTES = RouteCatalog()
 
 
-@contextmanager
-def route_catalog_context(route_variant: str = "", slots: dict | None = None, *, available_materials=None):
-    """Pin current choices and overlay verified history without global mutation."""
-    from app.route_reply import route_snapshot_from_values
-
-    snapshot = route_snapshot_from_values(route_variant, slots) if route_variant else None
-    if route_variant and snapshot is None:
-        raise ValueError("route_snapshot_unverifiable")
-    routes = ROUTES.current_snapshot()
-    materials = {str(item.get("key") or ""): item for item in available_materials or []}
-    for spec in routes.values():
-        keys = {key for group in spec.get("groups", {}).values() for key in group.get("assets", [])}
-        bindings = {}
-        for key in keys:
-            item = materials.get(key, {})
-            if item.get("media_hash"):
-                bindings[key] = {"asset_key": key, "media_hash": item["media_hash"],
-                                 "media_id": item.get("media_id"), "content_type": item.get("content_type")}
-        spec["asset_hashes"] = {key: item["media_hash"] for key, item in bindings.items()}
-        spec["asset_bindings"] = bindings
-    if snapshot is not None:
-        routes[route_variant] = snapshot
-    token = _ROUTE_VIEW.set(routes)
-    try:
-        yield
-    finally:
-        _ROUTE_VIEW.reset(token)
 
 
 ALL_GROUP_KEYS: list[str] = []
@@ -473,8 +296,6 @@ def reload_route_packages() -> None:
     global _REGISTRY_SIGNATURE
     load_route_packages.cache_clear()
     packages = load_route_packages()
-    for package in packages.values():
-        package["runtime_sop"] = _runtime_journey_sop(package, JOURNEY_POLICY)
     compiled = {
         key: {
         "branch": package["branch"],
@@ -506,10 +327,7 @@ def reload_route_packages() -> None:
             }
             for group_key, group in package["content_groups"].items()
         },
-        "policies": package["policies"],
         "fixed_answers": deepcopy(package.get("fixed_answers", [])),
-        "sop": package["runtime_sop"],
-        "journey_policy": JOURNEY_POLICY,
         }
         for key, package in packages.items()
     }
@@ -618,7 +436,7 @@ def route_package_summary() -> list[dict]:
             "default_entry_message": package["default_entry_message"],
             "required_slots": package["required_slots"],
             "content_groups": len(package["content_groups"]),
-            "sop_nodes": len(package["runtime_sop"]["nodes"]),
+            "sop_nodes": len(package["content_sequence"]),
         }
         for key, package in sorted(ROUTE_PACKAGES.items(), key=lambda item: _natural_key(item[0]))
     ]
