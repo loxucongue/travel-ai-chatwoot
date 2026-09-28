@@ -161,3 +161,43 @@ def test_api_v3_isolated_and_legacy_worker_does_not_consume(authenticated, sessi
         assert not advance_running_playgrounds(db)
     bad = client.post('/v1/playground/sessions', json={'engine_version': 'v3', 'mode': 'reply'}, headers={'X-CSRF-Token': csrf})
     assert bad.status_code == 422
+
+
+def test_default_configured_timer_runs_without_model_delay(session_factory, monkeypatch):
+    config = bundle()
+    config['silence']['intervals_minutes'] = [3, 5]
+    events = []
+    def model(c):
+        events.append(c['event'])
+        return answer(action='wait' if c['event'] == 'silence_due' else 'reply',
+                      messages=[] if c['event'] == 'silence_due' else [{'text': '請問幾位呢？'}])
+    monkeypatch.setattr(service, 'run_agent', model)
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        monkeypatch.setattr(service, 'compile_skills', lambda db: deepcopy(config))
+        for _ in range(3): step(db, row)
+        step(db, row, 179); assert events == ['customer_message']
+        step(db, row, 1); assert events[-1] == 'silence_due'
+        assert service.date(service.state(row)['next_check_at']) - service.date(row.virtual_now) == timedelta(minutes=5)
+        step(db, row, 300)
+        assert events == ['customer_message', 'silence_due', 'silence_due']
+        assert not service.state(row)['next_check_at']
+
+
+def test_explicit_model_stop_ends_configured_timers(session_factory, monkeypatch):
+    config = bundle()
+    config['silence']['intervals_minutes'] = [3, 5]
+    monkeypatch.setattr(service, 'run_agent', lambda c: answer(action='wait', stop_followup=True))
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        monkeypatch.setattr(service, 'compile_skills', lambda db: deepcopy(config))
+        step(db, row); step(db, row)
+        assert not service.state(row)['next_check_at']
+
+
+def test_model_text_is_unchanged_even_when_reference_is_only_a_hint(session_factory, monkeypatch):
+    monkeypatch.setattr(service, 'run_agent', lambda c: answer(messages=[{'text': '完整原稿，不裁剪。', 'script_id': 'not-a-script'}]))
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        for _ in range(3): step(db, row)
+        assert delivered(row)[-1] == '完整原稿，不裁剪。'

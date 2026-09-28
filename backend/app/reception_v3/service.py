@@ -8,6 +8,7 @@ from sqlalchemy import select, update
 from app.automation_models import AutomationRun, AutomationSession
 from app.material_library import candidate_materials, resolve_materials, tenant_for_session
 from app.models import utcnow
+from app.model_metering import calls, metrics
 from app.opening_messages import delivery_items, opening_media_info
 from app.reception_v3 import release_id
 from app.reception_v3.runtime import run_agent
@@ -54,6 +55,7 @@ def add_message(db, row, content, client_key, content_type='text'):
     value['buffered_questions'] = [*value.get('buffered_questions', []), client_key]
     value['next_check_at'] = None
     value['next_check_minutes'] = None
+    value['silence_step'] = 0
     value['pending_event'] = 'customer_message'
     # Handoff remains terminal for automatic reception. A new user question
     # after opt-out is different: it may be answered without restoring outreach.
@@ -94,6 +96,8 @@ def scripts(bundle, route):
               for s in bundle['common_scripts'] if s.get('enabled', True)}
     result.update({s['id']: {'text': s['answer_text'], 'assets': s.get('asset_ids', [])}
                    for s in bundle['routes'].get(route, {}).get('scripts', []) if s.get('status') == 'active'})
+    for key, group in bundle['routes'].get(route, {}).get('groups', {}).items():
+        result.setdefault(key, {'text': group['text'], 'assets': group['assets']})
     return result
 
 
@@ -110,7 +114,7 @@ def parts_for(db, row, bundle, decision):
     available = scripts(bundle, route)
     for message in decision['messages']:
         script = available.get(message['script_id']) if message['script_id'] else None
-        if message['script_id'] and script is None:
+        if message['script_id'] and not message['text'] and script is None:
             raise ValueError('v3_unknown_script')
         add(message['text'] or (script['text'] if script else ''),
             message['asset_keys'] or (script['assets'] if script else []))
@@ -150,9 +154,16 @@ def apply_decision(db, row, run, bundle, decision):
     value['pending_event'] = None
     value['buffered_questions'] = []
     value['next_check_at'] = None
-    value['next_check_minutes'] = None if value.get('opt_out') or value.get('handoff') or not bundle['silence']['enabled'] else decision['next_check_minutes']
+    step = value.get('silence_step', 0) + (1 if run.input_snapshot.get('event') == 'silence_due' else 0)
+    value['silence_step'] = step
+    intervals = bundle['silence'].get('intervals_minutes', [])
+    configured_delay = intervals[step] if step < len(intervals) else None
+    stopped = value.get('opt_out') or value.get('handoff') or decision.get('stop_followup') or not bundle['silence']['enabled']
+    value['next_check_minutes'] = None if stopped else (decision['next_check_minutes'] or configured_delay)
     value['last_reason'] = decision['reason']
     kind = 'introduction' if decision['start_introduction'] else 'reply'
+    if decision['start_introduction']:
+        value['introduction_route'] = route
     interval = bundle['routes'].get(route, {}).get('interval_seconds', bundle['reply']['opening_interval_seconds'])
     append_plan(row, value, parts, kind, interval, run.id)
     if not parts and value['next_check_minutes']:
@@ -188,6 +199,8 @@ def advance(row, wall_now=None):
             kind = value.pop('delivery_kind', None)
             value['delivery_due_at'] = None
             if kind == 'introduction':
+                value['completed_introductions'] = list(dict.fromkeys([
+                    *value.get('completed_introductions', []), value.get('introduction_route')]))
                 value['pending_event'] = 'introduction_completed'
                 row.due_at = utcnow()
             elif kind != 'opening' and value.get('next_check_minutes'):
@@ -253,7 +266,8 @@ def tick(db, *, session_id=None, wall_now=None):
                    'buffered_questions': [m for m in row.messages if m.get('id') in value.get('buffered_questions', [])],
                    'available_materials': candidate_materials(db, tenant_for_session(db, row))}
         context['website_facts'], context['website_version'] = active_web_facts(
-            db, tenant_for_session(db, row), '', environment='playground', candidate_pool=True)
+            db, tenant_for_session(db, row), '\n'.join(m.get('content', '') for m in context['messages']
+                if m.get('direction') == 'incoming'), environment='playground', candidate_pool=True)
         run = AutomationRun(session_id=row.id, generation=row.generation, module='silence_touch' if event == 'silence_due' else 'reply',
                             idempotency_key=f'v3:{row.id}:{uuid4().hex}', status='processing', input_snapshot=context,
                             lease_until=later(utcnow(), 90))
@@ -271,12 +285,15 @@ def tick(db, *, session_id=None, wall_now=None):
         db.commit()
         db.refresh(row)
         run_id, generation = run.id, row.generation
+        http_calls = []
+        meter_token = calls.set(http_calls)
+        decision, logs = None, []
         try:
             decision, logs, digest = run_agent(context)
             db.refresh(row)
             run = db.get(AutomationRun, run_id)
             run.trace = {'engine_version': 'v3', 'event': event, 'skill_digest': bundle['digest'],
-                         'logs': logs, 'request_hash': digest, 'outbound': False}
+                         'logs': logs, 'request_hash': digest, 'outbound': False, **metrics(http_calls)}
             run.decision = decision
             if row.generation != generation or row.controls.get('simulation', {}).get('status') == 'stopped':
                 run.status, run.error_code = 'cancelled', 'superseded'
@@ -288,12 +305,17 @@ def tick(db, *, session_id=None, wall_now=None):
             db.refresh(row)
             run = db.get(AutomationRun, run_id)
             run.status, run.error_code = 'failed', str(exc)[:120]
+            run.decision = decision or {}
+            run.trace = {'engine_version': 'v3', 'event': event, 'outbound': False,
+                         'logs': logs or getattr(exc, 'calls', []), **metrics(http_calls)}
             if row.generation == generation:
                 value = state(row)
                 value['pending_event'] = None
                 value['last_error'] = str(exc)[:200]
                 save(row, value)
                 row.due_at = None
+        finally:
+            calls.reset(meter_token)
         run.completed_at, run.lease_until = utcnow(), None
         db.commit()
         return True

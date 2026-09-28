@@ -545,7 +545,7 @@ function RehearsalRunner(props: {
       </div>
       <div className="ai-chat-topbar-actions">
         <span className="ai-chat-safe"><ShieldCheck size={13} />沙盒</span>
-        <button title="立即测试下一次沉默跟进" disabled={props.busy || props.processing || !running || !nextJob} onClick={props.onAdvanceNext}><FastForward size={17} /><span>测试下一次跟进</span></button>
+        <button title="立即测试下一次沉默跟进" disabled={props.busy || props.processing || !running || (!nextJob && !session.reception_state?.next_touch_at)} onClick={props.onAdvanceNext}><FastForward size={17} /><span>测试下一次跟进</span></button>
         <button onClick={() => setDetailsOpen(value => !value)}><PanelRight size={17} /><span>接待状态</span></button>
         <button title="新客户演练" disabled={props.busy} onClick={props.onCreate}><Plus size={17} /></button>
         <button className="danger" title="删除演练" disabled={props.busy} onClick={props.onDelete}><Trash2 size={16} /></button>
