@@ -1165,6 +1165,7 @@ def test_journey_api_auto_binds_route_sop_and_controls_run(authenticated, sessio
 
     response = client.post("/v1/playground/sessions", headers={"X-CSRF-Token": csrf}, json={
         "mode": "journey",
+        "engine_version": "v1",
         "inbox_binding_id": 1,
         "route_variant": ROUTE,
         "virtual_now": "2026-08-28T10:00:00+08:00",
@@ -1208,6 +1209,7 @@ def test_journey_api_can_advance_only_to_next_sandbox_touch(authenticated, sessi
 
     created = client.post("/v1/playground/sessions", headers={"X-CSRF-Token": csrf}, json={
         "mode": "journey",
+        "engine_version": "v1",
         "inbox_binding_id": 1,
         "route_variant": ROUTE,
         "virtual_now": "2026-08-28T10:00:00+08:00",

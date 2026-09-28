@@ -803,7 +803,9 @@ class SessionCreate(BaseModel):
     speed_multiplier:int=Field(default=1,ge=1,le=3600)
     entry_message:str=Field(default="",max_length=4000)
     sop_version_id:int|None=None
-    engine_version:Literal["v1","v2","v3"]=Field(default_factory=lambda: settings.ai_engine_default)
+    engine_version:Literal["v1","v2","v3"]=Field(
+        default_factory=lambda data: "v3" if data.get("mode") == "journey" else settings.ai_engine_default
+    )
 
 
 def journey_versions(db: Session, user: User, inbox_binding_id: int | None, route: str | None = None) -> list[tuple[SopVersion, SopDefinition]]:

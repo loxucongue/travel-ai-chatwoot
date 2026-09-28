@@ -476,7 +476,7 @@ function PlaygroundSidebar(props: {
     <div className="ai-chat-history-title">最近演练</div>
     <div className="ai-chat-history">
       {!props.sessions.length ? <p>还没有演练会话</p> : props.sessions.slice(0, 30).map(item => <div className={props.activeId === item.id ? 'active' : ''} key={item.id}>
-        <button onClick={() => props.onOpen(item.id)}><strong>模拟客户 #{item.id}</strong><small>{routeName(item.route_variant)} · {statusLabel(item.status)}</small></button>
+        <button onClick={() => props.onOpen(item.id)}><strong>模拟客户 #{item.id}</strong><small>{item.engine_version?.toUpperCase()} · {routeName(item.route_variant)} · {statusLabel(item.status)}</small></button>
         <button title="删除演练" disabled={props.busy} onClick={() => props.onDelete(item.id)}><Trash2 size={14} /></button>
       </div>)}
     </div>
