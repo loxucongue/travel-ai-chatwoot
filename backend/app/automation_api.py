@@ -636,6 +636,15 @@ def session_json(db,row):
         "next_touch_status": next_touch.status if next_touch else None,
         "last_warning": next((safe_text(x.get("content")) for x in reversed((row.controls or {}).get("timeline_events", [])) if x.get("event_type") == "silence_model_warning"), None),
     }
+    if row.engine_version == 'v3':
+        v3 = row.controls.get('v3', {})
+        simulation_view.update(next_event_at=v3.get('delivery_due_at') or v3.get('next_check_at'),
+                               next_event_name='线路介绍' if v3.get('delivery_kind') == 'introduction' else '沉默评估')
+        reception_state.update(next_touch_at=v3.get('next_check_at'), last_warning=v3.get('last_error'),
+                               journey_stage='handoff' if v3.get('handoff') else 'value_building')
+        if last_silence:
+            reception_state['last_touch'] = {**safe_text(last_silence.decision), 'touch_goal': 'nurture',
+                                            'touch_reason': last_silence.decision.get('reason', '')}
     return {"id":row.id,"mode":row.mode,"environment":row.environment,"engine_version":row.engine_version,"engine_release_id":row.engine_release_id,"generation":row.generation,"virtual_now":row.virtual_now,"messages":safe_text(row.messages),"memory":safe_text(row.memory),"controls":safe_text(row.controls),"simulation":simulation_view,"reception_state":reception_state,"pending":bool(row.due_at),"runs":[run_json(x) for x in runs],"jobs":[{"id":x.id,"enrollment_id":x.enrollment_id,"node_key":x.node_key,"scheduled_at":x.scheduled_at,"status":x.status,"reason":x.reason,"confirmed_at":x.confirmed_at,"payload":safe_text(x.payload)} for x in jobs],"enrollments":[{"id":x.id,"sop_id":x.sop_id,"version_id":x.sop_version_id,"round_number":x.round_number,"status":x.status,"enrolled_at":x.enrolled_at} for x in enrollments],"cycles":[cycle_json(x) for x in cycles],"outbound":False}
 
 
@@ -794,7 +803,7 @@ class SessionCreate(BaseModel):
     speed_multiplier:int=Field(default=1,ge=1,le=3600)
     entry_message:str=Field(default="",max_length=4000)
     sop_version_id:int|None=None
-    engine_version:Literal["v1","v2"]=Field(default_factory=lambda: settings.ai_engine_default)
+    engine_version:Literal["v1","v2","v3"]=Field(default_factory=lambda: settings.ai_engine_default)
 
 
 def journey_versions(db: Session, user: User, inbox_binding_id: int | None, route: str | None = None) -> list[tuple[SopVersion, SopDefinition]]:
@@ -1718,7 +1727,15 @@ def build_session(payload:SessionCreate,user:User,db:Session):
 
 @router.post("/playground/sessions",status_code=201)
 def create_session(payload:SessionCreate,user:User=Depends(manager_write),db:Session=Depends(get_db)):
+    if payload.engine_version == 'v3' and (payload.mode != 'journey' or payload.conversation_id):
+        fail('v3_requires_independent_journey', 422)
     row=build_session(payload,user,db)
+    if payload.engine_version == 'v3':
+        from app.reception_v3.service import start
+        start(db, row, payload.entry_message.strip() or (
+            ROUTES[payload.route_variant]['default_entry_message'] if payload.route_variant else '你好，我想咨询旅行行程'), payload.duration_minutes)
+        db.commit()
+        return session_json(db, row)
     if payload.mode == "journey":
         # A rehearsal represents wall-clock customer behaviour.  Keep this
         # authoritative on the server so an old cached UI cannot silently turn
@@ -1821,7 +1838,11 @@ def journey_action(session_id:int,action:Literal["pause","resume","stop"],user:U
     if row.environment != "playground" or row.mode != "journey":
         fail("journey_session_required", 422)
     try:
-        change_journey_status(db, row, action)
+        if row.engine_version == 'v3':
+            from app.reception_v3.service import control
+            control(row, action)
+        else:
+            change_journey_status(db, row, action)
     except ValueError as exc:
         fail(str(exc))
     db.commit()
@@ -1863,6 +1884,14 @@ def advance_journey_to_next_touch(session_id:int,user:User=Depends(manager_write
     state=simulation_state(row)
     if state.get("status") != "running":
         fail("journey_not_running",422)
+    if row.engine_version == 'v3':
+        from app.reception_v3.service import advance_next
+        try:
+            advance_next(row)
+        except ValueError as exc:
+            fail(str(exc), 409)
+        db.commit()
+        return session_json(db, row)
     active_run=db.scalar(select(AutomationRun.id).where(
         AutomationRun.session_id==row.id,
         AutomationRun.status.in_(["pending","processing"]),
@@ -1894,7 +1923,7 @@ def reset(session_id:int,user:User=Depends(manager_write),db:Session=Depends(get
     cancel_generation(db,row,"session_reset")
     row.generation+=1
     row.messages,row.memory,row.due_at,row.batch_started_at=[],{},None,None
-    row.controls = {k: v for k, v in row.controls.items() if k not in ("customer_added_at", "customer_added_source")}
+    row.controls = {k: v for k, v in row.controls.items() if k not in ("customer_added_at", "customer_added_source", "v3")}
     db.commit()
     return session_json(db,row)
 

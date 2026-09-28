@@ -91,7 +91,7 @@ type RunRecord = {
 
 type JourneySession = {
   id: number;
-  engine_version: 'v1' | 'v2';
+  engine_version: 'v1' | 'v2' | 'v3';
   engine_release_id: string;
   generation: number;
   environment: 'playground';
@@ -140,7 +140,7 @@ type SessionSummary = {
   created_at: string;
   route_variant?: RouteVariant;
   status?: string;
-  engine_version?: 'v1' | 'v2';
+  engine_version?: 'v1' | 'v2' | 'v3';
 };
 
 const ROUTE_NAMES: Record<RouteVariant, string> = {
@@ -319,7 +319,7 @@ function ReceptionPlayground() {
   const [inboxId, setInboxId] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [engineVersion, setEngineVersion] = useState<'v1' | 'v2'>('v2');
+  const [engineVersion, setEngineVersion] = useState<'v1' | 'v2' | 'v3'>('v3');
   const streamRef = useRef<HTMLDivElement>(null);
 
   const inboxes = useQuery({
@@ -487,7 +487,7 @@ function PlaygroundSidebar(props: {
   </aside>;
 }
 
-function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () => void; onOpenHistory: () => void; engineVersion: 'v1' | 'v2'; onEngineChange: (value: 'v1' | 'v2') => void }) {
+function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () => void; onOpenHistory: () => void; engineVersion: 'v1' | 'v2' | 'v3'; onEngineChange: (value: 'v1' | 'v2' | 'v3') => void }) {
   return <div className="ai-chat-home">
     <header className="ai-chat-topbar">
       <button className="ai-chat-mobile-menu" onClick={props.onOpenHistory} aria-label="打开会话列表"><Menu size={20} /></button>
@@ -499,11 +499,12 @@ function ChatHome(props: { inboxName?: string; loading: boolean; onCreate: () =>
       <h1>模拟一个新客户</h1>
       <p>点击开始后，AI 会像真实客服一样开场、识别线路、回答问题，并在客户沉默时继续跟进，直到取得联系方式或转人工。</p>
       <div className="ai-chat-engine-choice" role="group" aria-label="回复引擎">
+        <button className={props.engineVersion === 'v3' ? 'active' : ''} onClick={() => props.onEngineChange('v3')}><strong>V3 独立版本</strong><small>线路 Skill 接待</small></button>
         <button className={props.engineVersion === 'v2' ? 'active' : ''} onClick={() => props.onEngineChange('v2')}><strong>V2 当前版本</strong><small>按线路与客户需求回复</small></button>
         <button className={props.engineVersion === 'v1' ? 'active' : ''} onClick={() => props.onEngineChange('v1')}><strong>V1 历史版本</strong><small>用于回看与对比测试</small></button>
       </div>
       <button disabled={props.loading || !props.inboxName} onClick={props.onCreate}><Plus size={18} />{props.loading ? '正在准备...' : '开始新客户演练'}</button>
-      <small>{props.inboxName || '正在读取渠道'} · 未选线路 30 分钟一次，选线后按 1/3/5/10/30/60 分钟推进 · outbound=false</small>
+      <small>{props.inboxName || '正在读取渠道'} · 沙盒演练，不联系真实客户</small>
     </section>
   </div>;
 }

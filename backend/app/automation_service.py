@@ -270,6 +270,9 @@ def apply_controls(db: Session, session: AutomationSession, changes: dict) -> se
 def add_customer_message(db: Session, session: AutomationSession, content: str, client_key: str,
                          content_type: str = "text", *, queue_reply: bool = True,
                          trigger_entry_sops: bool = True) -> None:
+    if session.engine_version == 'v3':
+        from app.reception_v3.service import add_message
+        return add_message(db, session, content, client_key, content_type)
     if any(x.get("client_key") == client_key for x in session.messages):
         return
     intro_run_ids = {m.get('run_id') for m in session.messages if m.get('status') == 'draft'}
@@ -323,7 +326,7 @@ def add_customer_message(db: Session, session: AutomationSession, content: str, 
 
 
 def queue_passive(db: Session, environment: str | None = None, *, session_id: int | None = None) -> bool:
-    query = select(AutomationSession).where(AutomationSession.due_at <= utcnow())
+    query = select(AutomationSession).where(AutomationSession.due_at <= utcnow(), AutomationSession.engine_version != 'v3')
     if environment:
         query = query.where(AutomationSession.environment == environment)
     if session_id is not None:
@@ -384,7 +387,8 @@ def process_automation_run(
     environment: str | None = None,
     session_id: int | None = None,
 ) -> bool:
-    stale = update(AutomationRun).where(AutomationRun.status == "processing", AutomationRun.lease_until < utcnow())
+    legacy_sessions = select(AutomationSession.id).where(AutomationSession.engine_version != 'v3')
+    stale = update(AutomationRun).where(AutomationRun.status == "processing", AutomationRun.lease_until < utcnow(), AutomationRun.session_id.in_(legacy_sessions))
     if environment:
         stale = stale.where(AutomationRun.session_id.in_(select(AutomationSession.id).where(
             AutomationSession.environment == environment
@@ -394,7 +398,7 @@ def process_automation_run(
     db.execute(stale.values(status="pending", lease_token=None))
     db.commit()
     from sqlalchemy import case
-    query = select(AutomationRun).where(AutomationRun.status == "pending")
+    query = select(AutomationRun).where(AutomationRun.status == "pending", AutomationRun.session_id.in_(legacy_sessions))
     if environment:
         query = query.join(AutomationSession).where(AutomationSession.environment == environment)
     if session_id is not None:
@@ -1645,6 +1649,7 @@ def advance_running_playgrounds(db: Session, wall_now: str | None = None, *, ses
     query = select(AutomationSession).where(
         AutomationSession.environment == "playground",
         AutomationSession.mode == "journey",
+        AutomationSession.engine_version != 'v3',
     )
     if session_id is not None:
         query = query.where(AutomationSession.id == session_id)
@@ -1706,4 +1711,7 @@ def advance_running_playgrounds(db: Session, wall_now: str | None = None, *, ses
 
 
 def rehearse_tick(db: Session, environment: str | None = None) -> bool:
-    return queue_passive(db, environment) or process_automation_run(db, environment)
+    from app.reception_v3.service import tick
+    v3 = tick(db) if environment in (None, 'playground') else False
+    legacy = queue_passive(db, environment) or process_automation_run(db, environment)
+    return v3 or legacy
