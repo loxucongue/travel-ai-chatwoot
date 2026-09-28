@@ -54,7 +54,7 @@ def run_agent(context: dict):
               + '\n已加载线路 Skill：\n' + json.dumps(preloaded, ensure_ascii=False)
               + '\n通用接待 Skill：\n' + common['instructions'])
     current = {key: value for key, value in context.items()
-               if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
+               if key not in ('skills', 'website_facts', 'website_version', 'available_materials')}
     # These are already the active, scoped facts selected by the service. Make
     # their short text visible before the model decides something is unknown;
     # the read tool still exposes the complete records and provenance.
@@ -68,21 +68,9 @@ def run_agent(context: dict):
     current['route_facts'] = {
         key: {'version': route['version'], 'facts': route['facts']}
         for key, route in context['skills']['routes'].items()
-        if key != context.get('route_variant')
     }
-    # Preserve actual conversational roles instead of burying the dialogue in
-    # transport IDs and delivery metadata inside one large user JSON message.
-    history = []
-    for item in context.get('messages', []):
-        text = item.get('content') or ''
-        if not text and item.get('material_key'):
-            text = '[已发送资料：' + item['material_key'] + ']'
-        if text:
-            history.append({'role': 'user' if item.get('direction') == 'incoming' else 'assistant',
-                            'content': text})
-    messages = [{'role': 'system', 'content': prompt}, *history,
-                {'role': 'user', 'content': '本轮运行上下文（不是客户新话）：\n'
-                 + json.dumps(current, ensure_ascii=False)}]
+    messages = [{'role': 'system', 'content': prompt},
+                {'role': 'user', 'content': json.dumps(current, ensure_ascii=False)}]
     tools = [
         {'type': 'function', 'function': {'name': 'load_skill',
          'description': '读取指定 Skill 正文及当前配置的完整原文、SOP、事实和图片引用。',
