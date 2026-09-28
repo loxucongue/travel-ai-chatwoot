@@ -151,6 +151,8 @@ def restore(backup):
         assert target.resolve().is_relative_to(LIVE.resolve())
         shutil.rmtree(target)
         shutil.copytree(backup / rel, target)
+    if (backup / 'backend/pyproject.toml').exists():
+        shutil.copy2(backup / 'backend/pyproject.toml', LIVE / 'backend/pyproject.toml')
     bindings = json.loads((backup / 'bindings.json').read_text())
     with sqlite3.connect(LIVE / 'backend/data/app.db') as db:
         for row in bindings:
@@ -188,6 +190,7 @@ def remote_phase(phase, stage):
         shutil.copy2(LIVE / 'backend/.env', backup / 'backend.env')
         for rel in RELEASE_PATHS:
             shutil.copytree(LIVE / rel, backup / rel)
+        shutil.copy2(LIVE / 'backend/pyproject.toml', backup / 'backend/pyproject.toml')
         write(backup / 'before.json', before)
         for rel in RELEASE_PATHS:
             target = LIVE / rel
@@ -195,6 +198,7 @@ def remote_phase(phase, stage):
             swapped = True
             shutil.rmtree(target)
             shutil.copytree(stage / rel, target)
+        shutil.copy2(stage / 'backend/pyproject.toml', LIVE / 'backend/pyproject.toml')
         # Bind subsequent turns to the new engine; leave every old job untouched.
         with sqlite3.connect(LIVE / 'backend/data/app.db') as db:
             db.execute("update conversation_states set ai_engine_release_id=? where ai_engine_version='v2'", (checked['release'],))

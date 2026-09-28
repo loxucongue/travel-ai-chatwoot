@@ -15,6 +15,7 @@ def main():
     parser.add_argument('--days', type=int, choices=[9, 11], required=True)
     parser.add_argument('--budget', type=float, default=3)
     parser.add_argument('--natural', action='store_true', help='Wait for configured, unprompted follow-up')
+    parser.add_argument('--explore', action='store_true', help='Start unselected, compare routes, then select')
     args = parser.parse_args()
     out = Path(args.output).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -34,12 +35,19 @@ def main():
             raise RuntimeError('acceptance_network_blocked')
         return original(client, request, *a, **kw)
     httpx.Client.send = send
+    original_async = httpx.AsyncClient.send
+    async def send_async(client, request, *a, **kw):
+        if str(request.url) != settings.deepseek_base_url.rstrip('/') + '/chat/completions' or request.method != 'POST':
+            raise RuntimeError('acceptance_network_blocked')
+        return await original_async(client, request, *a, **kw)
+    httpx.AsyncClient.send = send_async
     from app.main import app  # register all tables
     from app.db import Base, engine, SessionLocal
     from app.models import User, InboxBinding, utcnow
     from app.automation_models import AutomationSession, AutomationRun
     from app.reception_v3 import service
-    from app.reception_v3.skills import compile_skills
+    from app.reception_v3.skills import compile_skills, SkillRegistry
+    import yaml
     from sqlalchemy import select
     Base.metadata.create_all(engine)
     tables = ['tenants', 'inbox_bindings', 'knowledge_versions', 'material_assets', 'stored_media',
@@ -61,9 +69,17 @@ def main():
         row = AutomationSession(owner_id=1, inbox_binding_id=inbox.id, engine_version='v3', mode='journey',
             environment='playground', messages=[], memory={}, controls={}, virtual_now=utcnow())
         db.add(row); db.flush()
-        service.start(db, row, f'我想了解桃花{args.days}日' + ('含珠峰' if args.days == 11 else ''))
+        service.start(db, row, '你好，我想咨询旅行行程' if args.explore else
+                      f'我想了解桃花{args.days}日' + ('含珠峰' if args.days == 11 else ''))
         sid = row.id
-        (out / 'skills.json').write_text(json.dumps(compile_skills(db), ensure_ascii=False, indent=2), encoding='utf-8')
+        bundle = compile_skills(db)
+        (out / 'skills.json').write_text(json.dumps(bundle, ensure_ascii=False, indent=2), encoding='utf-8')
+        registry = SkillRegistry(bundle)
+        for item in registry.index():
+            folder = out / 'skills' / item['name']
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / 'SKILL.md').write_text('---\n' + yaml.safe_dump(item, allow_unicode=True, sort_keys=False)
+                + '---\n\n' + registry.load(item['name'])['instructions'], encoding='utf-8')
         db.commit()
     minutes = 3 if args.days == 9 else 5
     steps = ['我們兩位，三月底出發。', '那一位自己住，要加多少？',
@@ -73,6 +89,8 @@ def main():
     if args.natural:
         steps = [{'wait': 80}, '我們兩位，明年3月28日，請顧問加我的微信 v3natural0928 接手。']
     index, inserted, seen, seen_runs, waiting = 0, False, set(), set(), None
+    preamble = ['9日和11日有什么不同？先比较一下，不用发完整介绍。',
+                f'那就选桃花{args.days}日，请发完整介绍。'] if args.explore else []
     deadline = time.monotonic() + 1000
     while time.monotonic() < deadline:
         with SessionLocal() as db:
@@ -98,7 +116,11 @@ def main():
                 emit('customer', text=text, phase='during_introduction')
             busy = state.get('pending_event') or any(m.get('status') == 'draft' for m in row.messages)
             if not busy:
-                if waiting is not None and time.monotonic() < waiting:
+                if preamble:
+                    item = preamble.pop(0)
+                    service.add_message(db, row, item, f'preamble-{len(preamble)}')
+                    emit('customer', text=item, phase='route_matching')
+                elif waiting is not None and time.monotonic() < waiting:
                     pass
                 elif index < len(steps):
                     waiting = None

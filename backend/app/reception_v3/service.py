@@ -293,7 +293,10 @@ def tick(db, *, session_id=None, wall_now=None):
             db.refresh(row)
             run = db.get(AutomationRun, run_id)
             run.trace = {'engine_version': 'v3', 'event': event, 'skill_digest': bundle['digest'],
-                         'logs': logs, 'request_hash': digest, 'outbound': False, **metrics(http_calls)}
+                         'logs': logs, 'request_hash': digest, 'outbound': False,
+                         'loaded_skills': logs[-1].get('loaded_skills', {}) if logs else {},
+                         'skill_tool_calls': [call for log in logs for call in log.get('tool_calls', [])],
+                         **metrics(http_calls)}
             run.decision = decision
             if row.generation != generation or row.controls.get('simulation', {}).get('status') == 'stopped':
                 run.status, run.error_code = 'cancelled', 'superseded'
