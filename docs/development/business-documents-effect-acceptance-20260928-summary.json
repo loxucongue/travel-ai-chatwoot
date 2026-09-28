@@ -1,0 +1,244 @@
+{
+  "cases": [
+    {
+      "case": "doc_age_utf8",
+      "customer_turns": 5,
+      "delivered_messages": 25,
+      "run_failures": [],
+      "completed": true,
+      "waits": [],
+      "model_calls": 9,
+      "cost_cny": 0.20846024
+    },
+    {
+      "case": "doc_default_minute",
+      "customer_turns": 3,
+      "delivered_messages": 23,
+      "run_failures": [],
+      "completed": true,
+      "waits": [
+        {
+          "wall": "2026-09-28T02:32:10.162726+00:00",
+          "kind": "wait_completed",
+          "key": "doc_default_minute",
+          "label": "default_one_minute_first_nurture",
+          "elapsed": 200.0876028672792
+        }
+      ],
+      "model_calls": 6,
+      "cost_cny": 0.13651424
+    },
+    {
+      "case": "doc_eleven",
+      "customer_turns": 3,
+      "delivered_messages": 22,
+      "run_failures": [
+        {
+          "run": 3,
+          "status": "failed",
+          "error": "EvaluationCallError",
+          "detail": "deepseek_too_many_materials"
+        }
+      ],
+      "completed": false,
+      "waits": [],
+      "model_calls": 5,
+      "cost_cny": 0.13473888
+    },
+    {
+      "case": "doc_eleven_qa",
+      "customer_turns": 11,
+      "delivered_messages": 32,
+      "run_failures": [
+        {
+          "run": 11,
+          "status": "blocked",
+          "error": "human_or_contact_block",
+          "detail": null
+        }
+      ],
+      "completed": false,
+      "waits": [],
+      "model_calls": 17,
+      "cost_cny": 0.45972575999999993
+    },
+    {
+      "case": "doc_health_price_utf8",
+      "customer_turns": 13,
+      "delivered_messages": 30,
+      "run_failures": [],
+      "completed": true,
+      "waits": [],
+      "model_calls": 22,
+      "cost_cny": 0.5637563200000001
+    },
+    {
+      "case": "doc_human",
+      "customer_turns": 2,
+      "delivered_messages": 4,
+      "run_failures": [],
+      "completed": true,
+      "waits": [],
+      "model_calls": 3,
+      "cost_cny": 0.06519616
+    },
+    {
+      "case": "doc_matching",
+      "customer_turns": 12,
+      "delivered_messages": 29,
+      "run_failures": [],
+      "completed": true,
+      "waits": [
+        {
+          "wall": "2026-09-28T02:24:13.507308+00:00",
+          "kind": "wait_completed",
+          "key": "doc_matching",
+          "label": "considering_default_1_3_5_minutes",
+          "elapsed": 315.23570354422554
+        }
+      ],
+      "model_calls": 24,
+      "cost_cny": 0.53061736
+    },
+    {
+      "case": "doc_nine",
+      "customer_turns": 3,
+      "delivered_messages": 18,
+      "run_failures": [
+        {
+          "run": 3,
+          "status": "failed",
+          "error": "EvaluationCallError",
+          "detail": "deepseek_too_many_materials"
+        }
+      ],
+      "completed": false,
+      "waits": [],
+      "model_calls": 5,
+      "cost_cny": 0.125444
+    },
+    {
+      "case": "doc_nine_qa",
+      "customer_turns": 3,
+      "delivered_messages": 18,
+      "run_failures": [
+        {
+          "run": 3,
+          "status": "failed",
+          "error": "EvaluationCallError",
+          "detail": "deepseek_too_many_materials"
+        }
+      ],
+      "completed": false,
+      "waits": [],
+      "model_calls": 5,
+      "cost_cny": 0.11678496
+    },
+    {
+      "case": "doc_positive_utf8",
+      "customer_turns": 6,
+      "delivered_messages": 26,
+      "run_failures": [],
+      "completed": true,
+      "waits": [
+        {
+          "wall": "2026-09-28T02:33:51.291018+00:00",
+          "kind": "wait_completed",
+          "key": "doc_positive_utf8",
+          "label": "after_complete_intro_new_culture",
+          "elapsed": 320.1784947128035
+        },
+        {
+          "wall": "2026-09-28T02:39:33.437661+00:00",
+          "kind": "wait_completed",
+          "key": "doc_positive_utf8",
+          "label": "optout_after_return",
+          "elapsed": 315.45137538202107
+        },
+        {
+          "wall": "2026-09-28T02:40:55.819998+00:00",
+          "kind": "wait_completed",
+          "key": "doc_positive_utf8",
+          "label": "optout_after_memory_question",
+          "elapsed": 75.50954495184124
+        }
+      ],
+      "model_calls": 12,
+      "cost_cny": 0.30518631999999996
+    },
+    {
+      "case": "doc_silence3",
+      "customer_turns": 5,
+      "delivered_messages": 6,
+      "run_failures": [
+        {
+          "run": 5,
+          "status": "failed",
+          "error": "EvaluationCallError",
+          "detail": "v2_material_wrong_route"
+        }
+      ],
+      "completed": false,
+      "waits": [
+        {
+          "wall": "2026-09-28T02:19:23.357264+00:00",
+          "kind": "wait_completed",
+          "key": "doc_silence3",
+          "label": "natural_silence_3_minutes",
+          "elapsed": 200.026354377158
+        }
+      ],
+      "model_calls": 12,
+      "cost_cny": 0.17097576
+    },
+    {
+      "case": "doc_silence5",
+      "customer_turns": 7,
+      "delivered_messages": 30,
+      "run_failures": [],
+      "completed": true,
+      "waits": [
+        {
+          "wall": "2026-09-28T02:22:11.834837+00:00",
+          "kind": "wait_completed",
+          "key": "doc_silence5",
+          "label": "natural_silence_5_minutes",
+          "elapsed": 320.51860045688227
+        }
+      ],
+      "model_calls": 13,
+      "cost_cny": 0.31110247999999996
+    },
+    {
+      "case": "doc_stop",
+      "customer_turns": 7,
+      "delivered_messages": 9,
+      "run_failures": [],
+      "completed": true,
+      "waits": [
+        {
+          "wall": "2026-09-28T02:23:10.737755+00:00",
+          "kind": "wait_completed",
+          "key": "doc_stop",
+          "label": "optout_3_and_5_minutes",
+          "elapsed": 315.0963843613863
+        }
+      ],
+      "model_calls": 13,
+      "cost_cny": 0.3116788
+    }
+  ],
+  "valid_case_count": 13,
+  "customer_turns": 80,
+  "delivered_messages": 272,
+  "all_http_calls_including_invalid": 170,
+  "input_tokens_including_invalid": 3047922,
+  "output_tokens_including_invalid": 44467,
+  "cached_input_tokens_including_invalid": 1315072,
+  "cost_cny_including_invalid": 3.874038880000001,
+  "excluded_encoding_cases": [
+    "doc_age",
+    "doc_health_price",
+    "doc_silence_positive"
+  ]
+}

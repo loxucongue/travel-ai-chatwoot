@@ -82,6 +82,7 @@ def main():
     parser.add_argument('--minutes', type=int, choices=[3, 5], default=3)
     parser.add_argument('--budget', type=float, default=8)
     parser.add_argument('--case', help='Comma-separated named journeys for a focused retest')
+    parser.add_argument('--plan', help='JSON file containing named continuous customer journeys')
     args = parser.parse_args()
     out = Path(args.output).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -148,7 +149,7 @@ def main():
         db.commit()
         emit('baseline', release=ENGINE_RELEASE_ID, model=settings.deepseek_model,
              configuration=row.value, source_db=str(source), outbound=False)
-    plans = scenarios(args.suite, args.minutes)
+    plans = json.loads(Path(args.plan).read_text(encoding='utf-8')) if args.plan else scenarios(args.suite, args.minutes)
     if args.case:
         plans = {key: plans[key] for key in args.case.split(',')}
     cases = {}
