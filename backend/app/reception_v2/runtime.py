@@ -106,10 +106,12 @@ SYSTEM_PROMPT = """你是 China2Go 的旅游咨询和留资接待顾问。
 - 当前公共接待配置中的 common_scripts 是可直接使用的通用话术；按适用场景优先沿用原文，必要时调整衔接。线路内容以对应线路话术为准。lead_capture.enabled=false 时不主动索取联系方式；客户自行提供或要求真人仍正常交接。
 - 两条桃花线路以官网7693-2对应线路 Skill 和当前配置话术为准。不要用历史业务反馈或通用资料覆盖线路话术。后台配置是当前可直接使用的内容，不再自行审查、删减其产品口径。
 - 客户从广告选线进入直接承接该线路；未知线路先帮助选择。首次开场由程序按后台配置发送。
+- 客户确认线路后，delivery_intent=full_introduction，开始该线路图文介绍；人数未知也照常介绍，在首段自然确认线路、询问人数，不等待回答。人数已知不重复问。客户明确说先不介绍、只问单项或只比较时，delivery_intent=none，仅回答当前问题，保留已确认的线路。
 - 线路名或天数的提及只是检索线索，不是选线确认。客户说“9到11天”“还没选定”时继续比较；没有已确认线路且本轮未选线，route_variant留空，不启动整套介绍。明确广告选线或客户选定后记录route_selected。
 - 支持目录内的改线直接由你承接：action=reply、route_variant使用新线路、记录route_selected，保留已有可信人数日期并介绍新线路。改线本身不需要人工确认；即使此前已询问联系方式，也不能因此输出handoff或route_switch_confirmation。
 - 线路介绍按 Skill 的整套顺序和图片组织；介绍完成后集中回答期间的问题。后续选适用 scripts，优先原文，只按实际上下文调整称呼、衔接和所需段落。多问题一起回答。
 - 分流说明用于判断场景，不作为客服正文。沿用话术时不要自行追加客户没问的解释或免责声明。已知人数日期不重复问，资料不重复发，客户要求重发除外。
+- 介绍期间排队的问题会在整套介绍交付后才交给你回答。以实际已交付记录为准，直接接着回答，不再说“我先继续介绍”。只补人数或日期时简短承接，不重新介绍或补发照片。对客直接说产品安排，不提“我们的路线话术”“配置”“Skill”等内部依据。
 - 话术、线路事实未覆盖时再查通用事实。已加载资料不要重复查询。比较时分别读取两条线路，按实际差异建议。
 - 通用服务说明只补充线路未覆盖的部分。例如线路费用已经明确不含机票，回答能否代订时承接“可以协助代订”，不能把已知的不包含又说成“是否包含以个别报价为准”。
 - 不替客户补充尚未确定的安排。询问单人房时回答对应房差；仅凭总人数不能推断其他人如何拼房，也不能承诺已经安排成团。
@@ -613,22 +615,7 @@ def _prepare_route_introduction(context: dict, decision: EvaluationDecision) -> 
         decision.v2_events = [e for e in decision.v2_events if e.get('material_kind') != 'full_introduction']
         decision.delivery_intent = 'none'
         return
-    slots = _customer_slots(context, decision)
-    route = ROUTES.get(decision.route_variant, {})
-    if not slots.get('party_size'):
-        question = route.get('groups', {}).get('entry_question', {}).get('text', '')
-        if question and not explicit and (_is_first_customer_message(context) or any(
-                e['type'] == 'route_selected' for e in decision.v2_events)):
-            has_question = any(e['type'] == 'question' for e in decision.v2_events) or decision.intent in {'price', 'departure', 'contact'}
-            decision.reply = decision.reply_body = (decision.reply_body or decision.reply) if has_question else question
-            decision.follow_up_question = question if has_question else ''
-            if not has_question:
-                decision.evidence_refs = []
-                decision.covered_content_groups = []
-                decision.content_group_key = ''
-            decision.lead_action = 'none'
-            decision.material_keys = []
-            decision.journey_stage = 'needs_discovery'
+    if not explicit and getattr(decision, 'delivery_intent', 'none') != 'full_introduction':
         return
     # The delivery compiler consumes an instruction, not a fabricated customer
     # event. Questions remain real events and are answered after the sequence.

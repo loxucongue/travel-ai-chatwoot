@@ -10,13 +10,13 @@ def test_full_introduction_orders_actual_parts_and_scopes_receipts(route):
     available = {key for group in spec['groups'].values() for key in group['assets']}
     sections = introduction_sections(spec, available, {})
     keys = [section['group_key'] for section in sections]
-    assert keys[:2] == ['advisor_greeting', 'itinerary_overview']
+    assert keys[:2] == ['entry_question', 'itinerary_overview']
     assert keys[-2:] == ['accommodation_summary', 'no_shopping']
     if route == 'peach_11d_2027':
         assert keys.index('rongbuk_reference') < keys.index('hotel_reference')
     materials = [{'asset_key': key, 'media_hash': key} for key in available]
     parts = introduction_parts(sections, materials, plan_id='request:1', interval_seconds=2)
-    assert parts[0].content == spec['groups']['advisor_greeting']['text']
+    assert parts[0].content == spec['groups']['entry_question']['text']
     first_image = next(part for part in parts if part.kind == 'media')
     assert first_image.material['asset_key'] in spec['groups']['itinerary_overview']['assets']
     assert parts[0].interval_seconds == 0

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-09-27.website-direct-9d-1",
+  "package_version": "2026-09-28.advisor-entry-9d-1",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_9d_2027",
   "branch": "peach_9d",
@@ -181,8 +181,8 @@
       "delivery_mode": "text_only"
     },
     "entry_question": {
-      "purpose": "首次进入线路时自然介绍差异",
-      "approved_text": "預計幾位一起去？",
+      "purpose": "确认所选线路，自然问人数，同时开始图文介绍",
+      "approved_text": "這是我們桃花9日、不上珠峰的行程，我先把行程圖傳給您看看～\n方便問一下，這次大概幾位一起來呢？",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements",
@@ -1605,13 +1605,13 @@
         "other"
       ],
       "content_group_key": "entry_question",
-      "answer_text": "預計幾位一起去？",
+      "answer_text": "這是我們桃花9日、不上珠峰的行程，我先把行程圖傳給您看看～\n方便問一下，這次大概幾位一起來呢？",
       "fact_ids": [
         "service.requirements"
       ],
       "asset_ids": [],
-      "source_ref": "website-7693-full/02-peach-9d/content.md",
-      "answer_origin": "website_verbatim",
+      "source_ref": "docs/development/advisor-entry-572-fix-20260928.md",
+      "answer_origin": "operator_approved",
       "positive_examples": [],
       "negative_examples": [],
       "party_size_min": null,

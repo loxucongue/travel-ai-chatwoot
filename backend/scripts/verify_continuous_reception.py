@@ -201,7 +201,9 @@ def main():
                     continue
                 step = plans[key][case['index']]
                 if isinstance(step, dict) and 'interrupt' in step:
-                    if not any(m.get('status') == 'simulated_delivered' and m.get('media_id') for m in s.messages):
+                    if not any(m.get('status') == 'simulated_delivered' and m.get('media_id')
+                               and (m.get('content_group_key') or '').endswith(':itinerary_overview')
+                               for m in s.messages):
                         continue
                     if not busy:
                         raise RuntimeError('interruption_missed_introduction')

@@ -9,6 +9,9 @@ def introduction_group_keys(route: dict, slots: dict) -> list[str]:
     keys = [key for key in route.get('introduction_sequence', route.get('sequence', []))
             if groups.get(key, {}).get('initial_delivery')]
     party_size = slots.get('party_size')
+    if not party_size and 'advisor_greeting' in keys and 'entry_question' in groups:
+        # Ask within the introduction; missing party size does not block delivery.
+        keys[keys.index('advisor_greeting')] = 'entry_question'
     if party_size and 'advisor_greeting' in keys:
         try:
             count = int(party_size)

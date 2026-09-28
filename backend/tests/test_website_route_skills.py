@@ -14,10 +14,22 @@ def test_entire_website_branch_is_loaded_with_resolvable_images(days,directory):
     route=ROUTES[f'peach_{days}d_2027']
     skill=SkillRegistry().load(f'peach-{days}d-2027')
     source=(PACKAGE_ROOT.parent/'website-7693-full'/directory/'content.md').read_text(encoding='utf-8')
+    # These three source instructions were superseded by the advisor-entry fix.
+    replaced_entry_lines = {
+        'Q．預計幾位一起去？',
+        '依人數答案分流：自己一人→文01-2／2-3人→文01-3／4-6人或6人以上→文01-1／逾1分鐘無回應或系統未能判斷 → 直接播放文01',
+        '文 01（僅限1分鐘無回應或系統未判斷出人數答案時，跳轉至此）',
+    }
+    assert replaced_entry_lines <= set(source.splitlines())
     for line in source.splitlines():
         if not line.strip() or '![' in line:
             continue
+        if line in replaced_entry_lines:
+            assert line not in skill['instructions']
+            continue
         assert line in skill['instructions'], line
+    assert route['groups']['entry_question']['text'] in skill['instructions']
+    assert '人數未知 → 使用Q承接後直接介紹，不等待回覆' in skill['instructions']
     assert '{{script:' not in skill['instructions']
     assets={a for group in route['groups'].values() for a in group['assets']}
     assert set(re.findall(r'素材 key：(.*?)\]',skill['instructions'])) <= assets

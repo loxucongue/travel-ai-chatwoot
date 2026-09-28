@@ -108,6 +108,7 @@ def test_ad_entry_preserves_configured_brand_and_completes_fixed_introduction(ro
     decision = EvaluationDecision('reply', route['branch'], 'other', reply='模型自行摘要',
         route_variant=route_id, slots={'party_size': '4'},
         v2_events=[{'type': 'route_selected', 'quote': '選這條'}])
+    decision.delivery_intent = 'full_introduction'
     runtime._prepare_route_introduction(context, decision)
     runtime._enforce_delivery_contract(context, decision)
     runtime._attach_configured_opening(context, decision)
@@ -120,15 +121,34 @@ def test_ad_entry_preserves_configured_brand_and_completes_fixed_introduction(ro
     assert len(decision.material_keys) > 2
 
 
-def test_first_selected_route_asks_configured_party_question():
-    route = ROUTES['peach_9d_2027']
+@pytest.mark.parametrize('route_id', ['peach_9d_2027', 'peach_11d_2027'])
+def test_first_selected_route_asks_with_full_introduction_without_waiting(route_id):
+    route = ROUTES[route_id]
     decision = EvaluationDecision('reply', route['branch'], 'other', reply='任意介绍',
-        route_variant='peach_9d_2027', evidence_refs=['route.9.price'],
-        covered_content_groups=['price_reference'], v2_events=[{'type': 'route_selected'}])
-    runtime._prepare_route_introduction({'module': 'reply', 'context_messages': []}, decision)
-    assert decision.reply == route['groups']['entry_question']['text']
-    assert not decision.material_keys
-    assert not decision.evidence_refs and not decision.covered_content_groups
+        route_variant=route_id,
+        v2_events=[{'type': 'route_selected'}])
+    context = {'module': 'reply', 'context_messages': [],
+        'available_materials': [{'key': k} for g in route['groups'].values() for k in g['assets']]}
+    decision.delivery_intent = 'full_introduction'
+    runtime._prepare_route_introduction(context, decision)
+    runtime._enforce_delivery_contract(context, decision)
+    assert decision.introduction_delivery
+    sections = decision.v2_delivery_sections
+    assert [s['group_key'] for s in sections[:2]] == ['entry_question', 'itinerary_overview']
+    assert sections[0]['text'] == route['groups']['entry_question']['text']
+    assert sections[1]['asset_keys'] == route['groups']['itinerary_overview']['assets']
+    assert len(sections) > 5
+
+
+def test_selected_route_with_explicit_no_introduction_keeps_binding_and_answer():
+    route_id = 'peach_11d_2027'
+    decision = EvaluationDecision('reply', ROUTES[route_id]['branch'], 'price', reply='團費11480元。',
+        route_variant=route_id, slots={'party_size': 2},
+        v2_events=[{'type': 'route_selected'}, {'type': 'question'}])
+    runtime._prepare_route_introduction({'module': 'reply'}, decision)
+    assert decision.route_variant == route_id
+    assert not decision.introduction_delivery
+    assert decision.reply == '團費11480元。'
 
 
 @pytest.mark.parametrize('bound', ['', 'peach_9d_2027'])
@@ -161,6 +181,7 @@ def test_route_selection_uses_party_size_already_saved_before_matching():
         'available_materials': [{'key': k} for g in route['groups'].values() for k in g['assets']]}
     decision = EvaluationDecision('reply', route['branch'], 'other', reply='選9日',
         route_variant=route_id, v2_events=[{'type': 'route_selected'}])
+    decision.delivery_intent = 'full_introduction'
     runtime._prepare_route_introduction(context, decision)
     runtime._enforce_delivery_contract(context, decision)
     assert decision.introduction_delivery
