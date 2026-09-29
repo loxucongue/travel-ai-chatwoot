@@ -58,7 +58,7 @@ def test_selected_route_preloads_only_its_complete_config(monkeypatch):
 
 def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
     requests = model(monkeypatch, [
-        {'content': None, 'tool_calls': [tool('load_skill', {'name': 'peach-9d-2027'}),
+        {'content': None, 'reasoning_content': 'Need both route sources.', 'tool_calls': [tool('load_skill', {'name': 'peach-9d-2027'}),
                                        tool('load_skill', {'name': 'peach-11d-2027'}, 't2')]},
         final(messages=[{'text': '两条线路比较'}])])
     _, logs, _ = runtime.run_agent(context())
@@ -68,6 +68,9 @@ def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
     assert [r['tool_call_id'] for r in results] == ['t1', 't2']
     assert 'PRICE_ONLY_9' in results[0]['content'] and 'PRICE_ONLY_11' in results[1]['content']
     assert len(logs[-1]['loaded_skills']) == 3
+    assert requests[0]['thinking'] == {'type': 'enabled'}
+    assert requests[0]['reasoning_effort'] == 'low'
+    assert next(m for m in requests[1]['messages'] if m.get('tool_calls'))['reasoning_content'] == 'Need both route sources.'
 
 
 def test_active_website_facts_are_visible_before_a_tool_call(monkeypatch):

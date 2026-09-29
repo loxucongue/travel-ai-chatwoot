@@ -102,7 +102,7 @@ def run_agent(context: dict):
         for turn in range(6):
             payload = {'model': settings.deepseek_model, 'messages': messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
-                       'thinking': {'type': 'disabled'}, 'temperature': 0, 'max_tokens': 4000,
+                       'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': 4000,
                        'stream': True, 'stream_options': {'include_usage': True}}
             hashes.append(_request_hash(payload))
             if len(json.dumps(messages, ensure_ascii=False)) > settings.deepseek_max_input_characters:
@@ -117,10 +117,11 @@ def run_agent(context: dict):
             message = body['choices'][0]['message']
             log = {**_call_log(turn + 1, started, body, 'completed', None),
                    'node': 'reception_v3', 'loaded_skills': dict(loaded),
-                   'system_characters': len(prompt), 'tool_calls': []}
+                   'system_characters': len(prompt), 'reasoning_effort': 'low', 'tool_calls': []}
             logs.append(log)
             if message.get('tool_calls'):
                 messages.append({'role': 'assistant', 'content': message.get('content'),
+                                 'reasoning_content': message.get('reasoning_content', ''),
                                  'tool_calls': message['tool_calls']})
                 for call in message['tool_calls']:
                     function = call['function']
@@ -147,7 +148,8 @@ def run_agent(context: dict):
                     raise
                 repaired = True
                 log.update(status='invalid_json', error_code=str(exc))
-                messages.extend([{'role': 'assistant', 'content': message.get('content') or ''},
+                messages.extend([{'role': 'assistant', 'content': message.get('content') or '',
+                                  'reasoning_content': message.get('reasoning_content', '')},
                                  {'role': 'user', 'content': f'只修正 JSON 字段和类型，不审核或改写话术。错误：{exc}'}])
                 continue
             # The model may identify a route without requesting its body (for

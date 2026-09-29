@@ -64,7 +64,7 @@ def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
                             await response.aread()
                             response.extensions["call_timing"] = timing
                             return response
-                        parts, usage, finish, done = [], {}, None, False
+                        parts, reasoning, usage, finish, done = [], [], {}, None, False
                         tool_calls, model, fingerprint = {}, None, None
                         async for line in response.aiter_lines():
                             if not line.startswith("data:"):
@@ -80,6 +80,8 @@ def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
                             for choice in chunk.get("choices") or []:
                                 delta = choice.get('delta') or {}
                                 text = delta.get("content") or ""
+                                if delta.get('reasoning_content'):
+                                    reasoning.append(delta['reasoning_content'])
                                 for piece in delta.get('tool_calls') or []:
                                     index = piece.get('index', 0)
                                     call = tool_calls.setdefault(index, {'id':'', 'type':'function',
@@ -100,6 +102,8 @@ def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
                             raise httpx.ReadError("incomplete_model_stream")
                         timing["phase"] = "completed"
                         message = {'content': ''.join(parts)}
+                        if reasoning:
+                            message['reasoning_content'] = ''.join(reasoning)
                         if tool_calls:
                             if any(not c['id'] or not c['function']['name'] for c in tool_calls.values()):
                                 raise httpx.ReadError('incomplete_model_tool_stream')
