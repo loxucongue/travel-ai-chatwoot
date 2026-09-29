@@ -57,7 +57,7 @@ export type ReceptionConfig = {
   common_scripts: {id: string; name: string; scenario: string; text: string; enabled: boolean}[];
   reply: { opening_message: string; opening_messages: string[]; opening_items: OpeningItem[]; opening_interval_seconds: number; goal: string; tone: 'friendly_professional' | 'concise' | 'warm'; tone_guidance: string; opening_character_limit: number; custom_guidance: string };
   lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[] };
-  routing: { enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' };
+  routing: { enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' | 'consult_advisor' };
   handoff: { large_group_enabled: boolean; large_group_minimum: number };
   silence: { live_enabled?: boolean | null; enabled: boolean; intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
 };

@@ -68,7 +68,7 @@ class RoutingSettings(BaseModel):
     enabled_route_variants: list[str] = Field(default_factory=lambda: list(ROUTE_PACKAGES), min_length=1)
     allow_route_switch: bool = True
     preserve_profile_on_switch: bool = True
-    outside_catalog_action: Literal["recommend_supported_routes", "explain_boundary_only"] = "recommend_supported_routes"
+    outside_catalog_action: Literal["recommend_supported_routes", "explain_boundary_only", "consult_advisor"] = "consult_advisor"
 
     @model_validator(mode="after")
     def supported_routes_only(self):

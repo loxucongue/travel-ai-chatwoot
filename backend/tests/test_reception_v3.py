@@ -227,3 +227,25 @@ def test_model_text_is_unchanged_even_when_reference_is_only_a_hint(session_fact
         row = create(db, monkeypatch)
         for _ in range(3): step(db, row)
         assert delivered(row)[-1] == '完整原稿，不裁剪。'
+
+
+def test_invitation_keeps_reception_open_and_actual_email_closes_it(session_factory, monkeypatch):
+    monkeypatch.setattr(service, 'run_agent', lambda c: answer(
+        messages=[{'text': '方便提供您的信箱嗎？'}], next_check_minutes=3))
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        for _ in range(3): step(db, row)
+        assert not service.state(row).get('handoff')
+        assert service.state(row)['next_check_at']
+        service.add_message(db, row, 'guest@example.invalid', 'email'); db.commit()
+        assert service.state(row)['pending_event'] == 'customer_message'
+        monkeypatch.setattr(service, 'run_agent', lambda c: answer(
+            action='handoff', profile={'contact_channel': 'Email', 'contact_value': 'guest@example.invalid'},
+            handoff_reason='使用客户指定邮箱确认九月安排', messages=[{'text': '收到，我請顧問用郵件聯絡您。'}]))
+        step(db, row); step(db, row)
+        db.expire_all()
+        saved = db.get(AutomationSession, row.id)
+        assert saved.memory['contact_value'] == 'guest@example.invalid'
+        assert saved.memory['contact_channel'] == 'Email'
+        assert service.state(saved)['handoff']
+        assert not service.state(saved).get('next_check_at')
