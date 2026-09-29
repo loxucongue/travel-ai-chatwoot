@@ -54,7 +54,14 @@ def run_agent(context: dict):
               + '\n已加载线路 Skill：\n' + json.dumps(preloaded, ensure_ascii=False)
               + '\n通用接待 Skill：\n' + common['instructions'])
     current = {key: value for key, value in context.items()
-               if key not in ('skills', 'website_facts', 'website_version', 'available_materials')}
+               if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
+    # Delivery metadata and earlier model reasons are not customer dialogue.
+    # Send actual speech with chat roles so repeated invitations are visible.
+    current['state'] = {key: value for key, value in current.get('state', {}).items()
+                        if key != 'last_reason'}
+    current['buffered_questions'] = [
+        {'content': m.get('content', ''), 'created_at': m.get('created_at')}
+        for m in current.get('buffered_questions', [])]
     # These are already the active, scoped facts selected by the service. Make
     # their short text visible before the model decides something is unknown;
     # the read tool still exposes the complete records and provenance.
@@ -69,8 +76,16 @@ def run_agent(context: dict):
         key: {'version': route['version'], 'facts': route['facts']}
         for key, route in context['skills']['routes'].items()
     }
-    messages = [{'role': 'system', 'content': prompt},
-                {'role': 'user', 'content': json.dumps(current, ensure_ascii=False)}]
+    messages = [{'role': 'system', 'content': prompt}]
+    for item in context.get('messages', []):
+        content = item.get('content', '')
+        if item.get('content_type', 'text') != 'text':
+            content = '[已交付附件] ' + json.dumps({key: item[key] for key in
+                ('content_type', 'asset_key', 'name', 'filename') if key in item}, ensure_ascii=False)
+        if content:
+            messages.append({'role': 'user' if item.get('direction') == 'incoming' else 'assistant',
+                             'content': content})
+    messages.append({'role': 'user', 'content': json.dumps(current, ensure_ascii=False)})
     tools = [
         {'type': 'function', 'function': {'name': 'load_skill',
          'description': '读取指定 Skill 正文及当前配置的完整原文、SOP、事实和图片引用。',

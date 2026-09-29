@@ -87,8 +87,12 @@ def test_dialogue_and_customer_preferences_remain_in_current_context(monkeypatch
     ]
     requests = model(monkeypatch, [final(messages=[{'text': '住宿回答'}])])
     runtime.run_agent(c)
-    current = json.loads(requests[0]['messages'][1]['content'])
-    assert current['messages'] == c['messages']
+    messages = requests[0]['messages']
+    assert [m['role'] for m in messages[1:-1]] == ['user', 'assistant', 'user']
+    assert [m['content'] for m in messages[1:-1]] == [m['content'] for m in c['messages']]
+    current = json.loads(messages[-1]['content'])
+    assert 'messages' not in current
+    assert 'transport-id' not in json.dumps(messages, ensure_ascii=False)
 
 
 def test_live_configuration_changes_loaded_text_and_digest():
