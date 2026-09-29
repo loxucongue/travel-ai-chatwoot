@@ -56,6 +56,17 @@ def test_selected_route_preloads_only_its_complete_config(monkeypatch):
     assert decision['messages'][0]['text'] == '回答原稿'
 
 
+def test_optional_script_reference_null_does_not_retry_or_rewrite(monkeypatch):
+    response = {'content': json.dumps({'action': 'reply', 'messages': [
+        {'text': '兩人一房，機票另計。', 'script_id': None}]}, ensure_ascii=False)}
+    requests = model(monkeypatch, [response])
+    decision, logs, _ = runtime.run_agent(context('peach_9d_2027'))
+    assert len(requests) == 1
+    assert logs[-1]['status'] == 'completed'
+    assert decision['messages'][0]['text'] == '兩人一房，機票另計。'
+    assert decision['messages'][0]['script_id'] is None
+
+
 def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
     requests = model(monkeypatch, [
         {'content': None, 'reasoning_content': 'Need both route sources.', 'tool_calls': [tool('load_skill', {'name': 'peach-9d-2027'}),

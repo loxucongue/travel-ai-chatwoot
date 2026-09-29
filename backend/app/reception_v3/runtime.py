@@ -15,7 +15,7 @@ from app.reception_v3.prompt import SYSTEM_PROMPT
 class Message(BaseModel):
     model_config = ConfigDict(extra='forbid')
     text: str = ''
-    script_id: str = ''
+    script_id: str | None = ''
     asset_keys: list[str] = Field(default_factory=list)
 
 
