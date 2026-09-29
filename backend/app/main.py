@@ -1,10 +1,12 @@
 import logging
+import sqlite3
 import uuid
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError
 
 from app.api import router
 from app.ops_api import router as ops_router
@@ -30,6 +32,20 @@ async def request_id(request: Request, call_next):
 async def http_error(request: Request, exc: HTTPException):
     detail = exc.detail if isinstance(exc.detail, dict) else {"code": "http_error", "message": str(exc.detail)}
     return JSONResponse(status_code=exc.status_code, content={"error": {**detail, "request_id": getattr(request.state, "request_id", "")}})
+
+
+@app.exception_handler(OperationalError)
+async def database_error(request: Request, exc: OperationalError):
+    # Handle inside CORS so a database failure is readable by the console,
+    # instead of becoming an opaque browser "Failed to fetch" error.
+    full = getattr(exc.orig, 'sqlite_errorcode', None) == sqlite3.SQLITE_FULL
+    logging.getLogger(__name__).error('Database request failed: %s',
+                                     getattr(request.state, 'request_id', ''), exc_info=exc)
+    return JSONResponse(status_code=507 if full else 503, content={"error": {
+        "code": "storage_full" if full else "database_unavailable",
+        "message": "服务器存储空间不足，暂时无法保存，请联系管理员。" if full else "数据库暂时不可用，请稍后重试。",
+        "request_id": getattr(request.state, "request_id", ""),
+    }})
 
 
 app.include_router(router)

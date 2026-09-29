@@ -424,6 +424,8 @@ function ReceptionPlayground() {
   const processing = Boolean(current?.pending || current?.runs.some(run => ['pending', 'processing'].includes(run.status)));
   const journeySessions = (sessionList.data?.items ?? []).filter(item => item.mode === 'journey');
   const openSession = (id: number) => {
+    mutateSession.reset();
+    deleteSession.reset();
     setSessionId(id);
     setParams({ session: String(id) });
     setHistoryOpen(false);
@@ -435,7 +437,7 @@ function ReceptionPlayground() {
       activeId={sessionId}
       open={historyOpen}
       busy={inboxes.isLoading || mutateSession.isPending || deleteSession.isPending}
-      onCreate={() => { setSessionId(null); setParams({}); setHistoryOpen(false); }}
+      onCreate={() => { mutateSession.reset(); deleteSession.reset(); setSessionId(null); setParams({}); setHistoryOpen(false); }}
       onOpen={openSession}
       onDelete={id => deleteSession.mutate(id)}
       onClose={() => setHistoryOpen(false)}

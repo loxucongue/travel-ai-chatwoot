@@ -42,10 +42,21 @@ def write(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding='utf8')
 
 
+def require_disk_space(required_bytes):
+    free = shutil.disk_usage(LIVE).free
+    if free < required_bytes:
+        raise RuntimeError(f'insufficient_disk_space:required={required_bytes}:free={free}')
+
+
 def preflight(stage):
     # Use a copied DB and existing configuration; no outbound transport allowed.
-    shutil.copytree(LIVE / 'backend/data', stage / 'backend/data', dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns('*.db*', '*.lock'))
+    require_disk_space((LIVE / 'backend/data/app.db').stat().st_size + 1024 ** 3)
+    (stage / 'backend/data').mkdir(parents=True, exist_ok=True)
+    # Schema/configuration checks only need runtime route overrides and a DB.
+    # Uploaded media and backup trees are not preflight inputs.
+    overrides = LIVE / 'backend/data/route-packages'
+    if overrides.exists():
+        shutil.copytree(overrides, stage / 'backend/data/route-packages', dirs_exist_ok=True)
     with sqlite3.connect(LIVE / 'backend/data/app.db') as source, sqlite3.connect(stage / 'backend/data/app.db') as target:
         source.backup(target)
     shutil.copy2(LIVE / 'backend/.env', stage / 'backend/.env')
@@ -186,6 +197,10 @@ def remote_phase(phase, stage):
     checked = json.loads((stage / 'preflight.json').read_text())
     assert not checked['dependency_mismatches'] and checked['schema_compatible']
     before = inventory(LIVE)
+    backup_bytes = (LIVE / 'backend/data/app.db').stat().st_size
+    backup_bytes += sum(p.stat().st_size for rel in RELEASE_PATHS
+                        for p in (LIVE / rel).rglob('*') if p.is_file())
+    require_disk_space(backup_bytes + 1024 ** 3)
     backup.mkdir(parents=True, exist_ok=False)
     swapped = False
     try:
@@ -276,6 +291,8 @@ def main():
             command = 'mkdir -p ' + shlex.quote(stage) + '\ntar -xzf /tmp/' + name + '.tar.gz -C ' + shlex.quote(stage)
             _, stdout, stderr = client.exec_command(command)
             assert stdout.channel.recv_exit_status() == 0, stderr.read().decode()
+            with client.open_sftp() as sftp:
+                sftp.remove('/tmp/' + name + '.tar.gz')
             write(out / 'stage.json', {'stage': stage})
         else:
             stage = json.loads((out / 'stage.json').read_text())['stage']
