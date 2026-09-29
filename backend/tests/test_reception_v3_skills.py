@@ -203,3 +203,29 @@ def test_model_selected_route_activates_body_before_final_decision(monkeypatch):
     assert 'INTRO_ONLY_11' in json.dumps(requests[1])
     assert logs[0]['status'] == 'skill_activation'
     assert 'peach-11d-2027' in logs[-1]['loaded_skills']
+
+
+def test_contact_description_migration_preserves_opening_authored_text_and_disabled_state():
+    from scripts.update_contact_reception import PREVIOUS_SCENARIOS, updated_configuration
+    c = context()['skills']
+    c['reply'] = {'opening_message': '运营开场原文', 'custom_guidance': '运营补充要求'}
+    c['common_scripts'] = [{'id': 'contact_family', 'name': '旧标题',
+        'scenario': PREVIOUS_SCENARIOS['contact_family'], 'text': '运营自定义正文', 'enabled': False}]
+    before = deepcopy(c)
+    updated = updated_configuration(c)
+    family = next(s for s in updated['common_scripts'] if s['id'] == 'contact_family')
+    assert family['scenario'] != PREVIOUS_SCENARIOS['contact_family']
+    assert family['text'] == '运营自定义正文' and family['enabled'] is False
+    assert updated['reply'] == before['reply']
+    assert c == before
+    assert updated_configuration(updated) == updated
+
+
+def test_contact_description_migration_does_not_replace_operator_scenario():
+    from scripts.update_contact_reception import updated_configuration
+    c = context()['skills']
+    custom = {'id': 'contact_other_dates', 'name': '运营标题',
+              'scenario': '运营自行设定的适用场景', 'text': '自己的原话', 'enabled': True}
+    c['common_scripts'] = [deepcopy(custom)]
+    updated = updated_configuration(c)
+    assert next(s for s in updated['common_scripts'] if s['id'] == custom['id']) == custom
