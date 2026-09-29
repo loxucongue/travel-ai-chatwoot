@@ -255,8 +255,6 @@ def test_comparison_uses_asset_route_without_switching_selected_route(session_fa
     spec = bundle()
     spec['routes']['eleven'] = deepcopy(spec['routes']['nine'])
     monkeypatch.setattr(service, 'tenant_for_session', lambda *args: 1)
-    monkeypatch.setattr(service, 'candidate_materials', lambda *args: [
-        {'key': 'map11', 'routes': ['eleven']}, {'key': 'shared', 'routes': ['nine', 'eleven']}])
     calls = []
     def resolve(db, keys, route, tenant):
         calls.append((keys, route, tenant))
@@ -264,6 +262,8 @@ def test_comparison_uses_asset_route_without_switching_selected_route(session_fa
     monkeypatch.setattr(service, 'resolve_materials', resolve)
     with session_factory() as db:
         row = create(db, monkeypatch)
+        monkeypatch.setattr(service, 'candidate_materials', lambda *args: [
+            {'key': 'map11', 'routes': ['eleven']}, {'key': 'shared', 'routes': ['nine', 'eleven']}])
         decision = Decision(route_variant='nine', messages=[{
             'text': '另一條的行程給您對照。', 'asset_keys': ['map11', 'shared']}]).model_dump()
         route, parts = service.parts_for(db, row, spec, decision)
