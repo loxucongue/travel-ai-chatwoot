@@ -111,8 +111,16 @@ def parts_for(db, row, bundle, decision):
     if route and route not in bundle['routes']:
         raise ValueError('v3_unknown_route')
     parts = []
+    tenant_id = tenant_for_session(db, row)
+    materials = {m['key']: m for m in candidate_materials(db, tenant_id)}
     def add(text, keys, mode='text_then_assets'):
-        media = [info for key in keys for info in resolve_materials(db, [key], route, tenant_for_session(db, row))]
+        media = []
+        for key in keys:
+            # Comparing routes may reference a different route's image without
+            # changing the customer's selected route.
+            asset_routes = [r for r in materials.get(key, {}).get('routes', []) if r in bundle['routes']]
+            asset_route = route if route in asset_routes or not asset_routes else asset_routes[0]
+            media.extend(resolve_materials(db, [key], asset_route, tenant_id))
         media_parts = [{**m, 'content': ''} for m in media]
         text_parts = [{'content': text, 'content_type': 'text'}] if text else []
         parts.extend(media_parts + text_parts if mode == 'assets_then_text' else text_parts + media_parts)

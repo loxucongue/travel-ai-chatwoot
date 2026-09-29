@@ -249,3 +249,24 @@ def test_invitation_keeps_reception_open_and_actual_email_closes_it(session_fact
         assert saved.memory['contact_channel'] == 'Email'
         assert service.state(saved)['handoff']
         assert not service.state(saved).get('next_check_at')
+
+
+def test_comparison_uses_asset_route_without_switching_selected_route(session_factory, monkeypatch):
+    spec = bundle()
+    spec['routes']['eleven'] = deepcopy(spec['routes']['nine'])
+    monkeypatch.setattr(service, 'tenant_for_session', lambda *args: 1)
+    monkeypatch.setattr(service, 'candidate_materials', lambda *args: [
+        {'key': 'map11', 'routes': ['eleven']}, {'key': 'shared', 'routes': ['nine', 'eleven']}])
+    calls = []
+    def resolve(db, keys, route, tenant):
+        calls.append((keys, route, tenant))
+        return [{'content_type': 'image', 'asset_key': keys[0], 'route_variant': route}]
+    monkeypatch.setattr(service, 'resolve_materials', resolve)
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        decision = Decision(route_variant='nine', messages=[{
+            'text': '另一條的行程給您對照。', 'asset_keys': ['map11', 'shared']}]).model_dump()
+        route, parts = service.parts_for(db, row, spec, decision)
+        assert route == 'nine'
+        assert calls == [(['map11'], 'eleven', 1), (['shared'], 'nine', 1)]
+        assert [p.get('route_variant') for p in parts[1:]] == ['eleven', 'nine']
