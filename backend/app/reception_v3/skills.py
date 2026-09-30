@@ -8,12 +8,24 @@ import re
 import yaml
 
 from app.reception_config import get_reception_configuration
-from app.route_packages import ROUTES, ensure_route_packages_current
+from app.route_packages import ROUTES, PACKAGE_ROOT, ensure_route_packages_current
+
+
+def service_knowledge():
+    return json.loads((PACKAGE_ROOT.parent / 'service-knowledge/service-knowledge.json').read_text(encoding='utf-8'))
 
 
 def compile_skills(db):
     ensure_route_packages_current()
     config = get_reception_configuration(db)
+    service = service_knowledge()
+    common_scripts = {s['id']: {
+        'id': s['id'], 'name': s['name'], 'text': s['answer_text'], 'enabled': True,
+        'scenario': json.dumps({'适用': s.get('positive_examples', []),
+                               '不适用': s.get('negative_examples', [])}, ensure_ascii=False),
+    } for s in service.get('fixed_answers', []) if s.get('status') == 'active'}
+    # An operator override, including a disabled script, wins by ID.
+    common_scripts.update({s['id']: deepcopy(s) for s in config.get('common_scripts', [])})
     routes = {}
     for key, route in ROUTES.items():
         if key not in config['routing']['enabled_route_variants']:
@@ -32,7 +44,8 @@ def compile_skills(db):
             'interval_seconds': route['initial_delivery_interval_seconds'],
             'version': route['package_version'],
         }
-    bundle = {'routes': routes, 'common_scripts': config.get('common_scripts', []),
+    bundle = {'routes': routes, 'common_scripts': list(common_scripts.values()),
+              'service_knowledge': {'version': service['knowledge_version'], 'facts': service['facts']},
               'reply': config['reply'], 'silence': {k: v for k, v in config['silence'].items()
                                                   if not k.startswith('v2_')},
               'lead_capture': config['lead_capture'], 'routing': config['routing'], 'handoff': config['handoff']}

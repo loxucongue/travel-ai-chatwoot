@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-09-29-contact-reception-9d",
+  "package_version": "2026-09-30-business-replies-9d",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_9d_2027",
   "branch": "peach_9d",
@@ -59,7 +59,7 @@
     },
     {
       "id": "route.9.price",
-      "text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為2人1標間拼住價格，如需單休須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "source_ref": "website-7693-full/02-peach-9d/content.md"
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "id": "route.shared.hotel_reference",
-      "text": "以及除了地區條件有限以外，我們全面升級都住國際品牌希爾頓飯店哦！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！",
+      "text": "除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！",
       "source_ref": "website-7693-full/02-peach-9d/content.md"
     },
     {
@@ -251,7 +251,7 @@
     },
     "hotel_reference": {
       "purpose": "介绍住宿与供氧设备",
-      "approved_text": "以及除了地區條件有限以外，我們全面升級都住國際品牌希爾頓飯店哦！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！",
+      "approved_text": "除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！",
       "asset_keys": [
         "routes12-hilton-room",
         "routes12-hilton-oxygen"
@@ -364,7 +364,7 @@
     },
     "price_deferral": {
       "purpose": "客戶插問價格時直接回答，不以介紹順序延後",
-      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為2人1標間拼住價格，如需單休須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "asset_keys": [],
       "evidence_refs": [
         "route.9.price"
@@ -374,7 +374,7 @@
     },
     "price_reference": {
       "purpose": "直接回答每人價格與2人一間的計價條件；4至6人屬於此小團規格，不因客戶說4人就延後報價，不延伸獨立包車或折扣承諾",
-      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為2人1標間拼住價格，如需單休須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "asset_keys": [],
       "evidence_refs": [
         "route.9.price",
@@ -587,7 +587,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "hotel_reference",
-      "answer_text": "以及除了地區條件有限以外，我們全面升級都住國際品牌希爾頓飯店哦！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！",
+      "answer_text": "除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！",
       "fact_ids": [
         "route.shared.hotel_reference"
       ],
@@ -596,7 +596,7 @@
         "routes12-hilton-oxygen"
       ],
       "source_ref": "website-7693-full/02-peach-9d/content.md",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "住什麼飯店",
         "住宿環境怎麼樣",
@@ -649,13 +649,13 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "price_reference",
-      "answer_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為2人1標間拼住價格，如需單休須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "answer_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "fact_ids": [
         "route.9.price"
       ],
       "asset_ids": [],
       "source_ref": "website-7693-full/02-peach-9d/content.md",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "一個人多少錢",
         "團費多少",
@@ -973,24 +973,24 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_transition",
-      "answer_text": "是這樣的～目前用台胞證進入西藏的旅客，65歲以上都是要辦理健康證明，不過放心～我到時候幫您備註下～健康證明的格式還有申請規定，我再發給您！也都會依照時間提醒您辦理",
+      "answer_text": "使用台胞證的旅客，65歲以上需要辦理健康證明喔。",
       "fact_ids": [
         "service.requirements"
       ],
       "asset_ids": [],
       "source_ref": "website-7693-full/02-peach-9d/content.md#L124",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "65歲以上要健康證明嗎",
         "長輩去西藏要準備什麼",
         "老人家可以辦入藏函嗎"
       ],
       "negative_examples": [],
-      "usage_note": ""
+      "usage_note": "只回答健康证明条件，不反推64岁免交证明；不自行承诺后续发送格式或定时提醒。报名年龄上限另看年龄口径。"
     },
     {
       "id": "age_75_entry_claim",
-      "name": "75歲以上入藏函限制",
+      "name": "满75岁台湾旅客",
       "status": "active",
       "priority": 190,
       "topics": [
@@ -999,20 +999,23 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_transition",
-      "answer_text": "目前75歲以上長輩申請入藏函是申請不下來的",
+      "answer_text": "台灣旅客65–75歲（含75歲）可以報名，使用台胞證需要提供健康證明喔。",
       "fact_ids": [
         "service.requirements"
       ],
       "asset_ids": [],
-      "source_ref": "website-7693-full/02-peach-9d/content.md#L124",
-      "answer_origin": "website_verbatim",
+      "source_ref": "AI(2).docx#第21段；业务确认2026-09-30",
+      "answer_origin": "operator_approved",
       "positive_examples": [
-        "75歲可以去嗎",
-        "75歲能辦入藏函嗎",
-        "老人有年齡限制嗎"
+        "妈妈刚好75岁可以去吗，需要什么证明",
+        "75岁台湾旅客能报名吗"
       ],
-      "negative_examples": [],
-      "usage_note": ""
+      "negative_examples": [
+        "76岁可以去吗",
+        "64岁是最低年龄吗",
+        "香港护照的规定"
+      ],
+      "usage_note": "完整短答已经覆盖满75岁资格和证明，直接引用即可。不追加健康证明与入藏函一起办理等未提供流程。超过75岁用通用 over_75_reception。"
     },
     {
       "id": "young_child_suitability",
@@ -1395,6 +1398,37 @@
       "party_size_min": null,
       "party_size_max": null,
       "usage_note": ""
+    },
+    {
+      "id": "altitude_concern",
+      "name": "担心高反与珠峰安排",
+      "status": "active",
+      "priority": 130,
+      "topics": [
+        "altitude"
+      ],
+      "party_size_min": null,
+      "party_size_max": null,
+      "content_group_key": "altitude_health",
+      "answer_text": "9日不上珠峰，從林芝入藏，讓身體逐步適應海拔。車上和希爾頓房內有供氧設備，但供氧不代表不會高反；出發前可以帶行程請醫師評估身體狀況喔。",
+      "fact_ids": [
+        "route.9.overview",
+        "route.shared.hotel_reference",
+        "route.shared.vehicle_reference"
+      ],
+      "asset_ids": [],
+      "source_ref": "AI(1).docx#高反建议；线路行程与供氧事实",
+      "answer_origin": "operator_approved",
+      "positive_examples": [
+        "第一次去担心高反，会不会上珠峰",
+        "最担心高反，这条行程怎么样"
+      ],
+      "negative_examples": [
+        "已经不舒服需要帮助",
+        "有随团医师吗",
+        "具体怎么用药"
+      ],
+      "usage_note": "这是高反顾虑的简短首答，不再附加全套设备、浓度、医院、保险清单；后续问哪项再回答哪项。"
     }
   ],
   "match_keywords": [

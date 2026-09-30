@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "knowledge_version": "2026-09-21.health-service-3-device-scope-20260921",
+  "knowledge_version": "2026-09-30.business-replies",
   "sources": [
     {
       "id": "china2go.tibet_insurance",
@@ -60,6 +60,11 @@
       "text": "旅途中有任何不舒服，請立即告知導遊，由團隊協助聯絡正規醫療機構、安排交通，必要時陪同就醫。是否需要吸氧及如何使用，聽從現場醫護人員建議；已有醫囑的藥物依醫囑使用。",
       "source_ref": "china2go.tibet_insurance#出現高原反應",
       "review_note": "刪除舊摘錄中導遊代作醫療判斷的歧義，保留已核實的聯絡、交通及陪同協助，個人治療交由醫护人員。"
+    },
+    {
+      "id": "service.age_requirements",
+      "text": "台灣旅客65–75歲（含75歲）可報名並提供健康證明；超過75歲不建議參加，需個案確認。65歲是健康證明條件，不是最低參加年齡。沒有提供其他年齡的文件豁免或健康證明辦理流程。",
+      "source_ref": "AI(2).docx#第21段；业务2026-09-30确认"
     }
   ],
   "fixed_answers": [
@@ -71,7 +76,7 @@
       "topics": [
         "medical_service"
       ],
-        "answer_text": "行程沒有安排隨隊醫師。導遊接受過高原急救訓練，隨車備有血氧儀、氧氣瓶和急救包；旅途中若不舒服，會協助聯絡正規醫院、安排交通，必要時陪同就醫。",
+      "answer_text": "行程沒有安排隨隊醫師。導遊接受過高原急救訓練，隨車備有血氧儀、氧氣瓶和急救包；旅途中若不舒服，會協助聯絡正規醫院、安排交通，必要時陪同就醫。",
       "fact_ids": [
         "service.medical_support",
         "service.medical_preparedness",
@@ -134,7 +139,7 @@
       "topics": [
         "altitude_health"
       ],
-        "answer_text": "旅途中有任何不舒服，請立即告知導遊。團隊會協助聯絡正規醫療機構、安排交通，必要時陪同就醫；吸氧與用藥按現場醫護人員或既有醫囑處理。",
+      "answer_text": "旅途中有任何不舒服，請立即告知導遊。團隊會協助聯絡正規醫療機構、安排交通，必要時陪同就醫；吸氧與用藥按現場醫護人員或既有醫囑處理。",
       "fact_ids": [
         "service.altitude_response"
       ],
@@ -154,6 +159,91 @@
         "personal_health_suitability",
         "medical_guarantee_request",
         "current_conditions"
+      ]
+    },
+    {
+      "id": "age_minimum_65",
+      "name": "65岁并非最低年龄",
+      "status": "active",
+      "topics": [
+        "documents"
+      ],
+      "answer_text": "不是喔，65歲指的是台灣旅客要提供健康證明的年齡條件，不是最低參加年齡。",
+      "fact_ids": [
+        "service.age_requirements"
+      ],
+      "source_ref": "AI(2).docx#第21段",
+      "positive_examples": [
+        "是不是最低65歲才能參加，我64歲",
+        "65歲是最低年齡嗎"
+      ],
+      "negative_examples": [
+        "非台湾证件的申请条件",
+        "刚满75岁能参加吗"
+      ]
+    },
+    {
+      "id": "over_75_reception",
+      "name": "超过75岁接待",
+      "status": "active",
+      "topics": [
+        "documents"
+      ],
+      "answer_text": "超過75歲就不建議參加，需要請顧問另行確認能否接待喔。",
+      "fact_ids": [
+        "service.age_requirements"
+      ],
+      "source_ref": "AI(2).docx#第21段",
+      "positive_examples": [
+        "76歲可以一起嗎",
+        "超過75歲能參加嗎"
+      ],
+      "negative_examples": [
+        "非台湾证件的申请条件",
+        "刚满75岁能参加吗"
+      ]
+    },
+    {
+      "id": "medication_rhodiola",
+      "name": "红景天咨询",
+      "status": "active",
+      "topics": [
+        "altitude_health"
+      ],
+      "answer_text": "紅景天要不要先吃，請醫師或藥師依您的身體狀況確認喔，不要照其他人的吃法。",
+      "fact_ids": [
+        "service.website_medication_precautions"
+      ],
+      "source_ref": "AI(1).docx#第80段；service.website_medication_precautions",
+      "positive_examples": [
+        "紅景天要先吃嗎",
+        "紅景天提前幾天吃"
+      ],
+      "negative_examples": [
+        "客户正在出现不适需要就医协助",
+        "随团有没有医师"
+      ]
+    },
+    {
+      "id": "medication_diamox",
+      "name": "丹木斯咨询",
+      "status": "active",
+      "topics": [
+        "altitude_health"
+      ],
+      "answer_text": "丹木斯要不要用、提前幾天及用量，請醫師或藥師依您的身體狀況確認喔，不要照其他人的劑量吃。",
+      "fact_ids": [
+        "service.website_medication_precautions"
+      ],
+      "source_ref": "AI(1).docx#第80段；service.website_medication_precautions",
+      "positive_examples": [
+        "丹木斯怎麼吃",
+        "丹木斯提前幾天",
+        "丹木斯呢"
+      ],
+      "negative_examples": [
+        "客户正在出现不适需要就医协助",
+        "随团有没有医师"
       ]
     }
   ]

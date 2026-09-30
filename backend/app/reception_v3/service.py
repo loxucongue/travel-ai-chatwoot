@@ -317,6 +317,12 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                    'messages': [m for m in row.messages if m.get('direction') == 'incoming' or m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')],
                    'buffered_questions': [m for m in row.messages if m.get('id') in value.get('buffered_questions', [])],
                    'available_materials': candidate_materials(db, tenant_for_session(db, row))}
+        intervals = bundle['silence'].get('intervals_minutes', [])
+        next_step = value.get('silence_step', 0) + (event == 'silence_due')
+        context['followup_schedule'] = {
+            'remaining_intervals_minutes': intervals[next_step:],
+            'next_configured_minutes': intervals[next_step] if next_step < len(intervals) else None,
+        }
         context['website_facts'], context['website_version'] = active_web_facts(
             db, tenant_for_session(db, row), '\n'.join(m.get('content', '') for m in context['messages']
                 if m.get('direction') == 'incoming'), environment=environment, candidate_pool=True)
@@ -363,6 +369,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 row.due_at = utcnow()
                 run.status = 'completed'
             else:
+                # Account for model time without delivering a draft here. This
+                # also anchors a wait decision to evaluation completion.
+                advance(row, wall_now=wall_now, deliver=False)
                 apply_decision(db, row, run, bundle, decision)
                 value = state(row)
                 for key in ('last_error', 'retry_at', 'attempts', 'failed_event'):

@@ -65,11 +65,19 @@ def run_agent(context: dict):
     # These are already the active, scoped facts selected by the service. Make
     # their short text visible before the model decides something is unknown;
     # the read tool still exposes the complete records and provenance.
-    current['service_knowledge'] = {
+    base_service = context['skills'].get('service_knowledge', {})
+    service_facts = {fact['id']: fact for fact in base_service.get('facts', [])}
+    service_facts.update({fact.get('id', f'website:{i}'): fact
+                          for i, fact in enumerate(context.get('website_facts', []))})
+    knowledge = {
         'version': context.get('website_version'),
-        'facts': [{key: fact[key] for key in ('id', 'text', 'source') if key in fact}
-                  for fact in context.get('website_facts', [])],
+        'facts': list(service_facts.values()),
     }
+    if base_service:
+        knowledge['service_version'] = base_service.get('version')
+    current['service_knowledge'] = {**knowledge, 'facts': [
+        {key: fact[key] for key in ('id', 'text', 'source', 'source_ref') if key in fact}
+        for fact in knowledge['facts']]}
     # The enabled catalog is small. Expose facts for comparison without loading
     # another route's entire SOP and sales scripts into the current reception.
     current['route_facts'] = {
@@ -130,7 +138,7 @@ def run_agent(context: dict):
                         if function['name'] == 'load_skill':
                             result = load(args['name'])
                         elif function['name'] == 'get_service_facts':
-                            result = {'facts': context.get('website_facts', []), 'version': context.get('website_version')}
+                            result = knowledge
                         else:
                             raise ValueError('unknown_tool')
                     except (ValueError, KeyError, TypeError) as exc:
