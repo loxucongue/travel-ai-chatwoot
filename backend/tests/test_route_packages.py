@@ -36,14 +36,17 @@ from app.route_packages import (
 
 
 
-def test_first_wave_order_follows_website_branches():
+def test_first_wave_order_follows_business_documents():
     nine = ROUTE_PACKAGES["peach_9d_2027"]
     eleven = ROUTE_PACKAGES["peach_11d_2027"]
     assert nine["content_sequence"][:6] == [
         "advisor_greeting", "itinerary_overview", "peach_highlights",
         "hotel_reference", "vehicle_reference", "vehicle_oxygen",
     ]
-    assert eleven["content_sequence"].index("rongbuk_reference") < eleven["content_sequence"].index("hotel_reference")
+    assert eleven["content_sequence"][:4] == [
+        "advisor_greeting", "itinerary_overview", "peach_highlights", "hotel_reference",
+    ]
+    assert eleven["content_sequence"].index("hotel_reference") < eleven["content_sequence"].index("rongbuk_upgrade")
     assert eleven["content_sequence"].index("rongbuk_reference") < eleven["content_sequence"].index("vehicle_reference")
 
 

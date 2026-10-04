@@ -6,7 +6,7 @@ from sqlalchemy.orm.exc import StaleDataError
 from app.automation_models import AutomationSession
 from app.chatwoot_service import client_for, payload_dict
 from app.config import settings
-from app.conversation_policy import compute_state, has_ai_label
+from app.conversation_policy import compute_state, has_ai_label, observe_ai_label
 from app.history_sync import message_timestamp, message_direction
 from app.models import ConversationState, ChatwootConnection, MessageEvent, OutboundMessage, StoredMedia, User, Tenant, HandoffTask, utcnow
 from app.operations import setting_value, ensure_handoff
@@ -51,6 +51,52 @@ def permitted(db, conversation):
         and effective == 'AI_ACTIVE'
         and not db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
                                                       HandoffTask.status.in_(['pending','claimed']))))
+
+
+def enable_new_customer(db, conversation, message):
+    """Opt new arrivals into the configured inbox, never re-enable old customers."""
+    cutoff = setting_value(db, 'live_reply', {}).get('auto_new_customers_since')
+    if (not cutoff or not settings.outbound_enabled or not global_message_sending_enabled(db)
+            or conversation.inbox.chatwoot_inbox_id != settings.live_reply_inbox_id
+            or not reception_conversation_allowed(db, conversation.chatwoot_conversation_id)
+            or not conversation.inbox.ai_enabled or not db.get(Tenant, conversation.tenant_id).ai_enabled
+            or has_ai_label(conversation.labels or []) or session_for(db, conversation.id)
+            or conversation.ai_mode_source not in ('system', 'chatwoot')
+            or db.scalar(select(MessageEvent.id).where(MessageEvent.conversation_state_id == conversation.id,
+                MessageEvent.id != message.id, MessageEvent.private.is_(False)))
+            or db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id))):
+        return
+    connection = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == conversation.tenant_id))
+    if not connection or connection.account_id != settings.live_reply_account_id:
+        return
+    client = client_for(connection)
+    try:
+        remote = payload_dict(client.get_conversation(conversation.chatwoot_conversation_id))
+        created = remote.get('created_at')
+        if (not created or dt(message_timestamp(created)) < dt(cutoff)
+                or remote.get('inbox_id') != settings.live_reply_inbox_id or remote.get('can_reply') is False):
+            return
+        labels = client.get_conversation_labels(conversation.chatwoot_conversation_id)
+        labels = labels.get('payload') if isinstance(labels, dict) else labels
+        if (not isinstance(labels, list) or set(labels).intersection(blocking_labels(db))
+                or set(conversation.contact.labels if conversation.contact else []).intersection(blocking_labels(db))):
+            return
+        if not has_ai_label(labels):
+            client.set_conversation_labels(conversation.chatwoot_conversation_id, [*labels, 'ai'])
+            labels = client.get_conversation_labels(conversation.chatwoot_conversation_id)
+            labels = labels.get('payload') if isinstance(labels, dict) else labels
+        if not isinstance(labels, list) or not has_ai_label(labels):
+            raise ValueError('new_customer_ai_label_not_confirmed')
+        conversation.labels = labels
+        observe_ai_label(conversation, labels, 'chatwoot')
+        conversation.effective_ai_state, conversation.effective_state_reason = compute_state(
+            db.get(Tenant, conversation.tenant_id), conversation.inbox, labels,
+            conversation.contact.labels if conversation.contact else [], conversation.can_reply,
+            conversation.ai_mode, conversation.ai_sync_status, conversation.ai_label_present)
+    except Exception:
+        ensure_handoff(db, conversation, 'new_customer_activation_failed', '新客户自动接待未启用，请顾问接手。')
+    finally:
+        client.close()
 
 
 def accept(db, conversation, message):

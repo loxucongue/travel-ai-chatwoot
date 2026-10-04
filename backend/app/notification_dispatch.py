@@ -65,6 +65,11 @@ def process_notification_delivery(session_factory=None) -> bool:
             agent_id = int(config["agent_id"])
             if not any(int(agent.get("id", 0)) == agent_id for agent in agents):
                 raise ValueError("notification_agent_not_in_inbox")
+            # The configured handoff destination must also own the conversation
+            # so subsequent customer messages notify the same advisor.
+            assignee = (remote.get("meta") or {}).get("assignee") or {}
+            if config.get("assign_on_handoff") and assignee.get("id") != agent_id:
+                client.assign_conversation(payload["conversation_id"], agent_id)
             content = (f"[@顾问](mention://user/{agent_id}/advisor)\n"
                        f"{payload['title']}\n{payload['body']}\n"
                        f"[ai-notification:{payload['notification_id']}]")

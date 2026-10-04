@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-09-30-business-replies-9d",
+  "package_version": "2026-10-04-document-live-9d",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_9d_2027",
   "branch": "peach_9d",
@@ -15,7 +15,7 @@
   ],
   "default_entry_message": "想了解2027桃花9日不上珠峰行程",
   "initial_delivery_interval_seconds": 2,
-  "ai_guidance": "本线路使用官网7693-2第二条的完整原文话术和图片。优先沿用话术，可依实际上下文调整称呼与衔接；不要改成泛化介绍。官网线路口径优先于历史业务反馈及通用资料。完整介绍按content_sequence发送，之后回答期间的问题。",
+  "ai_guidance": "以AI.docx、AI(1).docx、AI(2).docx的业务答复口径为准；官网补充未覆盖的线路事实。优先使用适用原话，按content_sequence发完整介绍，再回答期间的问题。需要询问时，把一个必要问题放在整轮最后。",
   "source": {
     "url": "https://china2go.com/7693-2/",
     "snapshot_manifest": "data/knowledge/china2go/website-7693-full/manifest.json",
@@ -59,7 +59,7 @@
     },
     {
       "id": "route.9.price",
-      "text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n標準6人小團：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n可接待4–6人小團，其他人數的實際報價由顧問確認。\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "source_ref": "website-7693-full/02-peach-9d/content.md"
     },
     {
@@ -94,7 +94,7 @@
     },
     {
       "id": "route.shared.group_offer",
-      "text": "★限量升級4-6人小團 價格不變",
+      "text": "可接待4–6人小團，其他人數的實際報價由顧問確認。",
       "source_ref": "website-7693-full/02-peach-9d/content.md"
     },
     {
@@ -160,7 +160,7 @@
     },
     "advisor_greeting": {
       "purpose": "承接已选的9日线路并开始完整介绍",
-      "approved_text": "接下來帶您看桃花9日、不上珠峰的完整行程～",
+      "approved_text": "我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！\n接下來帶您看桃花9日、不上珠峰的完整行程～",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -203,7 +203,7 @@
     },
     "party_intro_small": {
       "purpose": "2至3人客户回答人数后的承接话术",
-      "approved_text": "歡迎，我是China2Go國旅環球，我們的拚團都是4-6人小團，最適合像您們人數少前往的，比較自在！先給您介紹一下行程",
+      "approved_text": "歡迎，我是China2Go國旅環球，我們的拚團都是4-6人小團，最適合像您們人數少前往的，輕鬆自在！先給您介紹一下行程",
       "asset_keys": [],
       "evidence_refs": [
         "route.9.overview",
@@ -323,7 +323,7 @@
     },
     "departure_question": {
       "purpose": "出发时间缺失时的单一追问",
-      "approved_text": "這路線是3月尾-4月出，每周4個出團日。請問您計劃什麼時候來呢？好安排顧問給您詳細介紹~❤️",
+      "approved_text": "這條行程是3/20–4/10出發，每週五、六、日、一發團。請問您大概計劃什麼時候出發呢？",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements",
@@ -344,7 +344,7 @@
     },
     "contact_transition": {
       "purpose": "提供价值后的留资承接",
-      "approved_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
+      "approved_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -354,7 +354,7 @@
     },
     "contact_request": {
       "purpose": "满足留资前置条件后询问一种联系方式",
-      "approved_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
+      "approved_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -364,7 +364,7 @@
     },
     "price_deferral": {
       "purpose": "客戶插問價格時直接回答，不以介紹順序延後",
-      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n標準6人小團：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n可接待4–6人小團，其他人數的實際報價由顧問確認。\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "asset_keys": [],
       "evidence_refs": [
         "route.9.price"
@@ -374,7 +374,7 @@
     },
     "price_reference": {
       "purpose": "直接回答每人價格與2人一間的計價條件；4至6人屬於此小團規格，不因客戶說4人就延後報價，不延伸獨立包車或折扣承諾",
-      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "approved_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n標準6人小團：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n可接待4–6人小團，其他人數的實際報價由顧問確認。\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "asset_keys": [],
       "evidence_refs": [
         "route.9.price",
@@ -649,12 +649,12 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "price_reference",
-      "answer_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n十人小團優惠價：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n★限量升級4-6人小團 價格不變\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
+      "answer_text": "【西藏桃花節9日遊（不上珠峰）】\n\n出發時間：3/20-4/10（每週五、六、日、一發團）\n標準6人小團：¥9,980/人（客人為兩人一房的價格，一個人住一間須補單房差¥2,600）\n可接待4–6人小團，其他人數的實際報價由顧問確認。\n包含：入藏函，車，導遊，司機，保險，住宿，酒店早餐，門票\n不含：機票、正餐、小費",
       "fact_ids": [
         "route.9.price"
       ],
       "asset_ids": [],
-      "source_ref": "website-7693-full/02-peach-9d/content.md",
+      "source_ref": "AI(1).docx#价格建议；AI(2).docx#价格适用条件",
       "answer_origin": "operator_approved",
       "positive_examples": [
         "一個人多少錢",
@@ -671,7 +671,7 @@
         "現在幾個人報名",
         "一定會出團嗎"
       ],
-      "usage_note": "按客户当前所问线路选段。询问几人合计时，计算每人团费乘已知人数并明确合计，保留房型和不含项；不要只贴单人报价。单问房差或团期只答对应段。"
+      "usage_note": "9日9980元仅为标准6人小团、两人一房报价。客户人数不是6人或人数未知时，说明标准价格及适用条件，其人数报价需要顾问确认，不把9980直接乘以2、4、8或10当成其报价。6人且两人一房时才可算全团59880元；单问单房差直接答2600元。只问团费不额外列全团合计。"
     },
     {
       "id": "departure",
@@ -809,13 +809,13 @@
       "party_size_min": 2,
       "party_size_max": 3,
       "content_group_key": "party_intro_small",
-      "answer_text": "歡迎，我是China2Go國旅環球，我們的拚團都是4-6人小團，最適合像您們人數少前往的，比較自在！先給您介紹一下行程",
+      "answer_text": "歡迎，我是China2Go國旅環球，我們的拚團都是4-6人小團，最適合像您們人數少前往的，輕鬆自在！先給您介紹一下行程",
       "fact_ids": [
         "route.shared.brand_positioning"
       ],
       "asset_ids": [],
       "source_ref": "website-7693-full/02-peach-9d/content.md",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "我們兩位可以嗎",
         "三個人能參加嗎",
@@ -848,7 +848,7 @@
         "7位可以參加嗎"
       ],
       "negative_examples": [],
-      "usage_note": "适用时保留公司定位、4–6人团型及可考虑自己一团的原话主体。介绍已完成时只去掉最后的先介绍行程；不缩成收到几位。这里没有独立包团的报价。若问自己一团同价吗，答：自己一團的安排和報價需要另外確認；官網的價格不變指的是拼團升級為4–6人小團。"
+      "usage_note": "适用时保留公司定位、4–6人团型及可考虑自己一团的原话主体。介绍完成后去掉先介绍行程，不缩成收到几位。自己一团的安排和报价需另外确认，不从团型推导4位与标准6人报价一样。"
     },
     {
       "id": "lhasa_landmarks",
@@ -1162,7 +1162,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_request",
-      "answer_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
+      "answer_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
       "fact_ids": [
         "service.requirements"
       ],
@@ -1192,7 +1192,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_transition",
-      "answer_text": "方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。",
+      "answer_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
       "fact_ids": [
         "service.requirements"
       ],
@@ -1222,13 +1222,13 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "departure_question",
-      "answer_text": "這路線是3月尾-4月出，每周4個出團日。請問您計劃什麼時候來呢？好安排顧問給您詳細介紹~❤️",
+      "answer_text": "這條行程是3/20–4/10出發，每週五、六、日、一發團。請問您大概計劃什麼時候出發呢？",
       "fact_ids": [
         "service.requirements"
       ],
       "asset_ids": [],
       "source_ref": "website-7693-full/02-peach-9d/content.md",
-      "answer_origin": "website_verbatim",
+      "answer_origin": "operator_approved",
       "positive_examples": [
         "客戶尚未提供時間，且日期影響下一步安排"
       ],

@@ -286,6 +286,8 @@ def get_notification_settings(user: User = Depends(super_admin), db: Session = D
 def set_notification_settings(payload: NotificationSettings, user: User = Depends(require_super_admin_csrf), db: Session = Depends(get_db)):
     current = setting_value(db, "notification_settings", {})
     value = payload.model_dump(exclude={"secret"}, mode="json")
+    if "assign_on_handoff" not in payload.model_fields_set:
+        value["assign_on_handoff"] = current.get("assign_on_handoff", False)
     value["encrypted_secret"] = current.get("encrypted_secret")
     if payload.secret:
         value["encrypted_secret"] = encrypt_secret(payload.secret).decode()

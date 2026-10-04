@@ -46,6 +46,7 @@ class NotificationSettings(BaseModel):
     channel: Literal["webhook", "chatwoot"] = "webhook"
     agent_id: int | None = Field(default=None, gt=0)
     bot_id: int | None = Field(default=None, gt=0)
+    assign_on_handoff: bool = False
     url: HttpUrl | None = None
     secret: str | None = Field(default=None, min_length=8)
     event_types: list[str] = Field(default_factory=lambda: ["handoff.created", "handoff.overdue"])

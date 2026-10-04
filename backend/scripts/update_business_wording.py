@@ -17,7 +17,13 @@ def corrected_package(package):
 
     def text(value):
         return (value.replace(old_hotel, new_hotel)
-                .replace('2人1標間拼住價格，如需單休須補單房差', '兩人一房的價格，一個人住一間須補單房差'))
+                .replace('2人1標間拼住價格，如需單休須補單房差', '兩人一房的價格，一個人住一間須補單房差')
+                .replace('十人小團優惠價：', '桃花11日團費：' if eleven else '標準6人小團：')
+                .replace('★限量升級4-6人小團 價格不變', '可接待4–6人小團，其他人數的實際報價由顧問確認。' if not eleven else '4–6人小團，兩人一房。')
+                .replace('比較自在', '輕鬆自在')
+                .replace('方便留一下您的LINE ID嗎？我請顧問接著協助您確認出發安排。', '我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？')
+                .replace('這路線是3月尾-4月出，每周4個出團日。請問您計劃什麼時候來呢？好安排顧問給您詳細介紹~❤️',
+                         '這條行程是3/20–4/10出發，每週五、六、日、一發團。請問您大概計劃什麼時候出發呢？'))
 
     # Update the three authoring views together. Image order, prices, intervals
     # and unrelated operator text are retained.
@@ -25,9 +31,27 @@ def corrected_package(package):
         fact['text'] = text(fact['text'])
     for group in result['content_groups'].values():
         group['approved_text'] = text(group['approved_text'])
+    greeting = result['content_groups'].get('advisor_greeting')
+    if greeting and greeting['approved_text'].startswith('接下來帶您看桃花'):
+        greeting['approved_text'] = '我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！\n' + greeting['approved_text']
+    # Product introduction is data, not model-generated ordering.
+    if eleven:
+        sequence = result['content_sequence']
+        if 'hotel_reference' in sequence and 'rongbuk_upgrade' in sequence:
+            sequence.remove('hotel_reference')
+            sequence.insert(sequence.index('rongbuk_upgrade'), 'hotel_reference')
+        if 'peach_highlights' in sequence and 'hotel_reference' in sequence:
+            sequence.remove('peach_highlights')
+            sequence.insert(sequence.index('hotel_reference'), 'peach_highlights')
+    result['ai_guidance'] = '以AI.docx、AI(1).docx、AI(2).docx的业务答复口径为准；官网补充未覆盖的线路事实。优先使用适用原话，按content_sequence发完整介绍，再回答期间的问题。需要询问时，把一个必要问题放在整轮最后。'
     for script in result['fixed_answers']:
         original_text = script['answer_text']
         script['answer_text'] = text(script['answer_text'])
+        if not eleven and script['id'] == 'price':
+            script['usage_note'] = '9日9980元仅为标准6人小团、两人一房报价。客户人数不是6人或人数未知时，说明标准价格及适用条件，其人数报价需要顾问确认，不把9980直接乘以2、4、8或10当成其报价。6人且两人一房时才可算全团59880元；单问单房差直接答2600元。只问团费不额外列全团合计。'
+            script['source_ref'] = 'AI(1).docx#价格建议；AI(2).docx#价格适用条件'
+        if not eleven and script['id'] == 'group_party':
+            script['usage_note'] = '适用时保留公司定位、4–6人团型及可考虑自己一团的原话主体。介绍完成后去掉先介绍行程，不缩成收到几位。自己一团的安排和报价需另外确认，不从团型推导4位与标准6人报价一样。'
         if script['id'] == 'age_75_entry_claim' and script['answer_text'] in (
             '目前75歲以上長輩申請入藏函是申請不下來的',
             '台灣旅客65–75歲（含75歲）可以報名，需提供健康證明；超過75歲則不建議參加，需要個案確認。'):
@@ -62,6 +86,22 @@ def corrected_package(package):
     return result
 
 
+def corrected_configuration(configuration):
+    """One-time authoring migration; never rewrites model output."""
+    result = deepcopy(configuration)
+    replacements = {
+        '您先和家人討論，時間還不用急著決定。方便留一下您的 LINE ID 嗎？之後有想調整的地方，可以請顧問接著協助您。':
+        '您先和家人討論，時間還不用急著決定。之後有想調整的地方，可以請顧問接著協助您。方便留一下您的 LINE ID 嗎？',
+        '這個月份的安排需要另外確認。方便留一下您的 LINE ID 嗎？我請顧問協助您看適合的行程。':
+        '這個月份的安排需要另外確認，可以請顧問協助您看適合的行程。方便留一下您的 LINE ID 嗎？',
+        '可以呀，留 Email 就好。方便提供您的信箱嗎？我請顧問用郵件和您聯絡。':
+        '可以呀，留 Email 就好，我可以請顧問用郵件和您聯絡。方便提供您的信箱嗎？',
+    }
+    for script in result.get('common_scripts', []):
+        script['text'] = replacements.get(script['text'], script['text'])
+    return result
+
+
 def main():
     import argparse
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -79,7 +119,7 @@ def main():
             args.backup.mkdir(parents=True, exist_ok=True)
             with (args.backup / (key + '.json')).open('x', encoding='utf-8') as file:
                 json.dump(before, file, ensure_ascii=False, indent=2)
-            after['package_version'] += '.business-20260930'
+            after['package_version'] += '.business-20261004'
             install_route_package(after)
         print(json.dumps({'route': key, 'changed': changed, 'applied': changed and args.apply}))
 

@@ -8,7 +8,7 @@ from app.operations import setting_value, ensure_handoff
 from app.outbound_control import global_message_sending_enabled
 from app.runtime_settings import dt
 from app.delivery_status import apply_receipt
-from app.reception_v3.live import accept, cancel, permitted
+from app.reception_v3.live import accept, cancel, permitted, enable_new_customer
 
 class ReplyBlocked(Exception):
     pass
@@ -55,6 +55,7 @@ def mirror_event(db, event):
         elif current and message.direction=='outgoing' and not message.private:
             cancel(db,state.id,'human_reply')
         if incoming and current:
+            enable_new_customer(db,state,message)
             accept(db,state,message)
         elif incoming and policy.get('armed_at') and message.created_at>=policy['armed_at'] and not fresh(message.created_at) and permitted(db,state):
             ensure_handoff(db,state,'reply_queue_overdue','客户消息等待超时，请人工接待。')

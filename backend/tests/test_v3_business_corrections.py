@@ -74,6 +74,19 @@ def test_package_corrections_preserve_operator_text_and_materials():
         _validate(fixed, path)
 
 
+def test_contact_script_migration_keeps_opening_and_custom_authoring():
+    correct = runpy.run_path(str(Path(__file__).parents[1] / 'scripts/update_business_wording.py'))['corrected_configuration']
+    before = {'reply': {'opening_message': '运营开场'}, 'common_scripts': [
+        {'id': 'contact_email', 'text': '可以呀，留 Email 就好。方便提供您的信箱嗎？我請顧問用郵件和您聯絡。'},
+        {'id': 'custom', 'text': '运营自定义原话'},
+    ]}
+    after = correct(before)
+    assert after['reply'] == before['reply']
+    assert after['common_scripts'][0]['text'].endswith('方便提供您的信箱嗎？')
+    assert after['common_scripts'][1] == before['common_scripts'][1]
+    assert correct(after) == after
+
+
 def test_self_reported_contact_handoffs_without_fabricated_id(session_factory, monkeypatch):
     with session_factory() as db:
         row = create(db, monkeypatch)
