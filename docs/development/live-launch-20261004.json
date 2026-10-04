@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-04",
+  "status": "deployed; Facebook recipient and mobile device confirmation pending",
+  "code_commit": "7b4852783945a3350d4226b19b1d58cfef49ee2c",
+  "deployment": "v3-consolidation-20261004T041524Z",
+  "engine": "reception-v3-52dd5fda4d81d90c",
+  "source_priority": [
+    "AI.docx",
+    "AI(1).docx",
+    "AI(2).docx",
+    "website supplements"
+  ],
+  "changes": [
+    "Bind actual Facebook inbox 142196; retire deleted inbox 128859",
+    "Enroll fresh post-cutoff customers automatically without resuming historical sessions",
+    "Assign handoff to configured advisor and mention that same person via agent bot",
+    "Enable live silence evaluation at successive 1,3,5 minute intervals",
+    "Align six-person pricing, Hilton-before-Rongbuk order and question-at-end wording"
+  ],
+  "opening_unchanged": true,
+  "inbox_id": 142196,
+  "advisor_id": 264715,
+  "bot_id": 10866,
+  "new_customer_cutoff": "2026-10-04T04:15:24+00:00",
+  "silence": {
+    "enabled": true,
+    "live_enabled": true,
+    "intervals_minutes": [
+      1,
+      3,
+      5
+    ],
+    "active_start": "09:00",
+    "active_end": "00:00",
+    "max_proactive_messages_per_day": 8
+  },
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ok"
+    }
+  },
+  "engineering_tests": {
+    "full_backend_passed": 199,
+    "final_affected_passed": 31,
+    "frontend_passed": 1,
+    "frontend_build": "passed",
+    "warnings": "13 existing deprecation warnings in full backend"
+  },
+  "model_tests": {
+    "model": [
+      "deepseek-v4-flash"
+    ],
+    "http_calls": 46,
+    "input_tokens": 1216728,
+    "output_tokens": 25937,
+    "cost_cny": 1.19312352,
+    "round_ledger_total_cny": 2.12641856,
+    "round_limit_cny": 3,
+    "complete_cases": [
+      "L1004N",
+      "L1004E",
+      "L1004C2",
+      "L1004P",
+      "L1004F"
+    ],
+    "excluded": "L1004C stopped by concurrent test budget reservation; not a pass",
+    "repaired_failure": "L1004N calculated 4-person total from 6-person rate; corrected script usage and retested L1004P/F",
+    "latest_candidate": "L1004F verifies updated last-question wording, first silence, 4-person pricing, Email handoff",
+    "natural_wait_seconds": [
+      560.0039947,
+      75.0648364
+    ],
+    "silence_result": "C2: 1 minute invite, then 3 minutes wait, then 5 minutes stop. F: updated invitation ends with question.",
+    "limits": "Targeted continuous conversations, not exhaustive validation of all 95 historical requirements or all wording variants."
+  },
+  "transport_test": {
+    "conversation_id": 303,
+    "scope": "own widget test contact; isolated delivery database",
+    "records": [
+      {
+        "id": 46,
+        "chatwoot_message_id": 898193232,
+        "status": "submitted",
+        "media_id": null
+      },
+      {
+        "id": 47,
+        "chatwoot_message_id": 898193304,
+        "status": "submitted",
+        "media_id": 101
+      },
+      {
+        "id": 48,
+        "chatwoot_message_id": 898193385,
+        "status": "submitted",
+        "media_id": 100
+      }
+    ],
+    "remote": [
+      {
+        "id": 898193232,
+        "private": false,
+        "status": "sent",
+        "attachment_types": []
+      },
+      {
+        "id": 898193304,
+        "private": false,
+        "status": "sent",
+        "attachment_types": [
+          "image"
+        ]
+      },
+      {
+        "id": 898193385,
+        "private": false,
+        "status": "sent",
+        "attachment_types": [
+          "file"
+        ]
+      }
+    ],
+    "recorded_receipts": [
+      {
+        "chatwoot_message_id": 898193232,
+        "status": "sent"
+      },
+      {
+        "chatwoot_message_id": 898193304,
+        "status": "sent"
+      },
+      {
+        "chatwoot_message_id": 898193385,
+        "status": "sent"
+      }
+    ]
+  },
+  "notification_test": {
+    "conversation_id": 303,
+    "scope": "isolated dispatcher, real internal widget note",
+    "status": "delivered",
+    "error": null,
+    "at": "2026-10-04T04:17:19.832141+00:00",
+    "notification_id": 6,
+    "assignee_id": 264715,
+    "test_messages": [
+      {
+        "id": 898189306,
+        "private": true,
+        "status": "sent",
+        "sender": "agent_bot"
+      }
+    ],
+    "public_message_count": 0,
+    "notification_response_keys": [
+      "data"
+    ]
+  },
+  "server_phone_mention": [
+    {
+      "id": 717833996,
+      "notification_type": "conversation_mention",
+      "read_at": null,
+      "created_at": 1791087439
+    }
+  ],
+  "production_customer_outbound_count_before": 45,
+  "production_customer_outbound_count_after": 45,
+  "production_live_sessions_at_check": 0,
+  "remaining": [
+    "Real Facebook/Messenger user-originated message through current inbox to customer-visible reply and receipt",
+    "Advisor confirms iPhone notification and conversation opening; Apple Watch separately unverified"
+  ],
+  "backup": "/opt/china2go-ai/backups/v3-consolidation-20261004T041524Z",
+  "config_backup": "/opt/china2go-ai/backups/v3-consolidation-20261004T041524Z/activation",
+  "rollback": "Disable global AI sending first, restore code with scripts/deploy_v3.py rollback, retain new business records; fall back to Chatwoot human reception. Do not replace current DB with backup. Review current inbox binding and silence settings before re-enabling."
+}
