@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 import sys
 
+PREVIOUS_CONTACT_NOTE = '介绍或主要问题已答即可首次邀请，不必等到确定报名。看已发送对话：发过邀请但没给联系方式，就继续答疑；换月份、补人数和家人讨论都不再次索取。客户主动询问联系、表示愿意留资或问如何办理时才重新承接。指定Email就承接Email，只问一种。收到实际联系方式才handoff。'
+CONTACT_NOTE = '这是普通出发安排邀请原话。先按通用tibet-reception Skill判断本轮是否邀请，再选本话术；可适配已知人数、日期和安排。上一则邀请未回应、客户继续追问时只答疑；有长辈同行不等于客户说要和家人讨论。指定Email时用通用Email原话，收到实际联系方式才交接。'
 
 def corrected_package(package):
     result = deepcopy(package)
@@ -46,6 +48,8 @@ def corrected_package(package):
     result['ai_guidance'] = '以AI.docx、AI(1).docx、AI(2).docx的业务答复口径为准；官网补充未覆盖的线路事实。优先使用适用原话，按content_sequence发完整介绍，再回答期间的问题。需要询问时，把一个必要问题放在整轮最后。'
     for script in result['fixed_answers']:
         original_text = script['answer_text']
+        if script['id'] in ('contact_request', 'contact_after_read') and script.get('usage_note') == PREVIOUS_CONTACT_NOTE:
+            script['usage_note'] = CONTACT_NOTE
         script['answer_text'] = text(script['answer_text'])
         if not eleven and script['id'] == 'price':
             script['usage_note'] = '9日9980元仅为标准6人小团、两人一房报价。客户人数不是6人或人数未知时，说明标准价格及适用条件，其人数报价需要顾问确认，不把9980直接乘以2、4、8或10当成其报价。6人且两人一房时才可算全团59880元；单问单房差直接答2600元。只问团费不额外列全团合计。'
@@ -88,7 +92,7 @@ def corrected_package(package):
 
 def corrected_configuration(configuration):
     """One-time authoring migration; never rewrites model output."""
-    from scripts.update_contact_reception import FAMILY_TEXT, FAMILY_SCENARIO, PREVIOUS_FAMILY_SCENARIO, PREVIOUS_SCENARIOS
+    from scripts.update_contact_reception import FAMILY_TEXT, FAMILY_SCENARIO, PREVIOUS_FAMILY_SCENARIO, PREVIOUS_SCENARIOS, update_invitation_scenarios
     result = deepcopy(configuration)
     replacements = {
         '您先和家人討論，時間還不用急著決定。方便留一下您的 LINE ID 嗎？之後有想調整的地方，可以請顧問接著協助您。':
@@ -104,7 +108,7 @@ def corrected_configuration(configuration):
         if script['id'] == 'contact_family' and script.get('scenario') in (
                 PREVIOUS_FAMILY_SCENARIO, PREVIOUS_SCENARIOS['contact_family']):
             script['scenario'] = FAMILY_SCENARIO
-    return result
+    return update_invitation_scenarios(result)
 
 
 def main():
@@ -126,7 +130,7 @@ def main():
             args.backup.mkdir(parents=True, exist_ok=True)
             with (args.backup / (key + '.json')).open('x', encoding='utf-8') as file:
                 json.dump(before, file, ensure_ascii=False, indent=2)
-            after['package_version'] += '.business-20261004'
+            after['package_version'] += '.business-20261006'
             install_route_package(after)
         print(json.dumps({'route': key, 'changed': changed, 'applied': changed and args.apply}))
     with SessionLocal() as db:

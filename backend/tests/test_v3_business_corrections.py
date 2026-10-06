@@ -105,6 +105,46 @@ def test_family_wording_upgrade_preserves_custom_script_and_switches():
     assert corrected_configuration(custom) == custom
 
 
+def test_invitation_scenario_upgrade_is_narrow_and_idempotent():
+    from scripts.update_contact_reception import DEPLOYED_SCENARIOS, update_invitation_scenarios
+    before = {'reply': {'opening_items': [{'content': '业务开场'}]},
+              'silence': {'intervals_minutes': [1, 3, 5]}, 'common_scripts': [
+                  dict(id=key, scenario=value, text='保留运营正文', enabled=False)
+                  for key, value in DEPLOYED_SCENARIOS.items()]}
+    after = update_invitation_scenarios(before)
+    assert after['reply'] == before['reply'] and after['silence'] == before['silence']
+    for old, new in zip(before['common_scripts'], after['common_scripts']):
+        assert new['scenario'] != old['scenario']
+        assert {k: v for k, v in new.items() if k != 'scenario'} == {k: v for k, v in old.items() if k != 'scenario'}
+    assert update_invitation_scenarios(after) == after
+    custom = deepcopy(before)
+    for script in custom['common_scripts']:
+        script['scenario'] = '运营自定义适用场景'
+    assert update_invitation_scenarios(custom) == custom
+
+
+def test_route_invitation_upgrade_preserves_sop_facts_and_script_text():
+    from scripts.update_business_wording import corrected_package, PREVIOUS_CONTACT_NOTE, CONTACT_NOTE
+    for path in PACKAGE_ROOT.glob('*/route-package.json'):
+        current = json.loads(path.read_text(encoding='utf8'))
+        legacy = deepcopy(current)
+        for script in legacy['fixed_answers']:
+            if script['id'] in ('contact_request', 'contact_after_read'):
+                script['usage_note'] = PREVIOUS_CONTACT_NOTE
+        after = corrected_package(legacy)
+        assert after['content_groups'] == legacy['content_groups']
+        assert after['knowledge_facts'] == legacy['knowledge_facts']
+        assert after['content_sequence'] == legacy['content_sequence']
+        for old, new in zip(legacy['fixed_answers'], after['fixed_answers']):
+            assert old['answer_text'] == new['answer_text'] and old['asset_ids'] == new['asset_ids']
+            if old['id'] in ('contact_request', 'contact_after_read'):
+                assert new['usage_note'] == CONTACT_NOTE
+                old['usage_note'] = '运营自己的邀请时机'
+        custom = corrected_package(legacy)
+        assert all(s['usage_note'] == '运营自己的邀请时机' for s in custom['fixed_answers']
+                   if s['id'] in ('contact_request', 'contact_after_read'))
+
+
 def test_wording_cli_updates_saved_configuration_and_loaded_skill(session_factory, monkeypatch, tmp_path):
     import sys
     from app import db as database, route_packages
