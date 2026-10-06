@@ -1,8 +1,8 @@
 {
   "date": "2026-10-06",
-  "status": "implemented; engineering tests passed; real-model regression incomplete; not deployed",
+  "status": "deployed; targeted real-model and continuous-conversation regressions completed; remaining acceptance limits listed",
   "candidate_engine": "reception-v3-4144c37eeb698c7d",
-  "production_engine_observed": "reception-v3-52dd5fda4d81d90c",
+  "production_engine_observed": "reception-v3-4144c37eeb698c7d",
   "baseline_evidence": "output/continued-effects-20261004/report.html",
   "changes": [
     "Distinguish declining contact capture/current-channel preference from an explicit opt-out of all proactive contact; persist the former in profile without globally disabling follow-up.",
@@ -19,6 +19,149 @@
     "configuration_and_business_suite_after_cli_change": "9 passed",
     "full_backend": "202 passed, 13 existing deprecation warnings",
     "real_model": {
+      "method": "Full-context failure replays, three connected customer journeys, real wall-clock silence waits, one new-lead silence observation, and a postdeployment isolated model call.",
+      "model": "deepseek-v4-flash (response model deepseek-flash)",
+      "context_replays_passed": 5,
+      "completed_long_conversations": 3,
+      "new_lead_silence_observations": 1,
+      "postdeploy_isolated_check_passed": true,
+      "actual_http_calls_including_invalid_input": 48,
+      "invalid_input_calls_excluded_from_acceptance": 7,
+      "input_tokens": 1333732,
+      "output_tokens": 26248,
+      "new_ledger_cost_cny": 1.00212,
+      "new_ledger_limit_cny": 3,
+      "previous_ledger_unchanged": true,
+      "evidence": "output/fix-effects-20261006/report.html",
+      "cases": {
+        "F1006A": {
+          "customer_messages": 8,
+          "decisions": 11,
+          "final_state": {
+            "opt_out": false,
+            "handoff": true,
+            "next_check_at": null
+          },
+          "silence": [
+            {
+              "wall": "2026-10-06T01:45:02.289446+00:00",
+              "action": "wait",
+              "stop_followup": false,
+              "reason": "客户说先跟家人商量，上一轮已邀请LINE未回应；本轮无新的未解决问题可补充，给空间不重复索取，按配置等待下一次评估。"
+            },
+            {
+              "wall": "2026-10-06T01:46:31.781493+00:00",
+              "action": "wait",
+              "stop_followup": false,
+              "reason": "客户已表示只在当前渠道咨询、不需要留联系方式，且刚完成吃饭与小费的答疑；本轮没有新的实质帮助内容，也没有未处理的追问，给客户与家人商量的空间，保留后续评估。"
+            }
+          ],
+          "waits": [
+            {
+              "label": "considering_first_silence",
+              "seconds": 75.39294181484729
+            },
+            {
+              "label": "declined_contact_first_silence",
+              "seconds": 75.12029220396653
+            },
+            {
+              "label": "self_reported_handoff_no_followup",
+              "seconds": 75.25273498380557
+            }
+          ]
+        },
+        "F1006B": {
+          "customer_messages": 5,
+          "decisions": 6,
+          "final_state": {
+            "opt_out": false,
+            "handoff": true,
+            "next_check_at": null
+          },
+          "silence": [],
+          "waits": [
+            {
+              "label": "handoff_no_followup",
+              "seconds": 75.26500528678298
+            }
+          ]
+        },
+        "F1006C2": {
+          "customer_messages": 5,
+          "decisions": 9,
+          "final_state": {
+            "opt_out": true,
+            "handoff": false,
+            "next_check_at": null
+          },
+          "silence": [
+            {
+              "wall": "2026-10-06T01:46:59.869048+00:00",
+              "action": "wait",
+              "stop_followup": false,
+              "reason": "介紹已完成並回答高反顧慮，上一則已就家人討論邀約LINE，客戶未回應且無新的實質問題；剛邀請過不重複索取，先給空間等待。"
+            },
+            {
+              "wall": "2026-10-06T01:50:03.591464+00:00",
+              "action": "wait",
+              "stop_followup": false,
+              "reason": "剛在客戶表示要和家人討論後已邀請LINE，客戶未回應；相鄰不再重複索取，暫無新的可推進內容，等待下一次評估。"
+            },
+            {
+              "wall": "2026-10-06T01:55:06.402885+00:00",
+              "action": "wait",
+              "stop_followup": true,
+              "reason": "已完成介绍、回答高反顾虑并针对4位三月底家人同行邀请LINE，客户未回应且无新问题，无合适新内容，结束后续主动评估。"
+            }
+          ],
+          "waits": [
+            {
+              "label": "natural_1_then_3_then_5",
+              "seconds": 560.3072689776309
+            },
+            {
+              "label": "explicit_optout_no_followup",
+              "seconds": 75.08960722014308
+            }
+          ]
+        },
+        "F1006D": {
+          "customer_messages": 1,
+          "decisions": 3,
+          "final_state": {
+            "opt_out": false,
+            "handoff": false,
+            "next_check_at": "2026-10-06T01:59:42.521312+00:00"
+          },
+          "silence": [
+            {
+              "wall": "2026-10-06T01:56:42.546778+00:00",
+              "action": "wait",
+              "stop_followup": false,
+              "reason": "完整介紹剛交付，結尾已問同行人數尚待回應，首次沉默（1分鐘）不宜重複提問或緊接索取聯絡方式，先給空間按配置下次評估。"
+            }
+          ],
+          "waits": [
+            {
+              "label": "new_lead_first_silence",
+              "seconds": 75.19118713401258
+            }
+          ]
+        }
+      },
+      "findings": [
+        "Current-channel preference preserved without global opt-out; subsequent customer questions and silence evaluation remain available.",
+        "Four-person company/group wording retained alongside all queued lodging questions.",
+        "Family invitation uses known party, date and elderly traveller document context; meals/tips answer stays short.",
+        "Explicit route change interrupts remaining old itinerary; a hypothetical six-person question does not overwrite actual party size two.",
+        "Self-reported LINE addition creates handoff without invented contact ID; no automatic delivery during following 75 seconds.",
+        "Real 1-minute, then 3-minute, then 5-minute silence evaluations chose wait; final no-value evaluation stopped further scheduling.",
+        "Explicit opt-out persisted and no proactive delivery during following 75 seconds.",
+        "All silence samples this round chose wait; positive proactive-content delivery is not newly verified by these samples."
+      ]
+    },
+    "previous_budget_limited_attempt": {
       "method": "Replay the prior failing refusal turn with its full recorded conversation and current candidate Skills in an isolated database.",
       "result": "incomplete: initial model request succeeded; a subsequent request was blocked by the existing test-budget reservation limit",
       "passed": false,
@@ -32,16 +175,61 @@
     }
   },
   "deployment": {
-    "performed": false,
-    "configuration_applied_to_production": false,
+    "performed": true,
+    "release": "v3-consolidation-20261006T014216Z",
+    "engine": "reception-v3-4144c37eeb698c7d",
+    "code_commit": "aa33a912d561136de7cb2ddd01ec52abb9173dab",
+    "backup": "/opt/china2go-ai/backups/v3-consolidation-20261006T014216Z",
+    "configuration_applied_to_production": true,
+    "changed_configuration_sections": [
+      "common_scripts"
+    ],
+    "configuration_backup": "/opt/china2go-ai/backups/v3-consolidation-20261006T014216Z/wording/reception-config.json",
+    "opening_unchanged": true,
+    "silence_unchanged": true,
+    "active_silence": {
+      "enabled": true,
+      "live_enabled": true,
+      "intervals_minutes": [
+        1,
+        3,
+        5
+      ],
+      "active_start": "09:00",
+      "active_end": "00:00",
+      "max_proactive_messages_per_day": 8
+    },
+    "skill_digest": "7f7ce37511bd7410dc61535cc7fd07719b46ce7c860e6a4be09107f3b97b2bc5",
     "historical_optouts_reactivated": false,
+    "historical_tasks_replayed": false,
+    "services": [
+      "active",
+      "active",
+      "active"
+    ],
     "production_health_http": 200,
-    "production_outbound_records_observed": 45,
-    "real_customer_messages_sent_by_tests": 0
+    "public_api_ready_http": 200,
+    "outbound_before": 45,
+    "outbound_after": 45,
+    "real_customer_messages_sent_by_tests": 0,
+    "live_sessions_observed": 0,
+    "configured_inbox_exists": true,
+    "validated_route_materials": 17,
+    "opening_assets_valid": true,
+    "notification_configuration": {
+      "enabled": true,
+      "channel": "chatwoot",
+      "agent_id": 264715,
+      "bot_id": 10866,
+      "assign_on_handoff": true
+    },
+    "rollback": "scripts/deploy_v3.py rollback restores the full code release without replacing new business rows; restore common_scripts selectively from the configuration backup if necessary."
   },
   "remaining": [
-    "Complete the real-model refusal, SOP-question combination, family invitation, meals/tips and source-reference regression within an authorized testing budget.",
-    "Deploy the tested candidate and run scripts/update_business_wording.py --apply --backup <release-backup-directory> to migrate the saved common scripts.",
-    "Confirm final active configuration and service health after deployment; actual Messenger and phone/watch receipt acceptance remains independent."
-  ]
+    "Some generated expressions remain less natural than the approved scripts, for example the two-person quote explanation. Tone is not universally accepted based on this small sample.",
+    "The tested silence cases correctly waited or stopped, but do not prove positive new-content outreach. Validate that separately when a suitable unfinished customer need exists.",
+    "No real customer session was present during checks. Current Messenger end-to-end receiving and actual advisor iPhone/Apple Watch receipt remain independent acceptance work.",
+    "The invalid F1006C encoding attempt was stopped, retained in evidence and cost, and excluded from acceptance; F1006C2 replaced it."
+  ],
+  "candidate_commit": "aa33a912d561136de7cb2ddd01ec52abb9173dab"
 }
