@@ -88,10 +88,12 @@ def corrected_package(package):
 
 def corrected_configuration(configuration):
     """One-time authoring migration; never rewrites model output."""
+    from scripts.update_contact_reception import FAMILY_TEXT, FAMILY_SCENARIO, PREVIOUS_FAMILY_SCENARIO, PREVIOUS_SCENARIOS
     result = deepcopy(configuration)
     replacements = {
         '您先和家人討論，時間還不用急著決定。方便留一下您的 LINE ID 嗎？之後有想調整的地方，可以請顧問接著協助您。':
-        '您先和家人討論，時間還不用急著決定。之後有想調整的地方，可以請顧問接著協助您。方便留一下您的 LINE ID 嗎？',
+        FAMILY_TEXT,
+        '您先和家人討論，時間還不用急著決定。之後有想調整的地方，可以請顧問接著協助您。方便留一下您的 LINE ID 嗎？': FAMILY_TEXT,
         '這個月份的安排需要另外確認。方便留一下您的 LINE ID 嗎？我請顧問協助您看適合的行程。':
         '這個月份的安排需要另外確認，可以請顧問協助您看適合的行程。方便留一下您的 LINE ID 嗎？',
         '可以呀，留 Email 就好。方便提供您的信箱嗎？我請顧問用郵件和您聯絡。':
@@ -99,6 +101,9 @@ def corrected_configuration(configuration):
     }
     for script in result.get('common_scripts', []):
         script['text'] = replacements.get(script['text'], script['text'])
+        if script['id'] == 'contact_family' and script.get('scenario') in (
+                PREVIOUS_FAMILY_SCENARIO, PREVIOUS_SCENARIOS['contact_family']):
+            script['scenario'] = FAMILY_SCENARIO
     return result
 
 
@@ -106,6 +111,8 @@ def main():
     import argparse
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from app.route_packages import load_route_packages, install_route_package
+    from app.db import SessionLocal
+    from app.reception_config import get_reception_configuration, ReceptionConfiguration, put_reception_configuration
     parser = argparse.ArgumentParser()
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--backup', type=Path)
@@ -122,6 +129,20 @@ def main():
             after['package_version'] += '.business-20261004'
             install_route_package(after)
         print(json.dumps({'route': key, 'changed': changed, 'applied': changed and args.apply}))
+    with SessionLocal() as db:
+        before = get_reception_configuration(db)
+        after = ReceptionConfiguration.model_validate(corrected_configuration(before))
+        changed = before != after.model_dump()
+        if changed and args.apply:
+            if args.backup is None:
+                parser.error('--apply requires --backup')
+            args.backup.mkdir(parents=True, exist_ok=True)
+            with (args.backup / 'reception-config.json').open('x', encoding='utf-8') as file:
+                json.dump(before, file, ensure_ascii=False, indent=2)
+            put_reception_configuration(db, after)
+            db.commit()
+        print(json.dumps({'configuration': 'route_reception_config', 'changed': changed,
+                          'applied': changed and args.apply}))
 
 
 if __name__ == '__main__':

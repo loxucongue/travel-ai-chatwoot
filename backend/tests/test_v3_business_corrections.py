@@ -87,6 +87,73 @@ def test_contact_script_migration_keeps_opening_and_custom_authoring():
     assert correct(after) == after
 
 
+def test_family_wording_upgrade_preserves_custom_script_and_switches():
+    from scripts.update_business_wording import corrected_configuration
+    from scripts.update_contact_reception import FAMILY_TEXT, FAMILY_SCENARIO, PREVIOUS_FAMILY_SCENARIO
+    before = {'reply': {'opening_items': [{'content': '业务开场'}]},
+              'silence': {'enabled': False, 'intervals_minutes': [3, 5]},
+              'common_scripts': [dict(id='contact_family', enabled=False,
+                 text='您先和家人討論，時間還不用急著決定。之後有想調整的地方，可以請顧問接著協助您。方便留一下您的 LINE ID 嗎？',
+                 scenario=PREVIOUS_FAMILY_SCENARIO)]}
+    after = corrected_configuration(before)
+    assert after['common_scripts'][0] == dict(id='contact_family', enabled=False,
+                                              text=FAMILY_TEXT, scenario=FAMILY_SCENARIO)
+    assert after['reply'] == before['reply'] and after['silence'] == before['silence']
+    assert corrected_configuration(after) == after
+    custom = deepcopy(before)
+    custom['common_scripts'][0].update(text='运营专属邀请', scenario='运营专属场景')
+    assert corrected_configuration(custom) == custom
+
+
+def test_wording_cli_updates_saved_configuration_and_loaded_skill(session_factory, monkeypatch, tmp_path):
+    import sys
+    from app import db as database, route_packages
+    from app.reception_config import ReceptionConfiguration, put_reception_configuration
+    from scripts import update_business_wording
+    from scripts.update_contact_reception import PREVIOUS_FAMILY_SCENARIO, FAMILY_TEXT
+    with session_factory() as db:
+        before = get_reception_configuration(db)
+        before['common_scripts'] = [dict(id='contact_family', name='家庭讨论', enabled=True,
+            scenario=PREVIOUS_FAMILY_SCENARIO,
+            text='您先和家人討論，時間還不用急著決定。之後有想調整的地方，可以請顧問接著協助您。方便留一下您的 LINE ID 嗎？')]
+        put_reception_configuration(db, ReceptionConfiguration.model_validate(before)); db.commit()
+        before = get_reception_configuration(db)
+    monkeypatch.setattr(database, 'SessionLocal', session_factory)
+    monkeypatch.setattr(route_packages, 'load_route_packages', lambda: {})
+    monkeypatch.setattr(sys, 'argv', ['update', '--apply', '--backup', str(tmp_path)])
+    update_business_wording.main()
+    assert json.loads((tmp_path / 'reception-config.json').read_text(encoding='utf8')) == before
+    with session_factory() as db:
+        after = get_reception_configuration(db)
+        assert after['reply'] == before['reply'] and after['silence'] == before['silence']
+        assert after['common_scripts'][0]['text'] == FAMILY_TEXT
+        loaded = skills.SkillRegistry(skills.compile_skills(db)).load('tibet-reception')['instructions']
+        assert FAMILY_TEXT in loaded
+    update_business_wording.main()  # idempotent; existing backup is not overwritten
+
+
+def test_contact_capture_refusal_survives_into_silence_without_global_optout(session_factory, monkeypatch):
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        monkeypatch.setattr(service, 'run_agent', lambda c: answer(
+            profile={'contact_capture_declined': True, 'contact_preference': 'current_channel_only'},
+            messages=[{'text': '可以，我們就在這裡聊。'}], next_check_minutes=1))
+        step(db, row); step(db, row); step(db, row)
+        assert not service.state(row)['opt_out']
+        assert service.state(row)['next_check_at']
+        seen = []
+        def followup(c):
+            seen.append(c)
+            return answer(action='wait', next_check_minutes=3)
+        monkeypatch.setattr(service, 'run_agent', followup)
+        step(db, row, 65)
+        assert seen[-1]['event'] == 'silence_due'
+        assert seen[-1]['profile']['contact_capture_declined'] is True
+        assert seen[-1]['profile']['contact_preference'] == 'current_channel_only'
+        assert not service.state(row)['opt_out']
+        assert service.state(row)['next_check_at']
+
+
 def test_self_reported_contact_handoffs_without_fabricated_id(session_factory, monkeypatch):
     with session_factory() as db:
         row = create(db, monkeypatch)

@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-06",
+  "status": "implemented; engineering tests passed; real-model regression incomplete; not deployed",
+  "candidate_engine": "reception-v3-4144c37eeb698c7d",
+  "production_engine_observed": "reception-v3-52dd5fda4d81d90c",
+  "baseline_evidence": "output/continued-effects-20261004/report.html",
+  "changes": [
+    "Distinguish declining contact capture/current-channel preference from an explicit opt-out of all proactive contact; persist the former in profile without globally disabling follow-up.",
+    "Retain the configured four-person company/group introduction when also answering queued questions.",
+    "Adapt family-discussion invitations to known party size, departure period and actual arrangements instead of assuming dates remain undecided.",
+    "Answer meals and tips without repeating unrelated fee inclusions.",
+    "Use complete natural phrases for the business preference against 比較, without runtime string replacement.",
+    "Only attach a script_id when the answer actually quotes or adapts that script.",
+    "Update the existing authoring migration to save corrected common scripts to the database with a backup, preserving opening, silence settings and operator-customized text."
+  ],
+  "architecture": "Existing V3 Agent, Skills, profile and delivery state retained; no reply reviewer, new tables or runtime keyword classifier added.",
+  "tests": {
+    "affected_suite": "38 passed",
+    "configuration_and_business_suite_after_cli_change": "9 passed",
+    "full_backend": "202 passed, 13 existing deprecation warnings",
+    "real_model": {
+      "method": "Replay the prior failing refusal turn with its full recorded conversation and current candidate Skills in an isolated database.",
+      "result": "incomplete: initial model request succeeded; a subsequent request was blocked by the existing test-budget reservation limit",
+      "passed": false,
+      "actual_http_calls": 1,
+      "input_tokens": 29560,
+      "output_tokens": 126,
+      "new_charged_cny": 0.05912448,
+      "shared_ledger_total_cny": 2.41703296,
+      "shared_ledger_limit_cny": 3,
+      "budget_increased": false
+    }
+  },
+  "deployment": {
+    "performed": false,
+    "configuration_applied_to_production": false,
+    "historical_optouts_reactivated": false,
+    "production_health_http": 200,
+    "production_outbound_records_observed": 45,
+    "real_customer_messages_sent_by_tests": 0
+  },
+  "remaining": [
+    "Complete the real-model refusal, SOP-question combination, family invitation, meals/tips and source-reference regression within an authorized testing budget.",
+    "Deploy the tested candidate and run scripts/update_business_wording.py --apply --backup <release-backup-directory> to migrate the saved common scripts.",
+    "Confirm final active configuration and service health after deployment; actual Messenger and phone/watch receipt acceptance remains independent."
+  ]
+}

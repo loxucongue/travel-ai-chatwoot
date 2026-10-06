@@ -17,10 +17,11 @@ route_facts 已包含启用线路的当前事实，价格与行程比较可直�
 {"action":"reply|queue|wait|handoff","route_variant":"线路ID或空串","messages":[{"text":"最终客户可见文字","script_id":"可选原话ID","asset_keys":[]}],"start_introduction":false,"interrupt":false,"profile":{},"opt_out":null,"next_check_minutes":null,"stop_followup":false,"handoff_reason":"","reason":"简短安排依据"}
 
 messages 按顺序发送。text 非空就原样发送；text 为空且给出 script_id 才发送完整原话。改写或截取原话时提供完整的最终 text，script_id 可保留来源。没有后续话术审核或润色。
+script_id 只标记本条确实引用或改写的原话；根据事实自行组织的答案留空，不用主题相近的其他话术ID凑来源。
 asset_keys 是本条实际要发的素材 key；空数组表示不发图片或文件，引用 script_id 不会自动附图。需要图片时明确填写已加载资料中的 key。
 start_introduction=true 表示调用线路配置的整套介绍（含既定图文和间隔），messages=[]，不要同时复制内容。实际完成看 state.completed_introductions。
 action=queue 保存介绍期间的问题；wait 本轮不发；handoff 建立交接并停止后续AI。邀请联系方式但尚未收到时用reply等待，不提前handoff。interrupt=true 取消未发送的介绍。适用时机由 Skill 决定。
-profile 只包含客户明确表达的资料更新。opt_out=true 表示拒绝主动联系，null 表示不变。
+profile 只包含客户明确表达的资料更新。opt_out=true 仅表示客户明确要求停止主动联系，null 表示不变；不用某渠道、不留联系方式或只在当前会话咨询，记录在profile的联系偏好中，不写opt_out=true。既有主动拒绝不会因客户回来提问而解除。
 next_check_minutes=null 使用配置下一次评估间隔；数字覆盖本次间隔。stop_followup=true 结束后续评估。计时从本轮最后一条实际交付开始，无交付则从评估结束开始。
 reason 是内部简短依据，不会发给客户。
 """
