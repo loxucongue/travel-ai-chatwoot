@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-06",
+  "status": "deployed",
+  "code_commit": "c16cae594427381f7f17514c2cf95a0ba2da444c",
+  "engine": "reception-v3-5ab17066432dc592",
+  "release": "v3-consolidation-20261006T073935Z",
+  "backup": "/opt/china2go-ai/backups/v3-consolidation-20261006T073935Z",
+  "changes": [
+    "统一主Skill、通用场景和线路话术的留资时机。",
+    "相邻答疑不因换月份或新增待确认项重复索要联系方式。",
+    "客户明确提到家庭讨论才使用家庭讨论话术；长辈文件采用正常顾问承接。",
+    "只迁移已知旧配置，保留运营自定义内容；无新增语义审核、文字替换或数据库表。"
+  ],
+  "validation": {
+    "backend_full": "205 passed; 13 existing deprecation warnings",
+    "affected": "27 passed",
+    "frontend": "unchanged; build not rerun this turn",
+    "context_replays": 5,
+    "connected_cases": {
+      "I1006E": {
+        "completed": true,
+        "errors": [],
+        "decisions": 9,
+        "customer_messages": 5,
+        "real_waits": [
+          {
+            "label": "unresolved_september_1_then_3_then_5",
+            "seconds": 560.3294152528979
+          },
+          {
+            "label": "optout_no_outreach",
+            "seconds": 75.40439005289227
+          },
+          {
+            "label": "passive_answer_keeps_optout",
+            "seconds": 75.26089414022863
+          }
+        ],
+        "final_state": {
+          "opt_out": true,
+          "handoff": false,
+          "next_check_at": null
+        }
+      },
+      "I1006F": {
+        "completed": true,
+        "errors": [],
+        "decisions": 7,
+        "customer_messages": 5,
+        "real_waits": [
+          {
+            "label": "agreed_three_minute_document_reminder",
+            "seconds": 195.14972531981766
+          },
+          {
+            "label": "email_handoff_no_outreach",
+            "seconds": 75.5156993670389
+          }
+        ],
+        "final_state": {
+          "opt_out": false,
+          "handoff": true,
+          "next_check_at": null
+        }
+      },
+      "I1006H": {
+        "completed": true,
+        "errors": [],
+        "decisions": 5,
+        "customer_messages": 1,
+        "real_waits": [
+          {
+            "label": "new_lead_full_1_then_3_then_5",
+            "seconds": 562.8119125859812
+          }
+        ],
+        "final_state": {
+          "opt_out": false,
+          "handoff": false,
+          "next_check_at": null
+        }
+      }
+    },
+    "postdeploy_isolated_model_passed": true,
+    "scheduled_reminder_seconds": 186.374791,
+    "model": "deepseek-v4-flash (response: deepseek-flash)",
+    "http_calls": 30,
+    "input_tokens": 819072,
+    "output_tokens": 23094,
+    "incremental_cost_cny": 0.7009606399999999,
+    "shared_ledger_total_cny": 2.24796072,
+    "shared_ledger_limit_cny": 3,
+    "customer_channel_test_writes": 0
+  },
+  "configuration_migration": {
+    "engine": "reception-v3-5ab17066432dc592",
+    "configuration_backup": "/opt/china2go-ai/backups/v3-consolidation-20261006T073935Z/wording/reception-config.json",
+    "changed_sections": [
+      "common_scripts"
+    ],
+    "opening_unchanged": true,
+    "silence_unchanged": true,
+    "silence": {
+      "enabled": true,
+      "live_enabled": true,
+      "intervals_minutes": [
+        1,
+        3,
+        5
+      ],
+      "active_start": "09:00",
+      "active_end": "00:00",
+      "max_proactive_messages_per_day": 8
+    },
+    "family_script": {
+      "id": "contact_family",
+      "name": "和家人商量时邀请",
+      "scenario": "仅在客户本轮明确说先和家人商量或讨论时使用。妈妈同行、询问长辈年龄或报名文件不适用，普通首次邀请用线路contact_request。邀请时机统一依通用Skill；相邻追问不再次索取。适配已知人数、日期和安排，不把已答过的事实说成待确认。",
+      "text": "您先和家人討論～之後可以請顧問接著協助您們的出發安排。方便留一下您的 LINE ID 嗎？",
+      "enabled": true
+    },
+    "skill_digest": "26e7597ad712e787eb4d434aad28cff27bc475b4c3d6130db4d7e784c9a69fab"
+  },
+  "production_readiness": {
+    "release": "v3-consolidation-20261006T073935Z",
+    "engine": "reception-v3-5ab17066432dc592",
+    "git_commit": "c16cae594427381f7f17514c2cf95a0ba2da444c",
+    "backup": "/opt/china2go-ai/backups/v3-consolidation-20261006T073935Z",
+    "ready": 200,
+    "services": [
+      "active",
+      "active",
+      "active"
+    ],
+    "outbound_enabled": true,
+    "configured_inbox": 142196,
+    "skill_digest": "26e7597ad712e787eb4d434aad28cff27bc475b4c3d6130db4d7e784c9a69fab",
+    "silence": {
+      "enabled": true,
+      "live_enabled": true,
+      "intervals_minutes": [
+        1,
+        3,
+        5
+      ],
+      "active_start": "09:00",
+      "active_end": "00:00",
+      "max_proactive_messages_per_day": 8
+    },
+    "entry": {
+      "armed_at": "2026-08-26T15:39:15.939083+00:00",
+      "default": "human",
+      "trigger_label": "ai",
+      "proactive_enabled": false,
+      "reset_remote_ids": [
+        26
+      ],
+      "allowed_material_count": 12,
+      "auto_new_customers_since": "2026-10-04T04:15:24+00:00"
+    },
+    "notifications": {
+      "enabled": true,
+      "channel": "chatwoot",
+      "agent_id": 264715,
+      "bot_id": 10866,
+      "assign_on_handoff": true
+    },
+    "validated_route_materials": 17,
+    "opening_assets_valid": true,
+    "chatwoot_inbox_exists": true,
+    "notification_agent_in_inbox": true,
+    "outbound_count": 45,
+    "live_sessions": 0,
+    "notification_delivery_statuses": {
+      "delivered": 2
+    }
+  },
+  "evidence": "output/invitation-effects-20261006/report.html",
+  "limitations": [
+    "九月咨询后首次沉默再次邀请LINE，间隔仍偏短；后续3分钟选择等待，5分钟后停止。",
+    "长辈文件答复仍偏长，未将本次局部目标通过视为全体业务问题准确率。",
+    "测试模型调用为共享费用预留而串行，不作为生产并发压测。",
+    "真实手机、手表通知收件与真实客户渠道送达不属于本次沙盒验收。"
+  ],
+  "rollback": "Use staged release.py rollback for the full code version; configuration backup is listed above. Restore only changed common-script scenarios against current values; do not overwrite business data created after deployment."
+}
