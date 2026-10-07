@@ -2,6 +2,7 @@
 from copy import deepcopy
 from datetime import timedelta
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
 from app.automation_models import AutomationSession
 from app.chatwoot_service import client_for, payload_dict
@@ -199,9 +200,31 @@ def deliver_one(db, row):
         if not isinstance(result.get('id'), int):
             raise ValueError('submission_unknown')
         out.chatwoot_message_id, out.status, out.submitted_at = result['id'], 'submitted', utcnow()
-        db.add(MessageEvent(conversation_state_id=conversation.id, chatwoot_message_id=result['id'],
-            direction='outgoing', content=out.content, content_type=out.content_type, status='submitted', attribution='ai'))
+        # Keep the channel acceptance even if subsequent local bookkeeping fails.
         db.commit()
+        lookup = select(MessageEvent).where(MessageEvent.conversation_state_id == conversation.id,
+                                             MessageEvent.chatwoot_message_id == result['id'])
+        message = db.scalar(lookup)
+        if message is None:
+            try:
+                with db.begin_nested():
+                    message = MessageEvent(conversation_state_id=conversation.id, chatwoot_message_id=result['id'],
+                        direction='outgoing', content=out.content, content_type=out.content_type,
+                        status='submitted', attribution='ai')
+                    db.add(message)
+                    db.flush()
+            except IntegrityError:
+                # The webhook may insert the same message after our lookup.
+                message = db.scalar(lookup)
+                if message is None:
+                    raise
+        # Preserve callback receipts, attachment metadata and server timestamps.
+        message.attribution = 'ai'
+        from app.delivery_status import apply_receipt
+        apply_receipt(db, out, message.status)
+        db.commit()
+        if out.status == 'failed':
+            return
         # Reload after HTTP; preserve any incoming message that arrived meanwhile.
         for attempt in range(3):
             try:

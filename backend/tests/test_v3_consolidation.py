@@ -144,6 +144,42 @@ def test_unknown_live_submit_is_not_repeated(session_factory,monkeypatch):
         assert db.scalar(select(HandoffTask)) is not None
 
 
+@pytest.mark.parametrize('receipt', ['sent', 'delivered', 'read', 'failed'])
+def test_live_callback_before_http_response_reuses_message_and_receipt(session_factory, monkeypatch, receipt):
+    setup(session_factory, monkeypatch)
+    monkeypatch.setattr(service, 'compile_skills', lambda db: deepcopy(bundle()))
+    class Client:
+        sent = []
+        def get_conversation(self, cid): return {'can_reply': True}
+        def get_conversation_labels(self, cid): return {'payload': ['ai']}
+        def create_text_message(self, cid, text):
+            self.sent.append(text)
+            remote_id = 200 + len(self.sent)
+            with session_factory() as webhook:
+                webhook.add(MessageEvent(conversation_state_id=1, chatwoot_message_id=remote_id,
+                    direction='outgoing', content=text, status=receipt, attribution='inferred_human',
+                    sender_id=7, content_attributes={'callback': True}))
+                webhook.commit()
+            return {'id': remote_id}
+        def close(self): pass
+    client = Client()
+    monkeypatch.setattr(live, 'client_for', lambda connection: client)
+    with session_factory() as db:
+        live.accept(db, db.get(ConversationState, 1), db.get(MessageEvent, 1)); db.commit()
+        row = live.session_for(db, 1)
+        live.deliver_one(db, row)
+        out = db.scalar(select(OutboundMessage))
+        messages = db.scalars(select(MessageEvent).where(MessageEvent.chatwoot_message_id == 201)).all()
+        assert out.chatwoot_message_id == 201 and out.status == receipt
+        assert len(messages) == 1 and messages[0].attribution == 'ai'
+        assert messages[0].sender_id == 7 and messages[0].content_attributes == {'callback': True}
+        assert messages[0].status == receipt
+        assert bool(db.scalar(select(HandoffTask))) == (receipt == 'failed')
+        row.virtual_now = service.later(row.virtual_now, 3); db.commit()
+        live.deliver_one(db, row)
+        assert client.sent == (['配置开场一'] if receipt == 'failed' else ['配置开场一', '配置开场二'])
+
+
 def test_intro_finishes_while_question_is_being_classified(session_factory, monkeypatch):
     with session_factory() as db:
         row = create(db, monkeypatch)
