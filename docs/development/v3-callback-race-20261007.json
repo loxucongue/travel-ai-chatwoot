@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-07",
+  "incident_conversation": 305,
+  "cause": "Chatwoot accepted the opening text and its webhook inserted MessageEvent before the sender attempted a second insert. A unique-key exception rolled back the local acknowledgement and incorrectly triggered delivery_failed handoff.",
+  "confirmed_remote_message_id": 904993387,
+  "receipt": "delivered",
+  "fix": [
+    "Persist the accepted Chatwoot message ID before local mirror bookkeeping.",
+    "Reuse callback-created message records; a savepoint handles an insert race without losing the accepted send.",
+    "Keep callback receipt status and metadata; a real failed receipt still stops delivery and creates handoff."
+  ],
+  "tests": {
+    "targeted": "27 passed",
+    "full_backend": "209 passed; 13 pre-existing deprecation warnings",
+    "new_cases": [
+      "callback sent before HTTP response",
+      "callback delivered before HTTP response",
+      "callback read before HTTP response",
+      "callback failed before HTTP response"
+    ],
+    "model_test_calls": 0
+  },
+  "release": "v3-consolidation-20261007T023358Z",
+  "code_commit": "dafb65847c6a44e807e501cf42f9a5a9f824a18a",
+  "engine": "reception-v3-6583bd72a36812e3",
+  "backup": "/opt/china2go-ai/backups/v3-consolidation-20261007T023358Z",
+  "configuration_unchanged": true,
+  "environment_unchanged": true,
+  "recovery": {
+    "scope": "Only conversation 305, outbound 70, session 594 and erroneous handoff 4.",
+    "preconditions": "Re-read Chatwoot: the only public messages were the original route request and the confirmed opening text; handoff was unclaimed and AI label remained enabled.",
+    "receipt_backup": "/opt/china2go-ai/output/incidents/305/receipt-before.json",
+    "session_backup": "/opt/china2go-ai/backups/v3-consolidation-20261007T023358Z/incident-305/original.json",
+    "original_opening_resent": false,
+    "handoff_status": "cancelled",
+    "intro_completed": [
+      "peach_9d_2027"
+    ],
+    "session_status": "running",
+    "outbound_count": 19,
+    "final_question": "剛剛的行程和照片您都可以慢慢看～方便問一下，這次大概幾位一起來呢？",
+    "final_question_remote_status": "delivered",
+    "next_check_at": "2026-10-07T02:38:58.312253+00:00",
+    "real_customer_sends": "Resumed only the unsent opening image and remaining reception; no synthetic customer messages."
+  },
+  "verification_limit": "Channel delivery receipts verified; no claim of independent iPhone/Apple Watch notification receipt."
+}
