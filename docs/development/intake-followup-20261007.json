@@ -11,24 +11,1061 @@
     "界面显示累计分钟，服务保留原intervals_minutes存储形式；配置变更不重放历史会话"
   ],
   "test_plan": [
-    {"id":"T01","scenario":"两条线路的广告入口","expected":"第一条发配置人数问题与五个选项，无提前房间照片；不调用模型"},
-    {"id":"T02","scenario":"人数提问发送排队/提交/重启","expected":"仅提交成功后启动60秒计时，59秒不介绍，60秒开始；重启不重复"},
-    {"id":"T03","scenario":"人数、人数范围、先介绍、集合问题作为回应","expected":"普通回应后立即生成整套SOP，范围不变具体值，问题介绍后答"},
-    {"id":"T04","scenario":"第一句话已含人数","expected":"不重复问人数，直接介绍"},
-    {"id":"T05","scenario":"停止、改线、转人工及停止后被动追问","expected":"及时中断，无残留人数计时；被动答疑不恢复SOP或营销"},
-    {"id":"T06","scenario":"介绍中插问、图片和文字分段","expected":"完整配置顺序交付，按实际时间间隔，集中答疑"},
-    {"id":"T07","scenario":"六小时累计时间点，交替发送与跳过","expected":"准确保留1/5/15/60/180/360分钟；模型stop标志和耗时不延长或取消"},
-    {"id":"T08","scenario":"进程延迟、营业时间、预约、客户新消息","expected":"错过时点不集中补发；预约优先；新消息取消旧周期；不超过窗口"},
-    {"id":"T09","scenario":"正式渠道input_select及回调先于HTTP返回","expected":"正确持久化内容和选项，复用回调消息、保留回执，不重复提交"},
-    {"id":"T10","scenario":"后台编辑、保存、演练按钮","expected":"配置进入服务和Skill；累计时间不因删除中间项漂移；人数按钮发送原选项"},
-    {"id":"E11","scenario":"11日关联长对话","steps":["选线后真实等待60秒","完整介绍","4位、三月底、妈妈75岁","青铁和集合","与家人商量、担心住宿","逐次推进六小时检查点","拒绝主动联系"],"review":["原话和台湾语气","顾虑事实","邀请时机","每次触达新增价值与重复情况","完整状态和交付记录"]},
-    {"id":"E09","scenario":"9日关联长对话","steps":["选线","4～6位","介绍中问波密与车载氧气","与家人商量","沉默1及5分钟","拒绝LINE选择Email","提供Email并转人工"],"review":["人数区间不猜值","集中答疑","自然留资","转人工后停止触达"]}
+    {
+      "id": "T01",
+      "scenario": "两条线路的广告入口",
+      "expected": "第一条发配置人数问题与五个选项，无提前房间照片；不调用模型"
+    },
+    {
+      "id": "T02",
+      "scenario": "人数提问发送排队/提交/重启",
+      "expected": "仅提交成功后启动60秒计时，59秒不介绍，60秒开始；重启不重复"
+    },
+    {
+      "id": "T03",
+      "scenario": "人数、人数范围、先介绍、集合问题作为回应",
+      "expected": "普通回应后立即生成整套SOP，范围不变具体值，问题介绍后答"
+    },
+    {
+      "id": "T04",
+      "scenario": "第一句话已含人数",
+      "expected": "不重复问人数，直接介绍"
+    },
+    {
+      "id": "T05",
+      "scenario": "停止、改线、转人工及停止后被动追问",
+      "expected": "及时中断，无残留人数计时；被动答疑不恢复SOP或营销"
+    },
+    {
+      "id": "T06",
+      "scenario": "介绍中插问、图片和文字分段",
+      "expected": "完整配置顺序交付，按实际时间间隔，集中答疑"
+    },
+    {
+      "id": "T07",
+      "scenario": "六小时累计时间点，交替发送与跳过",
+      "expected": "准确保留1/5/15/60/180/360分钟；模型stop标志和耗时不延长或取消"
+    },
+    {
+      "id": "T08",
+      "scenario": "进程延迟、营业时间、预约、客户新消息",
+      "expected": "错过时点不集中补发；预约优先；新消息取消旧周期；不超过窗口"
+    },
+    {
+      "id": "T09",
+      "scenario": "正式渠道input_select及回调先于HTTP返回",
+      "expected": "正确持久化内容和选项，复用回调消息、保留回执，不重复提交"
+    },
+    {
+      "id": "T10",
+      "scenario": "后台编辑、保存、演练按钮",
+      "expected": "配置进入服务和Skill；累计时间不因删除中间项漂移；人数按钮发送原选项"
+    },
+    {
+      "id": "E11",
+      "scenario": "11日关联长对话",
+      "steps": [
+        "选线后真实等待60秒",
+        "完整介绍",
+        "4位、三月底、妈妈75岁",
+        "青铁和集合",
+        "与家人商量、担心住宿",
+        "逐次推进六小时检查点",
+        "拒绝主动联系"
+      ],
+      "review": [
+        "原话和台湾语气",
+        "顾虑事实",
+        "邀请时机",
+        "每次触达新增价值与重复情况",
+        "完整状态和交付记录"
+      ]
+    },
+    {
+      "id": "E09",
+      "scenario": "9日关联长对话",
+      "steps": [
+        "选线",
+        "4～6位",
+        "介绍中问波密与车载氧气",
+        "与家人商量",
+        "沉默1及5分钟",
+        "拒绝LINE选择Email",
+        "提供Email并转人工"
+      ],
+      "review": [
+        "人数区间不猜值",
+        "集中答疑",
+        "自然留资",
+        "转人工后停止触达"
+      ]
+    },
+    {
+      "id": "E03",
+      "scenario": "3分钟真实预约和拒绝后的被动答疑",
+      "steps": [
+        "2～3位选线介绍",
+        "青铁集合",
+        "预约3分钟提醒并真实等待",
+        "只在当前渠道问",
+        "拒绝主动联系",
+        "主动返回问小费",
+        "真实观察65秒"
+      ],
+      "review": [
+        "预约前无消息",
+        "到点提醒",
+        "不擅自换渠道",
+        "被动答疑不恢复触达"
+      ]
+    }
   ],
   "release_gate": "程序回归、配置与UI、两条关联长对话及六小时节点人工复核；真实设备显示和通知收件独立验收，不能由mock替代",
-  "validation_status": "engineering_passed_model_acceptance_incomplete",
-  "engineering_results": {"backend_passed":224,"backend_warnings":13,"frontend_passed":2,"frontend_build":"passed","browser":"人数配置保存、累计时间显示、人数按钮点击与计时取消已通过隔离检查"},
-  "model_results": {"http_requests":4,"input_tokens":119278,"output_tokens":4491,"cost_cny":0.1377544,"actual_intake_wait_seconds":60.545,"ledger_total_cny":2.38571512,"budget_limit_cny":3},
-  "real_model_status": "旧测试账本余额不足以预留下一请求；已询问总上限3元提高至5元，尚未获答复，不继续收费调用",
-  "observed_effect_gap": "11日住宿顾虑答复出现比較及偏长的安心措辞；未新增文字替换或模型审核器",
-  "not_verified": ["六个沉默时点的真实模型完整文案", "9日完整真实模型旅程", "Facebook设备端按钮外观", "本次手机及手表实际通知收件"]
+  "validation_status": "candidate_effect_tests_completed_pending_deployment",
+  "engineering_results": {
+    "backend_full_passed": 226,
+    "backend_warnings": 13,
+    "frontend_passed": 2,
+    "frontend_build": "passed_previous_candidate_no_further_frontend_changes",
+    "browser": "隔离浏览器：人数配置保存、累计时间显示、人数按钮点击与计时取消通过"
+  },
+  "model_results": {
+    "new_authorized_budget_cny": 20,
+    "execution_limit_cny": 18,
+    "http_requests": 116,
+    "input_tokens": 3466522,
+    "cached_input_tokens": 2575104,
+    "output_tokens": 71931,
+    "charged_or_reserved_cny": 2.46128816,
+    "unknown_usage_calls": 0,
+    "model_response_names": [
+      "deepseek-flash"
+    ],
+    "http_latency_p50_seconds": 3.11,
+    "http_latency_p95_seconds": 9.46,
+    "latency_scope": "模型HTTP耗时；不含测试费用锁等待、SOP分段时间或真实渠道耗时",
+    "prior_ledger_total_cny": 2.38571512,
+    "prior_intake_calls": 4,
+    "prior_intake_cost_cny": 0.1377544
+  },
+  "not_verified": [
+    "Facebook设备端按钮外观与点击回传实测",
+    "本次手机和手表实际通知收件",
+    "真实六小时墙钟端到端持续观察"
+  ],
+  "human_review": {
+    "passed": [
+      "选线后第一条为配置人数提问和五个按钮，品牌Amber开场在介绍开始时原文发送",
+      "无人回答实际60秒到期开始SOP；普通回答不用等满一分钟；区间人数不猜值",
+      "9日介绍期间波密/供氧两问先排队，整套介绍后用两条短答回答",
+      "最终G11年龄75岁、健康证明、青铁出藏建议与林芝接机均答到",
+      "G11/G9均评估1、5、15、60、180、360分钟；家庭讨论样本60分钟发住宿承接，后续仍评估，没有提前取消",
+      "S11无回应新客样本60分钟提醒看行程、180分钟首次邀请LINE，360分钟不复催",
+      "G9相邻家庭讨论不再索要LINE；指定Email后只问Email，收到邮箱后交接，无虚构出发日期",
+      "P9真实3分钟预约到期提醒；拒绝LINE仍可当前渠道咨询；拒绝主动联系后被动答小费，65秒观察无恢复触达"
+    ],
+    "remaining": [
+      "G11自由组织的住宿答复仍出现一次「比較」，品牌用词尚不稳定；短答引用场景已规避，本轮未加词语替换器",
+      "G9承接了4～6位用于邀请与交接，但没有再次逐句复述group_party公司定位；不能说所有原话都稳定逐字复现",
+      "个别内部reason把后续相对间隔写成检查点；实际执行时间及传入累计分钟正确，未发送这些内部理由"
+    ],
+    "judgement": "人数入口、六小时调度、普通答疑与留资交接达到本轮可发布要求；自然度与品牌措辞为有剩余差距，不宣称全业务要求百分百达标。"
+  },
+  "cases": [
+    {
+      "case": "A11",
+      "completed": true,
+      "decisions": 12,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": 60.545,
+      "sop_interval_seconds_min_max": [
+        2.021,
+        2.061
+      ],
+      "silence": [
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "客戶明確表示先和家人討論、在意住宿，住宿疑慮已回覆並已發出一次LINE邀請未回應；本輪不打擾，保留後續時間點再評估。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "客户表示要和家人讨论并已针对住宿顾虑作答，紧接着刚发出LINE邀请且未回应；本轮无新的适用内容，不重复索取也不复读，等待后续时间点。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "客户明确表示要先和家人讨论、主要担心住宿，且住宿问题已在本轮完整回答，上一则联系邀请刚发出未获回应。依规则给空间、不连续催要，暂不发送，保留后续6小时评估机会。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "客戶表示先和家人討論、擔心住宿；本輪前一則已完整回覆住宿（含波密、珠峰例外、絨布獨立廁所與供氧）並剛發出家庭討論的LINE邀請，未獲回應。依規則相鄰回覆不再次索取，也沒有尚未說明且能推進的新事實，故本輪不發送，保留後續評估機會。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "客戶表示先和家人討論、主要顧慮住宿，本輪已完整解答住宿安排並已首次邀請LINE未回應；此時再催要或複問已知資訊都不合適，暫無新的相關內容，先給空間等待。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "客户表示先与家人讨论住宿，已在上一轮回答住宿安排并邀请LINE，尚未回应。本轮不重复同一邀请、不追索联系方式，也没有新的未解决问题可补充，给客户空间，本次沉默不发消息。",
+          "messages": []
+        }
+      ],
+      "model_errors": [
+        "model_test_budget_exhausted",
+        "Expecting value: line 1 column 1 (char 0)",
+        "Expecting value: line 1 column 1 (char 0)",
+        "Expecting value: line 1 column 1 (char 0)"
+      ],
+      "final_state": {
+        "opt_out": true,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size": 4,
+        "departure_window": "三月底",
+        "companions": "媽媽同行(75歲)",
+        "discussion_route": "peach_11d_2027",
+        "contact_preference": null
+      }
+    },
+    {
+      "case": "B9",
+      "completed": true,
+      "decisions": 8,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.028,
+        2.157
+      ],
+      "silence": [
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "reply",
+          "reason": "客戶表示要與家人商量，剛已邀請過LINE，本輪不重複索取；補充尚未告知的出發區間作為實用資訊，供家人討論參考。",
+          "messages": [
+            {
+              "text": "對了，先提供您出發區間方便和家人討論～這條9日是3/20–4/10出發，每週五、六、日、一發團，您們可以先看看哪個時間比較方便。",
+              "script_id": "",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "客戶已表明先和家人商量，且剛已發過家庭討論版邀請與出發區間；本輪不宜立刻再追問或重複邀請，先給空間，維持後續沉默評估。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": false,
+        "handoff": true,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size_range": "4～6位",
+        "discussion_route": "peach_9d_2027",
+        "contact_preference": "email",
+        "contact_channel": "Email",
+        "line_declined": true,
+        "contact_value": "travel.qa@example.invalid",
+        "contact_status": "provided"
+      }
+    },
+    {
+      "case": "C9",
+      "completed": true,
+      "decisions": 8,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": 60.549,
+      "sop_interval_seconds_min_max": [
+        2.02,
+        2.03
+      ],
+      "silence": [
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "整套介绍与首次LINE邀请刚发送，客户尚未回应；相邻回复不重复索取联系方式，本轮无新增合适内容，先等待，后续时间点继续评估。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "整套介绍与首次留资邀请刚发送，客户尚未回应；1分钟时间点无新的可用信息，避免紧接重复触达，等待后续时间点再评估（可补出发日期等尚未确认的需求）。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "reply",
+          "reason": "介绍与LINE邀请均已发送未回应，不重复邀请；改问尚未取得的出发时间，帮助后续安排。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "departure_question",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "reply",
+          "reason": "介紹與首次邀請後客戶沉默，處於45分鐘檢查點；不重發已問過的出發日期與邀請，改補充尚未帶圖的拉薩經典景點（布達拉宮、八廓街）作為新的相關內容。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "lhasa_landmarks",
+              "asset_keys": [
+                "routes12-potala",
+                "routes12-barkhor"
+              ]
+            }
+          ]
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "整套9日介紹已完整交付，並已邀請LINE與詢問出發時間，客戶至今無任何回應；本輪無新增可回應的問題或需澄清的具體需求，暫不重複索取或再推銷，保留後續時間點評估。",
+          "messages": []
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "wait",
+          "reason": "整套介紹已完成，沉默期間已發過LINE邀請與出發時間詢問，客戶全程未回應、也未提供人數或日期；本輪為6小時跟進窗口最後一個檢查點，沒有新的未解決關注點可補充，重複索取或複述問題只會造成打擾，故不再發送，等客戶主動回來再承接。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": false,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {}
+    },
+    {
+      "case": "D11",
+      "completed": true,
+      "decisions": 8,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.021,
+        2.065
+      ],
+      "silence": [
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "reply",
+          "reason": "客户明确只在当前渠道咨询，排除留资邀请；已交付完整介绍与青铁、集合答疑，沉默时选一项尚未问过、且影响安排的出发时间询问。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "departure_question",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": null,
+          "since_last_outgoing": null,
+          "action": "reply",
+          "reason": "沉默1分鐘，客戶已拒絕留資故不邀請；補充尚未說明過的入藏函與證件準備資訊，不重問出發日期。",
+          "messages": [
+            {
+              "text": "補充一個出發前要準備的部分：台灣旅客進藏要透過旅行社辦入藏函，這條11日行程的團費已經包含入藏函，我們也會在成都安排專人把函件交給您，您這邊主要準備台胞證就好。",
+              "script_id": "",
+              "asset_keys": []
+            }
+          ]
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": true,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size_range": "7～10位",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      }
+    },
+    {
+      "case": "R11",
+      "completed": true,
+      "decisions": 11,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.019,
+        2.062
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "客户刚说先和家人讨论，1分钟前已回复住宿说明，短时间留讨论空间，无合适新内容，等待后续时间点再评估。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "客户表示先和家人讨论、主要担心住宿，上一则回复已就住宿布置与希尔顿/绒布客房作答，距上次出站仅约5分钟，属短时等待，留给客户与家人阅读讨论，本轮不发消息。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "15分鐘內剛完成住宿答疑，客戶明確表示要與家人討論，此刻宜給空間，不重複發送或催促，保留45/120/180分鐘的後續評估。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "客戶已表示先和家人討論、主要顧慮住宿；60分鐘後只針對住宿顧慮澄清家人實際在意的點，不重複住宿清單也不催促留資，保留後續120/180分鐘機會。",
+          "messages": [
+            {
+              "text": "住宿的部分，家人比較在意的是房內供氧，還是每天住宿的地點安排呢？我再針對這一點幫您說明～",
+              "script_id": "",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.7,
+          "action": "reply",
+          "reason": "客戶已看完整套介紹並問過青鐵、集合與住宿，之後表示先和家人討論；上一則LINE邀請已隔多輪且有新的諮詢，屬可再邀請一次的時機，用家庭討論原話自然收尾邀請。前一則未回應的住宿問題不重複追問。",
+          "messages": [
+            {
+              "text": "您先和家人討論住宿這部分～之後可以請顧問接著協助您們4位三月底的出發安排，還有媽媽報名要準備的文件。方便留一下您的 LINE ID 嗎？",
+              "script_id": "contact_family",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 179.8,
+          "action": "wait",
+          "reason": "客戶表示先和家人討論、在意住宿，已完整回答住宿與供氧並已發出LINE邀請（約180分鐘前），未獲回應。同一邀請不逐輪催要，本輪無新事實可補，給空間，待客戶主動回覆。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": true,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size": 4,
+        "departure_window": "2027年3月底",
+        "traveling_with_elderly": true,
+        "traveling_with_parent": true,
+        "opt_out": true
+      }
+    },
+    {
+      "case": "R9",
+      "completed": true,
+      "decisions": 12,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.025,
+        2.093
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "客戶剛說要先和家人商量，1分鐘前才回覆給空間，短時間內不打擾，保留後續評估機會。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "客戶剛表明要先和家人商量，距上一則出站僅5分鐘，屬短時閱讀與討論期，不宜再打擾；保留後續60/180分鐘的評估機會。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "客户刚明确表示要先和家人商量，短时内给空间，不重复索要联系方式或重发资料；15分钟点不发消息，保留后续60/180分钟的评估机会。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "介紹完成、客戶表示先和家人商量；間隔60分鐘做一次輕量承接，補出發區間並確認影響安排的未知出發時間，不重複索要聯絡方式",
+          "messages": [
+            {
+              "text": "這條9日行程是3/20–4/10出發，每週五、六、日、一發團。您和家人討論的時候，如果心裡有大概想出發的時間，我可以先幫您留意這一段～",
+              "script_id": "departure_question",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.9,
+          "action": "reply",
+          "reason": "180分鐘沉默節點，客戶表示與家人商量且曾關注波密住宿與供氧；依通用Skill做一次與其關注點相關的短承接，因上一則邀請未回應不再索要聯絡方式。",
+          "messages": [
+            {
+              "text": "您們慢慢討論～如果家人對波密那晚的住宿，或是房間、車上的供氧還有想了解的地方，都可以再跟我說，我再幫您們說明。",
+              "script_id": "",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 179.8,
+          "action": "wait",
+          "reason": "客戶已表示先和家人商量，且先前已做過一次晚段承接（出發區間、住宿與供氧），距上次出站已180分鐘仍未回應；不宜再換說法催要或重複邀請，本輪不發訊息，跟進窗口結束。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": false,
+        "handoff": true,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size_range": "4～6位",
+        "contact_preference": "email",
+        "contact_channel_declined": [
+          "LINE"
+        ],
+        "contact_capture_declined": false,
+        "contact_channel": "Email",
+        "contact_value": "travel.qa@example.invalid"
+      }
+    },
+    {
+      "case": "S11",
+      "completed": true,
+      "decisions": 8,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": 60.61,
+      "sop_interval_seconds_min_max": [
+        2.021,
+        2.034
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "完整介紹與出發時間提問剛送出約1分鐘，屬短時閱讀期，先保留空間不再追問；後續依配置時間點再評估承接。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "介紹剛完成、上一則才剛問出發時間（出站僅5分鐘），短時間內不宜重複追問或再邀約，先留閱讀與討論空間，後續時間點再評估。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "介紹剛完成15分鐘，最後已問出發時間，客戶尚未回應，短時間留閱讀與考慮空間，暫不再發訊，後續時間點繼續評估。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "介紹已完成且距上次出站60分鐘、客戶尚未回應；這是首次較晚承接，用讀後確認輕量重新開啟對話，不重複先前已問的人數與出發時間問題。未取得聯絡方式且客戶未拒絕，先不交接。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "read_check",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.8,
+          "action": "reply",
+          "reason": "silence_due 第4检查点（距上则出站约120分钟、距客户消息约182分钟）。客户全程未回应，介紹已完成且尚未邀请过联系方式；先简短承接日期未定，再首次自然邀请一种联系方式，不重问已问过的出发时间与看行程。",
+          "messages": [
+            {
+              "text": "如果出發時間還沒定也沒關係～這條11日是3/20–4/10，每週五、六、日、一發團，先有個方向就可以。",
+              "script_id": "",
+              "asset_keys": []
+            },
+            {
+              "text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
+              "script_id": "contact_request",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 179.8,
+          "action": "wait",
+          "reason": "6小時跟進窗口最後一個時間點。客戶全程未回應人數、日期與已發出的LINE邀請；3小時前才做過較晚承接與邀請，未拒絕也未留資，不宜再催要，本輪等待，窗口結束。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": false,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {}
+    },
+    {
+      "case": "P9",
+      "completed": true,
+      "decisions": 10,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.019,
+        2.066
+      ],
+      "silence": [
+        {
+          "minute": null,
+          "since_last_outgoing": 3.1,
+          "action": "reply",
+          "reason": "客戶明確要求在3分鐘後提醒看行程且先不要其他訊息；到點依約只發行程確認短句，不追加其他內容或邀請。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "read_check",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "客户刚回复选择在当前渠道咨询并已获承接，距上一则出站仅约1分钟，属阅读与消化时间，本轮无合适新增内容，先等待；客户已表示暂不留资，后续触达不移到索取联系方式。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "客戶剛表示要忙、並選擇只在這裡諮詢，我方回覆後僅過5分鐘且無新提問；此階段留閱讀時間，不重問已問過的出發時間，也不換渠道索取聯絡方式。後續時間點再評估合適的新幫助。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": true,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size_range": "2～3位",
+        "discussion_route": "peach_9d_2027",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "actual_appointment_seconds_from_customer": 189.461
+    },
+    {
+      "case": "F11",
+      "completed": true,
+      "decisions": 11,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.022,
+        2.068
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "上一則剛回答住宿並邀請LINE（1分鐘前），客戶說要與家人討論，此刻屬閱讀與討論時間，不宜立即再觸達，保留後續檢查點。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "距离上一则回复仅5分钟，客户刚表示要和家人讨论住宿，上一则已邀请LINE未回应；此时留阅读与讨论空间，不重复索要联系方式，后续时间点再评估。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "客户15分钟前刚说要先和家人讨论，且上一则出站已含住宿说明与LINE邀请；此刻距邀请仅15分钟，留阅读与家人讨论时间，不重复索要联系方式，本轮不发。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "沉默到期60分鐘，客戶主要顧慮為住宿；上一則回覆剛邀請過LINE未回應，不重複索取，改以住宿顧慮的自然承接詢問家人是否還有想了解的地方。",
+          "messages": [
+            {
+              "text": "住宿這部分，家人還有想了解的地方嗎？",
+              "script_id": "",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.9,
+          "action": "wait",
+          "reason": "客户180分钟前表示要和家人讨论、主要担心住宿，之后未再回复。已在120分钟前针对住宿做过一次较晚承接（询问家人还想了解什么），仍无回应；本轮不再换说法重问或第三次催要LINE，给客户与家人讨论空间，保留窗口内后续评估。",
+          "messages": []
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 299.9,
+          "action": "wait",
+          "reason": "沉默到期且6小时跟进窗口已结束（window_until 14:53:31 已过，remaining_intervals 为空）；此前已交付住宿说明与一次LINE邀请、并已发出住宿顾虑承接问句，客户在与家人讨论中，不宜再重复索要或复读住宿内容。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": true,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size": 4,
+        "candidate_departure_window": "三月底",
+        "traveling_with_family": true,
+        "opt_out": true
+      }
+    },
+    {
+      "case": "F9",
+      "completed": true,
+      "decisions": 12,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.028,
+        2.072
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "客戶剛剛（約1分鐘前）明確表示要先和家人商量，屬於剛交付後的閱讀與討論時間，本輪不打擾；後續時間點仍會評估。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "客戶剛表示要先與家人商量，僅過5分鐘，給予討論空間，本輪暫不發送，保留後續時間點評估。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "客户刚表示要先与家人商量，距上一条出站仅15分钟，属短时阅读讨论阶段；已有邀请未回应，不与家人讨论期间再次索要，本轮不发消息，保留后续较晚承接机会。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "客户已看过完整介绍、问过波密住宿与车内氧气后表示要与家人商量，上一条LINE邀请未回应，本轮不复索联系方式；改询问尚未知且影响安排的出发时间，帮助继续规划。",
+          "messages": [
+            {
+              "text": "您慢慢和家人討論沒關係～想先請教一下，您們大概計劃什麼時候出發呢？這條是3/20–4/10出發，每週五、六、日、一發團，先知道時間也方便幫您們看安排。",
+              "script_id": "departure_question",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.8,
+          "action": "wait",
+          "reason": "客户表示先与家人商量，且上一则询问出发时间尚未回应；本轮不再重复催问或换词索要联系方式，保留空间继续评估至6小时窗口结束。",
+          "messages": []
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 299.8,
+          "action": "wait",
+          "reason": "6小時沉默窗口結束前的評估點。客戶已明確表示先和家人商量，且上一則約300分鐘前的較晚承接（詢問出發時間）未獲回應；已做過一次較晚承接仍無回應，不再換說法催促，也沒有新的相關事實或可推進事項，故本輪等待，保留空間。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": false,
+        "handoff": true,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size_range": "4～6位",
+        "discussion_route": "peach_9d_2027",
+        "contact_preference": "Email（不用LINE）",
+        "contact_channel": "Email",
+        "contact_value": "travel.qa@example.invalid"
+      }
+    },
+    {
+      "case": "G11",
+      "completed": true,
+      "decisions": 11,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.022,
+        2.065
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "上一则才刚完成住宿说明的承接（出站仅1分钟），客户明确表示要先和家人讨论；1分钟点属阅读期，不宜打扰，保留后续4/10/45/120/180分钟的评估机会。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "客户5分钟前才表示要先和家人讨论并已收到住宿说明，属刚回复后的阅读讨论期，本轮不打扰，保留后续时间点评估。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "客户15分钟前刚说先和家人讨论、主要在意住宿，上一则已针对住宿做简短说明，短时间应留讨论空间，本轮不发，保留后续较晚时间点再评估家庭成员住宿顾虑的承接。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "沉默到期且距上次出站已60分鐘；客户表明先与家人讨论、主要在意住宿，未拒绝联系，引用lodging_family_followup承接住宿顾虑。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "lodging_family_followup",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.9,
+          "action": "wait",
+          "reason": "客戶表示先與家人討論、主要擔心住宿；兩小時前已實際發過住宿關切承接問句（『住宿這部分，家人還有想了解的地方嗎？』）且未回應，同一問題不宜換詞重問。本輪無新的相關事實可補，先等待，保留後續評估機會。",
+          "messages": []
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 299.9,
+          "action": "wait",
+          "reason": "360分钟窗口收尾；客户表示先与家人讨论、主要担心住宿，已在较晚时点发送过住宿相关的家人承接询问且未回应，再换说法重复会变成催促，本轮不再发送，给客户空间。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": true,
+        "handoff": false,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size": 4,
+        "candidate_departure_window": "三月底",
+        "travel_companions": "家人（母親75歲）",
+        "discussion_status": "先和家人討論",
+        "contact_capture_declined": false,
+        "opt_out_reason": "客戶明確要求不要再主動聯絡"
+      }
+    },
+    {
+      "case": "G9",
+      "completed": true,
+      "decisions": 12,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.028,
+        2.076
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "客戶剛說要先和家人商量，距上一則回覆僅1分鐘，給空間閱讀討論，本輪不打擾，後續時間點再評估。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "客戶5分鐘前才表明先和家人商量，剛回覆給予空間，此刻僅過5分鐘不宜再打擾；保留後續45/120/180分鐘的評估機會。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "客户刚说要与家人商量，距上一则出站仅约15分钟，属阅读与讨论时间，本轮不打扰；留待45/120/180分钟的较晚承接再评估。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "客户1小时前表示要和家人商量且曾问住宿与车上供氧，未拒绝联系；本轮沿用住宿承接短话术轻问剩余顾虑，不重复索取LINE，后续时间点继续评估。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "lodging_family_followup",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.9,
+          "action": "wait",
+          "reason": "客戶表示先和家人商量；1小時前已就住宿顧慮做過一次晚間承接且未回應，此刻再追問或再邀請會變成催促，保留360分鐘時間點再評估。",
+          "messages": []
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 299.9,
+          "action": "wait",
+          "reason": "6小时跟进窗口到期；客户说先和家人商量，之后已发过一次住宿相关承接未获回应，不重复同类讯息，留空间等待客户主动回来。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": false,
+        "handoff": true,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size_range": "4～6位",
+        "discussion_route": "peach_9d_2027",
+        "contact_preference": "Email",
+        "contact_capture_declined": false,
+        "declined_channel": "LINE",
+        "contact_channel": "Email",
+        "contact_value": "travel.qa@example.invalid"
+      }
+    }
+  ],
+  "method": "真实DeepSeek、生产配置只读副本、隔离数据库、完整关联对话。模型、SOP、持久化状态和定时器均走实际代码；禁止所有客户渠道网络写入。60秒人数等待与3分钟预约用真实时钟，六小时节点使用演练同一advance_next入口推进，不声称真实等待6小时。",
+  "iterations": [
+    {
+      "version": "baseline A11/B9/C9/D11",
+      "finding": "A11六节点全部wait；B9相邻重复LINE邀请、交接把产品日期当客户日期；D11扩大入藏函材料说明",
+      "change": "增加已过去分钟数，修正较晚承接、邀请时机、摘要证据及交函边界"
+    },
+    {
+      "version": "R11/R9/S11/P9",
+      "finding": "两条线路恢复1小时与3小时主动承接，Email交接和预约正常；仍出现比較及空泛留意承诺",
+      "change": "收紧短句示例，问句末尾，不承诺未建立的留意任务"
+    },
+    {
+      "version": "F11/F9",
+      "finding": "较晚短承接可用，但F9扩写每座位制氧机、台湾用词和尾问仍波动",
+      "change": "补充可直接引用的波密、车载供氧、家庭住宿承接三条短话术"
+    },
+    {
+      "version": "G11/G9",
+      "finding": "见最终人工复核与完整对话",
+      "change": "最终候选"
+    }
+  ],
+  "boundaries": [
+    "两条产品现有配置原文不在本轮重新审定；SOP按配置发送",
+    "6小时内每个节点都评估，不等于每个节点必须发；营业时间和日上限仍生效",
+    "接口提交、客户设备收到、顾问手机/手表推送是不同证据；本轮未向真实客户测试发送",
+    "样本只能证明本次表现，不能换算线上准确率或转化率"
+  ],
+  "setup_incident": "新增账本初次创建为空，A11出现三次本地JSON读取错误，尚未HTTP请求；修正测试脚本后恢复原状态。保留原始事件，不计作业务模型失败。"
 }

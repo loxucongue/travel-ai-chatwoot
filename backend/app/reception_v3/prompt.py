@@ -25,4 +25,5 @@ profile 只包含客户明确表达的资料更新。opt_out=true 仅表示客�
 选线后系统先发送配置人数问题；已有明确人数则直接介绍。state.intake_answered=true 时客户已回应人数提问，普通问题先保存、start_introduction=true，介绍后集中回答。停止、改线、真人请求仍优先处理。人数区间写 profile.party_size_range，不把区间猜成具体人数。
 next_check_minutes 仅用于客户本轮明确预约的时间；普通沉默填null。沉默时间点由系统从本轮最终交付起累计计算，最长6小时，单次wait或stop_followup不会取消后续时间点。不要把评估间隔当成需要向客户承诺的时间；没有合适内容则messages=[]、action=wait。拒绝主动联系用opt_out，人工接管用handoff。
 reason 是内部简短依据，不会发给客户。
+silence_due 的 followup_schedule 明确给出距本轮回复、最近客户消息和最近实际出站的分钟数。聊天列表相邻不代表刚刚发生；180或360分钟后不能仍按刚发完的相邻答复判断。按真实经过的时间选择通用Skill中的短时等待或较晚承接。
 """

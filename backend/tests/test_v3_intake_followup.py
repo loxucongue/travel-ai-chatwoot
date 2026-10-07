@@ -122,6 +122,9 @@ def test_six_hour_timeline_survives_skip_stop_flag_and_delivery_time(session_fac
         for minute in [1,5,15,60,180,360]:
             assert service.state(row)['next_check_at']==service.later(anchor,minute*60)
             service.advance_next(row);db.commit();step(db,row,0)
+            timing=seen[-1]['followup_schedule']
+            assert minute <= timing['elapsed_since_reply_minutes'] < minute+0.2
+            assert timing['minutes_since_last_customer'] >= minute
             if any(m.get('status')=='draft' for m in row.messages):step(db,row,7)
         assert len([c for c in seen if c['event']=='silence_due'])==6
         assert not service.state(row)['next_check_at']
@@ -140,6 +143,37 @@ def test_late_worker_skips_missed_slots_and_expired_window(session_factory,monke
         step(db,row,7*3600)
         assert not service.state(row)['next_check_at']
         assert db.scalar(select(AutomationRun).order_by(AutomationRun.id.desc())).id==before
+
+
+def test_quiet_hours_defer_only_within_the_same_six_hour_window(session_factory,monkeypatch):
+    calls=[]
+    with session_factory() as db:
+        row=create(db,monkeypatch,entry='先看看',model=lambda c:(calls.append(c) or answer(action='wait')))
+        step(db,row,0);step(db,row,0);step(db,row,2)
+        spec=config();spec['silence'].update(active_start='10:00',active_end='21:00')
+        monkeypatch.setattr(service,'compile_skills',lambda db:spec)
+        before=len(calls)
+        service.advance_next(row);db.commit();step(db,row,0)
+        assert len(calls)==before
+        assert service.date(service.state(row)['next_check_at']).isoformat().startswith('2026-10-07T10:00:00')
+        service.advance_next(row);db.commit();step(db,row,0)
+        assert len(calls)==before+1
+        assert service.date(service.state(row)['next_check_at']) <= service.date(service.state(row)['followup_until'])
+
+
+def test_daily_limit_does_not_send_or_extend_followup_into_tomorrow(session_factory,monkeypatch):
+    calls=[]
+    with session_factory() as db:
+        row=create(db,monkeypatch,entry='先看看',model=lambda c:(calls.append(c) or answer(action='wait')))
+        step(db,row,0);step(db,row,0);step(db,row,2)
+        spec=config();spec['silence']['max_proactive_messages_per_day']=1
+        monkeypatch.setattr(service,'compile_skills',lambda db:spec)
+        row.messages=[*row.messages,{'id':'previous-touch','direction':'outgoing','content':'已發的相關資料',
+                      'status':'simulated_delivered','proactive':True,'run_id':900,'created_at':row.virtual_now}]
+        db.commit();before=len(calls)
+        service.advance_next(row);db.commit();step(db,row,0)
+        assert len(calls)==before
+        assert not service.state(row)['next_check_at']
 
 
 def test_appointment_and_new_message_reset(session_factory,monkeypatch):

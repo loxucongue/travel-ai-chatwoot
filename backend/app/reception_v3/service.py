@@ -422,7 +422,13 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             'next_configured_minutes': intervals[next_step] if next_step < len(intervals) else None,
             'checkpoints_minutes': [sum(intervals[:i+1]) for i in range(len(intervals))],
             'window_until': value.get('followup_until'),
+            'elapsed_since_reply_minutes': round((date(row.virtual_now)-date(value['followup_anchor'])).total_seconds()/60, 1) if value.get('followup_anchor') else None,
         }
+        for direction, label in (('incoming', 'customer'), ('outgoing', 'outgoing')):
+            timestamps = [date(m['created_at']) for m in context['messages']
+                          if m.get('direction') == direction and m.get('created_at')]
+            context['followup_schedule'][f'minutes_since_last_{label}'] = round(
+                (date(row.virtual_now)-max(timestamps)).total_seconds()/60, 1) if timestamps else None
         context['website_facts'], context['website_version'] = active_web_facts(
             db, tenant_for_session(db, row), '\n'.join(m.get('content', '') for m in context['messages']
                 if m.get('direction') == 'incoming'), environment=environment, candidate_pool=True)

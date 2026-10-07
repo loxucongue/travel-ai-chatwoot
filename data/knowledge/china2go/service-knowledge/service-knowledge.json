@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "knowledge_version": "2026-09-30.business-replies",
+  "knowledge_version": "2026-10-07.business-short-replies",
   "sources": [
     {
       "id": "china2go.tibet_insurance",
@@ -68,6 +68,33 @@
     }
   ],
   "fixed_answers": [
+    {
+      "id": "bomi_hilton_short",
+      "name": "波密是否希爾頓",
+      "status": "active",
+      "positive_examples": ["波密也是希爾頓嗎", "波密那晚住希爾頓嗎"],
+      "negative_examples": ["請介紹所有住宿", "波密浴室是怎樣的"],
+      "answer_text": "波密那晚不是希爾頓喔，波密是這兩條桃花行程的住宿例外。",
+      "source_ref": "AI.docx、AI(1).docx 第25段：波密住宿例外"
+    },
+    {
+      "id": "vehicle_oxygen_short",
+      "name": "桃花行程車載供氧",
+      "status": "active",
+      "positive_examples": ["車上有氧氣嗎", "車子有供氧嗎"],
+      "negative_examples": ["每個座位都有製氧機嗎", "下車有隨身氧氣嗎", "會不會高反"],
+      "answer_text": "有喔，這兩條桃花行程的車上配有製氧機、彌散式供氧和緊急醫療氧氣鋼瓶。",
+      "source_ref": "兩條桃花線路已配置 vehicle、mobile_oxygen_cabin_claim 原話；未延伸每座位設備"
+    },
+    {
+      "id": "lodging_family_followup",
+      "name": "家人討論住宿後的承接",
+      "status": "active",
+      "positive_examples": ["客戶說先和家人討論、主要在意住宿，已過一小時以上，未拒絕主動聯絡"],
+      "negative_examples": ["剛回答住宿", "已發過相同承接仍未回應", "已拒絕主動聯絡", "客戶問具體住宿問題"],
+      "answer_text": "住宿這部分，家人還有想了解的地方嗎？",
+      "source_ref": "2026-10-07 沉默接待修復：承接客戶已表達顧慮，不新增產品事實"
+    },
     {
       "id": "tour_doctor_service",
       "name": "是否有隨團醫師",
