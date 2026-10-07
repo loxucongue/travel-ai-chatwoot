@@ -121,7 +121,7 @@
     }
   ],
   "release_gate": "程序回归、配置与UI、两条关联长对话及六小时节点人工复核；真实设备显示和通知收件独立验收，不能由mock替代",
-  "validation_status": "candidate_effect_tests_completed_pending_deployment",
+  "validation_status": "deployed_core_acceptance_passed_with_documented_style_gap",
   "engineering_results": {
     "backend_full_passed": 226,
     "backend_warnings": 13,
@@ -132,16 +132,16 @@
   "model_results": {
     "new_authorized_budget_cny": 20,
     "execution_limit_cny": 18,
-    "http_requests": 116,
-    "input_tokens": 3466522,
-    "cached_input_tokens": 2575104,
-    "output_tokens": 71931,
-    "charged_or_reserved_cny": 2.46128816,
+    "http_requests": 128,
+    "input_tokens": 3823465,
+    "cached_input_tokens": 2849792,
+    "output_tokens": 80538,
+    "charged_or_reserved_cny": 2.70564168,
     "unknown_usage_calls": 0,
     "model_response_names": [
       "deepseek-flash"
     ],
-    "http_latency_p50_seconds": 3.11,
+    "http_latency_p50_seconds": 3.04,
     "http_latency_p95_seconds": 9.46,
     "latency_scope": "模型HTTP耗时；不含测试费用锁等待、SOP分段时间或真实渠道耗时",
     "prior_ledger_total_cny": 2.38571512,
@@ -162,7 +162,8 @@
       "G11/G9均评估1、5、15、60、180、360分钟；家庭讨论样本60分钟发住宿承接，后续仍评估，没有提前取消",
       "S11无回应新客样本60分钟提醒看行程、180分钟首次邀请LINE，360分钟不复催",
       "G9相邻家庭讨论不再索要LINE；指定Email后只问Email，收到邮箱后交接，无虚构出发日期",
-      "P9真实3分钟预约到期提醒；拒绝LINE仍可当前渠道咨询；拒绝主动联系后被动答小费，65秒观察无恢复触达"
+      "P9真实3分钟预约到期提醒；拒绝LINE仍可当前渠道咨询；拒绝主动联系后被动答小费，65秒观察无恢复触达",
+      "部署后POST9保留正式时段与日上限，完整介绍、波密/供氧两问、家庭讨论、六个节点、Email交接复测完成"
     ],
     "remaining": [
       "G11自由组织的住宿答复仍出现一次「比較」，品牌用词尚不稳定；短答引用场景已规避，本轮未加词语替换器",
@@ -1036,6 +1037,83 @@
         "contact_channel": "Email",
         "contact_value": "travel.qa@example.invalid"
       }
+    },
+    {
+      "case": "POST9",
+      "completed": true,
+      "decisions": 12,
+      "first_message_is_configured_intake": true,
+      "opening_matches_config": true,
+      "sop_text_sequence_matches": true,
+      "actual_timeout_seconds": null,
+      "sop_interval_seconds_min_max": [
+        2.028,
+        2.069
+      ],
+      "silence": [
+        {
+          "minute": 1.0,
+          "since_last_outgoing": 1.0,
+          "action": "wait",
+          "reason": "客戶剛表示要先和家人商量，上一則回覆僅過1分鐘，屬短時閱讀/討論期，先保留空間，不發訊息；後續依設定時間點再評估。",
+          "messages": []
+        },
+        {
+          "minute": 5.0,
+          "since_last_outgoing": 5.0,
+          "action": "wait",
+          "reason": "客户刚说要和家人商量，距上一则回复仅5分钟，属短时留白，不打扰。",
+          "messages": []
+        },
+        {
+          "minute": 15.0,
+          "since_last_outgoing": 15.0,
+          "action": "wait",
+          "reason": "客戶剛說要先和家人商量，距上次出站僅15分鐘，屬短時等待，留閱讀與討論空間；尚無新的相關內容，本輪不發，保留後續45/120/180分鐘評估。",
+          "messages": []
+        },
+        {
+          "minute": 60.0,
+          "since_last_outgoing": 60.0,
+          "action": "reply",
+          "reason": "客戶說先和家人商量、先前關注波密住宿與車上供氧，距上次出站約60分鐘且未拒絕聯絡、尚未發過此承接，用家人討論住宿的簡短問句承接其顧慮，不重複索取LINE。",
+          "messages": [
+            {
+              "text": "",
+              "script_id": "lodging_family_followup",
+              "asset_keys": []
+            }
+          ]
+        },
+        {
+          "minute": 180.0,
+          "since_last_outgoing": 119.9,
+          "action": "wait",
+          "reason": "客户3小时前表示先与家人商量，我方2小时前已就住宿关注点做过一次承接且未获回应；本轮不再连续追问，保留窗口内后续自然承接机会。",
+          "messages": []
+        },
+        {
+          "minute": 360.0,
+          "since_last_outgoing": 299.9,
+          "action": "wait",
+          "reason": "客戶表明先和家人商量，並非拒絕；先前已邀請LINE並在較晚時段以住宿話題承接一次，均未獲回應。沉默窗口將結束，重複催問或再索聯絡方式不合適，故本輪不發送。",
+          "messages": []
+        }
+      ],
+      "model_errors": [],
+      "final_state": {
+        "opt_out": false,
+        "handoff": true,
+        "next_check_at": null
+      },
+      "final_profile": {
+        "party_size_range": "4～6位",
+        "contact_preference": "email",
+        "declined_channel": "LINE",
+        "contact_channel": "Email",
+        "contact_value": "travel.qa@example.invalid",
+        "discussion_route": "peach_9d_2027"
+      }
     }
   ],
   "method": "真实DeepSeek、生产配置只读副本、隔离数据库、完整关联对话。模型、SOP、持久化状态和定时器均走实际代码；禁止所有客户渠道网络写入。60秒人数等待与3分钟预约用真实时钟，六小时节点使用演练同一advance_next入口推进，不声称真实等待6小时。",
@@ -1067,5 +1145,65 @@
     "接口提交、客户设备收到、顾问手机/手表推送是不同证据；本轮未向真实客户测试发送",
     "样本只能证明本次表现，不能换算线上准确率或转化率"
   ],
-  "setup_incident": "新增账本初次创建为空，A11出现三次本地JSON读取错误，尚未HTTP请求；修正测试脚本后恢复原状态。保留原始事件，不计作业务模型失败。"
+  "setup_incident": "新增账本初次创建为空，A11出现三次本地JSON读取错误，尚未HTTP请求；修正测试脚本后恢复原状态。保留原始事件，不计作业务模型失败。",
+  "deployment": {
+    "source_commit": "e2083a83a170b54a326a74f639e32aaecd0256ef",
+    "release": "v3-consolidation-20261007T090126Z",
+    "engine": "reception-v3-aa01cbb127065fa1",
+    "code_rollback": "/opt/china2go-ai/backups/v3-consolidation-20261007T090126Z",
+    "config_rollback": "/opt/china2go-ai/backend/data/config-backups/intake-followup-20261007T090216823482Z.json",
+    "health": "API/database ok; worker/api/playground active",
+    "manifest_verified_files": 136,
+    "outbound_before": 92,
+    "outbound_after": 92,
+    "runtime_env_preserved": true,
+    "opening_preserved": true,
+    "opening_text": [
+      "您好～我是China2Go的旅遊顧問Amber～很高興認識您！"
+    ],
+    "opening_media_ids": [
+      102
+    ],
+    "intake": {
+      "enabled": true,
+      "question": "您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）",
+      "options": [
+        "自己一位",
+        "2～3位",
+        "4～6位",
+        "7～10位",
+        "10位以上"
+      ],
+      "wait_seconds": 60
+    },
+    "silence": {
+      "enabled": true,
+      "live_enabled": true,
+      "intervals_minutes": [
+        1,
+        4,
+        10,
+        45,
+        120,
+        180
+      ],
+      "active_start": "09:00",
+      "active_end": "00:00",
+      "max_proactive_messages_per_day": 8
+    },
+    "checkpoints_minutes": [
+      1,
+      5,
+      15,
+      60,
+      180,
+      360
+    ],
+    "live_followup_switch": "V3读取已保存的silence.enabled和silence.live_enabled，均为true；旧LIVE_SOP_ENABLED仅用于没有存储配置时的默认值。",
+    "model": "deepseek-v4-flash",
+    "key_matches_user_suffix": true,
+    "historical_sessions_replayed": 0,
+    "post_deploy_test": "POST9使用线上文件逐一校验后的代码副本及最新数据库中的配置；保留09:00–00:00时段与每日8次上限，完整客户旅程在隔离数据库执行，禁止客户渠道网络写入。",
+    "rollback_command": ".venv/Scripts/python scripts/deploy_v3.py rollback；配置仅需恢复时，在服务器backend运行 python scripts/update_intake_followup.py --restore <config_rollback>。不覆盖上线后新增数据库业务记录。"
+  }
 }
