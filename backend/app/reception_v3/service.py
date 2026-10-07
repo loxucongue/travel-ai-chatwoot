@@ -34,6 +34,50 @@ def save(row, value):
     row.controls = {**row.controls, 'v3': value}
 
 
+def opening_parts(db, row, bundle, *, text_only=False):
+    reply = bundle['reply']
+    texts = reply.get('opening_messages') or [reply.get('opening_message', '')]
+    parts = []
+    for item in delivery_items(reply.get('opening_items'), [t for t in texts if t]):
+        if text_only and item['content_type'] != 'text':
+            continue
+        info = opening_media_info(db, item, tenant_for_session(db, row)) if item['content_type'] != 'text' else {}
+        parts.append({**info, 'content': item.get('content', ''), 'content_type': item['content_type'],
+                      'interval_seconds_after': reply.get('opening_interval_seconds', 2)})
+    return parts
+
+
+def begin_intake(row, value, bundle, route):
+    intake = bundle.get('intake', {})
+    if (not intake.get('enabled') or route not in bundle['routes'] or value.get('handoff') or value.get('opt_out') or value.get('intake_status') == 'done'
+            or value.get('introduction_route') or value.get('completed_introductions')
+            or row.memory.get('party_size') or row.memory.get('party_size_range')):
+        return False
+    row.controls = {**row.controls, 'route_variant': route}
+    if value.get('intake_status') in ('sending', 'waiting'):
+        return True
+    value.update(intake_status='sending', intake_wait_seconds=intake['wait_seconds'],
+                 pending_event=None, intake_deadline=None)
+    append_plan(row, value, [{'content': intake['question'], 'content_type': 'input_select',
+        'content_attributes': {'items': [{'title': option, 'value': option} for option in intake['options']]}}],
+        'intake', 1)
+    return True
+
+
+def schedule_followup(value, bundle, now, *, reset=False):
+    intervals = bundle['silence'].get('intervals_minutes', [])
+    if reset or not value.get('followup_anchor'):
+        value['followup_anchor'] = now
+    anchor = value['followup_anchor']
+    value['followup_until'] = later(anchor, min(sum(intervals), 360) * 60)
+    value['next_check_at'] = None
+    for index in range(value.get('silence_step', 0), len(intervals)):
+        target = later(anchor, sum(intervals[:index+1]) * 60)
+        if date(target) > date(now) and date(target) <= date(value['followup_until']):
+            value.update(silence_step=index, next_check_at=target)
+            break
+
+
 def start(db, row, entry, duration_minutes=525600):
     row.engine_release_id = release_id()
     row.controls = {**row.controls, 'simulation': {
@@ -59,6 +103,13 @@ def add_message(db, row, content, client_key, content_type='text'):
     value['next_check_at'] = None
     value['next_check_minutes'] = None
     value['silence_step'] = 0
+    for key in ('followup_anchor', 'followup_until', 'appointment_pending'):
+        value.pop(key, None)
+    if value.get('intake_status') in ('sending', 'waiting'):
+        value.update(intake_status='done', intake_deadline=None, intake_answered=True)
+        row.messages = [{**m, 'status': 'cancelled'} if m.get('v3_kind') == 'intake' and m.get('status') == 'draft' else m for m in row.messages]
+        if value.get('delivery_kind') == 'intake':
+            value.update(delivery_kind=None, delivery_due_at=None)
     value['pending_event'] = 'customer_message'
     # Handoff remains terminal for automatic reception. A new user question
     # after opt-out is different: it may be answered without restoring outreach.
@@ -66,15 +117,14 @@ def add_message(db, row, content, client_key, content_type='text'):
         value['pending_event'] = None
     if not value.get('opening_started'):
         bundle = compile_skills(db)
-        reply = bundle['reply']
-        texts = reply.get('opening_messages') or [reply.get('opening_message', '')]
-        items = delivery_items(reply.get('opening_items'), [t for t in texts if t])
-        parts = []
-        for item in items:
-            info = opening_media_info(db, item, tenant_for_session(db, row)) if item['content_type'] != 'text' else {}
-            parts.append({**info, 'content': item.get('content', ''), 'content_type': item['content_type']})
-        value['opening_started'] = True
-        append_plan(row, value, parts, 'opening', reply.get('opening_interval_seconds', 2))
+        if bundle.get('intake', {}).get('enabled'):
+            # Exact configured advertisement titles only; free text is understood by the Agent.
+            route = next((key for key, spec in bundle['routes'].items()
+                          if content.strip() in [key, spec['name'], *spec.get('aliases', [])]), '')
+            begin_intake(row, value, bundle, route)
+        else:
+            value['opening_started'] = True
+            append_plan(row, value, opening_parts(db, row, bundle), 'opening', bundle['reply'].get('opening_interval_seconds', 2))
     save(row, value)
     row.due_at = utcnow() if value.get('pending_event') else None
 
@@ -143,16 +193,34 @@ def parts_for(db, row, bundle, decision):
 
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
+    if (value.get('intake_answered') and not value.get('completed_introductions')
+            and not value.get('opt_out') and not value.get('handoff')
+            and decision['action'] != 'handoff' and decision['opt_out'] is not True
+            and not decision['interrupt']):
+        decision = {**decision, 'start_introduction': True, 'messages': []}
+        run.trace = {**(run.trace or {}), 'execution_reason': 'intake_answer_starts_introduction'}
+        run.decision = decision
+    previous_memory = row.memory
+    row.memory = {**(row.memory or {}), **decision['profile']}
+    if decision['start_introduction'] and decision['action'] != 'handoff' and decision['opt_out'] is not True:
+        if begin_intake(row, value, bundle, decision['route_variant'] or row.controls.get('route_variant', '')):
+            save(row, value)
+            row.due_at = None
+            return
     # Resolve references before changing state, so a missing image cannot leave
     # a half-installed plan or be recorded as delivered.
-    route, parts = parts_for(db, row, bundle, decision)
-    row.memory = {**(row.memory or {}), **decision['profile']}
+    try:
+        route, parts = parts_for(db, row, bundle, decision)
+    except Exception:
+        row.memory = previous_memory
+        raise
     if decision['opt_out'] is True:
         value['opt_out'] = True
-    if decision['interrupt'] or decision['action'] == 'handoff':
+    if decision['interrupt'] or decision['action'] == 'handoff' or decision['opt_out'] is True:
         row.messages = [{**m, 'status': 'cancelled'} if m.get('status') == 'draft' else m for m in row.messages]
         value['delivery_kind'] = None
         value['delivery_due_at'] = None
+        value['intake_deadline'] = None
     if value.get('delivery_kind') == 'introduction' and not decision['interrupt'] and decision['action'] != 'handoff':
         value['pending_event'] = None
         row.due_at = None
@@ -160,29 +228,46 @@ def apply_decision(db, row, run, bundle, decision):
         return
     if route:
         row.controls = {**row.controls, 'route_variant': route}
+    if not route and not value.get('opening_started') and bundle.get('intake', {}).get('enabled'):
+        parts = opening_parts(db, row, bundle, text_only=True) + parts
+        value.update(opening_started=True, opening_media_pending=True)
     if decision['action'] == 'handoff':
         value['handoff'] = True
         value['handoff_reason'] = decision['handoff_reason']
         row.controls = {**row.controls, 'human': True}
     value['pending_event'] = None
-    value['buffered_questions'] = []
+    intake_answered = value.pop('intake_answered', False)
+    if not (decision['start_introduction'] and intake_answered):
+        value['buffered_questions'] = []
     value['next_check_at'] = None
     step = value.get('silence_step', 0) + (1 if run.input_snapshot.get('event') == 'silence_due' else 0)
     value['silence_step'] = step
     intervals = bundle['silence'].get('intervals_minutes', [])
     configured_delay = intervals[step] if step < len(intervals) else None
-    stopped = value.get('opt_out') or value.get('handoff') or decision.get('stop_followup') or not bundle['silence']['enabled']
-    value['next_check_minutes'] = None if stopped else (decision['next_check_minutes'] or configured_delay)
+    stopped = value.get('opt_out') or value.get('handoff') or not bundle['silence']['enabled']
+    appointment = decision['next_check_minutes'] if run.input_snapshot.get('event') == 'customer_message' else None
+    value['appointment_pending'] = bool(appointment)
+    value['next_check_minutes'] = None if stopped else (appointment or configured_delay)
     value['last_reason'] = decision['reason']
     kind = 'introduction' if decision['start_introduction'] else 'reply'
     if decision['start_introduction']:
         value['introduction_route'] = route
+        value.update(intake_status='done', intake_deadline=None)
+        if not value.get('opening_started'):
+            parts = opening_parts(db, row, bundle) + parts
+            value['opening_started'] = True
+        elif value.pop('opening_media_pending', False):
+            parts = [p for p in opening_parts(db, row, bundle) if p['content_type'] != 'text'] + parts
     interval = bundle['routes'].get(route, {}).get('interval_seconds', bundle['reply']['opening_interval_seconds'])
     append_plan(row, value, parts, kind, interval, run.id)
     if run.input_snapshot.get('event') == 'silence_due':
         row.messages = [{**m, 'proactive': True} if m.get('run_id') == run.id else m for m in row.messages]
     if not parts and value['next_check_minutes']:
-        value['next_check_at'] = later(row.virtual_now, value['next_check_minutes'] * 60)
+        if appointment:
+            value['next_check_at'] = later(row.virtual_now, appointment * 60)
+        else:
+            schedule_followup(value, bundle, row.virtual_now, reset=run.input_snapshot.get('event') != 'silence_due')
+    value['followup_intervals'] = intervals
     save(row, value)
     row.due_at = None
 
@@ -195,7 +280,7 @@ def complete_delivery(row, target, status):
     if part.get('plan_id') != value.get('delivery_plan_id'):
         return
     if any(m.get('status') == 'draft' for m in row.messages):
-        value['delivery_due_at'] = later(row.virtual_now, value['delivery_interval'])
+        value['delivery_due_at'] = later(row.virtual_now, part.get('interval_seconds_after', value['delivery_interval']))
     else:
         kind = value.pop('delivery_kind', None)
         value['delivery_due_at'] = None
@@ -204,8 +289,14 @@ def complete_delivery(row, target, status):
                 *value.get('completed_introductions', []), value.get('introduction_route')]))
             value['pending_event'] = 'introduction_completed'
             row.due_at = utcnow()
+        elif kind == 'intake' and value.get('intake_status') == 'sending':
+            value.update(intake_status='waiting', intake_deadline=later(row.virtual_now, value['intake_wait_seconds']))
         elif kind != 'opening' and value.get('next_check_minutes'):
-            value['next_check_at'] = later(row.virtual_now, value['next_check_minutes'] * 60)
+            if value.get('appointment_pending'):
+                value['next_check_at'] = later(row.virtual_now, value['next_check_minutes'] * 60)
+            else:
+                schedule_followup(value, {'silence': {'intervals_minutes': value.get('followup_intervals', [])}},
+                                  row.virtual_now, reset=not part.get('proactive'))
     save(row, value)
 
 
@@ -233,6 +324,9 @@ def advance(row, wall_now=None, *, deliver=True):
         target = drafts[0]['id']
         complete_delivery(row, target, 'simulated_delivered')
         value = state(row)
+    elif value.get('intake_deadline') and date(value['intake_deadline']) <= date(row.virtual_now):
+        value.update(intake_status='done', intake_deadline=None, pending_event='intake_due')
+        row.due_at = utcnow()
     elif value.get('next_check_at') and date(value['next_check_at']) <= date(row.virtual_now):
         value['next_check_at'] = None
         if not value.get('opt_out') and not value.get('handoff'):
@@ -252,7 +346,7 @@ def control(row, action):
         row.due_at = None
         row.messages = [{**m, 'status': 'cancelled'} if m.get('status') == 'draft' else m for m in row.messages]
         value = state(row)
-        value.update(pending_event=None, delivery_kind=None, delivery_due_at=None, next_check_at=None)
+        value.update(pending_event=None, delivery_kind=None, delivery_due_at=None, next_check_at=None, intake_deadline=None)
         save(row, value)
 
 
@@ -260,9 +354,10 @@ def advance_next(row):
     value = state(row)
     if value.get('pending_event') or any(m.get('status') == 'draft' for m in row.messages):
         raise ValueError('journey_busy')
-    if not value.get('next_check_at'):
+    target = value.get('intake_deadline') or value.get('next_check_at')
+    if not target:
         raise ValueError('journey_next_touch_missing')
-    row.virtual_now = value['next_check_at']
+    row.virtual_now = target
     advance(row)
 
 
@@ -293,7 +388,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
         bundle = compile_skills(db)
         if event == 'silence_due':
             silence = bundle['silence']
-            if value.get('opt_out') or value.get('handoff') or not silence['enabled'] or (environment == 'live' and not silence.get('live_enabled')):
+            expired = (not value.get('appointment_pending') and value.get('followup_until')
+                       and date(row.virtual_now)>date(value['followup_until'])+timedelta(seconds=60))
+            if value.get('opt_out') or value.get('handoff') or expired or not silence['enabled'] or (environment == 'live' and not silence.get('live_enabled')):
                 value.update(pending_event=None, next_check_at=None)
                 save(row, value)
                 db.commit()
@@ -308,7 +405,8 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 opening = local.replace(hour=int(start[:2]), minute=int(start[3:]), second=0, microsecond=0)
                 if opening <= local:
                     opening += timedelta(days=1)
-                value.update(pending_event=None, next_check_at=opening.isoformat())
+                within_window = value.get('followup_until') and opening <= date(value['followup_until'])
+                value.update(pending_event=None, next_check_at=opening.isoformat() if within_window else None)
                 save(row, value)
                 db.commit()
                 continue
@@ -322,6 +420,8 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
         context['followup_schedule'] = {
             'remaining_intervals_minutes': intervals[next_step:],
             'next_configured_minutes': intervals[next_step] if next_step < len(intervals) else None,
+            'checkpoints_minutes': [sum(intervals[:i+1]) for i in range(len(intervals))],
+            'window_until': value.get('followup_until'),
         }
         context['website_facts'], context['website_version'] = active_web_facts(
             db, tenant_for_session(db, row), '\n'.join(m.get('content', '') for m in context['messages']
@@ -348,7 +448,15 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
         meter_token = calls.set(http_calls)
         decision, logs = None, []
         try:
-            decision, logs, digest = run_agent(context)
+            if event == 'intake_due':
+                from app.reception_v3.runtime import Decision
+                decision = Decision(route_variant=row.controls['route_variant'], start_introduction=True,
+                                    reason='人数等待到期，开始配置介绍。').model_dump()
+                if value.get('handoff') or value.get('opt_out'):
+                    decision = Decision(action='wait').model_dump()
+                logs, digest = [], bundle['digest']
+            else:
+                decision, logs, digest = run_agent(context)
             db.refresh(row)
             run = db.get(AutomationRun, run_id)
             run.trace = {'engine_version': 'v3', 'event': event, 'skill_digest': bundle['digest'],

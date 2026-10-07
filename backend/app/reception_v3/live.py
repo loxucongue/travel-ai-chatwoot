@@ -190,13 +190,19 @@ def deliver_one(db, row):
         media = db.get(StoredMedia, part.get('media_id')) if part.get('media_id') else None
         out = OutboundMessage(conversation_state_id=conversation.id, idempotency_key=key,
             source_type='ai', source_id=row.id, content=part.get('content',''), content_type=part.get('content_type','text'),
-            status='submission_unknown', media_id=media.id if media else None)
+            status='submission_unknown', media_id=media.id if media else None,
+            content_attributes=part.get('content_attributes',{}))
         db.add(out)
         row.messages = [{**m, 'status':'submitting'} if m.get('id') == part['id'] else m for m in row.messages]
         db.commit()
         remote_id = conversation.chatwoot_conversation_id
-        result = payload_dict(client.create_attachment_message(remote_id, out.content, media.storage_path, media.mime_type)
-                              if media else client.create_text_message(remote_id, out.content))
+        if media:
+            result = payload_dict(client.create_attachment_message(remote_id, out.content, media.storage_path, media.mime_type))
+        elif out.content_type == 'input_select':
+            result = payload_dict(client.create_input_select_message(remote_id,out.content,
+                [item['title'] for item in out.content_attributes['items']]))
+        else:
+            result = payload_dict(client.create_text_message(remote_id,out.content))
         if not isinstance(result.get('id'), int):
             raise ValueError('submission_unknown')
         out.chatwoot_message_id, out.status, out.submitted_at = result['id'], 'submitted', utcnow()
@@ -210,7 +216,7 @@ def deliver_one(db, row):
                 with db.begin_nested():
                     message = MessageEvent(conversation_state_id=conversation.id, chatwoot_message_id=result['id'],
                         direction='outgoing', content=out.content, content_type=out.content_type,
-                        status='submitted', attribution='ai')
+                        status='submitted', attribution='ai', content_attributes=out.content_attributes)
                     db.add(message)
                     db.flush()
             except IntegrityError:

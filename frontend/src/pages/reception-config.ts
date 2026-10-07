@@ -54,6 +54,7 @@ export type OpeningItem = {
 
 export type ReceptionConfig = {
   schema_version: number;
+  intake: { enabled: boolean; question: string; options: string[]; wait_seconds: number };
   common_scripts: {id: string; name: string; scenario: string; text: string; enabled: boolean}[];
   reply: { opening_message: string; opening_messages: string[]; opening_items: OpeningItem[]; opening_interval_seconds: number; goal: string; tone: 'friendly_professional' | 'concise' | 'warm'; tone_guidance: string; opening_character_limit: number; custom_guidance: string };
   lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[] };
@@ -103,7 +104,8 @@ export function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value))
 export function normalizeConfig(value: ReceptionConfig): ReceptionConfig {
   const result = clone(value);
   result.common_scripts ??= [];
-  result.silence.intervals_minutes ??= [1,120];
+  result.intake ??= {enabled: true, question: '您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）', options: ['自己一位','2～3位','4～6位','7～10位','10位以上'], wait_seconds: 60};
+  result.silence.intervals_minutes ??= [1,4,10,45,120,180];
   result.reply.tone_guidance ??= '';
   result.reply.opening_message ??= '您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？';
   result.reply.opening_messages ??= [result.reply.opening_message];
@@ -131,6 +133,7 @@ export function productDraft(product: RouteProduct): ContentDraft {
 
 export function configurationChanges(before: ReceptionConfig, after: ReceptionConfig): Record<string, unknown> {
   const fields: Record<string,string[]> = {
+    intake: ['enabled','question','options','wait_seconds'],
     reply: ['opening_items','opening_interval_seconds','goal','tone','tone_guidance','custom_guidance'],
     lead_capture: ['enabled','channels'], routing: ['outside_catalog_action'],
     handoff: ['large_group_enabled','large_group_minimum'],
@@ -146,3 +149,6 @@ export function configurationChanges(before: ReceptionConfig, after: ReceptionCo
   if (JSON.stringify(before.common_scripts)!==JSON.stringify(after.common_scripts)) result.common_scripts=after.common_scripts;
   return result;
 }
+
+export const followupCheckpoints = (intervals: number[]) => intervals.map((_, index) => intervals.slice(0,index+1).reduce((sum,value) => sum+value,0));
+export const followupIntervals = (points: number[]) => points.map((point,index) => point-(points[index-1] ?? 0));

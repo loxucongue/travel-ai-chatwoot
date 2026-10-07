@@ -93,10 +93,23 @@ class CommonScript(BaseModel):
 
 
 
+class IntakeSettings(BaseModel):
+    enabled: bool = True
+    question: str = Field(default="您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）", min_length=1, max_length=500)
+    options: list[str] = Field(default_factory=lambda: ['自己一位', '2～3位', '4～6位', '7～10位', '10位以上'], min_length=1, max_length=10)
+    wait_seconds: int = Field(default=60, ge=1, le=300)
+
+    @model_validator(mode="after")
+    def valid(self):
+        if any(not option.strip() or len(option)>20 for option in self.options) or len(set(self.options)) != len(self.options):
+            raise ValueError('intake_options_invalid')
+        return self
+
+
 class SilenceSettings(BaseModel):
     enabled: bool = True
     live_enabled: bool = False
-    intervals_minutes: list[int] = Field(default_factory=lambda:[1,120],min_length=1,max_length=20)
+    intervals_minutes: list[int] = Field(default_factory=lambda:[1,4,10,45,120,180],min_length=1,max_length=20)
     active_start: str = "09:00"
     active_end: str = "21:00"
     max_proactive_messages_per_day: int = Field(default=6,ge=1,le=20)
@@ -107,11 +120,14 @@ class SilenceSettings(BaseModel):
         time.fromisoformat(self.active_start);time.fromisoformat(self.active_end)
         if any(x<1 or x>1440 for x in self.intervals_minutes):
             raise ValueError("silence_interval_out_of_range")
+        if sum(self.intervals_minutes)>360:
+            raise ValueError('silence_window_exceeds_six_hours')
         return self
 
 class ReceptionConfiguration(BaseModel):
     schema_version: int = 7
     reply: ReplySettings = Field(default_factory=ReplySettings)
+    intake: IntakeSettings = Field(default_factory=IntakeSettings)
     lead_capture: LeadSettings = Field(default_factory=LeadSettings)
     routing: RoutingSettings = Field(default_factory=RoutingSettings)
     handoff: HandoffSettings = Field(default_factory=HandoffSettings)

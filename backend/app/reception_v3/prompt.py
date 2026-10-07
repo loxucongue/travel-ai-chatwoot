@@ -22,6 +22,7 @@ asset_keys 是本条实际要发的素材 key；空数组表示不发图片或�
 start_introduction=true 表示调用线路配置的整套介绍（含既定图文和间隔），messages=[]，不要同时复制内容。实际完成看 state.completed_introductions。
 action=queue 保存介绍期间的问题；wait 本轮不发；handoff 建立交接并停止后续AI。邀请联系方式但尚未收到时用reply等待，不提前handoff。interrupt=true 取消未发送的介绍。适用时机由 Skill 决定。
 profile 只包含客户明确表达的资料更新。opt_out=true 仅表示客户明确要求停止主动联系，null 表示不变；不用某渠道、不留联系方式或只在当前会话咨询，记录在profile的联系偏好中，不写opt_out=true。既有主动拒绝不会因客户回来提问而解除。
-next_check_minutes=null 使用配置下一次评估间隔；数字覆盖本次间隔。stop_followup=true 结束后续评估。计时从本轮最后一条实际交付开始，无交付则从评估结束开始。
+选线后系统先发送配置人数问题；已有明确人数则直接介绍。state.intake_answered=true 时客户已回应人数提问，普通问题先保存、start_introduction=true，介绍后集中回答。停止、改线、真人请求仍优先处理。人数区间写 profile.party_size_range，不把区间猜成具体人数。
+next_check_minutes 仅用于客户本轮明确预约的时间；普通沉默填null。沉默时间点由系统从本轮最终交付起累计计算，最长6小时，单次wait或stop_followup不会取消后续时间点。不要把评估间隔当成需要向客户承诺的时间；没有合适内容则messages=[]、action=wait。拒绝主动联系用opt_out，人工接管用handoff。
 reason 是内部简短依据，不会发给客户。
 """

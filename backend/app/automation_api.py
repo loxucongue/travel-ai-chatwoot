@@ -51,10 +51,10 @@ def session_json(db, row):
             'generation': row.generation, 'virtual_now': row.virtual_now,
             'messages': safe_text(row.messages), 'memory': safe_text({k: {'value': v} for k,v in row.memory.items()}),
             'controls': safe_text(row.controls),
-            'simulation': {**simulation, 'next_event_at': value.get('delivery_due_at') or value.get('next_check_at'),
-                           'next_event_name': '线路介绍' if value.get('delivery_kind') == 'introduction' else '沉默评估'},
+              'simulation': {**simulation, 'next_event_at': value.get('delivery_due_at') or value.get('intake_deadline') or value.get('next_check_at'),
+                             'next_event_name': '人数等待' if value.get('intake_deadline') else ('线路介绍' if value.get('delivery_kind') == 'introduction' else '沉默评估')},
             'reception_state': {'journey_stage': stage, 'customer_profile': safe_text(row.memory),
-                                'next_touch_at': value.get('next_check_at'), 'last_warning': value.get('last_error'),
+                                'next_touch_at': value.get('intake_deadline') or value.get('next_check_at'), 'last_warning': value.get('last_error'),
                                 'can_retry': bool(value.get('failed_event'))},
             'pending': bool(value.get('pending_event') and not value.get('failed_event')),
             'runs': [run_json(x) for x in records], 'jobs': [], 'enrollments': [], 'cycles': [], 'outbound': False}
@@ -726,6 +726,7 @@ def update_reception_config(
     before = get_reception_configuration(db)
     editable = {
         "reply": {"opening_items", "opening_interval_seconds", "goal", "tone", "tone_guidance", "custom_guidance", "opening_character_limit"},
+        "intake": {"enabled", "question", "options", "wait_seconds"},
         "lead_capture": {"enabled", "channels"},
         "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action"},
         "handoff": {"large_group_enabled", "large_group_minimum"},

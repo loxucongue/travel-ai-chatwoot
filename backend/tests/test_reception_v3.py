@@ -14,7 +14,7 @@ def bundle():
         'hotel': {'text': '住宿原文', 'assets': [], 'delivery_mode': 'text_only'}},
         'introduction_sequence': ['map', 'hotel'], 'interval_seconds': 2, 'scripts': []}},
         'common_scripts': [], 'reply': {'opening_items': [], 'opening_messages': ['配置开场一', '配置开场二'],
-        'opening_interval_seconds': 2}, 'silence': {'enabled': True}}
+        'opening_interval_seconds': 2}, 'silence': {'enabled': True, 'intervals_minutes': [3, 5, 5]}}
 
 
 def answer(**kwargs):
@@ -210,7 +210,7 @@ def test_default_configured_timer_runs_without_model_delay(session_factory, monk
         assert not service.state(row)['next_check_at']
 
 
-def test_explicit_model_stop_ends_configured_timers(session_factory, monkeypatch):
+def test_model_stop_does_not_cancel_configured_timers(session_factory, monkeypatch):
     config = bundle()
     config['silence']['intervals_minutes'] = [3, 5]
     monkeypatch.setattr(service, 'run_agent', lambda c: answer(action='wait', stop_followup=True))
@@ -218,7 +218,7 @@ def test_explicit_model_stop_ends_configured_timers(session_factory, monkeypatch
         row = create(db, monkeypatch)
         monkeypatch.setattr(service, 'compile_skills', lambda db: deepcopy(config))
         step(db, row); step(db, row)
-        assert not service.state(row)['next_check_at']
+        assert service.state(row)['next_check_at'] == service.later(row.virtual_now, 180)
 
 
 def test_model_text_is_unchanged_even_when_reference_is_only_a_hint(session_factory, monkeypatch):

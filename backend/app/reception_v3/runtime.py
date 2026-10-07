@@ -87,7 +87,9 @@ def run_agent(context: dict):
     messages = [{'role': 'system', 'content': prompt}]
     for item in context.get('messages', []):
         content = item.get('content', '')
-        if item.get('content_type', 'text') != 'text':
+        if item.get('content_type') == 'input_select':
+            content += '\n选项：' + '、'.join(i['title'] for i in item.get('content_attributes', {}).get('items', []))
+        elif item.get('content_type', 'text') != 'text':
             content = '[已交付附件] ' + json.dumps({key: item[key] for key in
                 ('content_type', 'asset_key', 'name', 'filename') if key in item}, ensure_ascii=False)
         if content:

@@ -31,7 +31,9 @@ def compile_skills(db):
         if key not in config['routing']['enabled_route_variants']:
             continue
         routes[key] = {
-            'name': route['name'], 'aliases': route.get('selection_aliases', []),
+            'name': route['name'], 'aliases': list(dict.fromkeys(filter(None, [
+                *route.get('selection_aliases', []), route.get('selection_title', ''),
+                route.get('default_entry_message', '')]))),
             'facts': deepcopy(route['knowledge_facts']),
             'guidance': route.get('ai_guidance', ''),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
@@ -46,7 +48,7 @@ def compile_skills(db):
         }
     bundle = {'routes': routes, 'common_scripts': list(common_scripts.values()),
               'service_knowledge': {'version': service['knowledge_version'], 'facts': service['facts']},
-              'reply': config['reply'], 'silence': {k: v for k, v in config['silence'].items()
+              'reply': config['reply'], 'intake': config['intake'], 'silence': {k: v for k, v in config['silence'].items()
                                                   if not k.startswith('v2_')},
               'lead_capture': config['lead_capture'], 'routing': config['routing'], 'handoff': config['handoff']}
     bundle['digest'] = hashlib.sha256(json.dumps(bundle, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
@@ -99,6 +101,7 @@ class SkillRegistry:
             # legacy topic-count triggers must not compete with the Skill.
             fields = {
                 'reply': ('goal', 'tone', 'tone_guidance', 'custom_guidance'),
+                'intake': ('enabled', 'question', 'options', 'wait_seconds'),
                 'silence': ('enabled', 'intervals_minutes'),
                 'handoff': ('large_group_enabled', 'large_group_minimum'),
                 'routing': ('enabled_route_variants', 'allow_route_switch', 'preserve_profile_on_switch', 'outside_catalog_action'),

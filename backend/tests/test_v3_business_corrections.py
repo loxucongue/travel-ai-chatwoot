@@ -208,7 +208,7 @@ def test_self_reported_contact_handoffs_without_fabricated_id(session_factory, m
         assert service.state(row)['next_check_at'] is None
 
 
-def test_wait_timer_uses_completion_and_exposes_last_configured_round(session_factory, monkeypatch):
+def test_last_configured_round_cannot_be_extended_by_model(session_factory, monkeypatch):
     with session_factory() as db:
         row = create(db, monkeypatch)
         service.advance(row)
@@ -231,4 +231,4 @@ def test_wait_timer_uses_completion_and_exposes_last_configured_round(session_fa
         db.commit()
         service.tick(db, session_id=row.id, advance_clock=False)
         assert row.virtual_now == service.later(before, 20)
-        assert service.state(row)['next_check_at'] == service.later(before, 20 + 180)
+        assert service.state(row)['next_check_at'] is None

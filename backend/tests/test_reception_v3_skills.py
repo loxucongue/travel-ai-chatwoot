@@ -146,7 +146,8 @@ def test_route_applicability_survives_compilation_and_loading(monkeypatch):
                 'topics': ['price']} ]}
     monkeypatch.setattr(skills, 'ROUTES', {'peach_9d_2027': source})
     monkeypatch.setattr(skills, 'ensure_route_packages_current', lambda: None)
-    monkeypatch.setattr(skills, 'get_reception_configuration', lambda db: context()['skills'])
+    from app.reception_config import IntakeSettings
+    monkeypatch.setattr(skills, 'get_reception_configuration', lambda db: {**context()['skills'], 'intake': IntakeSettings().model_dump()})
     body = skills.SkillRegistry(skills.compile_skills(None)).load('peach-9d-2027')['instructions']
     for marker in ('这条线路专属接待说明', '包团', '"party_size_min": 4',
                    '"party_size_max": 6', '报价不等于已成团'):
