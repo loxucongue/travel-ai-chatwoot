@@ -138,6 +138,7 @@ class ConversationState(Base):
     ai_label_present: Mapped[bool] = mapped_column(Boolean, default=False)
     ai_sync_status: Mapped[str] = mapped_column(String(20), default="synced")
     ai_mode_updated_at: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    chatwoot_control_updated_at: Mapped[float] = mapped_column(Float, default=0, server_default="0")
     effective_ai_state: Mapped[str] = mapped_column(String(50), default="AI_PAUSED_CONVERSATION")
     effective_state_reason: Mapped[str] = mapped_column(String(200), default="ai_opt_in_required")
     last_message: Mapped[str] = mapped_column(Text, default="")

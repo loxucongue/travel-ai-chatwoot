@@ -40,7 +40,7 @@ def test_new_customer_auto_entry_does_not_resume_old_or_stopped_chat(session_fac
         assert not db.scalar(select(HandoffTask))
 
 
-@pytest.mark.parametrize('assignee,assignments', [(None,1),(9,1),(7,0)])
+@pytest.mark.parametrize('assignee,assignments', [(None,1),(9,0),(7,0)])
 def test_handoff_assigns_configured_advisor_and_mentions_same_person(session_factory,monkeypatch,assignee,assignments):
     notification_setup(session_factory,monkeypatch)
     with session_factory() as db:
@@ -48,11 +48,14 @@ def test_handoff_assigns_configured_advisor_and_mentions_same_person(session_fac
         db.commit()
     with respx.mock() as router:
         note=mock_chatwoot(router)
+        router.get('https://chatwoot.invalid/api/v1/accounts/180474/inbox_members/128859').respond(200,json={'payload':[{'id':7},{'id':9}]})
         router.get('https://chatwoot.invalid/api/v1/accounts/180474/conversations/26').respond(200,json={
             'id':26,'inbox_id':128859,'meta':{'assignee':{'id':assignee} if assignee else None}})
         assignment=(router.post('https://chatwoot.invalid/api/v1/accounts/180474/conversations/26/assignments')
             .respond(200,json={'id':7})) if assignments else None
         assert notification_dispatch.process_notification_delivery(session_factory)
         assert (assignment.call_count if assignment else 0)==assignments and note.call_count==1
+        import json
+        assert f'mention://user/{assignee or 7}/' in json.loads(note.calls[0].request.content)['content']
     with session_factory() as db:
         assert db.scalar(select(NotificationDelivery)).status=='delivered'

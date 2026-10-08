@@ -14,6 +14,17 @@ def unwrap(value):
     return value if isinstance(value, dict) else {}
 
 
+def control_revision(conversation):
+    value = conversation.get('updated_at')
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        try:
+            return datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp()
+        except (ValueError, TypeError, AttributeError):
+            return 0
+
+
 def contact_labels(payload: dict) -> list[str]:
     direct = payload.get("labels")
     if isinstance(direct, list):
@@ -92,6 +103,10 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
                 if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == linked.id,
                                                          HandoffTask.status.in_(["pending", "claimed"]))):
                     state, reason = "HUMAN_HANDOFF", "handoff:active_task"
+                from app.reception_v3.live import session_for, runtime_state, human_owned
+                state, reason = runtime_state(session_for(db, linked.id), state, reason)
+                if human_owned(db, linked):
+                    state, reason = "HUMAN_HANDOFF", "human:contact_owned"
                 if state != linked.effective_ai_state or reason != linked.effective_state_reason:
                     linked.version += 1
                 linked.effective_ai_state, linked.effective_state_reason, linked.updated_at = state, reason, utcnow()
@@ -117,6 +132,14 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
         row.contact_id = contact.id
 
     conversation = ctx["conversation"] if update_controls else {}
+    revision = control_revision(conversation)
+    # Creation and embedded message snapshots cannot undo an existing control
+    # decision. Subsequent changes arrive through conversation_updated events.
+    if not conversation_created and (ctx['event'] in ('conversation_created', 'message_created', 'message_updated')
+            or (row.chatwoot_control_updated_at and revision < row.chatwoot_control_updated_at)):
+        conversation = {}
+    elif conversation and revision:
+        row.chatwoot_control_updated_at = revision
     previous_labels = list(row.labels or [])
     previous_ai_label_present = row.ai_label_present
     labels = conversation.get("labels")
@@ -137,7 +160,7 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
     if team:
         row.team_id = int(team["id"]) if team.get("id") else None
         row.team_name = team.get("name")
-    if ctx["event"] == "conversation_status_changed" and payload.get("status"):
+    if conversation and ctx["event"] == "conversation_status_changed" and payload.get("status"):
         row.status = str(payload["status"])
     state, reason = compute_state(
         tenant, inbox, row.labels or [], contact.labels if contact else [], row.can_reply,
@@ -146,6 +169,10 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
     if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == row.id,
                                              HandoffTask.status.in_(["pending", "claimed"]))):
         state, reason = "HUMAN_HANDOFF", "handoff:active_task"
+    from app.reception_v3.live import session_for, runtime_state, human_owned
+    state, reason = runtime_state(session_for(db, row.id), state, reason)
+    if human_owned(db, row):
+        state, reason = 'HUMAN_HANDOFF', 'human:contact_owned'
     if state != row.effective_ai_state or reason != row.effective_state_reason:
         row.version += 1
     row.effective_ai_state, row.effective_state_reason, row.updated_at = state, reason, utcnow()

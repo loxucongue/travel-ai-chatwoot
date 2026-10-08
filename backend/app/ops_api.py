@@ -557,9 +557,10 @@ def restore_ai(task_id: int, payload: HandoffVersion, user: User = Depends(manag
     session = session_for(db, conversation.id)
     if session:
         v3_service.control(session, 'resume')
+        session.controls = {**session.controls, 'human': False}
         value = v3_service.state(session)
         value.update(handoff=False, handoff_created=False, pending_event=None,
-                     next_check_at=None, failed_event=None, buffered_questions=[])
+                     next_check_at=None, failed_event=None, buffered_questions=[], last_reason='manual_restore')
         v3_service.save(session, value)
     audit(db, user, "handoff.restore_ai", "handoff", task.id)
     db.commit()

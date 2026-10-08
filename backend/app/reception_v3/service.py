@@ -228,7 +228,8 @@ def apply_decision(db, row, run, bundle, decision):
         return
     if route:
         row.controls = {**row.controls, 'route_variant': route}
-    if not route and not value.get('opening_started') and bundle.get('intake', {}).get('enabled'):
+    if (not route and not value.get('opening_started') and bundle.get('intake', {}).get('enabled')
+            and row.memory.get('reception_status') != 'abusive'):
         parts = opening_parts(db, row, bundle, text_only=True) + parts
         value.update(opening_started=True, opening_media_pending=True)
     if decision['action'] == 'handoff':
@@ -244,7 +245,8 @@ def apply_decision(db, row, run, bundle, decision):
     value['silence_step'] = step
     intervals = bundle['silence'].get('intervals_minutes', [])
     configured_delay = intervals[step] if step < len(intervals) else None
-    stopped = value.get('opt_out') or value.get('handoff') or not bundle['silence']['enabled']
+    stopped = (value.get('opt_out') or value.get('handoff') or not bundle['silence']['enabled']
+               or row.memory.get('reception_status') == 'abusive')
     appointment = decision['next_check_minutes'] if run.input_snapshot.get('event') == 'customer_message' else None
     value['appointment_pending'] = bool(appointment)
     value['next_check_minutes'] = None if stopped else (appointment or configured_delay)

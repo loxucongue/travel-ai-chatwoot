@@ -22,6 +22,75 @@ def session_for(db, conversation_id):
                      AutomationSession.conversation_state_id == conversation_id))
 
 
+def runtime_state(row, effective, reason):
+    if not row:
+        return effective, reason
+    value = service.state(row)
+    if row.controls.get('human') or value.get('handoff') or value.get('last_reason') in ('human_reply', 'human_contact'):
+        return 'HUMAN_HANDOFF', 'human:advisor_owned'
+    if effective == 'AI_ACTIVE' and row.controls.get('simulation', {}).get('status') != 'running':
+        return 'AI_PAUSED_CONVERSATION', 'runtime:' + str(value.get('last_reason') or 'stopped')
+    return effective, reason
+
+
+def human_owned(db, conversation):
+    if not conversation.contact_id:
+        return False
+    linked = db.scalars(select(ConversationState).where(
+        ConversationState.tenant_id == conversation.tenant_id,
+        ConversationState.inbox_binding_id == conversation.inbox_binding_id,
+        ConversationState.contact_id == conversation.contact_id)).all()
+    for item in linked:
+        if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == item.id,
+                                                HandoffTask.status.in_(['pending', 'claimed']))):
+            return True
+        row = session_for(db, item.id)
+        if (item.id == conversation.id and row and row.controls.get('simulation', {}).get('status') == 'running'
+                and service.state(row).get('handoff') and not service.state(row).get('handoff_created')):
+            continue  # Finish the planned handoff message before creating its task.
+        if runtime_state(row, '', '')[0] == 'HUMAN_HANDOFF':
+            return True
+    return False
+
+
+def record_human_reply(db, conversation, message):
+    """A real public advisor reply acknowledges the local handoff too."""
+    from app.operations import audit
+    cancel(db, conversation.id, 'human_reply')
+    row = session_for(db, conversation.id)
+    if row is None:
+        owner = db.scalar(select(User).order_by(User.id))
+        row = AutomationSession(owner_id=owner.id, environment='live', engine_version='v3',
+            engine_release_id=release_id(), conversation_state_id=conversation.id,
+            inbox_binding_id=conversation.inbox_binding_id, virtual_now=utcnow(), messages=[], memory={},
+            controls={'simulation': {'status': 'stopped'}, 'v3': {'last_reason': 'human_reply'}})
+        db.add(row)
+    row.controls = {**row.controls, 'human': True}
+    conversation.effective_ai_state = 'HUMAN_HANDOFF'
+    conversation.effective_state_reason = 'human:advisor_reply'
+    linked_ids = [conversation.id]
+    if conversation.contact_id:
+        linked_ids = list(db.scalars(select(ConversationState.id).where(
+            ConversationState.tenant_id == conversation.tenant_id,
+            ConversationState.contact_id == conversation.contact_id,
+            ConversationState.inbox_binding_id == conversation.inbox_binding_id)))
+    for linked_id in linked_ids:
+        if linked_id != conversation.id:
+            cancel(db, linked_id, 'human_contact')
+    for task in db.scalars(select(HandoffTask).where(HandoffTask.conversation_state_id.in_(linked_ids),
+                                                  HandoffTask.status.in_(['pending', 'claimed']))):
+        task.status = 'claimed'
+        task.claimed_at = task.claimed_at or message.created_at
+        task.sla_due_at = None
+        task.chatwoot_assignee_id = message.sender_id or conversation.assignee_id
+        user = db.scalar(select(User).where(User.chatwoot_agent_id == task.chatwoot_assignee_id)) if task.chatwoot_assignee_id else None
+        task.assignee_user_id = user.id if user else None
+        task.updated_at = utcnow()
+        task.version += 1
+    audit(db, None, 'handoff.advisor_replied', 'conversation', conversation.chatwoot_conversation_id,
+          {'message_id': message.chatwoot_message_id, 'agent_id': message.sender_id})
+
+
 def handoff(db, row, reason, summary):
     conversation = db.get(ConversationState, row.conversation_state_id)
     ensure_handoff(db, conversation, reason, summary)
@@ -37,6 +106,9 @@ def cancel(db, conversation_id, reason):
         value = service.state(row)
         value['last_reason'] = reason
         service.save(row, value)
+        conversation = db.get(ConversationState, conversation_id)
+        conversation.effective_ai_state, conversation.effective_state_reason = runtime_state(
+            row, conversation.effective_ai_state, conversation.effective_state_reason)
 
 
 def permitted(db, conversation):
@@ -50,6 +122,7 @@ def permitted(db, conversation):
         and conversation.inbox.chatwoot_inbox_id == settings.live_reply_inbox_id
         and reception_conversation_allowed(db, conversation.chatwoot_conversation_id)
         and effective == 'AI_ACTIVE'
+        and not human_owned(db, conversation)
         and not db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
                                                       HandoffTask.status.in_(['pending','claimed']))))
 
@@ -61,6 +134,7 @@ def enable_new_customer(db, conversation, message):
             or conversation.inbox.chatwoot_inbox_id != settings.live_reply_inbox_id
             or not reception_conversation_allowed(db, conversation.chatwoot_conversation_id)
             or not conversation.inbox.ai_enabled or not db.get(Tenant, conversation.tenant_id).ai_enabled
+            or human_owned(db, conversation)
             or has_ai_label(conversation.labels or []) or session_for(db, conversation.id)
             or conversation.ai_mode_source not in ('system', 'chatwoot')
             or db.scalar(select(MessageEvent.id).where(MessageEvent.conversation_state_id == conversation.id,

@@ -32,6 +32,17 @@ def process_notification_delivery(session_factory=None) -> bool:
         if not config.get("enabled"):
             return False  # Pause, preserving queued reminders for re-enabling.
         notification = db.get(Notification, delivery.notification_id)
+        if notification.event_type == 'handoff.overdue':
+            conversation = db.scalar(select(ConversationState).where(
+                ConversationState.tenant_id == notification.tenant_id,
+                ConversationState.chatwoot_conversation_id == notification.conversation_id))
+            task = db.scalar(select(HandoffTask).where(HandoffTask.conversation_state_id == conversation.id,
+                HandoffTask.status == 'pending', HandoffTask.claimed_at.is_(None),
+                HandoffTask.sla_due_at < utcnow())) if conversation else None
+            if not task:
+                delivery.status, delivery.error_code = 'cancelled', 'handoff_already_acknowledged'
+                db.commit()
+                return True
         channel = config.get("channel", "webhook")
         target = None
         if channel == "chatwoot":
@@ -62,13 +73,14 @@ def process_notification_delivery(session_factory=None) -> bool:
                     (target.account_id != settings.live_reply_account_id or remote.get("inbox_id") != settings.live_reply_inbox_id)):
                 raise ValueError("notification_scope_mismatch")
             agents = normalize_collection(client.list_inbox_agents(remote["inbox_id"]))
-            agent_id = int(config["agent_id"])
+            assignee = (remote.get("meta") or {}).get("assignee") or {}
+            if (remote.get("meta") or {}).get("assignee_type") == 'AgentBot':
+                assignee = {}
+            agent_id = int(assignee.get('id') or config["agent_id"])
             if not any(int(agent.get("id", 0)) == agent_id for agent in agents):
                 raise ValueError("notification_agent_not_in_inbox")
-            # The configured handoff destination must also own the conversation
-            # so subsequent customer messages notify the same advisor.
-            assignee = (remote.get("meta") or {}).get("assignee") or {}
-            if config.get("assign_on_handoff") and assignee.get("id") != agent_id:
+            # Keep an existing human owner; only assign an unowned new handoff.
+            if config.get("assign_on_handoff") and payload['event'] == 'handoff.created' and not assignee.get('id'):
                 client.assign_conversation(payload["conversation_id"], agent_id)
             content = (f"[@顾问](mention://user/{agent_id}/advisor)\n"
                        f"{payload['title']}\n{payload['body']}\n"
@@ -121,7 +133,7 @@ def process_handoff_overdue(session_factory=None) -> bool:
         # Exact body equality avoids confusing task 1 with task 10. Scan beyond
         # previously notified tasks so the first 50 never starve the remainder.
         tasks = db.scalars(select(HandoffTask).where(
-            HandoffTask.status.in_(["pending", "claimed"]), HandoffTask.sla_due_at < utcnow()
+            HandoffTask.status == "pending", HandoffTask.claimed_at.is_(None), HandoffTask.sla_due_at < utcnow()
         ).order_by(HandoffTask.sla_due_at)).all()
         created = 0
         for task in tasks:

@@ -121,6 +121,10 @@ def sync_local_labels(
         row.ai_sync_status,
         row.ai_label_present,
     )
+    from app.reception_v3.live import session_for, runtime_state, human_owned
+    state, reason = runtime_state(session_for(db, row.id), state, reason)
+    if human_owned(db, row):
+        state, reason = "HUMAN_HANDOFF", "human:contact_owned"
     if ai_state_changed or normalized != (row.labels or []) or state != row.effective_ai_state or reason != row.effective_state_reason:
         row.version += 1
     row.labels = normalized
