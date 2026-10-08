@@ -1,0 +1,10 @@
+{
+  "requested_wording": "方便傳一下您的 LINE QR Code 給我嗎？",
+  "scope": ["两条线路contact_request及contact_after_read", "对应内容组contact_request及contact_transition", "通用contact_family及contact_other_dates", "通用接待Skill"],
+  "behavior": "客户在索取LINE QR Code后传图时交接顾问，标记附件待确认并保留来源消息。不会解码二维码或宣称已加好友。主动提供LINE ID或Email仍可直接交接；普通旅游图片不作为LINE留资。",
+  "tests": {"wording_and_skills": 47, "reception_and_live": 44, "final_metadata_regression": 18},
+  "real_model": {"scenarios": 7, "http_calls_including_retests": 9, "input_tokens": 198302, "output_tokens": 4797, "cost_cny": 0.21571088, "channel_writes": 0},
+  "observations": ["初测二维码交接来源误记附件ID，已明确来源消息字段并复测正确", "初测房间照片仅说需要顾问确认而未建交接，已修正Skill并复测正确"],
+  "publication": "scripts/deploy_v3.py发布代码后，执行backend/scripts/update_line_qr_wording.py --apply --backup指定目录，更新现有运行时线路覆盖及数据库通用话术；保留开场、跟进时间及其他配置。",
+  "limitations": "通过模拟附件验证消息元数据、模型判断及本地任务/通知生成；未向真实客户发送测试消息，未验证真实设备提醒或顾问扫码加好友结果。"
+}

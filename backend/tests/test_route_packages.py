@@ -167,7 +167,7 @@ def test_route_reference_copy_is_conversational_not_generic_read_check():
         assert "還滿意嗎" not in read_check
         assert "頁面展示" not in groups["hotel_reference"]["approved_text"]
         assert "頁面提供" not in groups["vehicle_reference"]["approved_text"]
-        assert "LINE ID" in groups["contact_request"]["approved_text"]
+        assert "LINE QR Code" in groups["contact_request"]["approved_text"]
         assert "微信或" not in groups["contact_request"]["approved_text"]
         assert "不確定時不再追問" not in groups["contact_request"]["approved_text"]
         assert "邀請客戶" not in groups["contact_request"]["approved_text"]

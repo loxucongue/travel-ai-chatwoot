@@ -189,7 +189,10 @@ def accept(db, conversation, message):
             MessageEvent.private.is_(False), MessageEvent.chatwoot_message_id < message.chatwoot_message_id)
             .order_by(MessageEvent.chatwoot_message_id)).all()
         row.messages = [{'id': f'cw-{m.chatwoot_message_id}', 'direction': m.direction, 'content': m.content,
-                         'status': 'submitted' if m.direction == 'outgoing' else m.status, 'created_at': m.created_at}
+                         'status': 'submitted' if m.direction == 'outgoing' else m.status, 'created_at': m.created_at,
+                         'content_type': m.content_type, 'attachments': [
+                             {k: a[k] for k in ('id', 'file_type', 'file_name', 'filename') if k in a}
+                             for a in (m.attachments or []) if isinstance(a, dict)]}
                         for m in history if m.direction in ('incoming','outgoing')]
         now=utcnow()
         row.controls = {'simulation': {'status':'running', 'last_wall_at':now, 'start_virtual_at':now},
@@ -200,7 +203,8 @@ def accept(db, conversation, message):
         else:
             return
     row.virtual_now = utcnow()
-    service.add_message(db, row, message.content or '[客户发送附件]', f'cw-{message.chatwoot_message_id}', message.content_type)
+    service.add_message(db, row, message.content or '[客户发送附件]', f'cw-{message.chatwoot_message_id}',
+                        message.content_type, attachments=message.attachments)
     value = service.state(row)
     policy, _ = reply_policy(db, conversation.inbox_binding_id)
     now = utcnow()

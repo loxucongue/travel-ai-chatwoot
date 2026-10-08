@@ -88,7 +88,7 @@ def start(db, row, entry, duration_minutes=525600):
     add_message(db, row, entry, f'entry-{uuid4().hex}')
 
 
-def add_message(db, row, content, client_key, content_type='text'):
+def add_message(db, row, content, client_key, content_type='text', attachments=None):
     if any(m.get('client_key') == client_key for m in row.messages):
         return
     value = state(row)
@@ -98,6 +98,9 @@ def add_message(db, row, content, client_key, content_type='text'):
     incoming = {'id': client_key, 'client_key': client_key, 'direction': 'incoming',
                 'content': content, 'content_type': content_type, 'created_at': row.virtual_now,
                 'timeline_sequence': len(row.messages) + 1}
+    if attachments:
+        incoming['attachments'] = [{k: a[k] for k in ('id', 'file_type', 'file_name', 'filename') if k in a}
+                                   for a in attachments if isinstance(a, dict)]
     row.messages = [*row.messages, incoming]
     value['buffered_questions'] = [*value.get('buffered_questions', []), client_key]
     value['next_check_at'] = None

@@ -60,7 +60,7 @@ def run_agent(context: dict):
     current['state'] = {key: value for key, value in current.get('state', {}).items()
                         if key != 'last_reason'}
     current['buffered_questions'] = [
-        {'content': m.get('content', ''), 'created_at': m.get('created_at')}
+        {'source_message_id': m.get('id'), **{key: m[key] for key in ('content', 'created_at', 'content_type', 'attachments') if key in m}}
         for m in current.get('buffered_questions', [])]
     # These are already the active, scoped facts selected by the service. Make
     # their short text visible before the model decides something is unknown;
@@ -87,7 +87,11 @@ def run_agent(context: dict):
     messages = [{'role': 'system', 'content': prompt}]
     for item in context.get('messages', []):
         content = item.get('content', '')
-        if item.get('content_type') == 'input_select':
+        if item.get('direction') == 'incoming' and (item.get('attachments') or item.get('content_type', 'text') != 'text'):
+            content += '\n[客户附件，图片内容尚未识别] ' + json.dumps({
+                'source_message_id': item.get('id'), 'content_type': item.get('content_type'),
+                'attachment_types': [a.get('file_type') for a in item.get('attachments', [])]}, ensure_ascii=False)
+        elif item.get('content_type') == 'input_select':
             content += '\n选项：' + '、'.join(i['title'] for i in item.get('content_attributes', {}).get('items', []))
         elif item.get('content_type', 'text') != 'text':
             content = '[已交付附件] ' + json.dumps({key: item[key] for key in

@@ -344,7 +344,7 @@
     },
     "contact_transition": {
       "purpose": "提供价值后的留资承接",
-      "approved_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
+      "approved_text": "我可以請顧問接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -354,7 +354,7 @@
     },
     "contact_request": {
       "purpose": "满足留资前置条件后询问一种联系方式",
-      "approved_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
+      "approved_text": "我可以請顧問接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
       "asset_keys": [],
       "evidence_refs": [
         "service.requirements"
@@ -1162,7 +1162,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_request",
-      "answer_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
+      "answer_text": "我可以請顧問接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
       "fact_ids": [
         "service.requirements"
       ],
@@ -1192,7 +1192,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_transition",
-      "answer_text": "我可以請顧問接著協助您確認出發安排。方便留一下您的LINE ID嗎？",
+      "answer_text": "我可以請顧問接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
       "fact_ids": [
         "service.requirements"
       ],
