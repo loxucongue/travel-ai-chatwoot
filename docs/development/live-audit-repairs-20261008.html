@@ -28,4 +28,9 @@
 <p>使用scripts/deploy_v3.py：复制生产数据库做迁移预检、备份完整代码/配置/数据库、等待在途交付完成后替换、保留配置及密钥。新增a032_control_order迁移；回滚代码不覆盖上线后的数据库记录。</p>
 <p>backend/scripts/repair_oct08_incidents.py默认预览，--apply仅修复审核后未出现新消息的会话，保留修复前状态快照；#307仅在负责人和末条消息仍与事故一致时恢复Amber。不会重放历史触达。</p>
 <p>实际发布版本与回滚目录由output/v3-consolidation-release/deploy-result.json记录；客户完整聊天及测试原始记录保留在Git忽略的output目录，不提交仓库。手机和手表实际收件仍须设备端确认。</p>
+<h2>正式发布结果</h2>
+<p>北京时间2026年10月8日14:48发布成功，代码提交afccfb0d5093bb6c2a07c8cf0af06343659cdf63；release为v3-consolidation-20261008T064802Z，运行引擎reception-v3-ec37418c1be215d7。</p>
+<p>完整回滚备份：/opt/china2go-ai/backups/v3-consolidation-20261008T064802Z。生产配置与环境文件哈希在发布前后一致，迁移为a032_control_order，三项服务均active，health及health/ready均200，发布后的日志未发现新异常。</p>
+<p>已执行事故修复：#300/#306/#307/#308归属人工，#307的任务5已认领且SLA清空，Chatwoot远端负责人确认恢复为Amber（275471）。事故状态快照：backend/data/incident-backups/oct08-2026-10-08T06-48-52.678336+00-00.json。</p>
+<p>部署及状态修复前后出站记录均为94条，没有补发客户消息或旧跟进。#304/#305仍可被动接待新提问，但不恢复已过期的历史跟进。最后通知相关回归21项通过。</p>
 </html>
