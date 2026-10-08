@@ -1,0 +1,14 @@
+{
+  "source": "2027-售價表總表-1002.xlsx",
+  "sheet": "西藏",
+  "scope": "仅桃花9日和桃花＋珠峰11日",
+  "prices_cny": {
+    "peach_9d_2027": {"per_person": 10780, "single_supplement": 2700, "cells": "A33:C35"},
+    "peach_11d_2027": {"per_person": 12780, "single_supplement": 3200, "cells": "A37:C39"}
+  },
+  "conditions": "两条线路均标注6人团；保留既有两人一房口径。A41明确4人独立成团每人加400元，6人独立成团按原价。",
+  "discounts": "A41早鸟及多人优惠可以叠加。优惠计价单位、月份边界未明确，不自行计算最终优惠价。",
+  "preserved": "其他线路、图片、开场、SOP顺序、发送间隔及沉默配置",
+  "verification": "50项相关测试通过，覆盖线路校验、编译Skill、非价格配置保留与迁移幂等。未调用付费模型、未向客户发送测试消息。",
+  "publication": "部署后执行backend/scripts/update_route_prices_20271002.py --apply --backup指定备份目录，更新当前运行时覆盖；只修改未来读取的线路资料，不改写历史消息。"
+}

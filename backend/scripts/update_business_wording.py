@@ -13,6 +13,7 @@ CONTACT_NOTE = '这是普通出发安排邀请原话。先按通用tibet-recepti
 def corrected_package(package):
     result = deepcopy(package)
     eleven = result['route_variant'] == 'peach_11d_2027'
+    current_price_policy = any(f['id'].endswith('.pricing_policy') for f in result['knowledge_facts'])
     old_hotel = '以及除了地區條件有限以外，我們全面升級都住國際品牌希爾頓飯店哦！'
     new_hotel = ('除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！'
                  if eleven else '除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！')
@@ -51,10 +52,10 @@ def corrected_package(package):
         if script['id'] in ('contact_request', 'contact_after_read') and script.get('usage_note') == PREVIOUS_CONTACT_NOTE:
             script['usage_note'] = CONTACT_NOTE
         script['answer_text'] = text(script['answer_text'])
-        if not eleven and script['id'] == 'price':
-            script['usage_note'] = '9日9980元仅为标准6人小团、两人一房报价。客户人数不是6人或人数未知时，说明标准价格及适用条件，其人数报价需要顾问确认，不把9980直接乘以2、4、8或10当成其报价。6人且两人一房时才可算全团59880元；单问单房差直接答2600元。只问团费不额外列全团合计。'
+        if not current_price_policy and not eleven and script['id'] == 'price':
+            script['usage_note'] = '团费、房差、人数适用条件与优惠以当前线路最新price及pricing_policy事实为准；单问房差只答房差，未问总额不额外计算。'
             script['source_ref'] = 'AI(1).docx#价格建议；AI(2).docx#价格适用条件'
-        if not eleven and script['id'] == 'group_party':
+        if not current_price_policy and not eleven and script['id'] == 'group_party':
             script['usage_note'] = '适用时保留公司定位、4–6人团型及可考虑自己一团的原话主体。介绍完成后去掉先介绍行程，不缩成收到几位。自己一团的安排和报价需另外确认，不从团型推导4位与标准6人报价一样。'
         if script['id'] == 'age_75_entry_claim' and script['answer_text'] in (
             '目前75歲以上長輩申請入藏函是申請不下來的',
