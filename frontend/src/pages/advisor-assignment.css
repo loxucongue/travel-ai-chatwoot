@@ -3,6 +3,7 @@
 .assignment-page .panel-header h2 { font-size:16px; margin:0; }
 .assignment-page th,.assignment-page td { font-size:14px; }
 .assignment-page table { min-width:720px; }
+.assignment-rule-actions { display:flex; align-items:center; justify-content:flex-end; gap:12px; white-space:nowrap; }
 .assignment-page small { display:block; margin-top:4px; font-size:12px; color:var(--text-muted,#6b7280); }
 .assignment-page .assignment-error { color:#b42318; max-width:240px; white-space:normal; }
 .assignment-toggle { display:flex; align-items:center; gap:8px; font-size:14px; }
