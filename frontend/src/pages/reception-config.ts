@@ -105,7 +105,7 @@ export function normalizeConfig(value: ReceptionConfig): ReceptionConfig {
   const result = clone(value);
   result.common_scripts ??= [];
   result.intake ??= {enabled: true, question: '您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）', options: ['自己一位','2～3位','4～6位','7～10位','10位以上'], wait_seconds: 60};
-  result.silence.intervals_minutes ??= [1,4,10,45,120,180];
+  result.silence.intervals_minutes ??= [360];
   result.reply.tone_guidance ??= '';
   result.reply.opening_message ??= '您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？';
   result.reply.opening_messages ??= [result.reply.opening_message];

@@ -13,13 +13,13 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.db import SessionLocal
 from app.operations import save_setting
-from app.reception_config import IntakeSettings, ReceptionConfiguration, SETTING_KEY, get_reception_configuration
+from app.reception_config import IntakeSettings, SilenceSettings, ReceptionConfiguration, SETTING_KEY, get_reception_configuration
 
 
 def updated(config):
     result = deepcopy(config)
     result['intake'] = IntakeSettings().model_dump()
-    result['silence']['intervals_minutes'] = [1, 4, 10, 45, 120, 180]
+    result['silence']['intervals_minutes'] = SilenceSettings().intervals_minutes
     ReceptionConfiguration.model_validate(result)
     return result
 

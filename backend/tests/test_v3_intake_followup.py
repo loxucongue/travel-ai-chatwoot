@@ -14,7 +14,7 @@ from test_reception_v3 import bundle, answer, delivered, step
 def config():
     spec = bundle()
     spec['intake'] = IntakeSettings().model_dump()
-    spec['silence'] = {**SilenceSettings().model_dump(), 'active_start':'00:00', 'active_end':'00:00'}
+    spec['silence'] = {**SilenceSettings().model_dump(), 'intervals_minutes':[1,4,10,45,120,180], 'active_start':'00:00', 'active_end':'00:00'}
     spec['routes']['eleven'] = {**deepcopy(spec['routes']['nine']), 'name':'十一日'}
     return spec
 
@@ -238,5 +238,5 @@ def test_migration_preserves_actual_greeting_assets_and_live_switches():
     before['silence'].update(enabled=False,live_enabled=False,active_end='00:00',max_proactive_messages_per_day=8,intervals_minutes=[1,3,5])
     after=updated(before)
     assert after['reply']==before['reply']
-    assert after['silence']=={**before['silence'],'intervals_minutes':[1,4,10,45,120,180]}
+    assert after['silence']=={**before['silence'],'intervals_minutes':[360]}
     assert updated(after)==after

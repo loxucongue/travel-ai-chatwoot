@@ -109,7 +109,7 @@ class IntakeSettings(BaseModel):
 class SilenceSettings(BaseModel):
     enabled: bool = True
     live_enabled: bool = False
-    intervals_minutes: list[int] = Field(default_factory=lambda:[1,4,10,45,120,180],min_length=1,max_length=20)
+    intervals_minutes: list[int] = Field(default_factory=lambda:[360],min_length=1,max_length=20)
     active_start: str = "09:00"
     active_end: str = "21:00"
     max_proactive_messages_per_day: int = Field(default=6,ge=1,le=20)
