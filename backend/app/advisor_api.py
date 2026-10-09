@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from app.db import get_db
-from app.models import AdvisorAssignment, ChatwootAgent, ConversationState, InboxBinding, User, utcnow
+from app.models import AdvisorAssignment, ChatwootAgent, ChatwootConnection, ConversationState, InboxBinding, User, utcnow
 from app.ops_api import manager, manager_csrf
 from app.operations import save_setting, audit
 from app.advisor_assignment import AssignmentConfig, configuration, EVENTS
@@ -48,10 +48,13 @@ def records(status: str = '', page: int = Query(1,ge=1), user: User = Depends(ma
         query = query.where(AdvisorAssignment.status == status)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     agents = {a.chatwoot_agent_id:a.name for a in db.scalars(select(ChatwootAgent))}
+    connections = {c.tenant_id:c for c in db.scalars(select(ChatwootConnection))}
     items = []
     for r in db.scalars(query.order_by(AdvisorAssignment.id.desc()).offset((page-1)*30).limit(30)):
         c = db.get(ConversationState,r.conversation_state_id)
+        connection = connections.get(c.tenant_id)
         items.append({'id':r.id,'conversation_id':c.chatwoot_conversation_id,
+            'chatwoot_url':f'{connection.base_url.rstrip("/")}/app/accounts/{connection.account_id}/conversations/{c.chatwoot_conversation_id}' if connection else None,
             'customer': c.contact.name if c.contact else '', 'event':EVENTS.get(r.event_type,r.event_type),
             'rule':r.rule_name,'agent':agents.get(r.agent_id,str(r.agent_id or '待分配')),
             'agent_id':r.agent_id,'status':r.status,'error':r.error,'created_at':r.created_at,
