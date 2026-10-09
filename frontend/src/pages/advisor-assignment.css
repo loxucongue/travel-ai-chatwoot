@@ -12,7 +12,11 @@
 .assignment-form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .assignment-rule-form label { min-width:0; font-size:14px; }
 .assignment-rule-form { max-height:65vh; overflow-y:auto; padding:2px; }
-.assignment-advisor-options { border:1px solid #d6e1e6; border-radius:6px; display:flex; flex-wrap:wrap; gap:16px; padding:12px; }
-.assignment-advisor-options label { display:flex; flex-direction:row; align-items:center; gap:8px; }
+.assignment-advisor-options { min-width:0; margin:0; border:1px solid #d6e1e6; border-radius:6px; display:grid; gap:2px; padding:8px; }
+.assignment-advisor-options legend { padding:0 6px; font-size:14px; }
+.assignment-advisor-options label { display:grid; grid-template-columns:16px minmax(0,1fr); align-items:center; gap:10px; min-height:40px; padding:8px; border-radius:4px; font-weight:400; line-height:22px; cursor:pointer; overflow-wrap:anywhere; }
+.assignment-advisor-options label:hover { background:#f5f8fa; }
+.assignment-advisor-options label:has(input:checked) { background:#edf7f4; color:#145b49; }
+.assignment-advisor-options input[type=checkbox],.assignment-advisor-options input[type=radio],.assignment-page td input[type=checkbox] { width:16px; height:16px; min-width:16px; max-width:16px; min-height:16px; max-height:16px; margin:0; padding:0; accent-color:#147d64; cursor:pointer; }
 .assignment-page .table-pagination>div { display:flex; gap:12px; align-items:center; }
 @media(max-width:640px) { .assignment-form-row{grid-template-columns:1fr} .assignment-page .page-header{flex-wrap:wrap;gap:12px} }
