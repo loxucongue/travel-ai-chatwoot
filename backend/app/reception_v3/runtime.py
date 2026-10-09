@@ -31,6 +31,8 @@ class Decision(BaseModel):
     next_check_minutes: float | None = Field(default=None, gt=0, le=10080)
     stop_followup: bool = False
     handoff_reason: str = ''
+    handoff_type: Literal['other', 'contact', 'contact_image', 'contact_reported', 'requested',
+                          'party_size', 'trip_days', 'custom', 'knowledge'] = 'other'
     reason: str = ''
 
 

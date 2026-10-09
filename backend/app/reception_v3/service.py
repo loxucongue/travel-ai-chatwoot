@@ -194,6 +194,32 @@ def parts_for(db, row, bundle, decision):
     return route, parts
 
 
+def update_profile(db, row, run, decision):
+    previous_memory = row.memory
+    profile = decision['profile']
+    memory = {**(row.memory or {}), **profile}
+    if profile.get('party_size') is not None:
+        memory.pop('party_size_range', None)
+        memory.pop('party_size_min', None)
+    elif profile.get('party_size_range'):
+        memory.pop('party_size', None)
+        if 'party_size_min' not in profile:
+            memory.pop('party_size_min', None)
+    row.memory = memory
+    if row.environment == 'live' and any(
+            row.memory.get(k) != (previous_memory or {}).get(k) for k in ('party_size', 'party_size_range', 'party_size_min', 'trip_days')):
+        from app.advisor_assignment import emit
+        from app.models import ConversationState
+        conversation = db.get(ConversationState, row.conversation_state_id)
+        assignment = emit(db, conversation, ['customer.profile'], f'profile:{run.id}',
+                          {**row.memory, 'route_variant': decision['route_variant'] or row.controls.get('route_variant',''),
+                           'summary': decision.get('handoff_reason') or '客户确认了人数或行程天数'})
+        if assignment and assignment.rule_id and assignment.action == 'handoff':
+            run.trace = {**(run.trace or {}), 'assignment_rule': assignment.rule_id}
+            return True
+    return False
+
+
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
     if (value.get('intake_answered') and not value.get('completed_introductions')
@@ -204,7 +230,8 @@ def apply_decision(db, row, run, bundle, decision):
         run.trace = {**(run.trace or {}), 'execution_reason': 'intake_answer_starts_introduction'}
         run.decision = decision
     previous_memory = row.memory
-    row.memory = {**(row.memory or {}), **decision['profile']}
+    if update_profile(db, row, run, decision):
+        return
     if decision['start_introduction'] and decision['action'] != 'handoff' and decision['opt_out'] is not True:
         if begin_intake(row, value, bundle, decision['route_variant'] or row.controls.get('route_variant', '')):
             save(row, value)
@@ -238,6 +265,7 @@ def apply_decision(db, row, run, bundle, decision):
     if decision['action'] == 'handoff':
         value['handoff'] = True
         value['handoff_reason'] = decision['handoff_reason']
+        value['handoff_type'] = decision.get('handoff_type', 'other')
         row.controls = {**row.controls, 'human': True}
     value['pending_event'] = None
     intake_answered = value.pop('intake_answered', False)
@@ -481,11 +509,11 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             elif decision['action'] == 'queue' and context['state'].get('delivery_kind') == 'introduction' and state(row).get('delivery_kind') != 'introduction':
                 # Delivery can finish while this classification call is running.
                 # Keep the buffered questions for the completion turn.
-                row.memory = {**(row.memory or {}), **decision['profile']}
-                value = state(row)
-                value['pending_event'] = 'introduction_completed'
-                save(row, value)
-                row.due_at = utcnow()
+                if not update_profile(db, row, run, decision):
+                    value = state(row)
+                    value['pending_event'] = 'introduction_completed'
+                    save(row, value)
+                    row.due_at = utcnow()
                 run.status = 'completed'
             else:
                 # Account for model time without delivering a draft here. This

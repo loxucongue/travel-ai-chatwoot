@@ -22,8 +22,10 @@ def heartbeat(worker_id):
 
 def maintenance_tick(receipts_checked, deadlines):
     from app.notification_dispatch import process_handoff_overdue, process_notification_delivery
+    from app.advisor_assignment import process_assignment
     errors = deadlines.setdefault("errors", {})
-    tasks = [("handoffs", lambda: process_handoff_overdue(SessionLocal)),
+    tasks = [("assignments", lambda: process_assignment(SessionLocal)),
+             ("handoffs", lambda: process_handoff_overdue(SessionLocal)),
              ("notifications", lambda: process_notification_delivery(SessionLocal))]
     now = time.monotonic()
     if now >= deadlines.get("receipts", 0):

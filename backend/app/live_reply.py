@@ -57,6 +57,8 @@ def mirror_event(db, event):
             if sender.get('type') != 'agent_bot':
                 record_human_reply(db,state,message)
         if incoming and current:
+            from app.advisor_assignment import incoming as assignment_incoming
+            assignment_incoming(db, state, message)
             if human_owned(db,state):
                 state.effective_ai_state, state.effective_state_reason = 'HUMAN_HANDOFF', 'human:contact_owned'
                 cancel(db,state.id,'human_contact')

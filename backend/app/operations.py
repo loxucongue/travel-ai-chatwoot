@@ -69,6 +69,7 @@ def ensure_handoff(
     reason_code: str,
     reason_detail: str = "",
     priority: str = "P2",
+    *, dispatch: bool = True,
 ) -> HandoffTask:
     existing = db.scalar(select(HandoffTask).where(HandoffTask.conversation_state_id == conversation.id, HandoffTask.status.in_(["pending", "claimed"])))
     if conversation.effective_ai_state != "HUMAN_HANDOFF":
@@ -87,5 +88,15 @@ def ensure_handoff(
     task = HandoffTask(conversation_state_id=conversation.id, reason_code=reason_code, reason_detail=reason_detail, priority=priority, sla_due_at=due)
     db.add(task)
     db.flush()
-    create_notification(db, "handoff.created", "新的人工接管任务", reason_detail or reason_code, conversation.chatwoot_conversation_id)
+    routed = None
+    if dispatch:
+        from app.advisor_assignment import emit, handoff_event
+        from app.reception_v3.live import session_for
+        session = session_for(db, conversation.id)
+        routed = emit(db, conversation, [handoff_event(reason_code), 'handoff.created'], f'handoff:{task.id}',
+                      {**(session.memory if session else {}),
+                       'route_variant': (session.controls if session else {}).get('route_variant',''),
+                       'summary': reason_detail or reason_code})
+    if dispatch and not (routed and routed.rule_id):
+        create_notification(db, "handoff.created", "新的人工接管任务", reason_detail or reason_code, conversation.chatwoot_conversation_id)
     return task

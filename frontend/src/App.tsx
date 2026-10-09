@@ -13,6 +13,7 @@ const Overview = lazy(() => import('./pages/Overview'));
 const Handoff = lazy(() => import('./pages/Handoff'));
 const RouteProducts = lazy(() => import('./pages/RouteProducts'));
 const AiReceptionStrategy = lazy(() => import('./pages/AiReceptionStrategy'));
+const AdvisorAssignment = lazy(() => import('./pages/AdvisorAssignment'));
 const WebKnowledge = lazy(() => import('./pages/WebKnowledge'));
 const AiPlayground = lazy(() => import('./pages/AutomationPlayground'));
 
@@ -23,6 +24,7 @@ const navigation = [
   { id: 'handoff', label: '人工接管', icon: Headphones },
   { id: 'products', label: '线路配置', icon: MapPinned },
   { id: 'ai-strategy', label: '公共接待', icon: Bot },
+  { id: 'advisor-assignment', label: '顾问分配', icon: Headphones },
   { id: 'knowledge', label: '通用知识', icon: BookOpenText },
   { id: 'settings', label: '系统设置', icon: SettingsIcon },
 ];
@@ -90,8 +92,8 @@ function AuthenticatedApp({ onLogout }: { onLogout: () => Promise<void> }) {
       <div className="workspace-pill"><span className="workspace-avatar">C2</span><div><strong>china2go</strong><span><i />{DEMO_MODE ? '公开演示' : '接待工作台'}</span></div><ChevronDown size={15} /></div>
       <nav className="main-nav" aria-label="主要导航">
         <span className="nav-section-label">运营</span>
-        {visibleNavigation.filter((item) => !['products', 'ai-strategy', 'knowledge', 'settings'].includes(item.id)).map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => go(item.id)}><Icon size={18} /><span>{item.label}</span></button>; })}
-        {visibleNavigation.some((item) => ['products', 'ai-strategy', 'knowledge', 'settings'].includes(item.id)) ? <><span className="nav-section-label management-label">管理</span>{visibleNavigation.filter((item) => ['products', 'ai-strategy', 'knowledge', 'settings'].includes(item.id)).map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => go(item.id)}><Icon size={18} /><span>{item.label}</span></button>; })}</> : null}
+        {visibleNavigation.filter((item) => !['products', 'ai-strategy', 'advisor-assignment', 'knowledge', 'settings'].includes(item.id)).map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => go(item.id)}><Icon size={18} /><span>{item.label}</span></button>; })}
+        {visibleNavigation.some((item) => ['products', 'ai-strategy', 'advisor-assignment', 'knowledge', 'settings'].includes(item.id)) ? <><span className="nav-section-label management-label">管理</span>{visibleNavigation.filter((item) => ['products', 'ai-strategy', 'advisor-assignment', 'knowledge', 'settings'].includes(item.id)).map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => go(item.id)}><Icon size={18} /><span>{item.label}</span></button>; })}</> : null}
       </nav>
       <div className="sidebar-spacer" />
       <div className="sidebar-status"><Bot size={17} /><div><strong>{DEMO_MODE ? '脱敏演示数据' : '自动回复闭环'}</strong><span>{DEMO_MODE ? '操作不会写入 Chatwoot' : '线路咨询与留资'}</span></div><i /></div>
@@ -111,6 +113,7 @@ function AuthenticatedApp({ onLogout }: { onLogout: () => Promise<void> }) {
         <Route path="/handoff" element={<Handoff notify={setToast} />} />
         <Route path="/products" element={role !== 'agent' ? <RouteProducts /> : <Navigate to="/conversations" replace />} />
         <Route path="/ai-strategy" element={role !== 'agent' ? <AiReceptionStrategy /> : <Navigate to="/conversations" replace />} />
+        <Route path="/advisor-assignment" element={role !== 'agent' ? <AdvisorAssignment /> : <Navigate to="/conversations" replace />} />
         <Route path="/knowledge" element={role !== 'agent' ? <WebKnowledge /> : <Navigate to="/conversations" replace />} />
         <Route path="*" element={<Navigate to={role === 'agent' ? '/conversations' : '/overview'} replace />} />
       </Routes></Suspense></main>

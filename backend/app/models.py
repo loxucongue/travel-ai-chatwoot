@@ -319,8 +319,37 @@ class Notification(Base):
     title: Mapped[str] = mapped_column(String(200))
     body: Mapped[str] = mapped_column(Text, default="")
     conversation_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    target_agent_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     read_at: Mapped[str | None] = mapped_column(String(40), nullable=True)
     created_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+
+
+class AdvisorAssignment(Base):
+    __tablename__ = 'advisor_assignments'
+    __table_args__ = (UniqueConstraint('conversation_state_id', 'event_key'),
+                     Index('ix_assignment_pending', 'status', 'available_at'))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_state_id: Mapped[int] = mapped_column(ForeignKey('conversation_states.id'))
+    event_key: Mapped[str] = mapped_column(String(160))
+    event_type: Mapped[str] = mapped_column(String(60))
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    rule_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    rule_name: Mapped[str] = mapped_column(String(120), default='')
+    action: Mapped[str] = mapped_column(String(20), default='notify')
+    agent_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(30), default='pending')
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    available_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+    error: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    notification_id: Mapped[int | None] = mapped_column(ForeignKey('notifications.id'), nullable=True)
+    created_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+    updated_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+
+
+class AdvisorRotation(Base):
+    __tablename__ = 'advisor_rotations'
+    key: Mapped[str] = mapped_column(String(160), primary_key=True)
+    position: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class NotificationRead(Base):

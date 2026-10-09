@@ -12,7 +12,7 @@ from app.chatwoot_service import client_for, payload_dict
 from app.config import settings
 from app.db import SessionLocal
 from app.models import (ChatwootConnection, ConversationState, HandoffTask,
-                        Notification, NotificationDelivery, utcnow)
+                        Notification, NotificationDelivery, AdvisorAssignment, utcnow)
 from app.operations import create_notification, setting_value
 from app.security import decrypt_secret
 
@@ -54,7 +54,11 @@ def process_notification_delivery(session_factory=None) -> bool:
             db.rollback()
             return False
         delivery_id = delivery.id
+        explicit_notification = db.scalar(select(AdvisorAssignment.id).where(
+            AdvisorAssignment.notification_id == notification.id, AdvisorAssignment.action == 'notify')) is not None
         payload = {"event": notification.event_type, "notification_id": notification.id,
+                   "explicit_notification": explicit_notification,
+                   "target_agent_id": notification.target_agent_id,
                    "title": notification.title, "body": notification.body,
                    "conversation_id": notification.conversation_id, "created_at": notification.created_at}
         # Persist before network I/O. A process crash must not blindly replay a note.
@@ -65,7 +69,7 @@ def process_notification_delivery(session_factory=None) -> bool:
     status = "delivered"
     try:
         if channel == "chatwoot":
-            if not target or not config.get("agent_id") or not config.get("bot_id") or not payload["conversation_id"]:
+            if not target or not (payload.get('target_agent_id') or config.get("agent_id")) or not config.get("bot_id") or not payload["conversation_id"]:
                 raise ValueError("notification_target_incomplete")
             client = client_for(target)
             remote = payload_dict(client.get_conversation(payload["conversation_id"]))
@@ -76,7 +80,8 @@ def process_notification_delivery(session_factory=None) -> bool:
             assignee = (remote.get("meta") or {}).get("assignee") or {}
             if (remote.get("meta") or {}).get("assignee_type") == 'AgentBot':
                 assignee = {}
-            agent_id = int(assignee.get('id') or config["agent_id"])
+            agent_id = int(payload['target_agent_id'] if payload['explicit_notification'] else
+                           (assignee.get('id') or payload.get('target_agent_id') or config["agent_id"]))
             if not any(int(agent.get("id", 0)) == agent_id for agent in agents):
                 raise ValueError("notification_agent_not_in_inbox")
             # Keep an existing human owner; only assign an unowned new handoff.
@@ -139,9 +144,16 @@ def process_handoff_overdue(session_factory=None) -> bool:
         for task in tasks:
             conversation = db.get(ConversationState, task.conversation_state_id)
             body = f"handoff:{task.id} · 会话 #{conversation.chatwoot_conversation_id} 已超过 SLA"
+            from app.models import AdvisorAssignment
+            if db.scalar(select(AdvisorAssignment.id).where(AdvisorAssignment.conversation_state_id == conversation.id,
+                    AdvisorAssignment.event_key == f'overdue:{task.id}', AdvisorAssignment.rule_id.is_not(None))):
+                continue
             if db.scalar(select(Notification.id).where(Notification.event_type == "handoff.overdue", Notification.body == body)):
                 continue
-            create_notification(db, "handoff.overdue", "人工接管任务已超时", body, conversation.chatwoot_conversation_id)
+            from app.advisor_assignment import emit
+            routed = emit(db, conversation, ['handoff.overdue'], f'overdue:{task.id}', {'summary':body})
+            if not (routed and routed.rule_id):
+                create_notification(db, "handoff.overdue", "人工接管任务已超时", body, conversation.chatwoot_conversation_id)
             created += 1
             if created >= 50:
                 break

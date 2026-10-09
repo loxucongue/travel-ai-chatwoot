@@ -225,7 +225,14 @@ def deliver_one(db, row):
     drafts = [m for m in row.messages if m.get('status') == 'draft']
     if not drafts:
         if value.get('handoff') and not value.get('handoff_created'):
-            handoff(db, row, value.get('handoff_reason') or 'customer_request',
+            reason_type = value.get('handoff_type', 'other')
+            if row.memory.get('contact_value'):
+                reason_type = 'contact'
+            elif row.memory.get('contact_status') == 'attachment_pending_verification':
+                reason_type = 'contact_image'
+            elif row.memory.get('contact_status') == 'self_reported_added':
+                reason_type = 'contact_reported'
+            handoff(db, row, reason_type,
                     str(row.memory) + '\n' + value.get('handoff_reason', ''))
             value = service.state(row)
             value['handoff_created'] = True
