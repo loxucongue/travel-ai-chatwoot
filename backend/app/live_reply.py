@@ -46,7 +46,12 @@ def mirror_event(db, event):
               and not payload.get('private') and not (payload.get('content_attributes') or {}).get('external_echo'))
     current=bool(policy.get('armed_at') and event.received_at >= policy['armed_at'] and fresh(event.received_at)
                  and (not incoming or payload.get('created_at') and fresh(payload['created_at'])))
-    state, message, _, _=upsert_mirrors(db,event,side_effects=False,update_controls=current)
+    state, message, context, _=upsert_mirrors(db,event,side_effects=False,update_controls=current)
+    if (state and current and event.event in ('conversation_created', 'conversation_updated')
+            and state.inbox.chatwoot_inbox_id == settings.live_reply_inbox_id
+            and context.get('previous_labels') != (state.labels or [])):
+        from app.reception_v3.live import apply_label_change
+        apply_label_change(db, state, context.get('previous_labels', []))
     if state and message:
         out=db.scalar(select(OutboundMessage).where(OutboundMessage.conversation_state_id==state.id,
                                                    OutboundMessage.chatwoot_message_id==message.chatwoot_message_id))

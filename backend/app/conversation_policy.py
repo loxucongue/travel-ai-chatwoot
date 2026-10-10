@@ -39,12 +39,13 @@ def compute_state(
         return "AI_PAUSED_GLOBAL", "tenant_disabled"
     if not inbox.ai_enabled:
         return "AI_PAUSED_INBOX", "inbox_disabled"
-    for label in ("拒绝联系", "黑名单"):
+    from app.runtime_settings import BLOCK_LABELS
+    for label in sorted(BLOCK_LABELS):
         if label in contact_labels:
             return "AI_PAUSED_LABEL", f"contact_label:{label}"
-    for label in ("客诉", "人工接管", "AI关闭"):
+    for label in ("人工接管", "客诉", "客訴", *sorted(BLOCK_LABELS - {"人工接管", "客诉", "客訴"})):
         if label in labels:
-            state = "HUMAN_HANDOFF" if label in ("客诉", "人工接管") else "AI_PAUSED_LABEL"
+            state = "HUMAN_HANDOFF" if label in ("客诉", "客訴", "人工接管") else "AI_PAUSED_LABEL"
             return state, f"conversation_label:{label}"
     if ai_sync_status != "synced":
         return "AI_PAUSED_SYNC", f"ai_label_sync:{ai_sync_status}"

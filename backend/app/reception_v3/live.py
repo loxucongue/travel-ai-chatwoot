@@ -122,9 +122,74 @@ def permitted(db, conversation):
         and conversation.inbox.chatwoot_inbox_id == settings.live_reply_inbox_id
         and reception_conversation_allowed(db, conversation.chatwoot_conversation_id)
         and effective == 'AI_ACTIVE'
+        and not set((conversation.labels or []) + (conversation.contact.labels if conversation.contact else [])).intersection(blocking_labels(db))
         and not human_owned(db, conversation)
         and not db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
                                                       HandoffTask.status.in_(['pending','claimed']))))
+
+
+def apply_label_change(db, conversation, previous_labels):
+    """Apply accepted label transitions, without replaying old customer messages."""
+    labels = set(conversation.labels or [])
+    added = labels - set(previous_labels)
+    mappings = setting_value(db, 'label_mappings', {})
+    handoff_labels = {'人工接管', '客诉', '客訴', *mappings.get('handoff_labels', [])}
+    matched = sorted(added & handoff_labels)
+    if matched:
+        ensure_handoff(db, conversation, 'label', 'Chatwoot 标签触发：' + '、'.join(matched),
+                       'P1' if set(matched) & {'客诉', '客訴'} else 'P2')
+        cancel(db, conversation.id, 'handoff_label')
+        return
+    if not has_ai_label(list(labels)) or labels.intersection(blocking_labels(db)):
+        cancel(db, conversation.id, 'label_paused')
+        return
+    # Only an explicit off -> on transition resumes a normally paused session.
+    # Removing a handoff tag alone must never release human ownership.
+    if has_ai_label(previous_labels) or not permitted(db, conversation):
+        return
+    row = session_for(db, conversation.id)
+    if not row:
+        return
+    value = service.state(row)
+    unknown = db.scalar(select(OutboundMessage.id).where(
+        OutboundMessage.conversation_state_id == conversation.id,
+        OutboundMessage.status.in_(['submission_unknown', 'unknown'])))
+    if (unknown or value.get('opt_out') or value.get('failed_event')
+            or value.get('handoff') or row.controls.get('human')):
+        return
+    if value.get('last_reason') not in ('label_paused', 'ai_label_removed', 'control_changed',
+                                      'remote_reception_paused', 'reception_paused'):
+        return
+    service.control(row, 'resume')
+    value['last_reason'] = 'label_restored'
+    service.save(row, value)
+    conversation.effective_ai_state, conversation.effective_state_reason = 'AI_ACTIVE', 'label_restored'
+
+
+def restore_blocker(db, conversation):
+    """Return the reason an explicit resume cannot release this conversation."""
+    if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
+                                            HandoffTask.status.in_(['pending', 'claimed']))):
+        return '请先完成当前人工任务后再恢复 AI'
+    if db.scalar(select(OutboundMessage.id).where(OutboundMessage.conversation_state_id == conversation.id,
+                                                 OutboundMessage.status.in_(['submission_unknown', 'unknown']))):
+        return '存在发送结果未知的消息，请先核对渠道送达记录'
+    if set(conversation.contact.labels if conversation.contact else []).intersection(blocking_labels(db)):
+        return '客户仍有停止联系标签，请先核对客户意愿'
+    row = session_for(db, conversation.id)
+    if row and service.state(row).get('opt_out'):
+        return '客户已明确拒绝联系，不能直接恢复 AI'
+    if conversation.contact_id:
+        for other in db.scalars(select(ConversationState).where(
+                ConversationState.tenant_id == conversation.tenant_id,
+                ConversationState.contact_id == conversation.contact_id,
+                ConversationState.inbox_binding_id == conversation.inbox_binding_id,
+                ConversationState.id != conversation.id)):
+            if (runtime_state(session_for(db, other.id), '', '')[0] == 'HUMAN_HANDOFF'
+                    or db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == other.id,
+                                                             HandoffTask.status.in_(['pending', 'claimed'])))):
+                return '同一客户的其他会话仍由人工接待，请先处理对应会话'
+    return None
 
 
 def enable_new_customer(db, conversation, message):

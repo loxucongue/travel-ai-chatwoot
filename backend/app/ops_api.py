@@ -523,6 +523,10 @@ def restore_ai(task_id: int, payload: HandoffVersion, user: User = Depends(manag
             "message": "存在发送结果未知的消息，请先核对渠道送达记录；尚未恢复 AI，也不会自动重发。",
             "outbound_ids": list(unresolved),
         })
+    from app.reception_v3.live import restore_blocker
+    blocker = restore_blocker(db, conversation)
+    if blocker:
+        raise HTTPException(409, detail={"code": "ai_restore_blocked", "message": blocker})
     mappings = setting_value(db, "label_mappings", LabelMappings().model_dump())
     client = client_for(get_connection(db))
     try:
@@ -532,7 +536,12 @@ def restore_ai(task_id: int, payload: HandoffVersion, user: User = Depends(manag
             client.create_label(AI_CONTROL_LABEL, "AI 自动接管会话", "#16A34A", True)
         current = client.get_conversation_labels(conversation.chatwoot_conversation_id)
         labels = current.get("payload", []) if isinstance(current, dict) else current
-        final = [x for x in labels if x not in mappings["handoff_labels"] and str(x).casefold() != AI_CONTROL_LABEL]
+        handoff_labels = set(mappings["handoff_labels"]) | {"人工接管", "客诉", "客訴"}
+        from app.runtime_settings import blocking_labels
+        remaining_blocks = set(labels).intersection(blocking_labels(db) - handoff_labels)
+        if remaining_blocks:
+            raise HTTPException(409, detail={"code": "ai_restore_blocked", "message": "会话仍有停止标签：" + '、'.join(sorted(remaining_blocks))})
+        final = [x for x in labels if x not in handoff_labels and str(x).casefold() != AI_CONTROL_LABEL]
         final.append(AI_CONTROL_LABEL)
         client.set_conversation_labels(conversation.chatwoot_conversation_id, final)
     finally:

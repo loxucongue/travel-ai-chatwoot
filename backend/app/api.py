@@ -100,6 +100,7 @@ def sync_local_labels(
     source: str = "chatwoot",
     ai_label_catalog_exists: bool = True,
 ) -> None:
+    previous_labels = list(row.labels or [])
     normalized = list(dict.fromkeys(labels))
     ai_state_changed = False
     if not ai_label_catalog_exists and row.ai_mode == "enabled":
@@ -131,6 +132,9 @@ def sync_local_labels(
     row.effective_ai_state = state
     row.effective_state_reason = reason
     row.updated_at = utcnow()
+    if source == 'platform' and previous_labels != normalized:
+        from app.reception_v3.live import apply_label_change
+        apply_label_change(db, row, previous_labels)
 
 
 def raise_chatwoot_error(exc: ChatwootError, message: str) -> None:
@@ -782,6 +786,14 @@ def update_conversation_ai_mode(
     db: Session = Depends(get_db),
 ):
     row = visible_conversation(db, user, conversation_id)
+    if payload.enabled:
+        from app.reception_v3.live import restore_blocker
+        blocker = restore_blocker(db, row)
+        if blocker:
+            raise HTTPException(409, detail={"code": "ai_restore_blocked", "message": blocker})
+        from app.runtime_settings import blocking_labels
+        if set(row.labels or []).intersection(blocking_labels(db) - {'AI关闭', 'ai_off'}):
+            raise HTTPException(409, detail={"code": "ai_restore_blocked", "message": "请先处理停止标签或在人工任务中恢复 AI"})
     desired_mode = "enabled" if payload.enabled else "disabled"
     row.ai_mode = desired_mode
     row.ai_mode_source = "platform"
@@ -801,9 +813,11 @@ def update_conversation_ai_mode(
         if payload.enabled and not ai_definition:
             client.create_label(AI_CONTROL_LABEL, "AI 自动接管会话", "#16A34A", True)
         current = string_payload(client.get_conversation_labels(conversation_id))
+        if payload.enabled and set(current).intersection(blocking_labels(db) - {'AI关闭', 'ai_off'}):
+            raise HTTPException(409, detail={"code": "ai_restore_blocked", "message": "Chatwoot 会话仍有停止标签，请先处理后再恢复 AI"})
         final = [
             label for label in current
-            if label.casefold() != AI_CONTROL_LABEL and label != "AI关闭"
+            if label.casefold() != AI_CONTROL_LABEL and label not in ("AI关闭", "ai_off")
         ]
         if payload.enabled:
             final.append(AI_CONTROL_LABEL)
@@ -815,10 +829,15 @@ def update_conversation_ai_mode(
         session = session_for(db, row.id)
         if session:
             value = v3_service.state(session)
-            if payload.enabled and not value.get('handoff'):
+            if payload.enabled:
                 v3_service.control(session, 'resume')
+                session.controls = {**session.controls, 'human': False}
+                value.update(handoff=False, handoff_created=False, pending_event=None,
+                             next_check_at=None, failed_event=None, buffered_questions=[], last_reason='manual_restore')
+                v3_service.save(session, value)
             elif not payload.enabled:
                 v3_service.control(session, 'stop')
+        sync_local_labels(db, row, final_labels, source="platform")
         audit(db, user, "conversation.ai_mode.update", "conversation", conversation_id, {
             "enabled": payload.enabled,
             "sync_status": row.ai_sync_status,

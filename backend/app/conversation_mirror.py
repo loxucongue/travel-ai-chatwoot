@@ -110,6 +110,11 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
                 if state != linked.effective_ai_state or reason != linked.effective_state_reason:
                     linked.version += 1
                 linked.effective_ai_state, linked.effective_state_reason, linked.updated_at = state, reason, utcnow()
+                if update_controls:
+                    from app.runtime_settings import blocking_labels
+                    if set(contact.labels or []).intersection(blocking_labels(db)):
+                        from app.reception_v3.live import cancel
+                        cancel(db, linked.id, 'contact_label_paused')
         return None, None, ctx, False
 
     inbox = db.scalar(select(InboxBinding).where(InboxBinding.tenant_id == tenant.id, InboxBinding.chatwoot_inbox_id == ctx["inbox_id"]))
