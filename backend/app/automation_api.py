@@ -193,9 +193,13 @@ class RouteFixedAnswerInput(BaseModel):
     @model_validator(mode="after")
     def validate_price_validity(self):
         from datetime import date
+        if self.valid_from:
+            date.fromisoformat(self.valid_from)
+            if not self.valid_until:
+                raise ValueError('price_validity_requires_end')
         if self.valid_until:
             end = date.fromisoformat(self.valid_until)
-            if self.id != 'price' or not self.fallback_text:
+            if self.id != 'price' or not (self.fallback_text or '').strip():
                 raise ValueError('price_validity_requires_fallback')
             if self.valid_from and date.fromisoformat(self.valid_from) > end:
                 raise ValueError('price_validity_order')

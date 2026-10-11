@@ -1,0 +1,418 @@
+[
+  {
+    "id": "age-qr-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "solo",
+        "text": "我自己一位，想先了解。",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "excludes": [
+          "家人還是朋友"
+        ]
+      },
+      {
+        "id": "age65",
+        "text": "我64歲，最低年齡是65歲嗎？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age75",
+        "text": "朋友剛滿75歲，她可以一起參加嗎？需要什麼文件？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age76",
+        "text": "另一個朋友76歲呢？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "line",
+        "text": "我想再確認安排，要怎麼給你我的LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "qr_image",
+        "text": "這是我的LINE QR Code",
+        "content_type": "image",
+        "attachments": [
+          {
+            "id": 909,
+            "file_type": "image"
+          }
+        ],
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "已經加",
+          "識別成功"
+        ]
+      },
+      {
+        "id": "after",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fees-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "intro",
+        "text": "我們4位朋友",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "independent",
+        "text": "可以四個人自己一團嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "surcharge",
+        "text": "自己一團會不會加價，要多多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "400"
+        ]
+      },
+      {
+        "id": "promotion",
+        "text": "現在優惠多少？我想看這條的團費。",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "10,780"
+        ],
+        "excludes": [
+          "折600",
+          "折400",
+          "折200",
+          "-600",
+          "-400",
+          "-200"
+        ]
+      },
+      {
+        "id": "stacking",
+        "text": "四個人可以在這個價錢上再減早鳥和多人優惠嗎？直接算總價給我。",
+        "checks": [
+          "no_third_person"
+        ],
+        "excludes": [
+          "每人-200",
+          "每人減200",
+          "每人減人民幣200"
+        ],
+        "evaluation_note": "已经连续讨论独团、收费和优惠，要求实际总价且确有待确认项，允许首次邀请联系方式；普通单项报价仍不邀请。"
+      },
+      {
+        "id": "consider",
+        "text": "日期還沒確定，我再想想。",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "already_added",
+        "text": "我已經加你們LINE了，請看看訊息。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "傳一下",
+          "已經收到",
+          "已經加您"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "night-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "now": "2026-10-11T11:30:00+00:00",
+    "steps": [
+      {
+        "id": "intro",
+        "seconds": 60,
+        "checks": [
+          "no_price",
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "six_hours_night",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "next_opening",
+        "next_check": true,
+        "checks": [
+          "send",
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "no_repeat",
+        "seconds": 3600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "age-qr-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "solo",
+        "text": "我自己一位，想先了解。",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "excludes": [
+          "家人還是朋友"
+        ]
+      },
+      {
+        "id": "age65",
+        "text": "我64歲，最低年齡是65歲嗎？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age75",
+        "text": "朋友剛滿75歲，她可以一起參加嗎？需要什麼文件？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age76",
+        "text": "另一個朋友76歲呢？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "line",
+        "text": "我想再確認安排，要怎麼給你我的LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "qr_image",
+        "text": "這是我的LINE QR Code",
+        "content_type": "image",
+        "attachments": [
+          {
+            "id": 909,
+            "file_type": "image"
+          }
+        ],
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "已經加",
+          "識別成功"
+        ]
+      },
+      {
+        "id": "after",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fees-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "intro",
+        "text": "我們4位朋友",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "independent",
+        "text": "可以四個人自己一團嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "surcharge",
+        "text": "自己一團會不會加價，要多多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "400"
+        ]
+      },
+      {
+        "id": "promotion",
+        "text": "現在優惠多少？我想看這條的團費。",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "12,180"
+        ],
+        "excludes": [
+          "折600",
+          "折400",
+          "折200",
+          "-600",
+          "-400",
+          "-200"
+        ]
+      },
+      {
+        "id": "stacking",
+        "text": "四個人可以在這個價錢上再減早鳥和多人優惠嗎？直接算總價給我。",
+        "checks": [
+          "no_third_person"
+        ],
+        "excludes": [
+          "每人-200",
+          "每人減200",
+          "每人減人民幣200"
+        ],
+        "evaluation_note": "已经连续讨论独团、收费和优惠，要求实际总价且确有待确认项，允许首次邀请联系方式；普通单项报价仍不邀请。"
+      },
+      {
+        "id": "consider",
+        "text": "日期還沒確定，我再想想。",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "already_added",
+        "text": "我已經加你們LINE了，請看看訊息。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "傳一下",
+          "已經收到",
+          "已經加您"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "night-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "now": "2026-10-11T11:30:00+00:00",
+    "steps": [
+      {
+        "id": "intro",
+        "seconds": 60,
+        "checks": [
+          "no_price",
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "six_hours_night",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "next_opening",
+        "next_check": true,
+        "checks": [
+          "send",
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "no_repeat",
+        "seconds": 3600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  }
+]

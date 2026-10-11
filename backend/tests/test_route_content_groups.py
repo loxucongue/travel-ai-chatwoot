@@ -59,6 +59,31 @@ def remove_custom(payload):
     payload["content_groups"] = [g for g in payload["content_groups"] if g["key"] != CUSTOM]
 
 
+def test_price_campaign_fields_survive_content_publish(content_api):
+    current, payload, published, put = content_api
+    payload['fixed_answers'] = deepcopy(current['fixed_answers'])
+    price = next(s for s in payload['fixed_answers'] if s['id'] == 'price')
+    price.update(valid_from='2026-10-11', valid_until='2026-10-31', fallback_text='Standard price')
+    response = put(payload)
+    assert response.status_code == 200, response.text
+    saved = next(s for s in published[0]['fixed_answers'] if s['id'] == 'price')
+    assert (saved['valid_from'], saved['valid_until'], saved['fallback_text']) == ('2026-10-11', '2026-10-31', 'Standard price')
+
+
+@pytest.mark.parametrize('fields', [
+    {'valid_from': '2026-10-11', 'valid_until': None},
+    {'valid_from': '2026-11-01', 'valid_until': '2026-10-31', 'fallback_text': 'Standard'},
+    {'valid_until': '2026-10-31', 'fallback_text': '   '},
+    {'valid_until': 'not-a-date', 'fallback_text': 'Standard'},
+])
+def test_price_campaign_rejects_incomplete_dates(content_api, fields):
+    current, payload, published, put = content_api
+    payload['fixed_answers'] = deepcopy(current['fixed_answers'])
+    next(s for s in payload['fixed_answers'] if s['id'] == 'price').update(fields)
+    assert put(payload).status_code == 422
+    assert not published
+
+
 def test_add_group_preserves_metadata_and_creates_unique_versions(content_api):
     current, payload, published, put = content_api
     before = deepcopy(current)

@@ -183,7 +183,7 @@ function RouteDetail({ product, content, tab, setTab, enabled, dirty, publishing
     <nav className="route-detail-tabs panel">{tabs.map(([key, label]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>)}</nav>
     <section className="route-detail-panel panel">
       {tab === 'base' ? <BaseTab product={product} content={content} enabled={enabled} onToggleEnabled={onToggleEnabled} patch={onPatchContent} /> : null}
-      {tab === 'price' ? <PriceTab facts={content.knowledge_facts} patch={onPatchContent} /> : null}
+      {tab === 'price' ? <PriceTab content={content} patch={onPatchContent} /> : null}
       {tab === 'content' ? <ContentTab product={product} content={content} patch={onPatchContent} /> : null}
       {tab === 'mainline' ? <MainlineTab content={content} patch={onPatchContent} /> : null}
       {tab === 'answers' ? <FixedAnswersTab product={product} content={content} patch={onPatchContent} /> : null}
@@ -218,9 +218,29 @@ function Readiness({ product }: { product: RouteProduct }) {
   return <aside className="route-readiness"><header>发布检查</header><div><p><span>线路事实</span><strong>{product.knowledge_facts.length} 条</strong></p><p><span>回复内容组</span><strong>{product.content_groups.length} 组</strong></p><p><span>图片素材</span><strong className={product.readiness.assets_ready === product.readiness.assets_total ? '' : 'warn'}>{product.readiness.assets_ready}/{product.readiness.assets_total}</strong></p><p><span>线路介绍</span><strong className={product.readiness.sop_ready ? '' : 'warn'}>{product.readiness.sop_ready ? '已发布' : '未就绪'}</strong></p></div><footer>只有事实、引用关系和必需素材全部通过校验，线路才会显示为可接待。</footer></aside>;
 }
 
-function PriceTab({ facts, patch }: { facts: ProductFact[]; patch: (updater: (value: ContentDraft) => void) => void }) {
-  const indexes = facts.map((fact, index) => ({ fact, index })).filter(({ fact }) => isPriceOrSchedule(fact));
-  return <div className="route-section-stack"><header className="detail-section-intro"><div><h2>价格与可售档期</h2></div></header>{indexes.length ? <div className="fact-table-editor">{indexes.map(({ fact, index }) => <FactRow key={fact.id} fact={fact} onChange={(field, value) => patch(draft => { draft.knowledge_facts[index][field] = value; })} />)}</div> : <EmptyState title="暂无价格或档期资料" description="请在线路资料的对应内容模块中新增。" />}</div>;
+function PriceValidity({ answer, update }: { answer: FixedAnswer; update: (updater: (item: FixedAnswer) => void) => void }) {
+  return <>
+    <div className="route-field-grid">
+      <label>活动开始日期<input type="date" value={answer.valid_from ?? ''} max={answer.valid_until ?? undefined} onChange={event => update(item => { item.valid_from = event.target.value || null; })} /></label>
+      <label>活动截止日期<input type="date" value={answer.valid_until ?? ''} min={answer.valid_from ?? undefined} onChange={event => update(item => { item.valid_until = event.target.value || null; })} /></label>
+    </div>
+    <label className="block-field">非活动期间报价<textarea rows={7} maxLength={10000} value={answer.fallback_text ?? ''} onChange={event => update(item => { item.fallback_text = event.target.value || null; })} /></label>
+    <small>日期按台北时间生效；起止日期均留空表示长期有效。修改日期时请同步修改报价话术。</small>
+  </>;
+}
+
+function PriceTab({ content, patch }: { content: ContentDraft; patch: (updater: (value: ContentDraft) => void) => void }) {
+  const indexes = content.knowledge_facts.map((fact, index) => ({ fact, index })).filter(({ fact }) => isPriceOrSchedule(fact));
+  const price = content.fixed_answers.find(answer => answer.id === 'price');
+  const updatePrice = (updater: (item: FixedAnswer) => void) => patch(draft => { const item = draft.fixed_answers.find(answer => answer.id === 'price'); if (item) updater(item); });
+  return <div className="route-section-stack"><header className="detail-section-intro"><div><h2>价格与可售档期</h2></div></header>
+    {price && <section className="route-section-stack">
+      <div className="detail-section-intro"><h3>客户询价回复</h3><Badge tone={price.status === 'active' ? 'green' : 'amber'}>{price.status === 'active' ? '已启用' : '未启用'}</Badge></div>
+      <label className="block-field">报价话术<textarea rows={9} maxLength={10000} value={price.answer_text} onChange={event => updatePrice(item => { item.answer_text = event.target.value; item.answer_origin = 'operator_approved'; item.source_ref = 'operator.config'; })} /></label>
+      <PriceValidity answer={price} update={updatePrice} />
+    </section>}
+    <details className="route-guidance-details"><summary>基础售价、费用明细与出发档期</summary>{indexes.length ? <div className="fact-table-editor">{indexes.map(({ fact, index }) => <FactRow key={fact.id} fact={fact} onChange={(field, value) => patch(draft => { draft.knowledge_facts[index][field] = value; })} />)}</div> : <EmptyState title="暂无价格或档期资料" description="请在线路资料的对应内容模块中新增。" />}</details>
+  </div>;
 }
 
 function ContentTab({ product, content, patch }: { product: RouteProduct; content: ContentDraft; patch: (updater: (value: ContentDraft) => void) => void }) {
@@ -417,6 +437,7 @@ function FixedAnswerDrawer({ product, content, answer, patch, onClose }: { produ
         <label>客户可能会这样问（每行一个）<textarea rows={5} value={answer.positive_examples.join('\n')} onChange={event => update(item => { item.positive_examples = lines(event.target.value); })} /></label>
         <label>相似但不能命中的问法（每行一个）<textarea rows={4} value={answer.negative_examples.join('\n')} onChange={event => update(item => { item.negative_examples = lines(event.target.value); })} /></label>
         <label>{answer.answer_origin === 'website_verbatim' ? '官网标准回答' : '优先使用的话术原文'}<textarea rows={10} maxLength={10000} value={answer.answer_text} onChange={event => update(item => { item.answer_text = event.target.value; if (item.answer_origin === 'website_verbatim') { item.answer_origin = 'operator_approved'; item.source_ref = 'operator.config'; } })} /><small>{answer.answer_text.length} 字，作为 V3 优先使用的话术。修改官网原话后，来源会自动改为“运营维护”。</small></label>
+        {answer.id === 'price' && <PriceValidity answer={answer} update={update} />}
         <section className="drawer-linked-section"><div><h4>关联线路素材（无需重复上传）</h4><span>{answer.asset_ids.length} 张</span></div>{routeAssetKeys.length ? <div className="fixed-answer-assets">{routeAssetKeys.map(key => { const asset = product.assets.find(item => item.key === key); return <label key={key}><input type="checkbox" checked={answer.asset_ids.includes(key)} onChange={event => update(item => { item.asset_ids = event.target.checked ? [...item.asset_ids, key] : item.asset_ids.filter(id => id !== key); })} />{asset?.preview_url ? <img src={`${API_BASE}${asset.preview_url}`} alt={asset.display_name} /> : <ImageIcon size={24} />}<span>{asset?.display_name ?? key}</span></label>; })}</div> : <p>本线路暂无素材，请先到“图片与文件”添加。</p>}</section>
         <div className="fixed-answer-source"><span>内容来源</span><strong>{answer.source_ref}</strong></div>
       </div>

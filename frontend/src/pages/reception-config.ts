@@ -19,6 +19,7 @@ export type FixedAnswer = {
   content_group_key: string; answer_text: string; fact_ids: string[]; asset_ids: string[];
   source_ref: string; answer_origin: 'website_verbatim' | 'operator_approved'; positive_examples: string[];
   negative_examples: string[];
+  valid_from?: string | null; valid_until?: string | null; fallback_text?: string | null;
 };
 
 export type ProductFact = { id: string; text: string; source_ref: string };

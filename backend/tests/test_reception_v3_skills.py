@@ -56,6 +56,16 @@ def test_selected_route_preloads_only_its_complete_config(monkeypatch):
     assert decision['messages'][0]['text'] == '回答原稿'
 
 
+@pytest.mark.parametrize('last_error,limit', [(None,4000), ('deepseek_output_token_limit',8000), ('timeout',4000)])
+def test_only_truncated_retry_expands_output_budget(monkeypatch, last_error, limit):
+    requests = model(monkeypatch, [final(messages=[{'text':'已完成回答'}])])
+    c = context('peach_9d_2027')
+    c['state'] = {'last_error':last_error}
+    decision, _, _ = runtime.run_agent(c)
+    assert requests[0]['max_tokens'] == limit
+    assert decision['messages'][0]['text'] == '已完成回答'
+
+
 def test_optional_script_reference_null_does_not_retry_or_rewrite(monkeypatch):
     response = {'content': json.dumps({'action': 'reply', 'messages': [
         {'text': '兩人一房，機票另計。', 'script_id': None}]}, ensure_ascii=False)}

@@ -41,14 +41,17 @@ def test_old_displayed_interval_is_migrated_once(session_factory):
         assert 'business_rules' not in config and 'stage_journey' not in config
 
 
-def test_failed_turn_keeps_customer_questions_and_new_message_recovers(session_factory,monkeypatch):
+@pytest.mark.parametrize('error', [TimeoutError('timeout'), TimeoutError()])
+def test_failed_turn_keeps_customer_questions_and_new_message_recovers(session_factory,monkeypatch,error):
     with session_factory() as db:
         row=create(db,monkeypatch)
-        monkeypatch.setattr(service,'run_agent',lambda c: (_ for _ in ()).throw(TimeoutError('timeout')))
+        monkeypatch.setattr(service,'run_agent',lambda c: (_ for _ in ()).throw(error))
         step(db,row);step(db,row)
         value=service.state(row)
         assert value['pending_event']=='customer_message' and value['buffered_questions']
         assert value['attempts']==1
+        assert value['last_error'] == (str(error) or 'TimeoutError')
+        assert db.scalar(select(AutomationRun)).error_code == value['last_error']
         service.add_message(db,row,'还有小费呢','new');db.commit()
         assert 'attempts' not in service.state(row)
         monkeypatch.setattr(service,'run_agent',lambda c:answer(messages=[{'text':'保留原文回答'}],stop_followup=True))

@@ -114,11 +114,14 @@ def run_agent(context: dict):
     logs, hashes = [], []
     deadline = time.monotonic() + 60
     repaired = False
+    # A retry with the same limit repeats an avoidable truncation. Keep normal
+    # calls small; give the existing bounded retry more room after this error.
+    output_limit = 8000 if context.get('state', {}).get('last_error') == 'deepseek_output_token_limit' else 4000
     try:
         for turn in range(6):
             payload = {'model': settings.deepseek_model, 'messages': messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
-                       'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': 4000,
+                       'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,
                        'stream': True, 'stream_options': {'include_usage': True}}
             hashes.append(_request_hash(payload))
             if len(json.dumps(messages, ensure_ascii=False)) > settings.deepseek_max_input_characters:

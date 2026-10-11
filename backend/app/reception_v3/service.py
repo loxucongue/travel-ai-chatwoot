@@ -551,13 +551,14 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             db.rollback()
             db.refresh(row)
             run = db.get(AutomationRun, run_id)
-            run.status, run.error_code = 'failed', str(exc)[:120]
+            error = str(exc) or type(exc).__name__
+            run.status, run.error_code = 'failed', error[:120]
             run.decision = decision or {}
             run.trace = {'engine_version': 'v3', 'event': event, 'outbound': False,
                          'logs': logs or getattr(exc, 'calls', []), **metrics(http_calls)}
             if row.generation == generation:
                 value = state(row)
-                value['last_error'] = str(exc)[:200]
+                value['last_error'] = error[:200]
                 value['attempts'] = value.get('attempts', 0) + 1
                 if value['attempts'] < 3:
                     value['retry_at'] = later(utcnow(), 2 ** value['attempts'])
@@ -568,7 +569,7 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                     save(row, value)
                     if environment == 'live':
                         from app.reception_v3.live import handoff
-                        handoff(db, row, 'model_failed', str(exc)[:200])
+                        handoff(db, row, 'model_failed', error[:200])
                         value = state(row)
                 save(row, value)
         finally:

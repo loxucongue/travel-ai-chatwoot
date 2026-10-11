@@ -1,0 +1,642 @@
+[
+  {
+    "id": "family-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "party_reply_starts_intro",
+        "text": "我們4位，跟家人一起，三月底想去。",
+        "drain": false,
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "question_during_intro",
+        "text": "媽媽擔心住宿，都是希爾頓嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "contains": [
+          "波密"
+        ]
+      },
+      {
+        "id": "price",
+        "text": "謝謝，請問一團多少人、費用？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "10,780",
+          "不含"
+        ]
+      },
+      {
+        "id": "single_room",
+        "text": "如果媽媽想自己住一間，房差多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "2,700"
+        ]
+      },
+      {
+        "id": "flight",
+        "text": "含機票嗎？",
+        "checks": [
+          "no_third_person"
+        ],
+        "contains": [
+          "協助"
+        ]
+      },
+      {
+        "id": "rail_meeting",
+        "text": "那可以搭青藏鐵路入藏嗎？這個行程在哪裡集合？",
+        "checks": [
+          "no_third_person"
+        ],
+        "contains": [
+          "林芝"
+        ]
+      },
+      {
+        "id": "consider_here",
+        "text": "好，我先跟家人商量，暫時先在這裡聊就好。",
+        "checks": [
+          "no_contact",
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "silence_6h",
+        "seconds": 21600,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "send"
+        ]
+      },
+      {
+        "id": "line_method",
+        "text": "家人討論好了，我要怎麼給你LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "email",
+        "text": "改用信箱吧，請用旅遊測試信箱 travel.qa@example.com 和我聯絡。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "after_handoff",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "silent-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "wait_59_seconds",
+        "seconds": 59,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "intake_timeout_intro",
+        "seconds": 1,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "three_minutes",
+        "seconds": 180,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "five_minutes",
+        "seconds": 120,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "one_hour",
+        "seconds": 3300,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "before_six_hours",
+        "seconds": 17999,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "six_hours",
+        "seconds": 1,
+        "checks": [
+          "send",
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "no_repeat",
+        "seconds": 3600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "postpone-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "intro",
+        "seconds": 60,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "postpone",
+        "text": "謝謝提供資訊！很想去看林芝的桃花，但是明年三月已安排了行程，只能後年再安排了，謝謝！",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "其他",
+          "LINE"
+        ],
+        "excludes": [
+          "3/20",
+          "4/10",
+          "每年",
+          "留意"
+        ]
+      },
+      {
+        "id": "other_season",
+        "text": "九月有什麼路線可以走？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "decline",
+        "text": "先不用加LINE，我跟朋友討論看看。",
+        "checks": [
+          "no_contact",
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "six_hours",
+        "seconds": 21600,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "send"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "family-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "party_reply_starts_intro",
+        "text": "我們4位，跟家人一起，三月底想去。",
+        "drain": false,
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "question_during_intro",
+        "text": "媽媽擔心住宿，都是希爾頓嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "contains": [
+          "波密"
+        ]
+      },
+      {
+        "id": "price",
+        "text": "謝謝，請問一團多少人、費用？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "12,180",
+          "不含"
+        ]
+      },
+      {
+        "id": "single_room",
+        "text": "如果媽媽想自己住一間，房差多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "3,200"
+        ]
+      },
+      {
+        "id": "flight",
+        "text": "含機票嗎？",
+        "checks": [
+          "no_third_person"
+        ],
+        "contains": [
+          "協助"
+        ]
+      },
+      {
+        "id": "rail_meeting",
+        "text": "那可以搭青藏鐵路入藏嗎？這個行程在哪裡集合？",
+        "checks": [
+          "no_third_person"
+        ],
+        "contains": [
+          "林芝"
+        ]
+      },
+      {
+        "id": "consider_here",
+        "text": "好，我先跟家人商量，暫時先在這裡聊就好。",
+        "checks": [
+          "no_contact",
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "silence_6h",
+        "seconds": 21600,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "send"
+        ]
+      },
+      {
+        "id": "line_method",
+        "text": "家人討論好了，我要怎麼給你LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "email",
+        "text": "改用信箱吧，請用旅遊測試信箱 travel.qa@example.com 和我聯絡。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "after_handoff",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "silent-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "wait_59_seconds",
+        "seconds": 59,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "intake_timeout_intro",
+        "seconds": 1,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "three_minutes",
+        "seconds": 180,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "five_minutes",
+        "seconds": 120,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "one_hour",
+        "seconds": 3300,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "before_six_hours",
+        "seconds": 17999,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "six_hours",
+        "seconds": 1,
+        "checks": [
+          "send",
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "no_repeat",
+        "seconds": 3600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "postpone-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "intro",
+        "seconds": 60,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "postpone",
+        "text": "謝謝提供資訊！很想去看林芝的桃花，但是明年三月已安排了行程，只能後年再安排了，謝謝！",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "其他",
+          "LINE"
+        ],
+        "excludes": [
+          "3/20",
+          "4/10",
+          "每年",
+          "留意"
+        ]
+      },
+      {
+        "id": "other_season",
+        "text": "九月有什麼路線可以走？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "decline",
+        "text": "先不用加LINE，我跟朋友討論看看。",
+        "checks": [
+          "no_contact",
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "six_hours",
+        "seconds": 21600,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "send"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unknown-compare",
+    "entry": "你好，我想了解西藏行程。",
+    "known_entry": false,
+    "steps": [
+      {
+        "id": "choose",
+        "text": "想了解有珠峰的11天",
+        "checks": [
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "party",
+        "text": "我們2個朋友一起，想先看看行程。",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "compare",
+        "text": "跟不上珠峰的9日有什麼差別？兩個費用都給我看看。",
+        "contains": [
+          "10,780",
+          "12,180"
+        ],
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "anaphora",
+        "text": "那9日在哪裡結束呢？",
+        "contains": [
+          "拉薩"
+        ],
+        "checks": [
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "switch",
+        "text": "那改成9日吧",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "room_unknown",
+        "text": "如果五個人呢？一定要有一個人住單人房嗎？",
+        "excludes": [
+          "一定要補",
+          "必須補"
+        ],
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "stop",
+        "text": "先不要再發消息給我了。",
+        "checks": [
+          "opt_out",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "stop_silence",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "party-7",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "large_party",
+        "text": "我們7位朋友一起去。",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "party-8",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "large_party",
+        "text": "我們8位朋友一起去。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "interrupt-human",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "begin",
+        "text": "4位",
+        "drain": false,
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "interrupt",
+        "text": "先不要介紹了，請真人直接在這裡跟我聊。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "silence",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  }
+]

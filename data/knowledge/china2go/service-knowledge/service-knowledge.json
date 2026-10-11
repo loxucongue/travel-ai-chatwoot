@@ -216,7 +216,7 @@
       "topics": [
         "documents"
       ],
-      "answer_text": "超過75歲就不建議參加，需要請顧問另行確認能否接待喔。",
+      "answer_text": "超過75歲就不建議參加，我們需要另行確認能否接待喔。",
       "fact_ids": [
         "service.age_requirements"
       ],
