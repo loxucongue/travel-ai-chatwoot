@@ -1,0 +1,468 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>业务回复全链路验收 · 2026-10-12</title><style>body{font:15px/1.7 system-ui,"Microsoft YaHei",sans-serif;color:#243745;background:#f5f7fa;margin:0}main{max-width:1360px;margin:auto;padding:32px}h1{font-size:27px}h2{font-size:21px;margin-top:34px}p{max-width:1100px}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #d6e0e7;padding:10px;vertical-align:top;text-align:left}th{background:#eaf1f6}td:first-child{min-width:165px}td:nth-child(2){min-width:100px}td:nth-child(4){max-width:290px;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.65 system-ui;background:#f2f6f8;padding:15px;border-radius:6px}details{background:white;border:1px solid #d6e0e7;padding:12px;margin:10px 0}summary{cursor:pointer;font-weight:600}a{color:#126477}.warning{border-left:4px solid #bd790c;background:#fff7e7;padding:12px}.ok{color:#14604f}.step{padding:10px 0;border-bottom:1px solid #e0e5e8}small{color:#60727e}@media(max-width:850px){main{padding:15px}.table{overflow-x:auto}table{min-width:1050px}}</style><main>
+<h1>业务回复全链路验收</h1><p>需求窗口：2026年10月9日至11日，包含10月11日最新截图与文字；完成于10月12日凌晨。历史接待、标签和转人工要求作为不破坏原功能的回归条件。最新要求覆盖冲突旧要求，不把每一句历史要求同时堆进提示词。</p>
+<h2>结论与适用边界</h2><p>当前架构可以承载两条线路的接待，不需要再建一套引擎。主要差距来自：具体旧话术与新原则矛盾、基础价格与活动价作用未分清、定时评估与实际发送混为一谈，以及原测试只看单轮输出/是否出错。修复集中在这些源头，模型最终正文直接使用，未增加回复审核模型。</p>
+<p><strong>最终有效样本：16 段关联旅程，113 个节点；自动断言未通过节点 0。</strong>完整113节点回放加最后费用专项16节点。后端独立回归157项通过，前端2项测试及生产构建通过，浏览器本地编辑/保存检查通过。截图仅本地验收，未修改生产价格配置。</p>
+<div class="warning">不能写成全部外部链路已验收：iPhone/Apple Watch实际推送未实机验证；六小时与隔夜使用虚拟时间推进；渠道551不可达并未恢复；9日新活动价和活动叠加算法未获得业务数字；大团阈值线上仍为8。人工复读仍发现重复问候、问句位置、留资时机不够稳定，不能据自动断言全绿认定全部效果达标。以下逐项写明处理与证据。</div>
+<h2>完整要求、改前状态、修改及测试结论</h2><div class="table"><table><thead><tr><th>编号 / 业务要求</th><th>改前状态</th><th>原因与处理</th><th>对应测试证据</th><th>结论</th></tr></thead><tbody>
+<tr id="R01"><td>R01 首次客户必须实际进入接待，不能选了线路后无响应</td><td>上轮已修</td><td>模型返回 wait 与系统是否真的发送人数问题曾不一致；已用已选线状态触发实际人数流程，不靠问候关键词。</td><td>family-9/entry; family-11/entry; test_model_recognized_route_wait_still_sends_actual_intake</td><td>通过；模型等待不再等同已发送。</td></tr>
+<tr id="R02"><td>R02 线路明确后马上问人数；有回应立即介绍，60秒未回也介绍</td><td>已实现</td><td>保留服务端的计时和交付状态。人数问题及5个选项读取配置，具体人数已知则不重复。</td><td>silent-9/wait_59_seconds、intake_timeout_intro; family-11/party_reply_starts_intro; test_v3_intake_followup</td><td>通过：59秒无新消息、60秒启动；客户回应无需再等一分钟。</td></tr>
+<tr id="R03"><td>R03 配置开场白、开场图按原文原图使用，一位客户只发一次</td><td>已实现；普通新客重复问候未清理</td><td>配置问候由服务端发送，模型又自由写您好造成重复。本轮明确模型只承接选线，照片仍取配置。</td><td>structural.json; unknown-compare/entry</td><td>配置品牌原文与媒体ID一致，SOP内仅一次；普通未选线入口仍偶发额外一句您好，提示词约束未完全消除此文字瑕疵。图片视觉内容、手机加载未在隔离模型测试中验证。</td></tr>
+<tr id="R04"><td>R04 没有广告线路的客户先匹配，再问人数</td><td>本轮补齐选线话术</td><td>旧指引允许自由开场，容易提前问人数并与选线后的固定提问重复；改成先问是否想上珠峰。</td><td>unknown-compare/entry、choose、party</td><td>关联测试通过；比较另一线路不自动改变正式选择。</td></tr>
+<tr id="R05"><td>R05 一组一组完整发送线路SOP，普通问题集中在末尾答；停止、改线、真人请求立即处理</td><td>已实现</td><td>保留确定性的图文队列，避免模型把介绍计划当已交付。模型选择内容，执行器负责真实状态及间隔。</td><td>structural.json; family-9/question_during_intro; unknown-compare/switch; interrupt-human</td><td>配置8/11个介绍组按序交付；图文间隔与配置相符；普通问题排队，真人请求取消后续。</td></tr>
+<tr id="R06"><td>R06 4人承接保留公司定位、4–6人小团、可考虑自己一团的业务原话</td><td>已实现</td><td>按场景引用 group_party，人数本身不表示已经购买独团；不顺带报价。</td><td>family-9/question_during_intro; family-11/question_during_intro</td><td>通过；不再只回人数合适。</td></tr>
+<tr id="R07"><td>R07 台湾口吻，尽量原文，回答顾虑后自然承接</td><td>部分已实现；旧示例冲突</td><td>统一通用Skill实际例句、配置基础话术与系统提示。保留事实限制，不再新增输出审核模型。</td><td>family两条/flight、rail_meeting、question_during_intro; age-qr两条</td><td>抽样完整回复已人工复读；风格仍存在模型变动，不承诺未来每句逐字相同。</td></tr>
+<tr id="R08"><td>R08 介绍结尾用家人还是朋友这类轻问句；问句放末尾，已知不重复问</td><td>已实现；个别补充句在问句后</td><td>明确说明先于问题，未知资料先说需确认再问；独行、已说家人朋友则换兴趣问题或保留等待。</td><td>silent两条/intake_timeout_intro; age-qr两条/solo; family两条; postpone两条/other_season</td><td>核心介绍收尾通过；最终9日复杂费用留资回复仍出现问句后补一句用途，未完全消除。纯价格、年龄答复不强加问句。</td></tr>
+<tr id="R09"><td>R09 客户没问价格就不主动报；不主动展开房差、独团差异</td><td>已实现；假设房型仍偶发金额</td><td>只问是否需要单人房时不报房差；人数不决定房间分配；明确问差额时才答对应金额。</td><td>unknown-compare/room_unknown; family两条/single_room; fees两条/independent、surcharge</td><td>通过；报价与独团基础价不混算。</td></tr>
+<tr id="R10"><td>R10 10月11日最新报价模板：团名、4–6人、金额、活动日期、包含及不含</td><td>上轮已修</td><td>最新模板替代10月9日的单句短报价要求。配置、当前事实与Skill使用同一有效模板。</td><td>family-11/price; family-9/price; fees两条/promotion</td><td>11日12180截至10/31；9日10780，没有擅自推算9日活动价。</td></tr>
+<tr id="R11"><td>R11 活动价不能与旧价格、房差、其他折扣混用</td><td>本轮修复</td><td>基础售价和活动事实同时存在；模型会把活动价当独团原价，并展开历史折扣。明确用途与优先级，未确认叠加不算最终价。</td><td>fees两条/surcharge、promotion、stacking</td><td>普通询价简洁；明确叠加询问时说明待确认，不捏造计价单位。</td></tr>
+<tr id="R12"><td>R12 活动截止日期能配置，约30天应如何处理</td><td>仅接口已支持，后台不便编辑</td><td>新增价格页当前话术、起止日期、非活动期间报价，同一份price话术也可在场景页编辑；API拒绝无截止日或无回退文本。</td><td>浏览器保存字段检查; test_price_campaign_fields_survive_content_publish; test_promotion_fixed_dates_and_fallback_do_not_roll_forward</td><td>支持运营设定约30天的真实活动；未实施每日自动续30天。当前仍是业务提供的10/31，11/1回到12780。文字日期需同步编辑。</td></tr>
+<tr id="R13"><td>R13 不要对客说顾问可以、请顾问；交接像同一个服务团队</td><td>上轮泛化要求已写，具体旧例句未清理</td><td>模型更易沿用具体例句。清理青铁、超龄、QR图、自报已加好友、目录外、真人请求例句，并把团队口吻放进系统协议。</td><td>family两条/flight、line_method、email; age-qr两条/qr_image; party-8; interrupt-human; fees两条/stacking</td><td>最终场景检查第三人称转交句；后台交接仍实际执行。</td></tr>
+<tr id="R14"><td>R14 不要介绍刚结束或一两分钟沉默就索要联系方式</td><td>已修，保留</td><td>留资依据为有效交流与下一步需要，不能依据计时到点或介绍完成。</td><td>silent两条/3分钟、5分钟、1小时、6小时; family两条/question_during_intro</td><td>通过；自动跟进不索要LINE、日期或人数。</td></tr>
+<tr id="R15"><td>R15 有效交流后主动留资；说再考虑仍可适当邀请，不等确定报名</td><td>已实现</td><td>结合已解决顾虑、具体安排，邀请单一方便渠道；与主动沉默触达的禁索取规则区分。</td><td>family两条/rail_meeting; fees两条/consider</td><td>能在有效交流后提出LINE QR Code；时机不是每轮固定触发，11日家庭样本在交通答疑后仍偏保守，后续主动联系可正常承接。</td></tr>
+<tr id="R16"><td>R16 LINE ID改为QR Code；也接受客户主动给Email或ID</td><td>已修；QR承接仍有旧第三人称</td><td>沿用当前配置邀请QR图；收到邮件直接交接，不再追问LINE。只是询问怎么给LINE还不交接。</td><td>family两条/line_method、email; age-qr两条/line、qr_image</td><td>通过；QR图为待人工确认，不假装已识别或已加好友。</td></tr>
+<tr id="R17"><td>R17 客户已加LINE，要承接并实际转人工，不重复索取</td><td>本轮统一原话</td><td>使用我们先确认一下讯息；后台contact_reported交接，保留待核实状态。</td><td>fees两条/already_added; age-qr两条/after; family两条/after_handoff</td><td>通过；后续AI与沉默均停止。</td></tr>
+<tr id="R18"><td>R18 拒绝留资不等于拒绝接待；拒绝再联系才停止主动触达</td><td>旧逻辑调度存在，模型仍会跳过</td><td>复测发现先不加LINE、和朋友讨论被解释为无新帮助。修复冲突指引，首个六小时仍发一句轻量承接；明确拒绝再联系继续停止。</td><td>postpone两条/decline、six_hours; unknown-compare/stop、stop_silence</td><td>对应场景必须实际有轻量消息，而非仅有评估日志；拒联场景不发。</td></tr>
+<tr id="R19"><td>R19 桃花时间不合适，介绍还有其他西藏和中国线路，并争取联系方式</td><td>上轮已修，本轮统一服务口吻</td><td>不能把目录仅两条误解成公司只卖两条；也不编造2028价格或9月确定团期。</td><td>postpone两条/postpone、other_season</td><td>通过；换月份本身不触发连续索要LINE。</td></tr>
+<tr id="R20"><td>R20 沉默六小时后才触达，之前不密集催问</td><td>已修</td><td>一次普通跟进从本轮最终交付开始计6小时，不是客户首条消息，也不是任意轮询一次即发送。</td><td>silent两条全程; test_only_after_six_hours_and_only_once</td><td>3分钟、5分钟、1小时、5:59:59均不发，6小时触达一次。</td></tr>
+<tr id="R21"><td>R21 沉默跟进有内容而且轻松，不索LINE、人数、日期或主动报价</td><td>部分修；暂不留资被静默跳过</td><td>删除相互冲突的有无新资料可随意wait指引；用简短兴趣交流或承接，不再重复未回应的问题。</td><td>family两条/silence_6h; silent两条/six_hours; postpone两条/six_hours</td><td>通过最终样本；此轮未回复不再连发多轮。</td></tr>
+<tr id="R22"><td>R22 夜间到点不能直接丢掉跟进，白天继续；客户回复重新计时</td><td>上轮已修</td><td>早期把6小时当生命周期终点；现在是首个触达点，夜间顺延09:00且不得越过渠道窗口。</td><td>night两条/six_hours_night、next_opening、no_repeat; test_customer_reply_restarts_six_hours_from_new_answer</td><td>夜间不发，次日09:00轻触达一次；本次用虚拟时间，不冒充真实等待六小时。</td></tr>
+<tr id="R23"><td>R23 人工接管后AI不抢答，标签影响范围清楚</td><td>上轮已修</td><td>人工/拒联/黑名单等状态优先，ai标签不是强制覆盖；恢复要明确操作，不回放取消草稿。</td><td>test_label_handoff_transitions.py; test_live_audit_fixes.py</td><td>回归通过：当前会话控制与联系人级拒联区分，同一客户其他会话不被误恢复。</td></tr>
+<tr id="R24"><td>R24 转人工按事件分配到顾问，通知能发出</td><td>既有功能，非本轮改规则</td><td>保持规则优先级、去重、均分、人工负责人保护；公共停发时私有通知可发。</td><td>test_advisor_assignment.py; test_handoff_to_private_notification_while_public_sending_paused</td><td>隔离集成通过，生产有1条服务端已交付记录；不等于iPhone/Watch实际响铃已验收。</td></tr>
+<tr id="R25"><td>R25 7人及以上是否转人工</td><td>当前配置阈值8，非7</td><td>这是业务配置边界，不是识别Bug。本轮不擅改线上阈值。7–10区间下界7不能当确定8。</td><td>party-7、party-8; test_profile_rule_stops_introduction_before_any_delivery</td><td>7人继续接待，8人转人工。若业务要求7起转，需要将后台阈值改7。</td></tr>
+<tr id="R26"><td>R26 青铁入藏、林芝集合、机票等业务事实能回答</td><td>已补事实，本轮服务口吻修正</td><td>优先文档补充事实：两线林芝进拉萨出，建议出藏搭青铁；机票不含但可协助；不把未知说成不能服务。</td><td>family两条/rail_meeting、flight</td><td>通过；没有再把整题退回资料没有。</td></tr>
+<tr id="R27"><td>R27 住宿例外、年龄、房型不能乱推断</td><td>已有修复，假设房型金额本轮收紧</td><td>波密不保证希尔顿；11日珠峰另有绒布旅馆事实；75边界按业务原话；五人不自动推两双一单。</td><td>family两条/question_during_intro; age-qr两条/age65、age75、age76; unknown-compare/room_unknown</td><td>相应样本通过；是对业务资料一致性的验收，不是另行医学判断。</td></tr>
+<tr id="R28"><td>R28 模型失败可恢复，有明确错误日志，不误以为接待完成</td><td>本轮修复</td><td>生产3次输出截断原来相同上限重试；仅该错误重试扩大4000到8000。空TimeoutError原来记录空字符串，现记录异常类名。</td><td>test_only_truncated_retry_expands_output_budget; test_failed_turn_keeps_customer_questions_and_new_message_recovers</td><td>回归通过；真实测试出现超时保留在费用与迭代证据中，不能保证模型永不超时。</td></tr>
+<tr id="R29"><td>R29 发送失败不能默默漏掉，也不能不确定时盲目重发</td><td>已有发送收据和转人工</td><td>生产#315的6条失败均渠道551用户目前没空，已停止AI并有人认领。无需改话术或强行重发。</td><td>production-errors.json; failed-receipts.json; test_runtime_reliability.py</td><td>保护链通过；渠道恢复、用户侧接收不属于本次可修复事实。</td></tr>
+<tr id="R30"><td>R30 演练能验证长对话与时间触达，不能每会话只测一句</td><td>本轮增强</td><td>新增可复用脚本，用真实V3状态机、隔离SQLite、生产只读配置和真实模型，从客户首条走到交接；媒体解析替身、禁外发。</td><td>evaluate_reception_journeys.py; 两个fixtures; 本报告完整对话</td><td>16种关联旅程113节点；另有多轮同题复测、未见场景及结构验收。</td></tr>
+</tbody></table></div><h2>从全局看问题为什么发生</h2><ol><li><b>架构职责：</b>模型负责理解、选话术及形成回复；执行器负责人数等待、SOP队列、交付确认、沉默时钟、标签及人工优先。删掉执行器的真实状态反而会把计划发送当作已发送。本次保留这个分工。</li><li><b>内容来源：</b>系统提示的泛化要求曾被Skill中的具体旧例句抵消；只在末尾追加一句第一人称不能解决。已清理具体例句并统一系统协议，通用基础话术的超龄答复也同步。</li><li><b>配置：</b>当前活动价、基础售价、原售价表优惠并存，必须明确它们用途；不能把所有数字都当作可直接叠加的价格。后台同一条price话术现在集中可见，仍保留基础费用事实供明确追问使用。</li><li><b>代码：</b>首次选线的wait、六小时生命周期、夜间顺延是此前已修的执行问题；本次补充截断重试预算和空异常记录。不以添加更多worker解决话术或状态错误。</li><li><b>验收：</b>只检查任务有运行、不出现禁词会漏掉“该触达却没发送”。现在对暂不留LINE等场景直接要求六小时有实际消息，并检查介绍顺序、间隔、文本、图片引用和交接后停止。</li></ol>
+<h2>迭代过程（保留失败，不把最后一次通过当成从未有问题）</h2><ol><li>基线10段71节点：4个自动检查节点出现第三人称转交；人工复读还发现真人请求称谓、问句后补话、假设房型报差额等问题。</li><li>清理旧例句后同题复测：一段11日家庭会话发生模型超时，测试程序未等待真实重试时间而卡住；修正测试程序等待2/4秒重试，并修复运行时空错误记录。随后该整段重跑完成。</li><li>加入6段42节点扩展测试：发现普通优惠询问展开旧折扣及折扣单位自相矛盾；也发现年龄多轮问答后的合适留资被过严测试误判，修正测试标准并保留记录。</li><li>全量复测113节点自动检查通过后继续人工检查：未选线路重复问候/人数提问，以及暂不留LINE后六小时不触达仍有遗漏。没有据自动全绿宣布完成，而是修正指引与断言。</li><li>针对复测再次出现“让顾问核算”：将团队口吻提升到系统协议，并将所有普通步骤纳入该检查。清理沉默章节中“没有新内容就wait”的冲突句。随后固定代码与配置完整执行113节点；其中复杂总价核算后的首次联系邀请被no_contact断言标记，经业务上下文复核属合理留资，明确区分单项报价与具体安排后，对两条费用长对话另跑16节点。该轮又发现9日单项询价附带邀请，将单项报价明确成只引用price的话术协议后，再跑同样16节点。原始失败标记保留，下面费用记录采用专项复测结果。</li></ol>
+<h2>测试方法与成本</h2><p>先只读生产配置、媒体元数据、运行错误与收据；再用生产配置快照和候选Skill运行真实DeepSeek。每段独立内存数据库，完整经过start/add_message/advance/tick。仅允许POST到模型接口，所有Chatwoot写入被禁止。图片只验证配置引用和队列顺序，图像本身与手机通知用外部链路边界标注。</p>
+<p>本轮模型接口记录 497 次调用，已返回usage计费估算 ¥9.7684；2 次usage未知按调用上界保留预算。<strong>合计保守占用 ¥11.0963 / 用户预算¥20</strong>，脚本硬上限¥18，另留¥2余量。不是平台账单精确金额，不含前一轮已有测试消费。</p>
+<p>规则回归：test_reception_v3、test_reception_v3_skills、test_v3_consolidation、test_v3_intake_followup、test_live_audit_fixes、test_runtime_reliability、test_advisor_assignment、test_label_handoff_transitions、test_six_hour_followup、test_business_feedback_20261011共128项；配置内容发布29项，合计157项（重跑项不重复计数）。其中历史自定义3小时测试仅验证旧自定义序列兼容，不代表当前默认跟进时点。</p>
+<h2>生产只读核查</h2><p>10月9日起至本轮初次快照：模型57次完成、3次截断失败，三次后续均恢复；出站34条delivered、201条read、20条sent、6条failed。sent仅代表提交，不把它计为客户已读。6条失败均在Chatwoot #315，渠道返回551；交接已认领、AI已停。通知服务端1条delivered，不推导手机响铃。两条待跟进会话在凌晨到点，按当前规则应顺延09:00；本次未等到真实09:00验证它们。</p>
+<h2>上线记录</h2><p>发布后只读验收：健康检查HTTP 200、已发布文件哈希与本地一致；线上当前报价、活动过期回退及360分钟跟进配置验证通过。</p><pre>{
+  &quot;git_commit&quot;: &quot;2dfec3866b1e55403a7b526825a759553124c327&quot;,
+  &quot;release&quot;: &quot;global-business-20261012-20261011T162358Z&quot;,
+  &quot;backup&quot;: &quot;/opt/china2go-ai/backups/global-business-20261012-20261011T162358Z&quot;,
+  &quot;settings_unchanged&quot;: true,
+  &quot;environment_unchanged&quot;: true
+}</pre>
+<h2>仍有的效果差距</h2><p>普通未选线入口仍偶发在配置品牌介绍后多说一次您好；明确选线入口不受影响。首次留资时机仍有模型差异：11日家庭会话在交通答疑后没有主动邀请，而其他考虑/另排场景会主动邀请。9日复杂报价的留资回复仍偶发问句后补一句用途说明。系统尚不能被描述为每一句效果百分之百稳定；本轮没有用关键词剪裁或强制每隔几轮索要来掩盖这些差异。</p><h2>后续仍需业务确认或实机验收</h2><ul><li>9日是否另有优惠价：当前沿用已确认10780；未用11日差额推算。</li><li>国庆活动与早鸟、多人、独团能否叠加及折扣单位：模型明确需核对，不编最终总价。</li><li>“每次约30天”不自动实现为每天续期。后台可编辑真实起止日期及报价文案，当前10/31固定有效期保留。</li><li>当前8人及以上转人工；7人继续AI。需要7人就调整后台阈值。</li><li>真实终端通知和六小时后实际渠道送达需实机证据；本次没有向真实客户发送测试消息。</li></ul>
+<h2>最终完整关联测试记录</h2><p>以下保留每一步客户输入、虚拟时刻、实际模拟交付内容以及状态。空回复用明确标记显示，不隐藏等待节点。完整模型输入/trace保存在本地output/global-review-20261011/accepted，未提交含生产配置的原始快照。</p>
+<details id="family-9"><summary>family-9 · 12 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節不上珠峰 9日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>party_reply_starts_intro</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：我們4位，跟家人一起，三月底想去。</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>question_during_intro</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：媽媽擔心住宿，都是希爾頓嗎？</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花9日、不上珠峰的完整行程～
+這是我們精選9日的桃花節行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+我們公司是全西藏精緻中小團資源最多的！我們的拚團都是4-6人一團～您們4位也可以考慮自己一團出發喔～
+住宿的部分，9日這條除了波密地區以外，其他都是升級國際品牌希爾頓飯店喔！希爾頓房內是12小時提供85–90%濃度的氧氣，在高原上對休息真的差很多。波密那晚不是希爾頓喔，波密是這兩條桃花行程的住宿例外。
+您們4位打算怎麼分房呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>price</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：謝謝，請問一團多少人、費用？</p><pre>西藏桃花節9日遊（不上珠峰）
+「4-6人小團」團費：人民幣¥ 10,780 /人
+
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+
+不含：機票、午晚餐、小費、個人花費</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>single_room</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：如果媽媽想自己住一間，房差多少？</p><pre>媽媽想自己住一間的話，這條9日的單房差是人民幣2,700元喔。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>flight</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：含機票嗎？</p><pre>這條行程的團費不包含機票喔～不過航班的部分，我們可以依您的需求提供建議，也可以協助代訂。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>rail_meeting</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：那可以搭青藏鐵路入藏嗎？這個行程在哪裡集合？</p><pre>我們這兩條桃花行程都是林芝進、拉薩出，所以會建議您出藏的時候再搭青藏鐵路，這樣能接上原本的行程喔。
+集合地點是林芝，第一天會安排林芝接機。
+您們4位三月底的出發安排，我們可以接著協助確認。方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>consider_here</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：好，我先跟家人商量，暫時先在這裡聊就好。</p><pre>好，您先和家人商量～有想了解的地方，隨時在這裡問我就好。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>silence_6h</b><small> · 2026-10-11T08:00:36+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>住宿這部分，家人還有想了解的地方嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>line_method</b><small> · 2026-10-11T08:00:36+00:00</small><p>客户/动作：家人討論好了，我要怎麼給你LINE？</p><pre>我們可以接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T14:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>email</b><small> · 2026-10-11T08:00:36+00:00</small><p>客户/动作：改用信箱吧，請用旅遊測試信箱 travel.qa@example.com 和我聯絡。</p><pre>收到了，我們會用您提供的信箱和您聯絡，接著協助您確認4位三月底出發的安排。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>after_handoff</b><small> · 2026-10-11T14:00:36+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="silent-9"><summary>silent-9 · 9 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節不上珠峰 9日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>wait_59_seconds</b><small> · 2026-10-11T02:00:59+00:00</small><p>客户/动作：推进时间 59 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intake_timeout_intro</b><small> · 2026-10-11T02:01:32+00:00</small><p>客户/动作：推进时间 1 秒</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花9日、不上珠峰的完整行程～
+這是我們精選9日的桃花節行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+您這次是跟家人還是朋友一起出發呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>three_minutes</b><small> · 2026-10-11T02:04:32+00:00</small><p>客户/动作：推进时间 180 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>five_minutes</b><small> · 2026-10-11T02:06:32+00:00</small><p>客户/动作：推进时间 120 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>one_hour</b><small> · 2026-10-11T03:01:32+00:00</small><p>客户/动作：推进时间 3300 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>before_six_hours</b><small> · 2026-10-11T08:01:31+00:00</small><p>客户/动作：推进时间 17999 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>six_hours</b><small> · 2026-10-11T08:01:32+00:00</small><p>客户/动作：推进时间 1 秒</p><pre>行程您慢慢看就好～有想了解的地方，隨時跟我說。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>no_repeat</b><small> · 2026-10-11T09:01:32+00:00</small><p>客户/动作：推进时间 3600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="postpone-9"><summary>postpone-9 · 6 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節不上珠峰 9日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intro</b><small> · 2026-10-11T02:01:32+00:00</small><p>客户/动作：推进时间 60 秒</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花9日、不上珠峰的完整行程～
+這是我們精選9日的桃花節行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+您這次是跟家人還是朋友一起出發呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>postpone</b><small> · 2026-10-11T02:01:32+00:00</small><p>客户/动作：謝謝提供資訊！很想去看林芝的桃花，但是明年三月已安排了行程，只能後年再安排了，謝謝！</p><pre>了解～桃花可以之後再安排，不急的。
+我們也有其他季節的西藏行程，以及中國其他地方的旅遊安排，都可以依您的時間和喜好協助確認。若您之後想先看看其他選擇，方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>other_season</b><small> · 2026-10-11T02:01:32+00:00</small><p>客户/动作：九月有什麼路線可以走？</p><pre>我們這兩條桃花行程都是3/20–4/10出發，沒有九月的團期喔～
+不過我們也有其他季節的西藏行程，以及中國其他地方的旅遊安排。您九月若想走，我們可以依您的時間和喜好協助確認。
+請問您九月是打算走西藏，還是也想看看其他地方呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>decline</b><small> · 2026-10-11T02:01:32+00:00</small><p>客户/动作：先不用加LINE，我跟朋友討論看看。</p><pre>好的，您先和朋友討論看看～之後有想了解的地方，隨時在這裡問我就好。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>six_hours</b><small> · 2026-10-11T08:01:32+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>您和朋友慢慢討論就好～之後想了解西藏或其他地方的安排，隨時跟我說。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="family-11"><summary>family-11 · 12 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>party_reply_starts_intro</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：我們4位，跟家人一起，三月底想去。</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>question_during_intro</b><small> · 2026-10-11T02:00:44+00:00</small><p>客户/动作：媽媽擔心住宿，都是希爾頓嗎？</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+我們公司是全西藏精緻中小團資源最多的！我們的拚團都是4–6人一團～您們4位也可以考慮自己一團出發喔。
+住宿的部分，除了波密和珠峰地區以外，其他都升級為國際品牌希爾頓飯店，房內有12小時85–90%濃度供氧。波密那晚不是希爾頓喔，波密是這兩條桃花行程的住宿例外；珠峰段則是住絨布旅館，房內有獨立廁所和供氧。
+想先幫您確認一下，同行的家人中是否有65歲以上長輩或是孩童呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:44+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>price</b><small> · 2026-10-11T02:00:44+00:00</small><p>客户/动作：謝謝，請問一團多少人、費用？</p><pre>西藏桃花節11日遊
+拼團升級「4-6人小團」優惠價：人民幣¥ 12,180 /人
+（截至10/31前報名，國慶月優惠）
+
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+
+不含：機票、午晚餐、小費、個人花費</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:44+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>single_room</b><small> · 2026-10-11T02:00:44+00:00</small><p>客户/动作：如果媽媽想自己住一間，房差多少？</p><pre>我們這條11日行程的房間是兩人一房；如果媽媽想自己住一間，單房差是人民幣3,200元喔。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:44+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>flight</b><small> · 2026-10-11T02:00:44+00:00</small><p>客户/动作：含機票嗎？</p><pre>這條行程的團費不包含機票喔～不過航班的部分，我們可以依您的需求提供建議，也可以協助代訂。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:44+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>rail_meeting</b><small> · 2026-10-11T02:00:46+00:00</small><p>客户/动作：那可以搭青藏鐵路入藏嗎？這個行程在哪裡集合？</p><pre>我們這兩條桃花行程都是林芝進、拉薩出，建議您出藏時再搭青藏鐵路，這樣能接上原本的行程喔。
+集合地點是林芝，第一天會安排林芝接機。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:46+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>consider_here</b><small> · 2026-10-11T02:00:46+00:00</small><p>客户/动作：好，我先跟家人商量，暫時先在這裡聊就好。</p><pre>好的～您先和家人慢慢商量，有想了解的地方隨時在這裡問我就好。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:46+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>silence_6h</b><small> · 2026-10-11T08:00:46+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>您和家人慢慢討論就好～住宿這部分，家人還有想了解的地方嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>line_method</b><small> · 2026-10-11T08:00:46+00:00</small><p>客户/动作：家人討論好了，我要怎麼給你LINE？</p><pre>我們可以接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T14:00:46+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>email</b><small> · 2026-10-11T08:00:46+00:00</small><p>客户/动作：改用信箱吧，請用旅遊測試信箱 travel.qa@example.com 和我聯絡。</p><pre>收到了～我們會用您提供的信箱和您聯絡，接著協助您確認出發安排。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>after_handoff</b><small> · 2026-10-11T14:00:46+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="silent-11"><summary>silent-11 · 9 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>wait_59_seconds</b><small> · 2026-10-11T02:00:59+00:00</small><p>客户/动作：推进时间 59 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intake_timeout_intro</b><small> · 2026-10-11T02:01:40+00:00</small><p>客户/动作：推进时间 1 秒</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+上面是桃花＋珠峰11日的完整行程，您可以慢慢看～想先了解哪一段都可以跟我說。
+您這次是跟家人還是朋友一起出發呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>three_minutes</b><small> · 2026-10-11T02:04:40+00:00</small><p>客户/动作：推进时间 180 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>five_minutes</b><small> · 2026-10-11T02:06:40+00:00</small><p>客户/动作：推进时间 120 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>one_hour</b><small> · 2026-10-11T03:01:40+00:00</small><p>客户/动作：推进时间 3300 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>before_six_hours</b><small> · 2026-10-11T08:01:39+00:00</small><p>客户/动作：推进时间 17999 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>six_hours</b><small> · 2026-10-11T08:01:40+00:00</small><p>客户/动作：推进时间 1 秒</p><pre>行程您慢慢看就好～有想了解的地方，隨時跟我說。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>no_repeat</b><small> · 2026-10-11T09:01:40+00:00</small><p>客户/动作：推进时间 3600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="postpone-11"><summary>postpone-11 · 6 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intro</b><small> · 2026-10-11T02:01:40+00:00</small><p>客户/动作：推进时间 60 秒</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+您這次是跟家人還是朋友一起出發呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>postpone</b><small> · 2026-10-11T02:01:40+00:00</small><p>客户/动作：謝謝提供資訊！很想去看林芝的桃花，但是明年三月已安排了行程，只能後年再安排了，謝謝！</p><pre>了解～桃花可以之後再安排。我們也有其他季節的西藏行程，以及中國其他地方的旅遊安排，可以依您的時間和喜好協助確認。若您想先看看其他選擇，方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>other_season</b><small> · 2026-10-11T02:01:40+00:00</small><p>客户/动作：九月有什麼路線可以走？</p><pre>我們目前的桃花產品都是3/20–4/10出發，九月不在這個區間裡。
+九月和其他季節我們也有西藏的行程，以及中國其他地方的旅遊安排，可以依您的時間和喜好協助確認。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>decline</b><small> · 2026-10-11T02:01:40+00:00</small><p>客户/动作：先不用加LINE，我跟朋友討論看看。</p><pre>好呀，您先和朋友討論～有想了解的隨時問我就好。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>six_hours</b><small> · 2026-10-11T08:01:40+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>您和朋友慢慢討論就好～之後想了解西藏或其他地方的安排，隨時跟我說。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="unknown-compare"><summary>unknown-compare · 9 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:01+00:00</small><p>客户/动作：广告首条：你好，我想了解西藏行程。</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+您好～我們目前有兩條西藏桃花行程：桃花9日（不上珠峰）和桃花＋珠峰11日。您會想上珠峰看看嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:01+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>choose</b><small> · 2026-10-11T02:00:01+00:00</small><p>客户/动作：想了解有珠峰的11天</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>party</b><small> · 2026-10-11T02:00:40+00:00</small><p>客户/动作：我們2個朋友一起，想先看看行程。</p><pre>我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+行程都傳給您了～我們都是4–6人小團，像您們兩位朋友一起出發，人數少反而輕鬆自在。
+您們會想先了解哪一段呢？像是珠峰那晚的住宿，還是沿途用車的部分？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>compare</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：跟不上珠峰的9日有什麼差別？兩個費用都給我看看。</p><pre>簡單說，兩條前七天的桃花和拉薩、日喀則精華是一樣的，差別在第八天之後～
+
+9日不上珠峰，第八天在日喀則走完扎什倫布寺，就搭拉日鐵路回拉薩，第九天送機；住宿例外只有波密那晚不是希爾頓。
+11日則多走珠峰段，會經過絨布寺、珠峰大本營，當晚住絨布旅館（房內有供氧和獨立廁所），再從日喀則回拉薩，第十一天送機；住宿例外是波密和珠峰地區，其他都安排希爾頓。
+兩條目前的團費：
+
+【西藏桃花節9日遊（不上珠峰）】
+「4-6人小團」團費：人民幣 ¥ 10,780／人
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+不含：機票、午晚餐、小費、個人花費
+
+【西藏桃花節11日遊】
+拼團升級「4-6人小團」優惠價：人民幣 ¥ 12,180／人（截至10/31前報名，國慶月優惠）
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+不含：機票、午晚餐、小費、個人花費</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>anaphora</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：那9日在哪裡結束呢？</p><pre>9日第八天在日喀則走完扎什倫布寺，就從日喀則搭拉日鐵路回拉薩，第九天在拉薩結束，安排送機或送火車～
+
+所以兩條的終點都是拉薩，差別就在中間有沒有進珠峰那一段。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>switch</b><small> · 2026-10-11T02:01:12+00:00</small><p>客户/动作：那改成9日吧</p><pre>我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花9日、不上珠峰的完整行程～
+這是我們精選9日的桃花節行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+9日的行程您慢慢看就好～這條是3/20–4/10出發，每週五、六、日、一發團。您們兩位大概計劃什麼時候出發呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:12+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>room_unknown</b><small> · 2026-10-11T02:01:12+00:00</small><p>客户/动作：如果五個人呢？一定要有一個人住單人房嗎？</p><pre>不一定要這樣分喔～團費是以兩人一房計算的，如果五個人當中有人想自己住一間，再補這條線的單房差就好。
+您們希望怎麼分房呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:01:12+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>stop</b><small> · 2026-10-11T02:01:12+00:00</small><p>客户/动作：先不要再發消息給我了。</p><pre>好的，我先不打擾您～之後如果想了解行程或有其他旅遊安排，隨時再跟我說就好。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: true, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>stop_silence</b><small> · 2026-10-11T08:01:12+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: true, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="party-7"><summary>party-7 · 2 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>large_party</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：我們7位朋友一起去。</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+我們公司是全西藏精緻中小團資源最多的！我們的拚團都是4–6人一團～
+您們7位朋友可以考慮自己一團出發喔～
+這趟西藏行程，有沒有哪個景點是您特別想去的呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="party-8"><summary>party-8 · 2 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>large_party</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：我們8位朋友一起去。</p><pre>收到～您們8位朋友一起走桃花＋珠峰11日，我們可以接著協助確認出發安排。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="interrupt-human"><summary>interrupt-human · 4 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>begin</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：4位</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>interrupt</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：先不要介紹了，請真人直接在這裡跟我聊。</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+好的，收到～接下來在這裡協助您。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>silence</b><small> · 2026-10-11T08:00:00+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="age-qr-9"><summary>age-qr-9 · 8 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節不上珠峰 9日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>solo</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：我自己一位，想先了解。</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花9日、不上珠峰的完整行程～
+這是我們精選9日的桃花節行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+我們很多自己一人的旅客，非常歡迎您～
+這條行程是3/20–4/10出發，每週五、六、日、一發團。請問您大概計劃什麼時候出發呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>age65</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：我64歲，最低年齡是65歲嗎？</p><pre>不是喔，65歲指的是台灣旅客要提供健康證明的年齡條件，不是最低參加年齡。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>age75</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：朋友剛滿75歲，她可以一起參加嗎？需要什麼文件？</p><pre>台灣旅客65–75歲（含75歲）可以報名，使用台胞證需要提供健康證明喔。
+我們可以接著協助您和朋友報名的文件安排。方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>age76</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：另一個朋友76歲呢？</p><pre>超過75歲就不建議參加，我們需要另行確認能否接待喔。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>line</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：我想再確認安排，要怎麼給你我的LINE？</p><pre>您把 LINE 的 QR Code 圖片直接傳到這個對話裡就可以囉～收到後我們會用 LINE 和您聯絡，接著協助您確認安排。方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:36+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>qr_image</b><small> · 2026-10-11T02:00:36+00:00</small><p>客户/动作：這是我的LINE QR Code</p><pre>圖片收到了，我們確認後會用您的 LINE 聯絡，接著協助您。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>after</b><small> · 2026-10-11T08:00:36+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="fees-9"><summary>fees-9 · 8 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節不上珠峰 9日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intro</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：我們4位朋友</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花9日、不上珠峰的完整行程～
+這是我們精選9日的桃花節行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+我們公司是全西藏精緻中小團資源最多的！我們的拚團都是4-6人一團～
+您們4位也可以考慮自己一團出發喔～
+收到，同行的朋友中是否有65歲以上長輩或是孩童</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>independent</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：可以四個人自己一團嗎？</p><pre>可以喔～我們本來就是4–6人一團，你們4位可以直接自己一團出發，不用跟其他旅客併團，整團的節奏和出發安排也比較好配合你們。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>surcharge</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：自己一團會不會加價，要多多少？</p><pre>4位自己一團的話，會在原本團費的基礎上每人加人民幣400元，也就是每人11,180元（原本10,780＋400）。房間一樣是兩人一房，出發時間和原本的團期相同。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>promotion</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：現在優惠多少？我想看這條的團費。</p><pre>西藏桃花節9日遊（不上珠峰）
+「4-6人小團」團費：人民幣¥ 10,780 /人
+
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+
+不含：機票、午晚餐、小費、個人花費</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>stacking</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：四個人可以在這個價錢上再減早鳥和多人優惠嗎？直接算總價給我。</p><pre>早鳥和多人優惠是可以一起用的～
+不過您們4位是自己一團，費用是在原團費上加價後的價格；早鳥折減又和出發日距離有關，能不能套用在您們目前的報價上、實際折多少，我們需要先確認，才能給您準確的總價，先不報一個可能失準的數字。
+方便傳一下您的 LINE QR Code 給我嗎？我們可以接著協助您確認4位的出發安排和優惠。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>consider</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：日期還沒確定，我再想想。</p><pre>了解～日期還沒確定沒關係，您們四位可以先慢慢想。之後不管是出發時間、住宿還是費用有想了解的地方，再問我就好。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:34+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>already_added</b><small> · 2026-10-11T02:00:34+00:00</small><p>客户/动作：我已經加你們LINE了，請看看訊息。</p><pre>好，我們先確認一下訊息，再接著協助您。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="night-9"><summary>night-9 · 5 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T11:30:00+00:00</small><p>客户/动作：广告首条：西藏桃花節不上珠峰 9日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intro</b><small> · 2026-10-11T11:31:32+00:00</small><p>客户/动作：推进时间 60 秒</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花9日、不上珠峰的完整行程～
+這是我們精選9日的桃花節行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+請問您是跟家人還是朋友一起來呢?</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T17:31:32+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>six_hours_night</b><small> · 2026-10-11T17:31:32+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-12T09:00:00+08:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>next_opening</b><small> · 2026-10-12T01:00:00+00:00</small><p>客户/动作：推进时间 0 秒 / 下一评估时刻</p><pre>行程您慢慢看就好～有想了解的地方，隨時跟我說。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>no_repeat</b><small> · 2026-10-12T02:00:00+00:00</small><p>客户/动作：推进时间 3600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="age-qr-11"><summary>age-qr-11 · 8 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>solo</b><small> · 2026-10-11T02:00:40+00:00</small><p>客户/动作：我自己一位，想先了解。</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+我們很多自己一位的旅客，非常歡迎您～行程您慢慢看就好，有沒有哪一段或哪個景點是您特別想先了解的呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>age65</b><small> · 2026-10-11T02:00:40+00:00</small><p>客户/动作：我64歲，最低年齡是65歲嗎？</p><pre>不是喔，65歲指的是台灣旅客要提供健康證明的年齡條件，不是最低參加年齡。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>age75</b><small> · 2026-10-11T02:00:40+00:00</small><p>客户/动作：朋友剛滿75歲，她可以一起參加嗎？需要什麼文件？</p><pre>台灣旅客65–75歲（含75歲）可以報名，使用台胞證需要提供健康證明喔。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>age76</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：另一個朋友76歲呢？</p><pre>超過75歲就不建議參加，我們需要另行確認能否接待喔。
+朋友的年紀我們可以再幫您確認能不能接待。方便傳一下您的 LINE QR Code 給我嗎？我們接著協助您確認報名安排。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>line</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：我想再確認安排，要怎麼給你我的LINE？</p><pre>您在 LINE 裡點開自己的 QR Code，截圖後直接傳到這裡給我就好～方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>qr_image</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：這是我的LINE QR Code</p><pre>圖片收到了，我們確認後會用您的 LINE 聯絡，接著協助您。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>after</b><small> · 2026-10-11T08:00:42+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="fees-11"><summary>fees-11 · 8 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T02:00:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intro</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：我們4位朋友</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+我們公司是全西藏精緻中小團資源最多的！我們的拚團都是4-6人一團～
+你們4位也可以考慮自己一團出發喔～
+行程您慢慢看～這趟有沒有哪個景點是您特別想去的呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>independent</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：可以四個人自己一團嗎？</p><pre>可以的～你們4位可以自己一團出發，不用跟其他旅客併團。我們本來就是做4–6人小團，4位獨立一團是沒問題的喔。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>surcharge</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：自己一團會不會加價，要多多少？</p><pre>可以喔～4位獨立成團的加價是每人加人民幣400元。以這條行程的標準團費原價人民幣12,780元來算，你們4位自己一團會是每人13,180元。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>promotion</b><small> · 2026-10-11T02:00:42+00:00</small><p>客户/动作：現在優惠多少？我想看這條的團費。</p><pre>西藏桃花節11日遊
+拼團升級「4-6人小團」優惠價：人民幣¥ 12,180 /人
+（截至10/31前報名，國慶月優惠）
+
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+
+不含：機票、午晚餐、小費、個人花費</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:42+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>stacking</b><small> · 2026-10-11T02:00:44+00:00</small><p>客户/动作：四個人可以在這個價錢上再減早鳥和多人優惠嗎？直接算總價給我。</p><pre>早鳥和多人優惠是可以一起用的喔～不過有兩件事要先跟您說清楚：
+
+早鳥折扣是依「出發前多久報名」分檔（半年、3–6個月、3個月內），你們的出發日還沒確定，要用哪一檔還不能定。另外，能不能在目前12,180的活動價上再折、以及你們4位這團實際的優惠金額，原表沒有寫明是每人還是每單，這部分我們需要再確認，所以總價我先不給您一個數字，確認好再一起算給您。
+我們可以接著協助您確認4位獨立成團的出發安排和實際優惠。方便傳一下您的 LINE QR Code 給我嗎？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:44+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>consider</b><small> · 2026-10-11T02:00:44+00:00</small><p>客户/动作：日期還沒確定，我再想想。</p><pre>好的～您慢慢想，不急。日期確定了或有其他想了解的地方，隨時跟我說就好。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T08:00:44+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>already_added</b><small> · 2026-10-11T02:00:44+00:00</small><p>客户/动作：我已經加你們LINE了，請看看訊息。</p><pre>好，我們先確認一下訊息，再接著協助您。</pre><small>{&quot;handoff&quot;: true, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+<details id="night-11"><summary>night-11 · 5 节点 · 通过</summary>
+<div class="step"><b>entry</b><small> · 2026-10-11T11:30:00+00:00</small><p>客户/动作：广告首条：西藏桃花節＋珠峰 11日</p><pre>您好，請問預計幾位想來旅遊？
+（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>intro</b><small> · 2026-10-11T11:31:40+00:00</small><p>客户/动作：推进时间 60 秒</p><pre>您好～我是China2Go的旅遊顧問Amber～很高興認識您！
+我們專門做4–10人小團、全外賓不拼內賓、零購物的西藏行程！
+接下來帶您看桃花＋珠峰11日的完整行程～
+這是我們精選11日的行程！從林芝低海拔入藏，循序漸進的海拔可以給身體時間適應高原～
+而行程完整涵蓋【林芝+波密＋拉薩+山南+日喀則以及珠峰大本營】等最重要的旅遊景點！
+這個行程除了必去的兩大桃花景點－嘎拉桃花村與波密桃花溝外，還有加碼去到以雪山湖泊、王宮遺址、千年古堡、以及最重要的拉薩秘境寺廟的特殊桃花行程
+除了波密和珠峰地區以外，其他住宿安排都升級為國際品牌希爾頓飯店喔！希爾頓是西藏最穩定且是12小時提供85-90%濃度的氧氣呦！而含氧量在西藏這樣的高原地區是很重要的！另外我們整體也是全酒店都有供氧氣的～
+而您選的是我們限量上珠峰的桃花節行程．這是獨有＂升級＂在珠峰絨布旅館的住宿！不過因為房間數較少，人數也是有限定的喔！
+這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！
+讓桃花能加入更深的西藏色彩，讓你不是只有賞桃花而已，而是真正的擁有了西藏獨有的桃花特色
+因為桃花節不加價升級6小團！車型則是2025年最新車，用VIP航空座椅車，每個人都有自己的大座位，並且有自帶製氧機，讓您舒適又安心～💕
+然後~這台車除了前面有緊急醫療氧氣鋼瓶！還特別裝了大家都可以吸的彌散式氧氣，簡單說就是～只要一開車，車子內部就在一個【移動氧艙】
+在西藏這樣的高原環境，住宿與車配備好！真的很重要
+還有一點，我們是唯一敢把無購物寫在合約上的旅行社，有任何購物行為賠償5000！
+您這次是跟家人還是朋友一起出發呢？</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-11T17:31:40+00:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>six_hours_night</b><small> · 2026-10-11T17:31:40+00:00</small><p>客户/动作：推进时间 21600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: &quot;2026-10-12T09:00:00+08:00&quot;, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>next_opening</b><small> · 2026-10-12T01:00:00+00:00</small><p>客户/动作：推进时间 0 秒 / 下一评估时刻</p><pre>行程您慢慢看就好～有想了解的地方，隨時跟我說。</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+<div class="step"><b>no_repeat</b><small> · 2026-10-12T02:00:00+00:00</small><p>客户/动作：推进时间 3600 秒</p><pre>［本步没有交付新消息］</pre><small>{&quot;handoff&quot;: false, &quot;opt_out&quot;: false, &quot;next_check_at&quot;: null, &quot;failures&quot;: []}</small></div>
+</details>
+</main></html>
