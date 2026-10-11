@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-10-04-document-live-11d.business-20261006",
+  "package_version": "2026-10-04-document-live-11d.business-20261006.business-20261011",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_11d_2027",
   "branch": "peach_11d",
@@ -14,7 +14,8 @@
     "11D Everest",
     "11-day peach blossom",
     "有珠峰的",
-    "包含珠峰"
+    "包含珠峰",
+    "西藏桃花節＋珠峰 11日"
   ],
   "default_entry_message": "想了解2027桃花加珠峰11日行程",
   "initial_delivery_interval_seconds": 2,
@@ -392,8 +393,8 @@
       "delivery_mode": "text_only"
     },
     "price_deferral": {
-      "purpose": "客户明确问团费时原样使用这段短答。未问价格不主动报；不附加单房差、独立成团加价、费用包含清单、出发日期或具体折扣。明确追问某项收费时，从线路事实只回答对应那一项。",
-      "approved_text": "這條11日行程的標準6人小團是人民幣12,780元/人（兩人一房），人數越多，優惠越多。",
+      "purpose": "客户明确问费用时使用当前有效price模板，不额外展开收费差异。",
+      "approved_text": "西藏桃花節11日遊\n拼團升級「4-6人小團」優惠價：人民幣¥ 12,180 /人\n（截至10/31前報名，國慶月優惠）\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費",
       "asset_keys": [],
       "evidence_refs": [
         "route.11.price"
@@ -402,8 +403,8 @@
       "delivery_mode": "text_only"
     },
     "price_reference": {
-      "purpose": "客户明确问团费时原样使用这段短答。未问价格不主动报；不附加单房差、独立成团加价、费用包含清单、出发日期或具体折扣。明确追问某项收费时，从线路事实只回答对应那一项。",
-      "approved_text": "這條11日行程的標準6人小團是人民幣12,780元/人（兩人一房），人數越多，優惠越多。",
+      "purpose": "客户明确问费用时使用当前有效price模板，不额外展开收费差异。",
+      "approved_text": "西藏桃花節11日遊\n拼團升級「4-6人小團」優惠價：人民幣¥ 12,180 /人\n（截至10/31前報名，國慶月優惠）\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費",
       "asset_keys": [],
       "evidence_refs": [
         "route.11.price",
@@ -698,7 +699,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "price_reference",
-      "answer_text": "這條11日行程的標準6人小團是人民幣12,780元/人（兩人一房），人數越多，優惠越多。",
+      "answer_text": "西藏桃花節11日遊\n拼團升級「4-6人小團」優惠價：人民幣¥ 12,180 /人\n（截至10/31前報名，國慶月優惠）\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費",
       "fact_ids": [
         "route.11.price"
       ],
@@ -722,7 +723,10 @@
         "我們4位",
         "什麼時候出發"
       ],
-      "usage_note": "客户明确问团费时原样使用这段短答。未问价格不主动报；不附加单房差、独立成团加价、费用包含清单、出发日期或具体折扣。明确追问某项收费时，从线路事实只回答对应那一项。"
+      "usage_note": "业务2026-10-11报价模板。客户问费用才发送；不主动附加房差或独团加价。",
+      "valid_from": "2026-10-11",
+      "valid_until": "2026-10-31",
+      "fallback_text": "西藏桃花節11日遊\n「4-6人小團」團費：人民幣¥ 12,780 /人\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費"
     },
     {
       "id": "departure",
@@ -1242,7 +1246,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_request",
-      "answer_text": "我可以請顧問接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
+      "answer_text": "我們可以接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
       "fact_ids": [
         "service.requirements"
       ],
@@ -1272,7 +1276,7 @@
       "party_size_min": null,
       "party_size_max": null,
       "content_group_key": "contact_transition",
-      "answer_text": "我可以請顧問接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
+      "answer_text": "我們可以接著協助您確認出發安排。方便傳一下您的 LINE QR Code 給我嗎？",
       "fact_ids": [
         "service.requirements"
       ],

@@ -140,7 +140,7 @@ def test_late_worker_skips_missed_slots_and_expired_window(session_factory,monke
         step(db,row,20*60)
         assert service.state(row)['next_check_at']==service.later(anchor,60*60)
         before=db.scalar(select(AutomationRun).order_by(AutomationRun.id.desc())).id
-        step(db,row,7*3600)
+        step(db,row,24*3600)
         assert not service.state(row)['next_check_at']
         assert db.scalar(select(AutomationRun).order_by(AutomationRun.id.desc())).id==before
 

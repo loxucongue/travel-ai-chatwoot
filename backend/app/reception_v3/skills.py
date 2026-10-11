@@ -2,8 +2,10 @@
 import hashlib
 import json
 from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 import re
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -15,7 +17,20 @@ def service_knowledge():
     return json.loads((PACKAGE_ROOT.parent / 'service-knowledge/service-knowledge.json').read_text(encoding='utf-8'))
 
 
-def compile_skills(db):
+def effective_price_scripts(scripts, now=None):
+    """Select authored promotion copy by a fixed business date, never roll it forward."""
+    today = (now or datetime.now(ZoneInfo('Asia/Taipei'))).astimezone(ZoneInfo('Asia/Taipei')).date().isoformat()
+    result = deepcopy(scripts)
+    for script in result:
+        if script.get('id') != 'price' or not script.get('valid_until'):
+            continue
+        if today > script['valid_until'] or today < (script.get('valid_from') or '0001-01-01'):
+            script['answer_text'] = script['fallback_text']
+        script['usage_note'] = '本次生效报价如下。只报本线路，原样使用；不得根据历史回复延长活动或使用过期价格。'
+    return result
+
+
+def compile_skills(db, now=None):
     ensure_route_packages_current()
     config = get_reception_configuration(db)
     service = service_knowledge()
@@ -39,13 +54,19 @@ def compile_skills(db):
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
                          'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
                          'topics', 'usage_note', 'status') if k in s}
-                        for s in route.get('fixed_answers', []) if s.get('status') == 'active'],
+                        for s in effective_price_scripts(route.get('fixed_answers', []), now) if s.get('status') == 'active'],
             'groups': deepcopy(route['groups']),
             'introduction_sequence': [k for k in route['introduction_sequence']
                                       if route['groups'][k].get('initial_delivery')],
             'interval_seconds': route['initial_delivery_interval_seconds'],
             'version': route['package_version'],
         }
+        price = next((s for s in routes[key]['scripts'] if s['id'] == 'price'), None)
+        if price:
+            routes[key]['facts'].append({'id': key + '.current_quote', 'text': '本轮当前有效报价（优先于历史价格）：\n' + price['answer_text']})
+            for group in ('price_reference', 'price_deferral'):
+                if group in routes[key]['groups']:
+                    routes[key]['groups'][group]['text'] = price['answer_text']
     bundle = {'routes': routes, 'common_scripts': list(common_scripts.values()),
               'service_knowledge': {'version': service['knowledge_version'], 'facts': service['facts']},
               'reply': config['reply'], 'intake': config['intake'], 'silence': {k: v for k, v in config['silence'].items()

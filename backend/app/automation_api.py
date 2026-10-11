@@ -186,6 +186,20 @@ class RouteFixedAnswerInput(BaseModel):
     positive_examples: list[str] = Field(default_factory=list, max_length=50)
     negative_examples: list[str] = Field(default_factory=list, max_length=50)
     usage_note: str = Field(default="", max_length=3000)
+    valid_from: str | None = None
+    valid_until: str | None = None
+    fallback_text: str | None = Field(default=None, max_length=10000)
+
+    @model_validator(mode="after")
+    def validate_price_validity(self):
+        from datetime import date
+        if self.valid_until:
+            end = date.fromisoformat(self.valid_until)
+            if self.id != 'price' or not self.fallback_text:
+                raise ValueError('price_validity_requires_fallback')
+            if self.valid_from and date.fromisoformat(self.valid_from) > end:
+                raise ValueError('price_validity_order')
+        return self
 
 
 class RouteContentUpdate(BaseModel):

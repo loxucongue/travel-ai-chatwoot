@@ -69,7 +69,9 @@ def schedule_followup(value, bundle, now, *, reset=False):
     if reset or not value.get('followup_anchor'):
         value['followup_anchor'] = now
     anchor = value['followup_anchor']
-    value['followup_until'] = later(anchor, min(sum(intervals), 360) * 60)
+    # Six hours is the first check, not an expiry at that same instant.
+    # Permit one deferral into daytime; the live channel window is checked too.
+    value['followup_until'] = later(anchor, 23 * 3600)
     value['next_check_at'] = None
     for index in range(value.get('silence_step', 0), len(intervals)):
         target = later(anchor, sum(intervals[:index+1]) * 60)
@@ -232,7 +234,10 @@ def apply_decision(db, row, run, bundle, decision):
     previous_memory = row.memory
     if update_profile(db, row, run, decision):
         return
-    if decision['start_introduction'] and decision['action'] != 'handoff' and decision['opt_out'] is not True:
+    selected_route = decision['route_variant'] or row.controls.get('route_variant', '')
+    if (selected_route and decision['action'] != 'handoff' and decision['opt_out'] is not True
+            and not decision['interrupt'] and row.memory.get('reception_status') != 'abusive'
+            and (decision['start_introduction'] or (not decision['messages'] and decision['action'] == 'wait'))):
         if begin_intake(row, value, bundle, decision['route_variant'] or row.controls.get('route_variant', '')):
             save(row, value)
             row.due_at = None
@@ -421,10 +426,19 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
         bundle = compile_skills(db)
         if event == 'silence_due':
             silence = bundle['silence']
+            if not value.get('appointment_pending') and value.get('followup_anchor'):
+                value['followup_until'] = later(value['followup_anchor'], 23 * 3600)
+            incoming_times = [date(m['created_at']) for m in row.messages
+                              if m.get('direction') == 'incoming' and m.get('created_at')]
+            channel_until = max(incoming_times) + timedelta(hours=23, minutes=55) if incoming_times else None
+            if environment == 'live' and channel_until and value.get('followup_until'):
+                value['followup_until'] = min(date(value['followup_until']), channel_until).isoformat()
             expired = (not value.get('appointment_pending') and value.get('followup_until')
                        and date(row.virtual_now)>date(value['followup_until'])+timedelta(seconds=60))
             if value.get('opt_out') or value.get('handoff') or expired or not silence['enabled'] or (environment == 'live' and not silence.get('live_enabled')):
                 value.update(pending_event=None, next_check_at=None)
+                value['followup_skip_reason'] = 'disabled_or_expired'
+                row.due_at = None
                 save(row, value)
                 db.commit()
                 continue
@@ -434,12 +448,20 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             allowed = start <= clock < end if start < end else clock >= start or clock < end
             today = {m.get('run_id') for m in row.messages if m.get('proactive') and m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')
                      and date(m['created_at']).astimezone(ZoneInfo('Asia/Taipei')).date() == local.date()}
-            if not allowed or len(today) >= silence.get('max_proactive_messages_per_day', 6):
+            if len(today) >= silence.get('max_proactive_messages_per_day', 6):
+                value.update(pending_event=None, next_check_at=None, followup_skip_reason='daily_limit')
+                row.due_at = None
+                save(row, value)
+                db.commit()
+                continue
+            if not allowed:
                 opening = local.replace(hour=int(start[:2]), minute=int(start[3:]), second=0, microsecond=0)
                 if opening <= local:
                     opening += timedelta(days=1)
                 within_window = value.get('followup_until') and opening <= date(value['followup_until'])
                 value.update(pending_event=None, next_check_at=opening.isoformat() if within_window else None)
+                value['followup_skip_reason'] = 'deferred_to_active_hours' if within_window else 'outside_channel_window'
+                row.due_at = None
                 save(row, value)
                 db.commit()
                 continue
