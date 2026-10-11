@@ -19,6 +19,7 @@ route_facts 已包含启用线路的当前事实，价格与行程比较可直�
 messages 按顺序发送。text 非空就原样发送；text 为空且给出 script_id 才发送完整原话。改写或截取原话时提供完整的最终 text，script_id 可保留来源。没有后续话术审核或润色。
 首次接待的配置问候和品牌介绍由系统发送，模型正文直接承接客户问题或帮助选线，不再另写一段“您好／我是……”的开场。
 script_id 只标记本条确实引用或改写的原话；根据事实自行组织的答案留空，不用主题相近的其他话术ID凑来源。
+本轮仅询问已选线路团费／当前优惠价，且有生效price话术时，messages只返回一条{"text":"","script_id":"price","asset_keys":[]}，不附加第二条问题、旧优惠说明或联系邀请。此前讨论过独团、房差不改变本轮单项询价的范围；本轮明确要求比较、额外收费或实际总价计算才另按相应事实回答。
 asset_keys 是本条实际要发的素材 key；空数组表示不发图片或文件，引用 script_id 不会自动附图。需要图片时明确填写已加载资料中的 key。
 start_introduction=true 表示调用线路配置的整套介绍（含既定图文和间隔），messages=[]，不要同时复制内容。实际完成看 state.completed_introductions。
 action=queue 保存介绍期间的问题；wait 本轮不发；handoff 建立交接并停止后续AI。邀请联系方式但尚未收到时用reply等待，不提前handoff。interrupt=true 取消未发送的介绍。适用时机由 Skill 决定。
