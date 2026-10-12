@@ -28,7 +28,8 @@
         "text": "謝謝，請問一團多少人、費用？",
         "checks": [
           "no_contact",
-          "no_third_person"
+          "no_third_person",
+          "exact_quote"
         ],
         "contains": [
           "10,780",
@@ -145,7 +146,8 @@
         "text": "謝謝，請問一團多少人、費用？",
         "checks": [
           "no_contact",
-          "no_third_person"
+          "no_third_person",
+          "exact_quote"
         ],
         "contains": [
           "12,180",
@@ -434,7 +436,8 @@
         "text": "自己一團會不會加價，要多多少？",
         "checks": [
           "no_contact",
-          "no_third_person"
+          "no_third_person",
+          "only_requested_surcharge"
         ],
         "contains": [
           "400"
@@ -445,7 +448,8 @@
         "text": "現在優惠多少？我想看這條的團費。",
         "checks": [
           "no_contact",
-          "no_third_person"
+          "no_third_person",
+          "exact_quote"
         ],
         "contains": [
           "10,780"
@@ -622,7 +626,8 @@
         "text": "自己一團會不會加價，要多多少？",
         "checks": [
           "no_contact",
-          "no_third_person"
+          "no_third_person",
+          "only_requested_surcharge"
         ],
         "contains": [
           "400"
@@ -633,7 +638,8 @@
         "text": "現在優惠多少？我想看這條的團費。",
         "checks": [
           "no_contact",
-          "no_third_person"
+          "no_third_person",
+          "exact_quote"
         ],
         "contains": [
           "12,180"

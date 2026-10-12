@@ -1,0 +1,237 @@
+[
+  {
+    "id": "multi-touch-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "now": "2026-10-13T00:00:00+00:00",
+    "silence": {
+      "intervals_minutes": [
+        360,
+        360
+      ]
+    },
+    "steps": [
+      {
+        "id": "family",
+        "text": "跟家人4位，先看行程就好。",
+        "checks": [
+          "no_price",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "before6h",
+        "seconds": 21599,
+        "checks": [
+          "no_send"
+        ]
+      },
+      {
+        "id": "first6h",
+        "seconds": 1,
+        "checks": [
+          "one_new_photo",
+          "no_price",
+          "no_contact",
+          "question_last"
+        ]
+      },
+      {
+        "id": "before12h",
+        "seconds": 21590,
+        "checks": [
+          "no_send"
+        ]
+      },
+      {
+        "id": "second12h",
+        "next_check": true,
+        "checks": [
+          "one_new_photo",
+          "no_price",
+          "no_contact",
+          "question_last"
+        ]
+      },
+      {
+        "id": "no-extra-round",
+        "seconds": 3600,
+        "checks": [
+          "no_send"
+        ]
+      },
+      {
+        "id": "stop",
+        "text": "暫時不用了，請不要再主動傳訊息給我。",
+        "checks": [
+          "opt_out"
+        ]
+      },
+      {
+        "id": "stop6h",
+        "seconds": 21600,
+        "checks": [
+          "no_send"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "multi-touch-11",
+    "entry": "西藏桃花節＋珠峰11日",
+    "now": "2026-10-13T00:00:00+00:00",
+    "silence": {
+      "intervals_minutes": [
+        360,
+        360
+      ]
+    },
+    "steps": [
+      {
+        "id": "family",
+        "text": "跟家人4位，先看行程就好。",
+        "checks": [
+          "no_price",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "before6h",
+        "seconds": 21599,
+        "checks": [
+          "no_send"
+        ]
+      },
+      {
+        "id": "first6h",
+        "seconds": 1,
+        "checks": [
+          "one_new_photo",
+          "no_price",
+          "no_contact",
+          "question_last"
+        ]
+      },
+      {
+        "id": "before12h",
+        "seconds": 21590,
+        "checks": [
+          "no_send"
+        ]
+      },
+      {
+        "id": "second12h",
+        "next_check": true,
+        "checks": [
+          "one_new_photo",
+          "no_price",
+          "no_contact",
+          "question_last"
+        ]
+      },
+      {
+        "id": "no-extra-round",
+        "seconds": 3600,
+        "checks": [
+          "no_send"
+        ]
+      },
+      {
+        "id": "stop",
+        "text": "暫時不用了，請不要再主動傳訊息給我。",
+        "checks": [
+          "opt_out"
+        ]
+      },
+      {
+        "id": "stop6h",
+        "seconds": 21600,
+        "checks": [
+          "no_send"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "future-trip-retention",
+    "entry": "西藏桃花節＋珠峰11日",
+    "now": "2026-10-13T00:00:00+00:00",
+    "steps": [
+      {
+        "id": "intro",
+        "seconds": 60,
+        "checks": [
+          "no_contact",
+          "no_price"
+        ]
+      },
+      {
+        "id": "future-year",
+        "text": "謝謝提供資訊！很想去看林芝的桃花，但是明年三月已安排了行程，只能後年再安排了。謝謝！",
+        "checks": [
+          "contact_by_now",
+          "not_handoff",
+          "no_third_person",
+          "no_price",
+          "question_last"
+        ],
+        "contains": [
+          "西藏",
+          "中國",
+          "QR"
+        ]
+      },
+      {
+        "id": "decline-contact",
+        "text": "先不加LINE，在這裡看看其他時間就好。",
+        "checks": [
+          "not_handoff",
+          "no_third_person",
+          "question_last"
+        ],
+        "excludes": [
+          "QR Code",
+          "方便傳",
+          "方便留",
+          "您的 LINE",
+          "您的LINE",
+          "提供信箱"
+        ]
+      },
+      {
+        "id": "flights",
+        "text": "如果春天去西藏，機票你們也可以代訂嗎？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "協助"
+        ]
+      },
+      {
+        "id": "six-hours",
+        "seconds": 21600,
+        "checks": [
+          "no_price",
+          "no_contact",
+          "one_new_photo"
+        ]
+      },
+      {
+        "id": "email",
+        "text": "那寄到 test.traveler@example.com 就好。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "handoff6h",
+        "seconds": 21600,
+        "checks": [
+          "no_send"
+        ]
+      }
+    ]
+  }
+]

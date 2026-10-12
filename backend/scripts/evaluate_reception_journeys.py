@@ -4,6 +4,7 @@ Uses a read-only production configuration/media snapshot. Media resolution is
 simulated, but intake, buffering, delivery order, timing and decisions use V3.
 """
 import argparse
+import hashlib
 from copy import deepcopy
 import json
 import logging
@@ -13,6 +14,7 @@ import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import ContextVar
 
 
 def main():
@@ -55,8 +57,17 @@ def main():
     from app.models import Tenant, User
     from app.automation_models import AutomationSession, AutomationRun
     from app.reception_v3 import service
-    bundle = snapshot['bundle']
-    service.compile_skills = lambda db: deepcopy(bundle)
+    source_paths = [Path(__file__), backend/'app/reception_v3/prompt.py',
+                    backend/'app/reception_v3/runtime.py', backend/'app/reception_v3/service.py',
+                    backend/'app/reception_v3/live.py', *sorted((backend/'app/reception_v3/skills').glob('*/SKILL.md'))]
+    def fingerprints():
+        return {str(p.relative_to(backend.parent)): hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths}
+    tested_sources = fingerprints()
+    (args.output/'manifest.json').write_text(json.dumps({'sources': tested_sources,
+        'snapshot_sha256': hashlib.sha256(json.dumps(snapshot, sort_keys=True, ensure_ascii=False).encode()).hexdigest(),
+        'cases_sha256': hashlib.sha256(json.dumps(cases, sort_keys=True, ensure_ascii=False).encode()).hexdigest()}, indent=2), encoding='utf8')
+    active_bundle = ContextVar('journey_configuration')
+    service.compile_skills = lambda db: deepcopy(active_bundle.get())
     service.candidate_materials = lambda *a: deepcopy(snapshot['materials'])
     service.active_web_facts = lambda *a, **kw: (snapshot['website_facts'], snapshot['website_version'])
     service.opening_media_info = lambda db, item, tenant: deepcopy(snapshot['opening_media'][str(item['media_id'])])
@@ -71,6 +82,12 @@ def main():
     service.resolve_materials = resolve
 
     def run_case(case):
+        bundle = deepcopy(snapshot['bundle'])
+        # Scenario overrides affect only this isolated in-memory conversation.
+        if case.get('silence'):
+            from app.reception_config import SilenceSettings
+            bundle['silence'] = SilenceSettings.model_validate({**bundle['silence'], **case['silence']}).model_dump()
+        active_bundle.set(bundle)
         engine = create_engine('sqlite://')
         Base.metadata.create_all(engine)
         records = []
@@ -141,6 +158,14 @@ def main():
                                 failures.append(check)
                         if check=='text_only' and any(m.get('content_type') != 'text' for m in emitted):failures.append(check)
                         if check=='no_third_person' and re.search(r'顧問可以|請顧問|讓顧問|轉人工|轉給顧問|轉接真人|由顧問',text):failures.append(check)
+                        if check=='exact_quote':
+                            route = bundle['routes'][row.controls['route_variant']]
+                            quote = next(s['answer_text'] for s in route['scripts'] if s['id']=='price')
+                            if text.count(quote) != 1:failures.append(check)
+                        if check=='no_surcharge' and re.search(r'單房差|独立成团.*400|獨立成團.*400|加價',text):failures.append(check)
+                        if check=='only_requested_surcharge':
+                            amounts = re.findall(r'([0-9][0-9,]*)\s*(?:元|/人)',text)
+                            if not amounts or any(a.replace(',','') != '400' for a in amounts):failures.append(check)
                         if check=='question_last' and re.search(r'[？?]',text) and not re.search(r'[？?][～~\s]*$',text):failures.append(check)
                         if check=='no_extra_opening':
                             authored = bundle['reply'].get('opening_messages') or [bundle['reply'].get('opening_message','')]
@@ -179,8 +204,12 @@ def main():
         return {'case':case['id'],'steps':len(records),'failures':[{ 'step':r['id'],'errors':r['failures']} for r in records if r['failures']]}
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         results=list(pool.map(run_case,cases))
+    if fingerprints() != tested_sources:
+        raise RuntimeError('effect_test_sources_changed_during_run')
     (args.output/'summary.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf8')
     print(json.dumps(results,ensure_ascii=False))
+    if any(case['failures'] for case in results):
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

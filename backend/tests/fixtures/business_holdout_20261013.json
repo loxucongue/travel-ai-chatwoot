@@ -1,0 +1,128 @@
+[
+  {
+    "id": "quote-holdout-1",
+    "entry": "西藏桃花節＋珠峰11日",
+    "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "ask_price_during_intro",
+        "text": "請問大概需要多少預算？",
+        "checks": [
+          "no_contact",
+          "question_last",
+          "exact_quote"
+        ],
+        "contains": [
+          "12,180",
+          "10/31",
+          "家人",
+          "朋友",
+          "？"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quote-holdout-2",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "ask_price_during_intro",
+        "text": "費用呢",
+        "checks": [
+          "no_contact",
+          "question_last",
+          "exact_quote"
+        ],
+        "contains": [
+          "10,780",
+          "家人",
+          "朋友",
+          "？"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "quote-holdout-3",
+    "entry": "西藏桃花節＋珠峰11日",
+    "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "ask_price_during_intro",
+        "text": "我們想知道團費，多少錢一個人？",
+        "checks": [
+          "no_contact",
+          "question_last",
+          "exact_quote"
+        ],
+        "contains": [
+          "12,180",
+          "10/31",
+          "家人",
+          "朋友",
+          "？"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "relationship-already-asked",
+    "entry": "西藏桃花節＋珠峰11日",
+    "steps": [
+      {
+        "id": "intro",
+        "seconds": 60,
+        "checks": [
+          "no_price",
+          "no_contact"
+        ],
+        "contains": [
+          "家人",
+          "朋友"
+        ]
+      },
+      {
+        "id": "quote",
+        "text": "費用呢",
+        "checks": [
+          "exact_quote",
+          "no_contact",
+          "no_surcharge"
+        ],
+        "excludes": [
+          "家人還是朋友",
+          "家人或朋友"
+        ]
+      },
+      {
+        "id": "friend",
+        "text": "朋友，我們還想了解高鐵可以入藏嗎？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "excludes": [
+          "高鐵直達"
+        ]
+      },
+      {
+        "id": "human",
+        "text": "我要真人幫我看看",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "after",
+        "seconds": 21600,
+        "checks": [
+          "no_send"
+        ]
+      }
+    ],
+    "now": "2026-10-13T00:00:00+00:00"
+  }
+]

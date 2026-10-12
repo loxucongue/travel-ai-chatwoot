@@ -1,4 +1,5 @@
 from copy import deepcopy
+import pytest
 from sqlalchemy import select
 
 from app.reception_v3 import service
@@ -60,7 +61,8 @@ def test_six_hour_photo_and_caption_are_delivered_once_in_order(session_factory,
         assert len(seen) == 1
 
 
-def test_followup_photo_uses_live_attachment_outbox_then_caption(session_factory, monkeypatch, tmp_path):
+@pytest.mark.parametrize('takeover_after', [None, 0, 1])
+def test_followup_photo_uses_live_attachment_outbox_then_caption(session_factory, monkeypatch, tmp_path, takeover_after):
     from app.reception_v3 import live
     from app.models import StoredMedia, OutboundMessage, MessageEvent, utcnow
     from live_fixture import setup
@@ -71,7 +73,8 @@ def test_followup_photo_uses_live_attachment_outbox_then_caption(session_factory
     class Client:
         def close(self): pass
         def get_conversation(self, cid): return {'id':cid, 'can_reply':True}
-        def get_conversation_labels(self, cid): return ['ai']
+        def get_conversation_labels(self, cid):
+            return ['ai', '人工接管'] if takeover_after is not None and len(sent) >= takeover_after else ['ai']
         def create_attachment_message(self, cid, text, filename, mime):
             assert cid == 26 and filename == str(path) and mime == 'image/jpeg'
             sent.append(('image', text)); return {'id':701}
@@ -91,6 +94,13 @@ def test_followup_photo_uses_live_attachment_outbox_then_caption(session_factory
         row.virtual_now = utcnow(); db.commit()
         live.deliver_one(db, row)
         live.deliver_one(db, row)
+        if takeover_after is not None:
+            assert sent == [('image','')][:takeover_after]
+            assert len(list(db.scalars(select(OutboundMessage)))) == takeover_after
+            assert row.controls['simulation']['status'] == 'stopped'
+            assert not any(m.get('status') == 'draft' for m in row.messages)
+            assert service.state(row).get('next_check_at') is None
+            return
         assert sent == [('image',''), ('text','這張是布達拉宮～')]
         out = list(db.scalars(select(OutboundMessage).order_by(OutboundMessage.id)))
         assert [(m.content_type, m.media_id, m.chatwoot_message_id, m.status) for m in out] == [
