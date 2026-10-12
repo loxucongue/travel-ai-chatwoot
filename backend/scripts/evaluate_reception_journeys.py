@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--cases', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--ledger', type=Path, required=True)
+    parser.add_argument('--workers', type=int, choices=(1, 2), default=2)
     args = parser.parse_args()
     args.output = args.output.resolve()
     snapshot = json.loads(args.snapshot.read_text(encoding='utf-8-sig'))
@@ -103,7 +104,8 @@ def main():
                         return
                 raise RuntimeError('delivery_did_not_settle')
             try:
-                for i, step in enumerate([{'id':'entry','checks':['intake']} if case.get('known_entry',True) else {'id':'entry'}] + case['steps']):
+                entry = {'id':'entry', 'checks': (['intake'] if case.get('known_entry',True) else []) + case.get('entry_checks',[])}
+                for i, step in enumerate([entry] + case['steps']):
                     before = {m['id'] for m in row.messages if m.get('status') == 'simulated_delivered'}
                     if step.get('text'):
                         service.add_message(db, row, step['text'], f'customer-{i}',
@@ -131,6 +133,15 @@ def main():
                         if check=='opt_out' and not state.get('opt_out'):failures.append(check)
                         if check=='send' and not emitted:failures.append(check)
                         if check=='no_third_person' and re.search(r'顧問可以|請顧問|讓顧問|轉人工|轉給顧問|轉接真人|由顧問',text):failures.append(check)
+                        if check=='question_last' and re.search(r'[？?]',text) and not re.search(r'[？?][～~\s]*$',text):failures.append(check)
+                        if check=='no_extra_opening':
+                            authored = bundle['reply'].get('opening_messages') or [bundle['reply'].get('opening_message','')]
+                            other = [m.get('content','') for m in emitted if m.get('content') not in authored]
+                            if any(re.match(r'\s*(?:您好|你好|哈囉|我是)',t) for t in other):failures.append(check)
+                        if check=='contact_by_now':
+                            sent = '\n'.join(m.get('content','') for m in row.messages
+                                             if m.get('status')=='simulated_delivered' and m.get('direction')=='outgoing')
+                            if not re.search(r'(?:LINE\s*QR\s*Code|信箱|Email).*?[？?]',sent,re.I):failures.append(check)
                     for token in step.get('contains',[]):
                         if token not in text:failures.append('missing:'+token)
                     for token in step.get('excludes',[]):
@@ -158,7 +169,7 @@ def main():
             for key in ('runner','client','identity'):
                 if hasattr(_transport,key):delattr(_transport,key)
         return {'case':case['id'],'steps':len(records),'failures':[{ 'step':r['id'],'errors':r['failures']} for r in records if r['failures']]}
-    with ThreadPoolExecutor(max_workers=2) as pool:
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
         results=list(pool.map(run_case,cases))
     (args.output/'summary.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf8')
     print(json.dumps(results,ensure_ascii=False))

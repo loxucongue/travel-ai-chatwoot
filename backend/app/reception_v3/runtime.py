@@ -50,11 +50,11 @@ def run_agent(context: dict):
         preloaded.append(load(selected))
     catalog = [{'id': key, 'name': route['name'], 'aliases': route.get('aliases', [])}
                for key, route in context['skills']['routes'].items()]
-    prompt = (SYSTEM_PROMPT + '\n'
-              'Skill 索引：\n' + json.dumps(registry.index(), ensure_ascii=False)
+    prompt = ('Skill 索引：\n' + json.dumps(registry.index(), ensure_ascii=False)
               + '\n线路目录（仅用于识别，不是完整产品资料）：\n' + json.dumps(catalog, ensure_ascii=False)
               + '\n已加载线路 Skill：\n' + json.dumps(preloaded, ensure_ascii=False)
-              + '\n通用接待 Skill：\n' + common['instructions'])
+              + '\n通用接待 Skill：\n' + common['instructions']
+              + '\n\n' + SYSTEM_PROMPT)
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
     # Delivery metadata and earlier model reasons are not customer dialogue.

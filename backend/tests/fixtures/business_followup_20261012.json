@@ -1,0 +1,880 @@
+[
+  {
+    "id": "family-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "party_reply_starts_intro",
+        "text": "我們4位，跟家人一起，三月底想去。",
+        "drain": false,
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "question_during_intro",
+        "text": "媽媽擔心住宿，都是希爾頓嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "contains": [
+          "波密"
+        ]
+      },
+      {
+        "id": "price",
+        "text": "謝謝，請問一團多少人、費用？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "10,780",
+          "不含"
+        ]
+      },
+      {
+        "id": "single_room",
+        "text": "如果媽媽想自己住一間，房差多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "2,700"
+        ]
+      },
+      {
+        "id": "flight",
+        "text": "含機票嗎？",
+        "checks": [
+          "no_third_person"
+        ],
+        "contains": [
+          "協助"
+        ]
+      },
+      {
+        "id": "rail_meeting",
+        "text": "那可以搭青藏鐵路入藏嗎？這個行程在哪裡集合？",
+        "checks": [
+          "no_third_person",
+          "question_last",
+          "contact_by_now"
+        ],
+        "contains": [
+          "林芝"
+        ]
+      },
+      {
+        "id": "consider_here",
+        "text": "好，我先跟家人商量，暫時先在這裡聊就好。",
+        "checks": [
+          "no_contact",
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "silence_6h",
+        "seconds": 21600,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "send"
+        ]
+      },
+      {
+        "id": "line_method",
+        "text": "家人討論好了，我要怎麼給你LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "email",
+        "text": "改用信箱吧，請用旅遊測試信箱 travel.qa@example.com 和我聯絡。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "after_handoff",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "family-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "party_reply_starts_intro",
+        "text": "我們4位，跟家人一起，三月底想去。",
+        "drain": false,
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "question_during_intro",
+        "text": "媽媽擔心住宿，都是希爾頓嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "contains": [
+          "波密"
+        ]
+      },
+      {
+        "id": "price",
+        "text": "謝謝，請問一團多少人、費用？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "12,180",
+          "不含"
+        ]
+      },
+      {
+        "id": "single_room",
+        "text": "如果媽媽想自己住一間，房差多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "3,200"
+        ]
+      },
+      {
+        "id": "flight",
+        "text": "含機票嗎？",
+        "checks": [
+          "no_third_person"
+        ],
+        "contains": [
+          "協助"
+        ]
+      },
+      {
+        "id": "rail_meeting",
+        "text": "那可以搭青藏鐵路入藏嗎？這個行程在哪裡集合？",
+        "checks": [
+          "no_third_person",
+          "question_last",
+          "contact_by_now"
+        ],
+        "contains": [
+          "林芝"
+        ]
+      },
+      {
+        "id": "consider_here",
+        "text": "好，我先跟家人商量，暫時先在這裡聊就好。",
+        "checks": [
+          "no_contact",
+          "not_handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "silence_6h",
+        "seconds": 21600,
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "send"
+        ]
+      },
+      {
+        "id": "line_method",
+        "text": "家人討論好了，我要怎麼給你LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "email",
+        "text": "改用信箱吧，請用旅遊測試信箱 travel.qa@example.com 和我聯絡。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "after_handoff",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unknown-compare",
+    "entry": "你好，我想了解西藏行程。",
+    "known_entry": false,
+    "steps": [
+      {
+        "id": "choose",
+        "text": "想了解有珠峰的11天",
+        "checks": [
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "party",
+        "text": "我們2個朋友一起，想先看看行程。",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "compare",
+        "text": "跟不上珠峰的9日有什麼差別？兩個費用都給我看看。",
+        "contains": [
+          "10,780",
+          "12,180"
+        ],
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "anaphora",
+        "text": "那9日在哪裡結束呢？",
+        "contains": [
+          "拉薩"
+        ],
+        "checks": [
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "switch",
+        "text": "那改成9日吧",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "room_unknown",
+        "text": "如果五個人呢？一定要有一個人住單人房嗎？",
+        "excludes": [
+          "一定要補",
+          "必須補"
+        ],
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "stop",
+        "text": "先不要再發消息給我了。",
+        "checks": [
+          "opt_out",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "stop_silence",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ],
+    "entry_checks": [
+      "no_extra_opening",
+      "question_last"
+    ]
+  },
+  {
+    "id": "age-qr-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "solo",
+        "text": "我自己一位，想先了解。",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "no_extra_opening",
+          "question_last"
+        ],
+        "excludes": [
+          "家人還是朋友"
+        ]
+      },
+      {
+        "id": "age65",
+        "text": "我64歲，最低年齡是65歲嗎？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age75",
+        "text": "朋友剛滿75歲，她可以一起參加嗎？需要什麼文件？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age76",
+        "text": "另一個朋友76歲呢？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "line",
+        "text": "我想再確認安排，要怎麼給你我的LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "qr_image",
+        "text": "這是我的LINE QR Code",
+        "content_type": "image",
+        "attachments": [
+          {
+            "id": 909,
+            "file_type": "image"
+          }
+        ],
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "已經加",
+          "識別成功"
+        ]
+      },
+      {
+        "id": "after",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fees-9",
+    "entry": "西藏桃花節不上珠峰 9日",
+    "steps": [
+      {
+        "id": "intro",
+        "text": "我們4位朋友",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "independent",
+        "text": "可以四個人自己一團嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "excludes": [
+          "都照你們",
+          "都照您們",
+          "任意更改",
+          "自由更改"
+        ]
+      },
+      {
+        "id": "surcharge",
+        "text": "自己一團會不會加價，要多多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "400"
+        ]
+      },
+      {
+        "id": "promotion",
+        "text": "現在優惠多少？我想看這條的團費。",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "10,780"
+        ],
+        "excludes": [
+          "折600",
+          "折400",
+          "折200",
+          "-600",
+          "-400",
+          "-200"
+        ]
+      },
+      {
+        "id": "stacking",
+        "text": "四個人可以在這個價錢上再減早鳥和多人優惠嗎？直接算總價給我。",
+        "checks": [
+          "no_third_person",
+          "question_last",
+          "contact_by_now"
+        ],
+        "excludes": [
+          "每人-200",
+          "每人減200",
+          "每人減人民幣200",
+          "-600",
+          "-400",
+          "-200",
+          "減600",
+          "減400",
+          "減200",
+          "售價表",
+          "售价表",
+          "每單",
+          "每单",
+          "知識庫"
+        ],
+        "evaluation_note": "已经连续讨论独团、收费和优惠，要求实际总价且确有待确认项，允许首次邀请联系方式；普通单项报价仍不邀请。"
+      },
+      {
+        "id": "consider",
+        "text": "日期還沒確定，我再想想。",
+        "checks": [
+          "not_handoff",
+          "no_third_person",
+          "question_last"
+        ]
+      },
+      {
+        "id": "already_added",
+        "text": "我已經加你們LINE了，請看看訊息。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "傳一下",
+          "已經收到",
+          "已經加您"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "age-qr-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "solo",
+        "text": "我自己一位，想先了解。",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "no_extra_opening",
+          "question_last"
+        ],
+        "excludes": [
+          "家人還是朋友"
+        ]
+      },
+      {
+        "id": "age65",
+        "text": "我64歲，最低年齡是65歲嗎？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age75",
+        "text": "朋友剛滿75歲，她可以一起參加嗎？需要什麼文件？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "age76",
+        "text": "另一個朋友76歲呢？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "line",
+        "text": "我想再確認安排，要怎麼給你我的LINE？",
+        "checks": [
+          "not_handoff",
+          "no_third_person"
+        ],
+        "contains": [
+          "QR"
+        ]
+      },
+      {
+        "id": "qr_image",
+        "text": "這是我的LINE QR Code",
+        "content_type": "image",
+        "attachments": [
+          {
+            "id": 909,
+            "file_type": "image"
+          }
+        ],
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "已經加",
+          "識別成功"
+        ]
+      },
+      {
+        "id": "after",
+        "seconds": 21600,
+        "checks": [
+          "no_send",
+          "no_third_person"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fees-11",
+    "entry": "西藏桃花節＋珠峰 11日",
+    "steps": [
+      {
+        "id": "intro",
+        "text": "我們4位朋友",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "independent",
+        "text": "可以四個人自己一團嗎？",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ],
+        "excludes": [
+          "都照你們",
+          "都照您們",
+          "任意更改",
+          "自由更改"
+        ]
+      },
+      {
+        "id": "surcharge",
+        "text": "自己一團會不會加價，要多多少？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "400"
+        ]
+      },
+      {
+        "id": "promotion",
+        "text": "現在優惠多少？我想看這條的團費。",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "12,180"
+        ],
+        "excludes": [
+          "折600",
+          "折400",
+          "折200",
+          "-600",
+          "-400",
+          "-200"
+        ]
+      },
+      {
+        "id": "stacking",
+        "text": "四個人可以在這個價錢上再減早鳥和多人優惠嗎？直接算總價給我。",
+        "checks": [
+          "no_third_person",
+          "question_last",
+          "contact_by_now"
+        ],
+        "excludes": [
+          "每人-200",
+          "每人減200",
+          "每人減人民幣200",
+          "-600",
+          "-400",
+          "-200",
+          "減600",
+          "減400",
+          "減200",
+          "售價表",
+          "售价表",
+          "每單",
+          "每单",
+          "知識庫"
+        ],
+        "evaluation_note": "已经连续讨论独团、收费和优惠，要求实际总价且确有待确认项，允许首次邀请联系方式；普通单项报价仍不邀请。"
+      },
+      {
+        "id": "consider",
+        "text": "日期還沒確定，我再想想。",
+        "checks": [
+          "not_handoff",
+          "no_third_person",
+          "question_last"
+        ]
+      },
+      {
+        "id": "already_added",
+        "text": "我已經加你們LINE了，請看看訊息。",
+        "checks": [
+          "handoff",
+          "no_third_person"
+        ],
+        "excludes": [
+          "傳一下",
+          "已經收到",
+          "已經加您"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "new-entry-1",
+    "known_entry": false,
+    "entry": "嗨，想看看西藏旅遊",
+    "entry_checks": [
+      "no_extra_opening",
+      "question_last",
+      "no_contact"
+    ],
+    "steps": [
+      {
+        "id": "choose",
+        "text": "我想看不上珠峰的9日",
+        "checks": [
+          "intake",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "intro",
+        "text": "兩位朋友，日期還沒決定",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "meeting_only",
+        "text": "在哪集合呢？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "林芝"
+        ]
+      },
+      {
+        "id": "flight_question",
+        "text": "有包括機票嗎？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "postpone",
+        "text": "我先跟朋友討論看看，還沒有確定",
+        "checks": [
+          "no_third_person",
+          "question_last",
+          "contact_by_now"
+        ]
+      },
+      {
+        "id": "decline",
+        "text": "先不要加好友，在這裡就好",
+        "checks": [
+          "no_contact",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "six_hours",
+        "seconds": 21600,
+        "checks": [
+          "send",
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "question_last"
+        ]
+      },
+      {
+        "id": "stop",
+        "text": "不用再主動發給我了",
+        "checks": [
+          "opt_out",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "after_stop",
+        "seconds": 21600,
+        "checks": [
+          "no_send"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "new-entry-2",
+    "known_entry": false,
+    "entry": "有什麼行程？",
+    "entry_checks": [
+      "no_extra_opening",
+      "question_last",
+      "no_contact"
+    ],
+    "steps": [
+      {
+        "id": "choose",
+        "text": "我想看有珠峰的11日",
+        "checks": [
+          "intake",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "intro",
+        "text": "兩位朋友，日期還沒決定",
+        "checks": [
+          "no_contact",
+          "no_price",
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "meeting_only",
+        "text": "在哪集合呢？",
+        "checks": [
+          "no_contact",
+          "no_third_person"
+        ],
+        "contains": [
+          "林芝"
+        ]
+      },
+      {
+        "id": "flight_question",
+        "text": "有包括機票嗎？",
+        "checks": [
+          "no_third_person"
+        ]
+      },
+      {
+        "id": "postpone",
+        "text": "我先跟朋友討論看看，還沒有確定",
+        "checks": [
+          "no_third_person",
+          "question_last",
+          "contact_by_now"
+        ]
+      },
+      {
+        "id": "decline",
+        "text": "先不要加好友，在這裡就好",
+        "checks": [
+          "no_contact",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "six_hours",
+        "seconds": 21600,
+        "checks": [
+          "send",
+          "no_contact",
+          "no_price",
+          "no_third_person",
+          "question_last"
+        ]
+      },
+      {
+        "id": "stop",
+        "text": "不用再主動發給我了",
+        "checks": [
+          "opt_out",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "after_stop",
+        "seconds": 21600,
+        "checks": [
+          "no_send"
+        ]
+      }
+    ]
+  }
+]
