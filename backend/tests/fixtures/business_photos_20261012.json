@@ -1,0 +1,52 @@
+[
+  {
+    "id": "quote-followup-9", "entry": "西藏桃花節不上珠峰 9日", "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {"id":"ask_price_during_intro", "text":"謝謝，請問一團多少人、費用？", "checks":["no_contact","question_last"], "contains":["10,780","家人","朋友","？"]},
+      {"id":"family_reply", "text":"跟家人一起，4位，媽媽想看看沿途的景點。", "checks":["no_contact","no_price"]},
+      {"id":"five_hours_no_touch", "seconds":18000, "checks":["no_send"]},
+      {"id":"six_hour_photo", "seconds":3600, "checks":["one_new_photo","no_contact","no_price","question_last"]},
+      {"id":"no_second_wave", "seconds":3600, "checks":["no_send"]},
+      {"id":"ask_price_again", "text":"那費用再給我一下，我轉給家人。", "checks":["no_contact"], "contains":["10,780"], "excludes":["家人還是朋友","家人或朋友"]},
+      {"id":"stop", "text":"謝謝，請不要再主動傳訊息給我。", "checks":["opt_out"]},
+      {"id":"stop_six_hours", "seconds":21600, "checks":["no_send"]}
+    ]
+  },
+  {
+    "id": "quote-followup-11", "entry": "西藏桃花節＋珠峰11日", "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {"id":"ask_price_during_intro", "text":"費用呢？", "checks":["no_contact","question_last"], "contains":["12,180","10/31","家人","朋友","？"]},
+      {"id":"friend_reply", "text":"跟朋友一起4位，先看看就好。", "checks":["no_contact","no_price"]},
+      {"id":"six_hour_photo", "seconds":21600, "checks":["one_new_photo","no_contact","no_price","question_last"]},
+      {"id":"already_asked_price", "text":"剛才那個報價還有嗎？", "checks":["no_contact"], "contains":["12,180"], "excludes":["家人還是朋友","家人或朋友"]},
+      {"id":"human_request", "text":"麻煩幫我找真人服務。", "checks":["handoff"]},
+      {"id":"human_six_hours", "seconds":21600, "checks":["no_send"]}
+    ]
+  },
+  {
+    "id": "solo-text-only", "entry": "西藏桃花節不上珠峰 9日", "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {"id":"solo_quote", "text":"我自己一個人去，費用多少？", "checks":["no_contact"], "contains":["10,780"], "excludes":["家人還是朋友","家人或朋友"]},
+      {"id":"no_photos_preference", "text":"知道了，不要再傳照片，文字就好。", "checks":["not_handoff","no_contact","text_only"]},
+      {"id":"six_hours_text_only", "seconds":21600, "checks":["send","text_only","no_contact","no_price"]}
+    ]
+  },
+  {
+    "id": "no-reply-9", "entry": "西藏桃花節不上珠峰 9日", "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {"id":"one_minute_introduction", "seconds":60, "checks":["send","no_price","no_contact"]},
+      {"id":"before_six_hours", "seconds":21599, "checks":["no_send"]},
+      {"id":"six_hour_photo", "seconds":1, "checks":["one_new_photo","no_price","no_contact","question_last"]},
+      {"id":"no_second_wave", "seconds":3600, "checks":["no_send"]}
+    ]
+  },
+  {
+    "id": "no-reply-11", "entry": "西藏桃花節＋珠峰11日", "now": "2026-10-12T02:00:00+00:00",
+    "steps": [
+      {"id":"one_minute_introduction", "seconds":60, "checks":["send","no_price","no_contact"]},
+      {"id":"before_six_hours", "seconds":21599, "checks":["no_send"]},
+      {"id":"six_hour_photo", "seconds":1, "checks":["one_new_photo","no_price","no_contact","question_last"]},
+      {"id":"no_second_wave", "seconds":3600, "checks":["no_send"]}
+    ]
+  }
+]

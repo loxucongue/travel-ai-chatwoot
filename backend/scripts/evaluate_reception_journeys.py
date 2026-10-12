@@ -132,6 +132,14 @@ def main():
                         if check=='not_handoff' and state.get('handoff'):failures.append(check)
                         if check=='opt_out' and not state.get('opt_out'):failures.append(check)
                         if check=='send' and not emitted:failures.append(check)
+                        if check=='one_new_photo':
+                            photos = [m for m in emitted if m.get('content_type') == 'image']
+                            previous_hashes = {m.get('media_hash') for m in row.messages if m['id'] in before and m.get('media_hash')}
+                            if (len(photos) != 1 or not photos[0].get('media_id')
+                                    or not photos[0].get('media_hash') or photos[0]['media_hash'] in previous_hashes
+                                    or photos[0].get('route_variant') != row.controls.get('route_variant')):
+                                failures.append(check)
+                        if check=='text_only' and any(m.get('content_type') != 'text' for m in emitted):failures.append(check)
                         if check=='no_third_person' and re.search(r'顧問可以|請顧問|讓顧問|轉人工|轉給顧問|轉接真人|由顧問',text):failures.append(check)
                         if check=='question_last' and re.search(r'[？?]',text) and not re.search(r'[？?][～~\s]*$',text):failures.append(check)
                         if check=='no_extra_opening':

@@ -34,6 +34,35 @@ def save(row, value):
     row.controls = {**row.controls, 'v3': value}
 
 
+def followup_materials(materials, messages, route):
+    """Offer new route photos, including deduplication across catalog aliases."""
+    by_key = {m['key']: m for m in materials}
+    sent_keys, sent_hashes, sent_ids = set(), set(), set()
+    for message in messages:
+        if (message.get('direction') != 'outgoing' or message.get('status') not in
+                ('simulated_delivered', 'submitted', 'sent', 'delivered', 'read')):
+            continue
+        key = message.get('asset_key')
+        if key:
+            sent_keys.add(key)
+        digest = message.get('media_hash') or by_key.get(key, {}).get('media_hash')
+        if digest:
+            sent_hashes.add(digest)
+        if message.get('media_id'):
+            sent_ids.add(message['media_id'])
+    result, offered = [], set()
+    # Prefer catalog entries with a useful caption over bare import aliases.
+    for material in sorted(materials, key=lambda m: bool(m.get('what_it_shows')), reverse=True):
+        identity = material.get('media_hash') or material.get('media_id') or material['key']
+        if (route not in material.get('routes', []) or material.get('content_type') != 'image'
+                or material['key'] in sent_keys or material.get('media_hash') in sent_hashes
+                or material.get('media_id') in sent_ids or identity in offered):
+            continue
+        offered.add(identity)
+        result.append(material)
+    return result
+
+
 def opening_parts(db, row, bundle, *, text_only=False):
     reply = bundle['reply']
     texts = reply.get('opening_messages') or [reply.get('opening_message', '')]
@@ -470,6 +499,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                    'messages': [m for m in row.messages if m.get('direction') == 'incoming' or m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')],
                    'buffered_questions': [m for m in row.messages if m.get('id') in value.get('buffered_questions', [])],
                    'available_materials': candidate_materials(db, tenant_for_session(db, row))}
+        if event == 'silence_due':
+            context['followup_materials'] = followup_materials(
+                context['available_materials'], row.messages, context['route_variant'])
         intervals = bundle['silence'].get('intervals_minutes', [])
         next_step = value.get('silence_step', 0) + (event == 'silence_due')
         context['followup_schedule'] = {
