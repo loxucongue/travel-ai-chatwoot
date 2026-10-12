@@ -149,6 +149,19 @@ def apply_label_change(db, conversation, previous_labels):
         return
     row = session_for(db, conversation.id)
     if not row:
+        # The incoming webhook can precede the operator's AI label. Start only
+        # an unanswered, fresh message; an old label edit must not replay history.
+        message = db.scalar(select(MessageEvent).where(
+            MessageEvent.conversation_state_id == conversation.id,
+            MessageEvent.private.is_(False), MessageEvent.direction.in_(['incoming', 'outgoing']))
+            .order_by(MessageEvent.chatwoot_message_id.desc()).limit(1))
+        armed_at = setting_value(db, 'live_reply', {}).get('armed_at')
+        has_outbound = db.scalar(select(OutboundMessage.id).where(
+            OutboundMessage.conversation_state_id == conversation.id))
+        if (message and message.direction == 'incoming' and armed_at and not has_outbound
+                and dt(message.created_at) >= dt(armed_at)
+                and timedelta(seconds=-30) <= dt(utcnow()) - dt(message.created_at) < timedelta(minutes=5)):
+            accept(db, conversation, message)
         return
     value = service.state(row)
     unknown = db.scalar(select(OutboundMessage.id).where(

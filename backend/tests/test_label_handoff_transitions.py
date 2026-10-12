@@ -13,6 +13,44 @@ from test_live_audit_fixes import session, event
 from test_runtime_reliability import mock_chatwoot
 
 
+@pytest.mark.parametrize('condition', ['fresh', 'old', 'answered', 'unknown', 'human'])
+def test_ai_added_after_customer_message_starts_only_fresh_unanswered_session(session_factory, monkeypatch, condition):
+    from datetime import timedelta
+    from app.models import MessageEvent, utcnow
+    from app.runtime_settings import dt, iso
+    setup(session_factory, monkeypatch)
+    with session_factory() as db:
+        conv = db.get(ConversationState, 1)
+        conv.labels = []
+        conv.ai_label_present = False
+        conv.ai_mode = 'disabled'
+        message = db.get(MessageEvent, 1)
+        message.content = '西藏桃花節＋珠峰11日'
+        if condition == 'old':
+            message.created_at = iso(dt(utcnow()) - timedelta(hours=2))
+        elif condition == 'answered':
+            db.add(MessageEvent(conversation_state_id=1, chatwoot_message_id=101,
+                                direction='outgoing', content='already answered'))
+        elif condition == 'unknown':
+            db.add(OutboundMessage(conversation_state_id=1, idempotency_key='unknown-start',
+                                  source_type='ai', content='test', status='unknown'))
+        elif condition == 'human':
+            conv.labels = ['人工接管']
+        db.commit()
+        labels = ['ai', '人工接管'] if condition == 'human' else ['ai']
+        event(db, 'conversation_updated', labels, 20)
+        row = live.session_for(db, 1)
+        if condition != 'fresh':
+            assert row is None
+            return
+        assert row is not None
+        assert any(m['content'] == message.content for m in row.messages)
+        assert service.state(row)['pending_event'] == 'customer_message'
+        event(db, 'conversation_updated', labels, 21)
+        assert live.session_for(db, 1).id == row.id
+        assert len([m for m in row.messages if m.get('id') == 'cw-100']) == 1
+
+
 def test_label_handoff_creates_one_private_notification_and_stops_drafts(session_factory, monkeypatch):
     setup(session_factory, monkeypatch)
     with session_factory() as db:

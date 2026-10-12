@@ -219,12 +219,17 @@ def test_live_input_select_is_persisted_and_callback_before_response(session_fac
         assert len(client.sent)==1
 
 
-def test_configuration_controls_intake_and_rejects_long_window(authenticated):
+def test_configuration_controls_intake_and_supports_followups_after_six_hours(authenticated):
     client,csrf=authenticated
     response=client.patch('/v1/automation/reception-config',headers={'X-CSRF-Token':csrf},json={'intake':{'question':'幾位呢？','wait_seconds':45,'options':['一位','兩位']},'silence':{'intervals_minutes':[1,4,10,45,120,180]}})
     assert response.status_code==200,response.text
     assert response.json()['config']['intake']['wait_seconds']==45
-    response=client.patch('/v1/automation/reception-config',headers={'X-CSRF-Token':csrf},json={'silence':{'intervals_minutes':[361]}})
+    response=client.patch('/v1/automation/reception-config',headers={'X-CSRF-Token':csrf},json={'silence':{'intervals_minutes':[360,720]}})
+    assert response.status_code==200,response.text
+    assert response.json()['config']['silence']['intervals_minutes']==[360,720]
+    response=client.get('/v1/automation/reception-config')
+    assert response.json()['config']['silence']['intervals_minutes']==[360,720]
+    response=client.patch('/v1/automation/reception-config',headers={'X-CSRF-Token':csrf},json={'silence':{'intervals_minutes':[360,1021]}})
     assert response.status_code==422
 
 

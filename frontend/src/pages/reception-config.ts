@@ -153,3 +153,7 @@ export function configurationChanges(before: ReceptionConfig, after: ReceptionCo
 
 export const followupCheckpoints = (intervals: number[]) => intervals.map((_, index) => intervals.slice(0,index+1).reduce((sum,value) => sum+value,0));
 export const followupIntervals = (points: number[]) => points.map((point,index) => point-(points[index-1] ?? 0));
+export const FOLLOWUP_WINDOW_MINUTES = 23 * 60;
+export const validFollowupIntervals = (intervals: number[]) => intervals.length > 0 && intervals.length <= 20
+  && intervals.every(value => Number.isInteger(value) && value >= 1)
+  && intervals.reduce((sum,value) => sum+value,0) <= FOLLOWUP_WINDOW_MINUTES;

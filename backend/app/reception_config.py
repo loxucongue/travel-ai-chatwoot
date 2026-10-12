@@ -120,8 +120,8 @@ class SilenceSettings(BaseModel):
         time.fromisoformat(self.active_start);time.fromisoformat(self.active_end)
         if any(x<1 or x>1440 for x in self.intervals_minutes):
             raise ValueError("silence_interval_out_of_range")
-        if sum(self.intervals_minutes)>360:
-            raise ValueError('silence_window_exceeds_six_hours')
+        if sum(self.intervals_minutes)>23*60:
+            raise ValueError('silence_window_exceeds_23_hours')
         return self
 
 class ReceptionConfiguration(BaseModel):

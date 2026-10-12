@@ -99,7 +99,7 @@ def schedule_followup(value, bundle, now, *, reset=False):
         value['followup_anchor'] = now
     anchor = value['followup_anchor']
     # Six hours is the first check, not an expiry at that same instant.
-    # Permit one deferral into daytime; the live channel window is checked too.
+    # The schedule may continue into daytime; the live channel window is checked too.
     value['followup_until'] = later(anchor, 23 * 3600)
     value['next_check_at'] = None
     for index in range(value.get('silence_step', 0), len(intervals)):
@@ -466,7 +466,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                        and date(row.virtual_now)>date(value['followup_until'])+timedelta(seconds=60))
             if value.get('opt_out') or value.get('handoff') or expired or not silence['enabled'] or (environment == 'live' and not silence.get('live_enabled')):
                 value.update(pending_event=None, next_check_at=None)
-                value['followup_skip_reason'] = 'disabled_or_expired'
+                value['followup_skip_reason'] = ('customer_opt_out' if value.get('opt_out') else
+                    'human_handoff' if value.get('handoff') else 'outside_channel_window' if expired else
+                    'silence_disabled' if not silence['enabled'] else 'live_silence_disabled')
                 row.due_at = None
                 save(row, value)
                 db.commit()
@@ -494,6 +496,8 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 save(row, value)
                 db.commit()
                 continue
+        if event == 'silence_due':
+            value.pop('followup_skip_reason', None)
         context = {'event': event, 'now': row.virtual_now, 'route_variant': row.controls.get('route_variant', ''),
                    'skills': bundle, 'profile': row.memory, 'state': value,
                    'messages': [m for m in row.messages if m.get('direction') == 'incoming' or m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')],
@@ -525,6 +529,8 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
         # Claim the session generation as well as the event. The API may add a
         # message while this model request is in flight.
         expected = deepcopy(row.controls)
+        if event == 'silence_due':
+            expected['v3'] = value
         generation = row.generation
         claimed_controls = {**expected, 'v3_lease': uuid4().hex}
         claimed = db.execute(update(AutomationSession).where(AutomationSession.id == row.id,

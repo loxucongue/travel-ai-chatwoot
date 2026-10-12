@@ -30,6 +30,36 @@ def test_only_after_six_hours_and_only_once(session_factory, monkeypatch):
         assert seen.count('silence_due')==1
 
 
+@pytest.mark.parametrize('skip_first',[False,True])
+def test_multiple_configured_checkpoints_survive_delivery_or_single_wait(session_factory, monkeypatch, skip_first):
+    seen=[]
+    def model(context):
+        seen.append(context)
+        return answer(action='wait', stop_followup=True) if skip_first and len(seen)==1 else answer(messages=[{'text':'续聊'}])
+    with session_factory() as db:
+        row=create(db,monkeypatch,entry='先看看',model=model)
+        spec=config();spec['silence']['intervals_minutes']=[360,720]
+        monkeypatch.setattr(service,'compile_skills',lambda db:spec)
+        value={'opening_started':True,'silence_step':0}
+        service.schedule_followup(value,spec,row.virtual_now,reset=True)
+        anchor=row.virtual_now
+        service.save(row,value);db.commit()
+        for minutes in [360,1080]:
+            deadline=service.state(row)['next_check_at']
+            assert deadline==service.later(anchor,minutes*60)
+            step(db,row,(service.date(deadline)-service.date(row.virtual_now)).total_seconds()-1)
+            assert len(seen)==(0 if minutes==360 else 1)
+            step(db,row,1);step(db,row,2)
+        assert [c['followup_schedule']['elapsed_since_reply_minutes'] for c in seen]==[360,1080]
+        assert service.state(row)['next_check_at'] is None
+
+
+def test_schedule_configuration_bounds():
+    assert SilenceSettings(intervals_minutes=[360,1020]).intervals_minutes==[360,1020]
+    for values in ([360,1021], [360,0], [360,-1], []):
+        with pytest.raises(ValueError): SilenceSettings(intervals_minutes=values)
+
+
 def test_default_and_configuration_preserve_other_fields():
     assert SilenceSettings().intervals_minutes==[360]
     before={'silence':{'intervals_minutes':[1,4,10],'enabled':False},'intake':{'wait_seconds':60},'reply':{'text':'unchanged'}}

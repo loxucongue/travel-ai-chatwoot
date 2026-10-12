@@ -10,6 +10,7 @@ import OpeningItemsEditor from './OpeningItemsEditor';
 import {
   configurationChanges, clone, ConfigResponse, normalizeConfig, followupCheckpoints, followupIntervals,
   OpeningItem, ReceptionConfig,
+  FOLLOWUP_WINDOW_MINUTES, validFollowupIntervals,
 } from './reception-config';
 
 type StrategyTab = 'base' | 'scripts' | 'lead' | 'silence';
@@ -131,7 +132,7 @@ export default function AiReceptionStrategy() {
     if (draft.reply.opening_character_limit < 80 || draft.reply.opening_character_limit > 200) return '单次回复上限必须在 80–200 字之间。';
     if (draft.lead_capture.enabled && !draft.lead_capture.channels.length) return '开启留资后，至少选择一种联系方式。';
     const intervals = draft.silence.intervals_minutes ?? [];
-    if (!intervals.length || intervals.some(value => !Number.isInteger(value) || value < 1) || intervals.reduce((sum, value) => sum + value, 0) > 360) return '跟进时间应递增，最后一次不超过360分钟。';
+    if (!validFollowupIntervals(intervals)) return '跟进时间应递增，最多20次，最后一次不超过1380分钟（23小时）。';
     if (!draft.intake.question.trim() || draft.intake.question.length > 500 || !Number.isInteger(draft.intake.wait_seconds) || draft.intake.wait_seconds < 1 || draft.intake.wait_seconds > 300) return '请填写人数问题及1至300秒的等待时间。';
     if (draft.intake.options.some(option => !option.trim() || Array.from(option).length > 20) || new Set(draft.intake.options).size !== draft.intake.options.length) return '人数选项应不重复且为1至20字。';
     if (draft.common_scripts.some(item => !item.name.trim() || !item.scenario.trim() || !item.text.trim())) return '请补全话术名称、适用场景和正文。';
@@ -181,9 +182,9 @@ export default function AiReceptionStrategy() {
         {tab === 'silence' && <div className="strategy-section-stack">
           <div className="strategy-card-title"><h3>沉默跟进</h3><Switch checked={draft.silence.enabled} onChange={enabled => patch(config => {config.silence.enabled=enabled;})} /></div>
           <div className="strategy-card-title"><strong>用于真实客户</strong><Switch checked={draft.silence.live_enabled ?? configQuery.data.runtime.live_silence_enabled} disabled={!draft.silence.enabled} onChange={enabled => patch(config => {config.silence.live_enabled=enabled;})} /></div>
-          <p>从本轮回复完成起计算；单次跳过仍保留后续跟进。</p>
-          {followupCheckpoints(draft.silence.intervals_minutes ?? []).map((minutes,index) => <div className="strategy-field-grid" key={index}><label>第 {index+1} 次：回复后（分钟）<input type="number" min={1} max={360} value={minutes} onChange={event => patch(config => {const points=followupCheckpoints(config.silence.intervals_minutes!);points[index]=Number(event.target.value);config.silence.intervals_minutes=followupIntervals(points);})} /></label><button className="icon-button" aria-label={`删除第 ${index+1} 次跟进`} disabled={draft.silence.intervals_minutes!.length===1} onClick={() => patch(config => {const points=followupCheckpoints(config.silence.intervals_minutes!);points.splice(index,1);config.silence.intervals_minutes=followupIntervals(points);})}><Trash2 size={16} /></button></div>)}
-          <button className="secondary-button compact" disabled={(draft.silence.intervals_minutes?.reduce((sum,v)=>sum+v,0) ?? 0)>=360 || (draft.silence.intervals_minutes?.length ?? 0)>=20} onClick={() => patch(config => {const total=config.silence.intervals_minutes!.reduce((sum,v)=>sum+v,0);config.silence.intervals_minutes!.push(Math.min(60,360-total));})}><Plus size={14} />添加跟进</button>
+          <p>从本轮回复完成起计算；夜间顺延，实际发送受渠道窗口限制。</p>
+          {followupCheckpoints(draft.silence.intervals_minutes ?? []).map((minutes,index) => <div className="strategy-field-grid" key={index}><label>第 {index+1} 次：回复后（分钟）<input type="number" min={1} max={FOLLOWUP_WINDOW_MINUTES} value={minutes} onChange={event => patch(config => {const points=followupCheckpoints(config.silence.intervals_minutes!);points[index]=Number(event.target.value);config.silence.intervals_minutes=followupIntervals(points);})} /></label><button className="icon-button" aria-label={`删除第 ${index+1} 次跟进`} disabled={draft.silence.intervals_minutes!.length===1} onClick={() => patch(config => {const points=followupCheckpoints(config.silence.intervals_minutes!);points.splice(index,1);config.silence.intervals_minutes=followupIntervals(points);})}><Trash2 size={16} /></button></div>)}
+          <button className="secondary-button compact" disabled={(draft.silence.intervals_minutes?.reduce((sum,v)=>sum+v,0) ?? 0)>=FOLLOWUP_WINDOW_MINUTES || (draft.silence.intervals_minutes?.length ?? 0)>=20} onClick={() => patch(config => {const total=config.silence.intervals_minutes!.reduce((sum,v)=>sum+v,0);config.silence.intervals_minutes!.push(Math.min(60,FOLLOWUP_WINDOW_MINUTES-total));})}><Plus size={14} />添加跟进</button>
           <div className="strategy-field-grid"><label>开始时间<input type="time" value={draft.silence.active_start} onChange={event => patch(config => {config.silence.active_start=event.target.value;})} /></label><label>结束时间<input type="time" value={draft.silence.active_end} onChange={event => patch(config => {config.silence.active_end=event.target.value;})} /></label><label>每日最多触达<input type="number" min={1} max={20} value={draft.silence.max_proactive_messages_per_day} onChange={event => patch(config => {config.silence.max_proactive_messages_per_day=Number(event.target.value);})} /></label></div>
         </div>}
       </section>

@@ -41,6 +41,7 @@ def test_night_followup_defers_to_nine_am_then_runs_once(session_factory, monkey
         assert service.state(row)['next_check_at'] == '2026-10-12T09:00:00+08:00'
         step(db, row, 7*3600+12*60)
         assert seen == ['silence_due']
+        assert 'followup_skip_reason' not in service.state(row)
         step(db, row, 2)
         assert delivered(row) == ['慢慢看就好～']
         assert service.state(row)['next_check_at'] is None
