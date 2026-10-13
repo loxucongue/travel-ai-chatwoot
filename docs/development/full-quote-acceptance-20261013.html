@@ -1,0 +1,23 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>完整报价模板恢复验收 · 2026-10-13</title>
+<style>body{font:16px/1.8 system-ui,sans-serif;background:#f4f7fa;color:#183248;max-width:1000px;margin:32px auto;padding:24px}pre{white-space:pre-wrap;background:white;padding:22px;border-left:4px solid #287b69}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #dbe3eb;padding:10px;text-align:left}.ok{background:#e1f2e9;padding:18px}a{color:#126293}</style>
+<h1>完整报价模板已恢复并上线</h1><p class="ok">代码 9806a8b · 发布 full-quote-20261013-20261013T023504Z<br>66项回归通过，2组真实模型关联对话、7个步骤全部通过；生产3个服务active，健康检查200。</p>
+<p>按用户最新更正，两条线路统一使用“线路名 → 拼團升級4–6人小團優惠價 → 活动截止日 → 包含 → 不含”的结构。金额读取各自配置：11日12,180元，9日10,780元；没有把11日价格复制到9日。</p>
+<p>报价后继续接一个轻松问句：同行关系未知时问家人还是朋友，已知关系时换兴趣问题。客户只问机票时只答机票，普通介绍和沉默跟进不主动报价。房差和独团加价不在模板外额外展开。</p>
+<p><strong>日期口径：</strong>恢复完整报价结构；日期沿用此前明确确认的“首次报价起30天，同一客户固定”，因此示例客户10/13首次报价对应11/12，使用“限時優惠”。没有静默改回10/31或国庆月；关于是否固定改回10/31的澄清尚未收到回答。两条线路使用同样日期结构，已有客户承诺保留。优惠过期使用各线路配置的标准价，并仍完整列出包含及不含。</p>
+<h2>peach_11d_2027</h2><pre>西藏桃花節11日遊
+拼團升級「4-6人小團」優惠價：人民幣¥ 12,180 /人
+（截至2026/11/12前報名，限時優惠）
+
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+
+不含：機票、午晚餐、小費、個人花費</pre><h2>peach_9d_2027</h2><pre>西藏桃花節9日遊（不上珠峰）
+拼團升級「4-6人小團」優惠價：人民幣¥ 10,780 /人
+（截至2026/11/12前報名，限時優惠）
+
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+
+不含：機票、午晚餐、小費、個人花費</pre>
+<h2>测试与回归</h2><table><tr><th>用例</th><th>步骤</th><th>结果</th></tr><tr><td>restore625</td><td>quote</td><td>通过</td></tr><tr><td>restore625</td><td>airfare_only</td><td>通过</td></tr><tr><td>restore9</td><td>entry</td><td>通过</td></tr><tr><td>restore9</td><td>intro</td><td>通过</td></tr><tr><td>restore9</td><td>quote</td><td>通过</td></tr><tr><td>restore9</td><td>family</td><td>通过</td></tr><tr><td>restore9</td><td>silence</td><td>通过</td></tr></table>
+<p>回归覆盖配置金额保留、模板恢复、幂等迁移、其他事实与话术保留、首次报价固定30天、重复报价不延期、过期备用价、Skill加载和线路配置校验。#625使用原始上下文隔离重放；生产客户试发0条，历史消息未改写。</p>
+<p>本次模型账本增量0.21718272元；20元预算累计已知消耗及未知预留18.17835840元。人数等待120秒、沉默时序、人工接管和全局设置未改。</p>
+<p><a href="../../output/acceptance-20261013/restore-quote-tests.txt">回归日志</a> · <a href="../../output/acceptance-20261013/restore-quote-results/summary.json">模型结果</a> · <a href="../../output/acceptance-20261013/restore-quote-results/restore625.json">#625重放</a> · <a href="../../output/acceptance-20261013/restore-quote-release.json">发布及备份</a> · <a href="../../output/acceptance-20261013/restore-quote-ready.json">生产核验</a></p></html>
