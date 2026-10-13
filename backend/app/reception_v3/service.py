@@ -14,6 +14,7 @@ from app.opening_messages import delivery_items, opening_media_info
 from app.reception_v3 import release_id
 from app.reception_v3.runtime import run_agent
 from app.reception_v3.skills import compile_skills
+from app.reception_v3.quotes import personalize_quotes, reserve_quoted_offers
 from app.web_knowledge import active_web_facts
 
 
@@ -93,17 +94,40 @@ def begin_intake(row, value, bundle, route):
     return True
 
 
+def followup_intervals(value, silence):
+    initial = silence.get('initial_checkpoints_minutes')
+    if initial is None:
+        return silence.get('intervals_minutes', [])
+    points = [] if value.get('followup_customer_replied') else list(initial)
+    interval = silence.get('recurring_interval_minutes', 180)
+    next_point = (points[-1] if points else 0) + interval
+    while next_point <= 23 * 60:
+        points.append(next_point)
+        next_point += interval
+    return [point - (points[i-1] if i else 0) for i, point in enumerate(points)]
+
+
+def active_followup_time(moment, silence):
+    clock = date(moment).astimezone(ZoneInfo('Asia/Taipei')).strftime('%H:%M')
+    start, end = silence.get('active_start', '00:00'), silence.get('active_end', '23:59')
+    return start <= clock < end if start < end else clock >= start or clock < end
+
+
 def schedule_followup(value, bundle, now, *, reset=False):
-    intervals = bundle['silence'].get('intervals_minutes', [])
+    silence = bundle['silence']
+    initial = silence.get('initial_checkpoints_minutes')
+    intervals = followup_intervals(value, silence)
     if reset or not value.get('followup_anchor'):
-        value['followup_anchor'] = now
+        value['followup_anchor'] = (value.get('followup_entry_at', now)
+            if initial is not None and not value.get('followup_customer_replied') else now)
     anchor = value['followup_anchor']
-    # Six hours is the first check, not an expiry at that same instant.
-    # The schedule may continue into daytime; the live channel window is checked too.
     value['followup_until'] = later(anchor, 23 * 3600)
     value['next_check_at'] = None
     for index in range(value.get('silence_step', 0), len(intervals)):
         target = later(anchor, sum(intervals[:index+1]) * 60)
+        first_hour = initial is not None and not value.get('followup_customer_replied') and sum(intervals[:index+1]) <= 60
+        if initial is not None and not first_hour and not active_followup_time(target, silence):
+            continue  # Skip quiet-hour slots; do not batch them at opening time.
         if date(target) > date(now) and date(target) <= date(value['followup_until']):
             value.update(silence_step=index, next_check_at=target)
             break
@@ -123,6 +147,15 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
     if any(m.get('client_key') == client_key for m in row.messages):
         return
     value = state(row)
+    previous_incoming = [m for m in row.messages if m.get('direction') == 'incoming']
+    value.setdefault('followup_entry_at', previous_incoming[0].get('created_at', row.virtual_now) if previous_incoming else row.virtual_now)
+    if previous_incoming:
+        value['followup_customer_replied'] = True
+    # A reply stops an in-flight silence plan, including its unsent caption.
+    proactive_plans = {m.get('plan_id') for m in row.messages if m.get('proactive') and m.get('status') == 'draft'}
+    row.messages = [{**m, 'status': 'cancelled'} if m.get('proactive') and m.get('status') == 'draft' else m for m in row.messages]
+    if value.get('delivery_plan_id') in proactive_plans:
+        value.update(delivery_kind=None, delivery_due_at=None)
     row.generation += 1
     for key in ('failed_event', 'attempts', 'retry_at', 'last_error'):
         value.pop(key, None)
@@ -308,7 +341,7 @@ def apply_decision(db, row, run, bundle, decision):
     value['next_check_at'] = None
     step = value.get('silence_step', 0) + (1 if run.input_snapshot.get('event') == 'silence_due' else 0)
     value['silence_step'] = step
-    intervals = bundle['silence'].get('intervals_minutes', [])
+    intervals = followup_intervals(value, bundle['silence'])
     configured_delay = intervals[step] if step < len(intervals) else None
     stopped = (value.get('opt_out') or value.get('handoff') or not bundle['silence']['enabled']
                or row.memory.get('reception_status') == 'abusive')
@@ -326,15 +359,19 @@ def apply_decision(db, row, run, bundle, decision):
         elif value.pop('opening_media_pending', False):
             parts = [p for p in opening_parts(db, row, bundle) if p['content_type'] != 'text'] + parts
     interval = bundle['routes'].get(route, {}).get('interval_seconds', bundle['reply']['opening_interval_seconds'])
+    reserve_quoted_offers(db, row, bundle, parts)
     append_plan(row, value, parts, kind, interval, run.id)
     if run.input_snapshot.get('event') == 'silence_due':
-        row.messages = [{**m, 'proactive': True} if m.get('run_id') == run.id else m for m in row.messages]
+        initial = bundle['silence'].get('initial_checkpoints_minutes')
+        first_hour = initial is not None and not value.get('followup_customer_replied') and step <= len(initial)
+        row.messages = [{**m, 'proactive': True, 'first_hour_followup': first_hour} if m.get('run_id') == run.id else m for m in row.messages]
     if not parts and value['next_check_minutes']:
         if appointment:
             value['next_check_at'] = later(row.virtual_now, appointment * 60)
         else:
             schedule_followup(value, bundle, row.virtual_now, reset=run.input_snapshot.get('event') != 'silence_due')
     value['followup_intervals'] = intervals
+    value['followup_settings'] = deepcopy(bundle['silence'])
     save(row, value)
     row.due_at = None
 
@@ -362,9 +399,23 @@ def complete_delivery(row, target, status):
             if value.get('appointment_pending'):
                 value['next_check_at'] = later(row.virtual_now, value['next_check_minutes'] * 60)
             else:
-                schedule_followup(value, {'silence': {'intervals_minutes': value.get('followup_intervals', [])}},
+                schedule_followup(value, {'silence': value.get('followup_settings', {'intervals_minutes': value.get('followup_intervals', [])})},
                                   row.virtual_now, reset=not part.get('proactive'))
     save(row, value)
+
+
+def skip_quiet_delivery(row, part):
+    """Recheck the clock after model/queue latency, before any channel submission."""
+    value = state(row)
+    silence = value.get('followup_settings', {})
+    if (not part.get('proactive') or part.get('first_hour_followup')
+            or silence.get('initial_checkpoints_minutes') is None or active_followup_time(row.virtual_now, silence)):
+        return False
+    row.messages = [{**m, 'status': 'cancelled'} if m.get('plan_id') == part.get('plan_id') and m.get('status') == 'draft' else m for m in row.messages]
+    value.update(delivery_kind=None, delivery_due_at=None, pending_event=None, followup_skip_reason='quiet_hours_before_delivery')
+    schedule_followup(value, {'silence': silence}, row.virtual_now)
+    save(row, value)
+    return True
 
 
 def advance(row, wall_now=None, *, deliver=True):
@@ -387,6 +438,8 @@ def advance(row, wall_now=None, *, deliver=True):
             save(row, value)
             return True
         if date(value['delivery_due_at']) > date(row.virtual_now):
+            return True
+        if skip_quiet_delivery(row, drafts[0]):
             return True
         target = drafts[0]['id']
         complete_delivery(row, target, 'simulated_delivered')
@@ -452,7 +505,7 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             continue
         if active:
             active.status, active.error_code = 'cancelled', 'lease_expired'
-        bundle = compile_skills(db)
+        bundle = personalize_quotes(db, row, compile_skills(db))
         if event == 'silence_due':
             silence = bundle['silence']
             if not value.get('appointment_pending') and value.get('followup_anchor'):
@@ -476,7 +529,13 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             local = date(row.virtual_now).astimezone(ZoneInfo('Asia/Taipei'))
             clock = local.strftime('%H:%M')
             start, end = silence.get('active_start', '00:00'), silence.get('active_end', '23:59')
-            allowed = start <= clock < end if start < end else clock >= start or clock < end
+            initial = silence.get('initial_checkpoints_minutes')
+            first_hour = (initial is not None and not value.get('followup_customer_replied')
+                and value.get('silence_step', 0) < len(initial)
+                and value.get('followup_entry_at')
+                and date(row.virtual_now) <= date(value['followup_entry_at']) + timedelta(minutes=61)
+                and not value.get('appointment_pending'))
+            allowed = active_followup_time(row.virtual_now, silence) or first_hour
             today = {m.get('run_id') for m in row.messages if m.get('proactive') and m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')
                      and date(m['created_at']).astimezone(ZoneInfo('Asia/Taipei')).date() == local.date()}
             if len(today) >= silence.get('max_proactive_messages_per_day', 6):
@@ -486,6 +545,14 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 db.commit()
                 continue
             if not allowed:
+                if initial is not None and not value.get('appointment_pending'):
+                    value.update(pending_event=None, silence_step=value.get('silence_step', 0) + 1)
+                    schedule_followup(value, bundle, row.virtual_now)
+                    value['followup_skip_reason'] = 'quiet_hours_slot_skipped'
+                    row.due_at = None
+                    save(row, value)
+                    db.commit()
+                    continue
                 opening = local.replace(hour=int(start[:2]), minute=int(start[3:]), second=0, microsecond=0)
                 if opening <= local:
                     opening += timedelta(days=1)
@@ -506,7 +573,7 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
         if event == 'silence_due':
             context['followup_materials'] = followup_materials(
                 context['available_materials'], row.messages, context['route_variant'])
-        intervals = bundle['silence'].get('intervals_minutes', [])
+        intervals = followup_intervals(value, bundle['silence'])
         next_step = value.get('silence_step', 0) + (event == 'silence_due')
         context['followup_schedule'] = {
             'remaining_intervals_minutes': intervals[next_step:],
@@ -514,6 +581,8 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             'checkpoints_minutes': [sum(intervals[:i+1]) for i in range(len(intervals))],
             'window_until': value.get('followup_until'),
             'elapsed_since_reply_minutes': round((date(row.virtual_now)-date(value['followup_anchor'])).total_seconds()/60, 1) if value.get('followup_anchor') else None,
+            'anchor_kind': ('customer_entry' if bundle['silence'].get('initial_checkpoints_minutes') is not None and not value.get('followup_customer_replied') else 'reply_completed'),
+            'elapsed_since_entry_minutes': round((date(row.virtual_now)-date(value['followup_entry_at'])).total_seconds()/60, 1) if value.get('followup_entry_at') else None,
         }
         for direction, label in (('incoming', 'customer'), ('outgoing', 'outgoing')):
             timestamps = [date(m['created_at']) for m in context['messages']

@@ -15,6 +15,17 @@ class ReplyPolicy(Base):
     updated_at: Mapped[str] = mapped_column(String(40), default=utcnow)
 
 
+class CustomerQuoteOffer(Base):
+    """A durable quote promise shared by conversations of the same customer."""
+    __tablename__ = 'customer_quote_offers'
+    __table_args__ = (UniqueConstraint('subject_key', 'route_variant'),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    subject_key: Mapped[str] = mapped_column(String(160))
+    route_variant: Mapped[str] = mapped_column(String(100))
+    offer: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+
+
 class AutomationSession(Base):
     __tablename__ = "automation_sessions"
     __table_args__ = (Index('uq_v3_live_conversation', 'conversation_state_id', unique=True,

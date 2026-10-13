@@ -188,11 +188,17 @@ class RouteFixedAnswerInput(BaseModel):
     usage_note: str = Field(default="", max_length=3000)
     valid_from: str | None = None
     valid_until: str | None = None
+    valid_for_days: int | None = Field(default=None, ge=1, le=365)
     fallback_text: str | None = Field(default=None, max_length=10000)
 
     @model_validator(mode="after")
     def validate_price_validity(self):
         from datetime import date
+        if self.valid_for_days:
+            if self.id != 'price' or not (self.fallback_text or '').strip() or '{offer_deadline}' not in self.answer_text:
+                raise ValueError('rolling_price_requires_deadline_placeholder_and_fallback')
+            if self.valid_from or self.valid_until:
+                raise ValueError('price_validity_modes_are_exclusive')
         if self.valid_from:
             date.fromisoformat(self.valid_from)
             if not self.valid_until:

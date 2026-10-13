@@ -60,6 +60,7 @@ def main():
     source_paths = [Path(__file__), backend/'app/reception_v3/prompt.py',
                     backend/'app/reception_v3/runtime.py', backend/'app/reception_v3/service.py',
                     backend/'app/reception_v3/live.py', *sorted((backend/'app/reception_v3/skills').glob('*/SKILL.md'))]
+    source_paths += [backend/'app/reception_v3/quotes.py', backend/'app/reception_v3/skills.py', backend/'app/reception_config.py']
     def fingerprints():
         return {str(p.relative_to(backend.parent)): hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths}
     tested_sources = fingerprints()
@@ -159,7 +160,8 @@ def main():
                         if check=='text_only' and any(m.get('content_type') != 'text' for m in emitted):failures.append(check)
                         if check=='no_third_person' and re.search(r'顧問可以|請顧問|讓顧問|轉人工|轉給顧問|轉接真人|由顧問',text):failures.append(check)
                         if check=='exact_quote':
-                            route = bundle['routes'][row.controls['route_variant']]
+                            from app.reception_v3.quotes import personalize_quotes
+                            route = personalize_quotes(db, row, bundle)['routes'][row.controls['route_variant']]
                             quote = next(s['answer_text'] for s in route['scripts'] if s['id']=='price')
                             if text.count(quote) != 1:failures.append(check)
                         if check=='no_surcharge' and re.search(r'單房差|独立成团.*400|獨立成團.*400|加價',text):failures.append(check)

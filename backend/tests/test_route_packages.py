@@ -275,7 +275,7 @@ def test_route_content_can_be_edited_and_republished(authenticated, monkeypatch)
     assert captured["package"]["content_groups"][current["content_groups"][0]["key"]]["approved_text"] == "运营更新后的回复内容"
     assert captured["package"]["content_groups"][current["content_groups"][0]["key"]]["initial_delivery"] == current["content_groups"][0]["initial_delivery"]
     assert captured["package"]["content_sequence"] == list(reversed(current["content_sequence"]))
-    expected_answers = [{"valid_from": None, "valid_until": None, "fallback_text": None, **answer}
+    expected_answers = [{"valid_from": None, "valid_until": None, "valid_for_days": None, "fallback_text": None, **answer}
                         for answer in current["fixed_answers"]]
     assert captured["package"]["fixed_answers"] == expected_answers
 

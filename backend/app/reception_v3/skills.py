@@ -2,7 +2,7 @@
 import hashlib
 import json
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import re
 from zoneinfo import ZoneInfo
@@ -17,11 +17,20 @@ def service_knowledge():
     return json.loads((PACKAGE_ROOT.parent / 'service-knowledge/service-knowledge.json').read_text(encoding='utf-8'))
 
 
-def effective_price_scripts(scripts, now=None):
-    """Select authored promotion copy by a fixed business date, never roll it forward."""
+def effective_price_scripts(scripts, now=None, offer=None):
+    """Render validity in code; a previously issued offer never rolls forward."""
     today = (now or datetime.now(ZoneInfo('Asia/Taipei'))).astimezone(ZoneInfo('Asia/Taipei')).date().isoformat()
     result = deepcopy(scripts)
     for script in result:
+        if script.get('id') == 'price' and script.get('valid_for_days'):
+            promise = offer or {'first_quoted_on': today, 'valid_until': (
+                datetime.fromisoformat(today) + timedelta(days=script['valid_for_days'])).date().isoformat()}
+            expired = today > promise['valid_until']
+            deadline = datetime.fromisoformat(promise['valid_until']).strftime('%Y/%m/%d')
+            script['answer_text'] = script['fallback_text'] if expired else script['answer_text'].replace('{offer_deadline}', deadline)
+            script['quote_offer'] = deepcopy(promise)
+            script['usage_note'] = '使用本次报价原文。截止日由系统按首次报价计算，同一客户固定；过期用标准价，不重新延长。'
+            continue
         if script.get('id') != 'price' or not script.get('valid_until'):
             continue
         if today > script['valid_until'] or today < (script.get('valid_from') or '0001-01-01'):
@@ -53,13 +62,15 @@ def compile_skills(db, now=None):
             'guidance': route.get('ai_guidance', ''),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
                          'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
-                         'topics', 'usage_note', 'status') if k in s}
+                         'topics', 'usage_note', 'status', 'quote_offer') if k in s}
                         for s in effective_price_scripts(route.get('fixed_answers', []), now) if s.get('status') == 'active'],
             'groups': deepcopy(route['groups']),
             'introduction_sequence': [k for k in route['introduction_sequence']
                                       if route['groups'][k].get('initial_delivery')],
             'interval_seconds': route['initial_delivery_interval_seconds'],
             'version': route['package_version'],
+            'quote_policy': next((deepcopy(s) for s in route.get('fixed_answers', [])
+                                  if s.get('id') == 'price' and s.get('valid_for_days') and s.get('status') == 'active'), None),
         }
         price = next((s for s in routes[key]['scripts'] if s['id'] == 'price'), None)
         if price:
@@ -123,7 +134,7 @@ class SkillRegistry:
             fields = {
                 'reply': ('goal', 'tone', 'tone_guidance', 'custom_guidance'),
                 'intake': ('enabled', 'question', 'options', 'wait_seconds'),
-                'silence': ('enabled', 'intervals_minutes'),
+                'silence': ('enabled', 'intervals_minutes', 'initial_checkpoints_minutes', 'recurring_interval_minutes', 'active_start', 'active_end'),
                 'handoff': ('large_group_enabled', 'large_group_minimum'),
                 'routing': ('enabled_route_variants', 'allow_route_switch', 'preserve_profile_on_switch', 'outside_catalog_action'),
                 'lead_capture': ('enabled', 'channels', 'require_supported_route',

@@ -19,7 +19,7 @@ export type FixedAnswer = {
   content_group_key: string; answer_text: string; fact_ids: string[]; asset_ids: string[];
   source_ref: string; answer_origin: 'website_verbatim' | 'operator_approved'; positive_examples: string[];
   negative_examples: string[];
-  valid_from?: string | null; valid_until?: string | null; fallback_text?: string | null;
+  valid_for_days?: number | null; valid_from?: string | null; valid_until?: string | null; fallback_text?: string | null;
 };
 
 export type ProductFact = { id: string; text: string; source_ref: string };
@@ -61,7 +61,7 @@ export type ReceptionConfig = {
   lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[] };
   routing: { enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' | 'consult_advisor' };
   handoff: { large_group_enabled: boolean; large_group_minimum: number };
-  silence: { live_enabled?: boolean | null; enabled: boolean; intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
+  silence: { live_enabled?: boolean | null; enabled: boolean; initial_checkpoints_minutes?: number[] | null; recurring_interval_minutes?: number; intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
 };
 
 export type ReceptionVersion = {
@@ -138,7 +138,7 @@ export function configurationChanges(before: ReceptionConfig, after: ReceptionCo
     reply: ['opening_items','opening_interval_seconds','goal','tone','tone_guidance','custom_guidance'],
     lead_capture: ['enabled','channels'], routing: ['outside_catalog_action'],
     handoff: ['large_group_enabled','large_group_minimum'],
-    silence: ['enabled','live_enabled','intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
+    silence: ['enabled','live_enabled','initial_checkpoints_minutes','recurring_interval_minutes','intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
   };
   const result: Record<string,unknown> = {};
   for (const [section, keys] of Object.entries(fields)) {

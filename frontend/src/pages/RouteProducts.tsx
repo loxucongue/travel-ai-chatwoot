@@ -220,12 +220,16 @@ function Readiness({ product }: { product: RouteProduct }) {
 
 function PriceValidity({ answer, update }: { answer: FixedAnswer; update: (updater: (item: FixedAnswer) => void) => void }) {
   return <>
-    <div className="route-field-grid">
+    <label className="block-field">优惠有效期<select value={answer.valid_for_days ? 'customer' : 'fixed'} onChange={event => update(item => {
+      item.valid_for_days = event.target.value === 'customer' ? 30 : null;
+      if (item.valid_for_days) {item.valid_from=null;item.valid_until=null;}
+    })}><option value="customer">首次报价起30天，同一客户固定</option><option value="fixed">统一活动日期</option></select></label>
+    {answer.valid_for_days ? <p>报价正文使用 {'{offer_deadline}'}，系统自动填入该客户固定截止日。重复询价、换会话不会延长。</p> : <div className="route-field-grid">
       <label>活动开始日期<input type="date" value={answer.valid_from ?? ''} max={answer.valid_until ?? undefined} onChange={event => update(item => { item.valid_from = event.target.value || null; })} /></label>
       <label>活动截止日期<input type="date" value={answer.valid_until ?? ''} min={answer.valid_from ?? undefined} onChange={event => update(item => { item.valid_until = event.target.value || null; })} /></label>
-    </div>
+    </div>}
     <label className="block-field">非活动期间报价<textarea rows={7} maxLength={10000} value={answer.fallback_text ?? ''} onChange={event => update(item => { item.fallback_text = event.target.value || null; })} /></label>
-    <small>日期按台北时间生效；起止日期均留空表示长期有效。修改日期时请同步修改报价话术。</small>
+    <small>日期按台北时间生效，截止当天有效；过期使用下方标准报价。统一日期均留空表示长期有效。</small>
   </>;
 }
 

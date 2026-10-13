@@ -110,6 +110,8 @@ class SilenceSettings(BaseModel):
     enabled: bool = True
     live_enabled: bool = False
     intervals_minutes: list[int] = Field(default_factory=lambda:[360],min_length=1,max_length=20)
+    initial_checkpoints_minutes: list[int] | None = Field(default=None, min_length=3, max_length=5)
+    recurring_interval_minutes: int = Field(default=180, ge=60, le=1380)
     active_start: str = "09:00"
     active_end: str = "21:00"
     max_proactive_messages_per_day: int = Field(default=6,ge=1,le=20)
@@ -122,6 +124,9 @@ class SilenceSettings(BaseModel):
             raise ValueError("silence_interval_out_of_range")
         if sum(self.intervals_minutes)>23*60:
             raise ValueError('silence_window_exceeds_23_hours')
+        points = self.initial_checkpoints_minutes
+        if points is not None and (points != sorted(set(points)) or points[0] < 1 or points[-1] != 60):
+            raise ValueError('first_hour_checkpoints_must_increase_and_end_at_60')
         return self
 
 class ReceptionConfiguration(BaseModel):

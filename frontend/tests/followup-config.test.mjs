@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {followupCheckpoints, followupIntervals, validFollowupIntervals} from '../src/pages/reception-config.ts';
+import {followupCheckpoints, followupIntervals, validFollowupIntervals, configurationChanges} from '../src/pages/reception-config.ts';
+
+test('saving entry cadence preserves checkpoint, repeat interval and quiet hours', () => {
+  const before={intake:{},reply:{},lead_capture:{},routing:{},handoff:{},silence:{initial_checkpoints_minutes:null,recurring_interval_minutes:180,active_start:'09:00',active_end:'00:00'}};
+  const after=structuredClone(before);
+  Object.assign(after.silence,{initial_checkpoints_minutes:[10,25,40,60],active_start:'07:00',active_end:'01:00',max_proactive_messages_per_day:12});
+  assert.deepEqual(configurationChanges(before,after).silence,{initial_checkpoints_minutes:[10,25,40,60],active_start:'07:00',active_end:'01:00',max_proactive_messages_per_day:12});
+});
 
 test('six-hour first touch can be followed by later configured checkpoints', () => {
   const intervals=followupIntervals([360,1080]);

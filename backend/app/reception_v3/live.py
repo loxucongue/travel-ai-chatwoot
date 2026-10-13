@@ -331,6 +331,9 @@ def deliver_one(db, row):
         db.commit()
         return
     part = drafts[0]
+    if service.skip_quiet_delivery(row, part):
+        db.commit()
+        return
     key = f'live-v3:{row.id}:{part["id"]}'
     existing = db.scalar(select(OutboundMessage).where(OutboundMessage.idempotency_key == key))
     if existing:
