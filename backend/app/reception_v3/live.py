@@ -340,6 +340,7 @@ def deliver_one(db, row):
         return
     connection = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == conversation.tenant_id))
     client = client_for(connection)
+    submission_started = False
     try:
         # Refresh channel controls before the external side effect.
         remote = payload_dict(client.get_conversation(conversation.chatwoot_conversation_id))
@@ -358,6 +359,7 @@ def deliver_one(db, row):
         db.add(out)
         row.messages = [{**m, 'status':'submitting'} if m.get('id') == part['id'] else m for m in row.messages]
         db.commit()
+        submission_started = True
         remote_id = conversation.chatwoot_conversation_id
         if media:
             result = payload_dict(client.create_attachment_message(remote_id, out.content, media.storage_path, media.mime_type))
@@ -407,8 +409,14 @@ def deliver_one(db, row):
                 db.rollback()
                 if attempt == 2:
                     raise
-    except Exception:
+    except Exception as exc:
         db.rollback()
+        if isinstance(exc, StaleDataError) and not submission_started:
+            # A model/webhook updated the session while the channel GET was in
+            # flight. The intent transaction rolled back before any POST. Let
+            # delivery_turn reload current controls and retry safely; this is
+            # not an uncertain customer send and must not create a handoff.
+            raise
         db.refresh(row)
         handoff(db, row, 'delivery_failed', '消息提交未完成，请核对渠道记录；系统不会自动重发。')
         service.control(row, 'stop')
