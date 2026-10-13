@@ -3,7 +3,7 @@
 <title>#625 报价与接话验收 · 2026-10-13</title>
 <style>body{font:16px/1.8 system-ui,sans-serif;color:#172638;background:#f4f7fa;margin:0}main{max-width:1080px;margin:36px auto;padding:32px;background:white;border-radius:14px}h1{font-size:28px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #dde4ec;padding:12px;text-align:left;vertical-align:top}th{background:#eef4fa}pre{white-space:pre-wrap;background:#f0f7f5;padding:22px;border-radius:10px;font:inherit}.status{padding:16px;background:#e8f5ef;border-left:4px solid #21875f}.muted{color:#526476}a{color:#165aa4}</style>
 <main><h1>#625 报价与接话验收</h1><p class="muted">2026-10-13 · 最新业务口径覆盖之前“普通报价列不含”的要求。</p>
-<p class="status" id="release-status">本地验收完成，等待生产部署与配置核验。82项自动回归通过；16个演练步骤验收通过。</p>
+<p class="status" id="release-status">已部署并核验：2026-10-13 10:23（北京时间），代码 f798738；发布 quote-engagement-20261013-20261013T022349Z。82项自动回归通过；16个演练步骤验收通过。生产三个服务 active，健康检查200。</p>
 <p>目标：客户问价格时，先回答价格和服务价值，再留下一个轻松、容易回答的接话问题。未问的额外支出不主动展开；客户主动询问时如实说明，不能暗示全包。</p>
 <table><thead><tr><th>业务要求</th><th>根因与修改</th><th>验证与结论</th></tr></thead><tbody>
 <tr><td>报价不主动列不含项目</td><td>两条线路的固定price模板及过期备用模板自带不含清单；现同步删除这些默认展示段落，价格、有效期和其他事实保留。</td><td>#625原始输入三次重放、9日询价、家人同行复报价、独行询价均未主动列不含，未推销房差。</td></tr>
@@ -29,5 +29,8 @@
 <li>本次测试账本从17.02205112元增至17.96117568元，增量约0.94元；总额含此前超时请求预留，未超20元预算。</li>
 </ul>
 <p><a href="../../output/acceptance-20261013/quote-engagement-tests.txt">回归日志</a> · <a href="../../output/acceptance-20261013/quote-engagement-final-results/summary.json">原始演练结果</a> · <a href="../../output/acceptance-20261013/quote-engagement-review.json">逐项复核</a> · <a href="../../output/acceptance-20261013/quote-engagement-final-results/quote625-exact.json">#625关联重放</a></p>
+<p>上线核验：实际生效的两条线路模板与规则已更新；#625优惠截止日仍为2026/11/12，过期备用报价也不主动列不含项目。人数等待120秒、首小时10/25/40/60分钟和后续3小时触达配置保留；12个已接管会话无主动跟进时间。部署未改变全局设置、密钥或历史聊天。</p>
+<p>部署前发现服务器的源模板早于运行覆盖配置，原覆盖方案已被校验阻止，未停止服务。实际发布只修改代码及已测试的运行配置，保留历史源模板；修改前已备份，可回退，不恢复或覆盖生产数据库。</p>
+<p><a href="../../output/acceptance-20261013/quote-engagement-release.json">发布及备份记录</a> · <a href="../../output/acceptance-20261013/quote-engagement-ready.json">生产只读核验</a></p>
 <p class="muted">原始业务事实保留，更新仅改变默认展示范围与主动询价后的收尾方式。生产部署状态以本页顶部及发布核验记录为准。</p>
 </main></html>
