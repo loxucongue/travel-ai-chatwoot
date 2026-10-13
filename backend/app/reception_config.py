@@ -97,7 +97,7 @@ class IntakeSettings(BaseModel):
     enabled: bool = True
     question: str = Field(default="您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）", min_length=1, max_length=500)
     options: list[str] = Field(default_factory=lambda: ['自己一位', '2～3位', '4～6位', '7～10位', '10位以上'], min_length=1, max_length=10)
-    wait_seconds: int = Field(default=60, ge=1, le=300)
+    wait_seconds: int = Field(default=120, ge=1, le=300)
 
     @model_validator(mode="after")
     def valid(self):

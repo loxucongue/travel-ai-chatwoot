@@ -754,7 +754,7 @@ def update_reception_config(
         "lead_capture": {"enabled", "channels"},
         "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action"},
         "handoff": {"large_group_enabled", "large_group_minimum"},
-        "silence": {"enabled", "live_enabled", "intervals_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
+        "silence": {"enabled", "live_enabled", "intervals_minutes", "initial_checkpoints_minutes", "recurring_interval_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
         "common_scripts": None,
     }
     value = deepcopy(before)

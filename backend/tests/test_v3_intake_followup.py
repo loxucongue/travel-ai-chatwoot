@@ -11,16 +11,16 @@ from live_fixture import setup
 from test_reception_v3 import bundle, answer, delivered, step
 
 
-def config():
+def config(wait_seconds=60):
     spec = bundle()
-    spec['intake'] = IntakeSettings().model_dump()
+    spec['intake'] = IntakeSettings(wait_seconds=wait_seconds).model_dump()
     spec['silence'] = {**SilenceSettings().model_dump(), 'intervals_minutes':[1,4,10,45,120,180], 'active_start':'00:00', 'active_end':'00:00'}
     spec['routes']['eleven'] = {**deepcopy(spec['routes']['nine']), 'name':'十一日'}
     return spec
 
 
-def create(db, monkeypatch, entry='九日', model=None):
-    monkeypatch.setattr(service, 'compile_skills', lambda db: config())
+def create(db, monkeypatch, entry='九日', model=None, wait_seconds=60):
+    monkeypatch.setattr(service, 'compile_skills', lambda db: config(wait_seconds))
     monkeypatch.setattr(service, 'active_web_facts', lambda *a, **k: ([], 'test'))
     monkeypatch.setattr(service, 'candidate_materials', lambda *a: [])
     monkeypatch.setattr(service, 'run_agent', model or (lambda c: answer(action='wait')))
@@ -31,19 +31,20 @@ def create(db, monkeypatch, entry='九日', model=None):
     return row
 
 
-def test_intake_actual_delivery_anchors_sixty_seconds_and_restarts(session_factory, monkeypatch):
+@pytest.mark.parametrize('wait_seconds', [60, 120])
+def test_intake_actual_delivery_anchors_configured_wait_and_restarts(session_factory, monkeypatch, wait_seconds):
     with session_factory() as db:
-        row=create(db,monkeypatch)
+        row=create(db,monkeypatch,wait_seconds=wait_seconds)
         assert not service.state(row).get('intake_deadline')
         assert [m['content_type'] for m in row.messages if m.get('status')=='draft']==['input_select']
         step(db,row,10)
         assert delivered(row)==[config()['intake']['question']]
         deadline=service.state(row)['intake_deadline']
-        assert deadline==service.later(row.virtual_now,60)
+        assert deadline==service.later(row.virtual_now,wait_seconds)
         row_id=row.id
     with session_factory() as db:
         row=db.get(AutomationSession,row_id)
-        step(db,row,59)
+        step(db,row,wait_seconds-1)
         assert service.state(row)['intake_status']=='waiting'
         step(db,row,1)
         assert service.state(row)['delivery_kind']=='introduction'
@@ -55,13 +56,14 @@ def test_intake_actual_delivery_anchors_sixty_seconds_and_restarts(session_facto
 
 
 @pytest.mark.parametrize('reply,profile',[('4～6位',{'party_size_range':'4～6位'}),('先介紹吧',{}),('在哪裡集合？',{})])
-def test_any_ordinary_answer_starts_intro_and_keeps_question(session_factory,monkeypatch,reply,profile):
+@pytest.mark.parametrize('wait_seconds', [60, 120])
+def test_any_ordinary_answer_starts_intro_and_keeps_question(session_factory,monkeypatch,reply,profile,wait_seconds):
     seen=[]
     def model(context):
         seen.append(context)
         return answer(profile=profile) if context['event']=='customer_message' else answer(messages=[{'text':'林芝集合。'}])
     with session_factory() as db:
-        row=create(db,monkeypatch,model=model)
+        row=create(db,monkeypatch,model=model,wait_seconds=wait_seconds)
         step(db,row,0)
         service.add_message(db,row,reply,'party');db.commit()
         step(db,row,0)
@@ -231,6 +233,22 @@ def test_configuration_controls_intake_and_supports_followups_after_six_hours(au
     assert response.json()['config']['silence']['intervals_minutes']==[360,720]
     response=client.patch('/v1/automation/reception-config',headers={'X-CSRF-Token':csrf},json={'silence':{'intervals_minutes':[360,1021]}})
     assert response.status_code==422
+
+
+def test_two_minute_intake_save_preserves_entry_followup_schedule(authenticated):
+    client,csrf=authenticated
+    headers={'X-CSRF-Token':csrf}
+    cadence={'initial_checkpoints_minutes':[10,25,40,60], 'recurring_interval_minutes':180,
+             'active_start':'07:00','active_end':'01:00','max_proactive_messages_per_day':12}
+    response=client.patch('/v1/automation/reception-config',headers=headers,json={'silence':cadence})
+    assert response.status_code==200,response.text
+    before=response.json()['config']
+    response=client.patch('/v1/automation/reception-config',headers=headers,json={'intake':{'wait_seconds':120}})
+    assert response.status_code==200,response.text
+    after=client.get('/v1/automation/reception-config').json()['config']
+    assert after['intake']['wait_seconds']==120
+    assert after['silence']==before['silence']
+    assert IntakeSettings().wait_seconds==120
 
 
 def test_migration_preserves_actual_greeting_assets_and_live_switches():
