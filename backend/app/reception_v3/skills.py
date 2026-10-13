@@ -29,13 +29,13 @@ def effective_price_scripts(scripts, now=None, offer=None):
             deadline = datetime.fromisoformat(promise['valid_until']).strftime('%Y/%m/%d')
             script['answer_text'] = script['fallback_text'] if expired else script['answer_text'].replace('{offer_deadline}', deadline)
             script['quote_offer'] = deepcopy(promise)
-            script['usage_note'] = '使用本次报价原文。截止日由系统按首次报价计算，同一客户固定；过期用标准价，不重新延长。'
+            script['usage_note'] = (script.get('usage_note', '') + '\n使用本次报价原文。截止日由系统按首次报价计算，同一客户固定；过期用标准价，不重新延长。').strip()
             continue
         if script.get('id') != 'price' or not script.get('valid_until'):
             continue
         if today > script['valid_until'] or today < (script.get('valid_from') or '0001-01-01'):
             script['answer_text'] = script['fallback_text']
-        script['usage_note'] = '本次生效报价如下。只报本线路，原样使用；不得根据历史回复延长活动或使用过期价格。'
+        script['usage_note'] = (script.get('usage_note', '') + '\n本次生效报价如下。只报本线路，原样使用；不得根据历史回复延长活动或使用过期价格。').strip()
     return result
 
 

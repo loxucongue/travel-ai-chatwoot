@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>#625 报价与接话验收 · 2026-10-13</title>
+<style>body{font:16px/1.8 system-ui,sans-serif;color:#172638;background:#f4f7fa;margin:0}main{max-width:1080px;margin:36px auto;padding:32px;background:white;border-radius:14px}h1{font-size:28px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #dde4ec;padding:12px;text-align:left;vertical-align:top}th{background:#eef4fa}pre{white-space:pre-wrap;background:#f0f7f5;padding:22px;border-radius:10px;font:inherit}.status{padding:16px;background:#e8f5ef;border-left:4px solid #21875f}.muted{color:#526476}a{color:#165aa4}</style>
+<main><h1>#625 报价与接话验收</h1><p class="muted">2026-10-13 · 最新业务口径覆盖之前“普通报价列不含”的要求。</p>
+<p class="status" id="release-status">本地验收完成，等待生产部署与配置核验。82项自动回归通过；16个演练步骤验收通过。</p>
+<p>目标：客户问价格时，先回答价格和服务价值，再留下一个轻松、容易回答的接话问题。未问的额外支出不主动展开；客户主动询问时如实说明，不能暗示全包。</p>
+<table><thead><tr><th>业务要求</th><th>根因与修改</th><th>验证与结论</th></tr></thead><tbody>
+<tr><td>报价不主动列不含项目</td><td>两条线路的固定price模板及过期备用模板自带不含清单；现同步删除这些默认展示段落，价格、有效期和其他事实保留。</td><td>#625原始输入三次重放、9日询价、家人同行复报价、独行询价均未主动列不含，未推销房差。</td></tr>
+<tr><td>报价必须有低压力收尾</td><td>旧Skill把“介绍时问过但没回答”作为省略问句的例外。现普通报价后关系未知就问家人还是朋友，关系已知则问相关兴趣；明确不要追问时尊重客户。</td><td>#625三次均以“您這次預計跟家人還是朋友一起出發呢？”结束；家人同行换成人文或自然风景偏好；独行不问家人朋友；明确只要价格时不追问。</td></tr>
+<tr><td>主动问费用范围时答完整</td><td>把机票、午晚餐、小费、个人花费另存为按需费用事实。仅问机票就只答机票，问全包或完整排除项目才列完整范围。</td><td>关联追问机票、餐食小费、完整排除清单、是否全包全部核对通过；额外费用没有被隐藏或删除。</td></tr>
+<tr><td>配置说明必须传到模型</td><td>发现有效期渲染器覆盖usage_note，导致业务配置说明丢失。改为保留原说明，再追加系统有效期说明。</td><td>固定日期、首次报价30天、过期恢复标准价三种情况均验证。</td></tr>
+<tr><td>其他接待行为保持正确</td><td>不改变人数等待、优惠承诺、沉默时序和人工接管。</td><td>119秒不介绍，120秒开始；客户先回复立即介绍；沉默图片继续发送且不报价、不索取联系方式。对应回归通过。</td></tr>
+</tbody></table>
+<h2>#625 原始上下文重放示例</h2><p>客户已收到完整介绍和两次图片跟随，再问：“我们2位，明年3月底出发，住宿和价格怎样？”先回答住宿，然后输出：</p>
+<pre>西藏桃花節11日遊
+拼團升級「4-6人小團」優惠價：人民幣¥ 12,180 /人
+（截至2026/11/12前報名，限時優惠）
+
+包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票
+
+您這次預計跟家人還是朋友一起出發呢？</pre>
+<h2>测试证据与边界</h2><ul>
+<li>82项回归：迁移幂等性、事实和其他配置保留、有效期与过期报价、Skill加载、2分钟人数等待、沉默时序。</li>
+<li>5组真实模型演练，共16个步骤：#625完整关联对话、9日询价与已知同行关系、11日独行和沉默图片，另加两次#625独立重放。</li>
+<li>最终15个步骤自动通过，1个断言误报经内容核对通过：实际“午、晚餐”与断言“午晚餐”含义相同。原始失败记录未删除。</li>
+<li>前两轮发现并处理：完整排除明细漏掉个人花费、#625结尾偶尔换成风景问题。首轮另有两个测试口径误报：介绍中“不加价”被识别为加价；持续咨询后的联系方式邀请被按“报价不得索取”误判。最终报价本身仍严格禁止留资邀请。</li>
+<li>仅在内存演练中调用模型，对真实客户发送测试消息0条。原始#625历史消息不改写、不补发。模型测试验证此次样本，不代表未来每次生成完全一致。</li>
+<li>本次测试账本从17.02205112元增至17.96117568元，增量约0.94元；总额含此前超时请求预留，未超20元预算。</li>
+</ul>
+<p><a href="../../output/acceptance-20261013/quote-engagement-tests.txt">回归日志</a> · <a href="../../output/acceptance-20261013/quote-engagement-final-results/summary.json">原始演练结果</a> · <a href="../../output/acceptance-20261013/quote-engagement-review.json">逐项复核</a> · <a href="../../output/acceptance-20261013/quote-engagement-final-results/quote625-exact.json">#625关联重放</a></p>
+<p class="muted">原始业务事实保留，更新仅改变默认展示范围与主动询价后的收尾方式。生产部署状态以本页顶部及发布核验记录为准。</p>
+</main></html>

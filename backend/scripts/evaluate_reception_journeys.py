@@ -100,6 +100,15 @@ def main():
                 messages=[], memory={}, controls={}, virtual_now=case.get('now', '2026-10-11T02:00:00+00:00'))
             db.add(row); db.flush()
             service.start(db, row, case['entry']); db.commit()
+            if case.get('replay_context'):
+                # Clone a read-only historical input into this isolated session.
+                seed = deepcopy(case['replay_context'])
+                row.virtual_now = seed['now']
+                row.messages = seed['messages']
+                row.memory = seed['profile']
+                row.controls = {**row.controls, 'route_variant': seed['route_variant']}
+                service.save(row, {**seed['state'], 'pending_event': seed['event']})
+                db.commit()
             def tick(seconds=0):
                 row.virtual_now = service.later(row.virtual_now, seconds)
                 wall = row.controls['simulation']['last_wall_at']
@@ -123,7 +132,7 @@ def main():
                 raise RuntimeError('delivery_did_not_settle')
             try:
                 entry = {'id':'entry', 'checks': (['intake'] if case.get('known_entry',True) else []) + case.get('entry_checks',[])}
-                for i, step in enumerate([entry] + case['steps']):
+                for i, step in enumerate(([] if case.get('replay_context') else [entry]) + case['steps']):
                     before = {m['id'] for m in row.messages if m.get('status') == 'simulated_delivered'}
                     if step.get('text'):
                         service.add_message(db, row, step['text'], f'customer-{i}',
@@ -169,6 +178,8 @@ def main():
                             amounts = re.findall(r'([0-9][0-9,]*)\s*(?:元|/人)',text)
                             if not amounts or any(a.replace(',','') != '400' for a in amounts):failures.append(check)
                         if check=='question_last' and re.search(r'[？?]',text) and not re.search(r'[？?][～~\s]*$',text):failures.append(check)
+                        if check=='one_question_required_last' and (len(re.findall(r'[？?]',text)) != 1 or not re.search(r'[？?][～~\s]*$',text)):failures.append(check)
+                        if check=='no_unsolicited_exclusions' and re.search(r'不(?:包含|包括|含)|另[付收]|自[付費费]',text):failures.append(check)
                         if check=='no_extra_opening':
                             authored = bundle['reply'].get('opening_messages') or [bundle['reply'].get('opening_message','')]
                             other = [m.get('content','') for m in emitted if m.get('content') not in authored]
