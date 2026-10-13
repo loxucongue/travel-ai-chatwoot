@@ -100,11 +100,11 @@ def test_label_refresh_and_contact_updates_preserve_human_ownership_without_task
         assert not live.permitted(db,conv)
 
 
-def test_planned_handoff_can_send_final_message_before_task_exists(session_factory,monkeypatch):
+def test_planned_handoff_blocks_even_before_task_exists(session_factory,monkeypatch):
     setup(session_factory,monkeypatch)
     with session_factory() as db:
         row=session(db);row.controls={**row.controls,'human':True,'v3':{'handoff':True}}
-        assert live.permitted(db,db.get(ConversationState,1))
+        assert not live.permitted(db,db.get(ConversationState,1))
         ensure_handoff(db,db.get(ConversationState,1),'test')
         assert not live.permitted(db,db.get(ConversationState,1))
 

@@ -45,9 +45,6 @@ def human_owned(db, conversation):
                                                 HandoffTask.status.in_(['pending', 'claimed']))):
             return True
         row = session_for(db, item.id)
-        if (item.id == conversation.id and row and row.controls.get('simulation', {}).get('status') == 'running'
-                and service.state(row).get('handoff') and not service.state(row).get('handoff_created')):
-            continue  # Finish the planned handoff message before creating its task.
         if runtime_state(row, '', '')[0] == 'HUMAN_HANDOFF':
             return True
     return False
@@ -92,11 +89,26 @@ def record_human_reply(db, conversation, message):
 
 
 def handoff(db, row, reason, summary):
+    service.control(row, 'stop')
+    row.controls = {**row.controls, 'human': True}
     conversation = db.get(ConversationState, row.conversation_state_id)
     ensure_handoff(db, conversation, reason, summary)
     value = service.state(row)
-    value.update(handoff=True, handoff_reason=reason, pending_event=None, next_check_at=None)
+    value.update(handoff=True, handoff_created=True, handoff_type=reason,
+                 handoff_reason=summary, pending_event=None, next_check_at=None)
     service.save(row, value)
+
+
+def handoff_from_decision(db, row):
+    value = service.state(row)
+    reason = value.get('handoff_type', 'other')
+    if row.memory.get('contact_value'):
+        reason = 'contact'
+    elif row.memory.get('contact_status') == 'attachment_pending_verification':
+        reason = 'contact_image'
+    elif row.memory.get('contact_status') == 'self_reported_added':
+        reason = 'contact_reported'
+    handoff(db, row, reason, str(row.memory) + '\n' + value.get('handoff_reason', ''))
 
 
 def cancel(db, conversation_id, reason):
@@ -298,24 +310,20 @@ def accept(db, conversation, message):
 def deliver_one(db, row):
     """Persist submission intent before HTTP. Unknown results never auto-repeat."""
     value = service.state(row)
+    # Old plans may still contain a handoff acknowledgement. Never send it,
+    # even when it predates this release or the session is already stopped.
+    if value.get('handoff') or row.controls.get('human'):
+        if value.get('handoff') and not value.get('handoff_created'):
+            handoff_from_decision(db, row)
+        elif (row.controls.get('simulation', {}).get('status') == 'running'
+              or any(m.get('status') == 'draft' for m in row.messages)):
+            service.control(row, 'stop')
+        db.commit()
+        return
     if row.controls.get('simulation', {}).get('status') != 'running':
         return
     drafts = [m for m in row.messages if m.get('status') == 'draft']
     if not drafts:
-        if value.get('handoff') and not value.get('handoff_created'):
-            reason_type = value.get('handoff_type', 'other')
-            if row.memory.get('contact_value'):
-                reason_type = 'contact'
-            elif row.memory.get('contact_status') == 'attachment_pending_verification':
-                reason_type = 'contact_image'
-            elif row.memory.get('contact_status') == 'self_reported_added':
-                reason_type = 'contact_reported'
-            handoff(db, row, reason_type,
-                    str(row.memory) + '\n' + value.get('handoff_reason', ''))
-            value = service.state(row)
-            value['handoff_created'] = True
-            service.save(row, value)
-            db.commit()
         return
     if not value.get('delivery_due_at') or dt(value['delivery_due_at']) > dt(row.virtual_now):
         return

@@ -21,7 +21,7 @@ messages 按顺序发送。text 非空就原样发送；text 为空且给出 scr
 script_id 只标记本条确实引用或改写的原话；根据事实自行组织的答案留空，不用主题相近的其他话术ID凑来源。
 asset_keys 是本条实际要发的素材 key；空数组表示不发图片或文件，引用 script_id 不会自动附图。需要图片时明确填写已加载资料中的 key。
 start_introduction=true 表示调用线路配置的整套介绍（含既定图文和间隔），messages=[]，不要同时复制内容。实际完成看 state.completed_introductions。
-action=queue 保存介绍期间的问题；wait 本轮不发；handoff 建立交接并停止后续AI。邀请联系方式但尚未收到时用reply等待，不提前handoff。interrupt=true 取消未发送的介绍。适用时机由 Skill 决定。
+action=queue 保存介绍期间的问题；wait 本轮不发；handoff 仅建立内部交接，messages 必须为空，当前轮及后续都不向客户发消息，不发收到、稍等或转接提示，直接等待顾问接待。邀请联系方式但尚未收到时用reply等待，不提前handoff。interrupt=true 取消未发送的介绍。适用时机由 Skill 决定。
 profile 只包含客户明确表达的资料更新。opt_out=true 仅表示客户明确要求停止主动联系，null 表示不变；不用某渠道、不留联系方式或只在当前会话咨询，记录在profile的联系偏好中，不写opt_out=true。既有主动拒绝不会因客户回来提问而解除。
 明确选线、尚未介绍且没有人数提问记录时，start_introduction=true、messages=[]，调用系统人数提问，不能输出wait并假定系统已经问过。选线后系统先发送配置人数问题；已有明确人数则直接介绍。state.intake_answered=true 时客户已回应人数提问，普通问题先保存、start_introduction=true，介绍后集中回答。停止、改线、真人请求仍优先处理。人数区间写 profile.party_size_range，不把区间猜成具体人数。
 next_check_minutes 仅用于客户本轮明确预约的时间；普通沉默填null。followup_schedule给出实际经过时间与配置的累计触达点，系统负责计时、夜间顺延和渠道窗口；模型不自行增减触达次数。followup_materials是当前线路尚未交付的去重图片候选。单次wait不取消后续配置节点；明确拒绝主动联系用opt_out，人工接管用handoff。

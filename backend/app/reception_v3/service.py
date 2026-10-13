@@ -296,6 +296,23 @@ def apply_decision(db, row, run, bundle, decision):
     previous_memory = row.memory
     if update_profile(db, row, run, decision):
         return
+    if decision['action'] == 'handoff':
+        # Handoff is an internal action, including this turn. Do not resolve
+        # or enqueue the model's text/assets, even if it supplied a farewell.
+        value.update(handoff=True, handoff_reason=decision['handoff_reason'],
+                     handoff_type=decision.get('handoff_type', 'other'),
+                     next_check_minutes=None, buffered_questions=[], last_reason=decision['reason'])
+        row.controls = {**row.controls, 'human': True}
+        if decision['route_variant']:
+            row.controls = {**row.controls, 'route_variant': decision['route_variant']}
+        save(row, value)
+        control(row, 'stop')
+        run.trace = {**(run.trace or {}), 'execution_reason': 'silent_handoff',
+                     'suppressed_handoff_messages': len(decision['messages'])}
+        if row.environment == 'live':
+            from app.reception_v3.live import handoff_from_decision
+            handoff_from_decision(db, row)
+        return
     selected_route = decision['route_variant'] or row.controls.get('route_variant', '')
     if (selected_route and decision['action'] != 'handoff' and decision['opt_out'] is not True
             and not decision['interrupt'] and row.memory.get('reception_status') != 'abusive'
@@ -329,11 +346,6 @@ def apply_decision(db, row, run, bundle, decision):
             and row.memory.get('reception_status') != 'abusive'):
         parts = opening_parts(db, row, bundle, text_only=True) + parts
         value.update(opening_started=True, opening_media_pending=True)
-    if decision['action'] == 'handoff':
-        value['handoff'] = True
-        value['handoff_reason'] = decision['handoff_reason']
-        value['handoff_type'] = decision.get('handoff_type', 'other')
-        row.controls = {**row.controls, 'human': True}
     value['pending_event'] = None
     intake_answered = value.pop('intake_answered', False)
     if not (decision['start_introduction'] and intake_answered):
