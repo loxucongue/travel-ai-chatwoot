@@ -77,6 +77,11 @@ def compile_skills(db, now=None):
             'quote_policy': next((deepcopy(s) for s in route.get('fixed_answers', [])
                                   if s.get('id') == 'price' and s.get('valid_for_days') and s.get('status') == 'active'), None),
         }
+        if route.get('party_pricing'):
+            from app.reception_v3.party_quotes import apply_price_scripts
+            routes[key]['party_pricing'] = deepcopy(route['party_pricing'])
+            routes[key]['party_pricing_enabled'] = any(s['id'] == 'price' for s in routes[key]['scripts'])
+            apply_price_scripts(routes[key])
         price = next((s for s in routes[key]['scripts'] if s['id'] == 'price'), None)
         if price:
             routes[key]['facts'].append({'id': key + '.current_quote', 'text': '本轮当前有效报价（优先于历史价格）：\n' + price['answer_text']})
@@ -164,6 +169,9 @@ class SkillRegistry:
                 body += '\n同时询问配对线路时的默认展示顺序（明确偏好、天数和日期优先）：' + json.dumps(route['entry_comparison'], ensure_ascii=False)
             if route.get('seasonal_pricing'):
                 body += '\n分季报价规则：' + json.dumps(route['seasonal_pricing'], ensure_ascii=False)
+            if route.get('party_pricing'):
+                body += '\n人數報價已由系統計算，使用下方符合本輪確切人數及團型的price_*模板。未選團型按明示拼團價提供參考，不據此標記客人已選拼團。未配置人數不猜折扣；不展示早鳥或限時文案。'
+                body += '\n報價後只接一個與旅遊興趣相關的輕鬆問句；未問房型時不提單房差、不問分房。客人變更人數／團型只記錄諮詢意向，不代表訂位或實際改團。人數未定就承接「等人數確定再核價」，不能說幫客人保留名額、已改好團，也不能自行給確認期限（例如四月初前、幾天內）。未問期限不新增日期；只有工具公布的團期可以引用。'
             if route.get('departure_availability'):
                 body += '\n已公布出发团期（不代表库存保证）：' + json.dumps(route['departure_availability'], ensure_ascii=False)
             if route.get('guidance'):

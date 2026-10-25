@@ -5,6 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
+from legacy_quote_fixture import legacy_peach_package
 
 from app.reception_v3.skills import effective_price_scripts
 from scripts.update_followup_offer_20261013 import update_package as offer_package
@@ -15,7 +16,7 @@ SOURCE = Path(__file__).resolve().parents[2] / 'data/knowledge/china2go/route-pa
 
 @pytest.mark.parametrize('days', [9, 11])
 def test_quote_migration_preserves_all_other_facts_scripts_and_configuration(days):
-    package = json.loads((SOURCE / f'peach-{days}d-2027/route-package.json').read_text(encoding='utf8'))
+    package = legacy_peach_package(days)
     package['knowledge_facts'] = [f for f in package['knowledge_facts'] if not f['id'].endswith('.fee_exclusions')]
     price = next(s for s in package['fixed_answers'] if s['id'] == 'price')
     price['answer_text'] += '\n\n不含：機票、午晚餐、小費、個人花費'
@@ -46,7 +47,7 @@ def test_quote_migration_preserves_all_other_facts_scripts_and_configuration(day
 @pytest.mark.parametrize('rolling', [False, True])
 @pytest.mark.parametrize('day,amount', [('2026-10-13', '12,180'), ('2026-11-13', '12,780')])
 def test_effective_quote_omits_exclusions_and_preserves_operator_usage(rolling, day, amount):
-    package = json.loads((SOURCE / 'peach-11d-2027/route-package.json').read_text(encoding='utf8'))
+    package = legacy_peach_package(11)
     package = update_package(offer_package(package) if rolling else package)
     now = datetime.fromisoformat(day).replace(tzinfo=ZoneInfo('Asia/Taipei'))
     offer = {'first_quoted_on': '2026-10-13', 'valid_until': '2026-11-12'}

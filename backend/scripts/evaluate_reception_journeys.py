@@ -130,7 +130,7 @@ def main():
                     backend/'app/reception_v3/runtime.py', backend/'app/reception_v3/service.py',
                     backend/'app/reception_v3/live.py', *sorted((backend/'app/reception_v3/skills').glob('*/SKILL.md'))]
     source_paths += [backend/'app/reception_v3/quotes.py', backend/'app/reception_v3/skills.py', backend/'app/reception_config.py']
-    source_paths += [backend/'app/reception_v3/seasonal_quotes.py']
+    source_paths += [backend/'app/reception_v3/seasonal_quotes.py', backend/'app/reception_v3/party_quotes.py']
     source_paths += [backend/'app/reception_v3/route_choice.py', backend/'app/reception_v3/customer_reactions.py',
                      backend/'app/reception_v3/followup_window.py', backend/'app/reception_v3/material_rules.py',
                      backend/'app/reception_v3/customer_images.py']

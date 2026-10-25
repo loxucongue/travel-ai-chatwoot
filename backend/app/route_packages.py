@@ -234,6 +234,12 @@ def _validate(package: dict, source: Path) -> dict:
         package.pop(legacy, None)
     if package.get('seasonal_pricing') and any(b['script_id'] not in fixed_answer_ids for b in package['seasonal_pricing']['bands']):
         raise RoutePackageError(f'route_package_pricing_script_missing:{route_id}')
+    if package.get('party_pricing'):
+        from app.reception_v3.party_quotes import validate_party_pricing
+        try:
+            validate_party_pricing(package['party_pricing'])
+        except (ValueError, KeyError, TypeError) as exc:
+            raise RoutePackageError(f'route_package_party_pricing_invalid:{route_id}') from exc
     return package
 
 
@@ -355,6 +361,7 @@ def reload_route_packages() -> None:
         "intake": deepcopy(package.get("intake")),
         "entry_comparison": deepcopy(package.get("entry_comparison")),
         "seasonal_pricing": deepcopy(package.get("seasonal_pricing")),
+        "party_pricing": deepcopy(package.get("party_pricing")),
         "departure_availability": deepcopy(package.get("departure_availability")),
         "initial_delivery_interval_seconds": package["initial_delivery_interval_seconds"],
         "required_slots": package["required_slots"],

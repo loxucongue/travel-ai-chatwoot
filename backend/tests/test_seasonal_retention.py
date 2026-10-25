@@ -72,13 +72,14 @@ def test_peach_outside_flowering_season_recommends_supported_summer_products():
     assert {a['route_variant'] for a in result['alternatives']} == {EIGHT, TEN}
 
 
-def test_peach_in_season_uses_existing_quote_template_without_changing_offer():
-    result = departure_quote(catalog(), PEACH, '2027-03-20', '2027-04-10', NOW)
+def test_peach_in_season_keeps_its_route_specific_pricing():
+    configured = catalog()
+    before = deepcopy(configured)
+    result = departure_quote(configured, PEACH, '2027-03-20', '2027-04-10', NOW)
     assert result['status'] == 'not_seasonal' and result['availability_checked']
     assert result['departure_examples']
-    package = catalog()['routes'][PEACH]
-    quote = next(s for s in package['fixed_answers'] if s['id'] == 'price')
-    assert '12,180' in quote['answer_text'] and quote['valid_for_days'] == 30
+    assert configured == before
+    assert 'price_cny' not in result  # availability must not invent a seasonal price
 
 
 @pytest.mark.parametrize('route,start,end,status', [

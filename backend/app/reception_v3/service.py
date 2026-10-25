@@ -317,9 +317,12 @@ def scripts(bundle, route):
 
 def parts_for(db, row, bundle, decision, *, followup=False):
     from app.reception_v3.seasonal_quotes import seasonal_group
+    from app.reception_v3.party_quotes import quote_error as party_quote_error
     route = decision['route_variant'] or row.controls.get('route_variant', '')
     if route and route not in bundle['routes']:
         raise ValueError('v3_unknown_route')
+    if party_quote_error(decision, bundle, row.memory or {}, route):
+        raise ValueError('party_quote_not_validated')
     parts = []
     tenant_id = tenant_for_session(db, row)
     materials = {m['key']: m for m in candidate_materials(db, tenant_id)}

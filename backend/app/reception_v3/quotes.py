@@ -28,11 +28,19 @@ def get_offer(db, row, route):
 
 
 def personalize_quotes(db, row, bundle):
-    if not any(r.get('quote_policy') for r in bundle['routes'].values()):
+    if not any(r.get('quote_policy') or r.get('party_pricing') for r in bundle['routes'].values()):
         return bundle
     bundle = deepcopy(bundle)
     now = datetime.fromisoformat(row.virtual_now.replace('Z', '+00:00'))
     for route, spec in bundle['routes'].items():
+        if spec.get('party_pricing'):
+            from zoneinfo import ZoneInfo
+            from app.reception_v3.party_quotes import apply_price_scripts
+            promise = get_offer(db, row, route)
+            valid = promise and now.astimezone(ZoneInfo('Asia/Taipei')).date().isoformat() <= promise['valid_until']
+            ceiling = spec['party_pricing'].get('legacy_offer_price_cny') if valid else None
+            apply_price_scripts(spec, legacy_ceiling=ceiling)
+            continue
         if not spec.get('quote_policy'):
             continue
         price = effective_price_scripts([spec['quote_policy']], now, get_offer(db, row, route))[0]
