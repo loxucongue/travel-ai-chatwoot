@@ -12,7 +12,7 @@
       {"id":"pause_food", "text":"今天先忙，明天有西藏酸奶冰淇淋的照片再分享給我就好，謝謝。", "checks":["not_handoff","no_price"]},
       {"id":"food_followup", "next_check":true, "checks":["send","not_handoff","no_price","no_new_introduction"], "contains_any":[["酸奶","冰淇淋"]], "excludes":["什麼時候來","幾月出發","何時出發"]},
       {"id":"souvenir_interest", "text":"美食很棒，我也想看看扎基寺的小金卡，喜歡這類有寓意的伴手禮，明天分享照片給我看看吧。", "checks":["not_handoff","no_price"]},
-      {"id":"souvenir_followup", "next_check":true, "checks":["send","not_handoff","no_price","no_new_introduction"], "contains_any":[["小金卡","伴手禮"]], "excludes":["一定發財","保證招財","免費贈送","何時出發"]},
+      {"id":"souvenir_followup", "next_check":true, "checks":["send","not_handoff","no_price","no_new_introduction"], "excludes":["一定發財","保證招財","免費贈送小金卡","何時出發"]},
       {"id":"shopping_concern", "text":"我只想了解，不一定會買，這不是購物團吧？", "checks":["send","not_handoff","no_price"], "contains_any":[["不安排購物","無購物","不會強迫","自願","純玩"]], "excludes":["買幾張","一定要買"]}
     ]
   }

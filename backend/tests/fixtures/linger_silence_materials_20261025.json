@@ -1,0 +1,32 @@
+[
+  {
+    "id":"food_silence_photo",
+    "title":"美食兴趣客户未索图，沉默跟进按兴趣分享美食图，回来继续聊",
+    "entry":"3~4月｜西藏桃花節＋珠峰 11日",
+    "known_entry":true,
+    "now":"2026-10-25T02:00:00+00:00",
+    "steps":[
+      {"id":"party","text":"兩位朋友一起，先了解","checks":["not_handoff","no_price"]},
+      {"id":"date","text":"想在2027年3月26日出發，現在先了解就好，不用聯絡方式","checks":["not_handoff","no_price"]},
+      {"id":"interest","text":"我跟朋友都喜歡乳製品，很期待西藏的氂牛酸奶和冰淇淋，這趟最在意美食。","checks":["not_handoff","no_price"]},
+      {"id":"pause","text":"嗯嗯，我先去忙，之後再聊當地美食吧。","checks":["not_handoff","no_price"]},
+      {"id":"silence","next_check":true,"checks":["send","not_handoff","no_price","no_new_introduction"],"contains_any":[["酸奶","冰淇淋"]],"excludes":["何時出發","幾月出發"]},
+      {"id":"return","text":"你說的這些小吃有包含在團費裡嗎？","checks":["send","not_handoff","no_price"],"contains_any":[["不包含","不含","自費","自己","自理"]],"excludes":["免費贈送冰淇淋","免費贈送酸奶"]}
+    ]
+  },
+  {
+    "id":"souvenir_silence_photo",
+    "title":"喜欢民俗伴手礼，沉默跟进展示小金卡，回来确认不购物团",
+    "entry":"3~4月｜西藏桃花節＋珠峰 11日",
+    "known_entry":true,
+    "now":"2026-10-25T02:00:00+00:00",
+    "steps":[
+      {"id":"party","text":"我和朋友兩位，先看行程","checks":["not_handoff","no_price"]},
+      {"id":"date","text":"明年2027年3月26日想出發，先在這裡聊聊，不用LINE。","checks":["not_handoff","no_price"]},
+      {"id":"interest","text":"我們很喜歡有當地寓意的小伴手禮，像扎基寺的小金卡就蠻有興趣，不一定買，但很喜歡了解這些文化。","checks":["not_handoff","no_price"],"excludes":["保證招財","一定發財"]},
+      {"id":"pause","text":"我先忙一下，之後再聊藏地伴手禮，謝謝～","checks":["not_handoff","no_price"]},
+      {"id":"silence","next_check":true,"checks":["send","not_handoff","no_price","no_new_introduction"],"contains_any":[["小金卡","伴手禮"]],"excludes":["保證招財","一定發財","免費贈送小金卡","何時出發"]},
+      {"id":"return","text":"如果我不想買這個，可以不買吧？這個團沒有購物站對嗎？","checks":["send","not_handoff","no_price"],"contains_any":[["自願","不買","無購物","不安排購物","不會強迫"]],"excludes":["買幾張","一定要買","保證招財"]}
+    ]
+  }
+]
