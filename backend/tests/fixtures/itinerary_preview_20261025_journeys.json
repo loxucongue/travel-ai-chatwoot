@@ -1,0 +1,164 @@
+[
+  {
+    "id": "private_entry_420_preview_then_details",
+    "title": "#420包团入口先看图，后问详情价格，确认前不锁定线路",
+    "entry": "我人數有4位以上，想自己包團",
+    "known_entry": false,
+    "entry_checks": [
+      "one_itinerary_map",
+      "not_handoff",
+      "no_price"
+    ],
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "request",
+        "text": "都可以評估考量,請傳詳細行程表與價錢給我謝謝您",
+        "checks": [
+          "no_new_introduction",
+          "no_itinerary_map"
+        ],
+        "expected_route": "",
+        "excludes": [
+          "D1 林芝",
+          "D2 色季拉",
+          "等於13,180",
+          "等於11,180"
+        ]
+      },
+      {
+        "id": "range",
+        "text": "還沒確定幾位，只知道4位以上；先不要算總價",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction"
+        ]
+      },
+      {
+        "id": "date",
+        "text": "我們想2027年3月26日出發，先和家人討論",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction"
+        ]
+      },
+      {
+        "id": "choose",
+        "text": "那就選桃花11日，請給我後面的介紹",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "expected_route": "peach_11d_2027",
+        "excludes": [
+          "比10日多2天",
+          "比10天多兩天"
+        ]
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "包團的行程也是照這張圖對嗎？",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction",
+          "no_itinerary_map"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "private_entry_417_latest_route_preview",
+    "title": "#417连续表达两条路线及包团，先给最近路线参考图再解释",
+    "entry": "西藏精華-8天 拉薩+珠峰\n3~4月｜西藏桃花節＋珠峰 11日\n我人數有4位以上，想自己包團",
+    "known_entry": false,
+    "entry_checks": [
+      "one_itinerary_map",
+      "not_handoff",
+      "no_price"
+    ],
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "scope",
+        "text": "先看桃花11日的圖就好，還沒選定",
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "no_itinerary_map"
+        ],
+        "expected_route": ""
+      },
+      {
+        "id": "difference",
+        "text": "11日跟8日都包含珠峰對嗎？",
+        "checks": [
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "contains_any": [
+          [
+            "都",
+            "兩條"
+          ]
+        ],
+        "excludes": [
+          "8日沒有珠峰",
+          "8天沒有珠峰"
+        ]
+      },
+      {
+        "id": "date",
+        "text": "2027年3月26日，4位家人，想自己一團，先在這裡看",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "choose",
+        "text": "就選桃花11日，請繼續介紹住宿和車子",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_itinerary_map",
+          "no_contact"
+        ],
+        "expected_route": "peach_11d_2027"
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction",
+          "no_contact"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "4位可以自己一團，不會和陌生人拼在一起吧？",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction",
+          "no_contact"
+        ]
+      }
+    ]
+  }
+]

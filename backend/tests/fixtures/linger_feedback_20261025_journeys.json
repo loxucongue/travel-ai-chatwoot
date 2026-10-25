@@ -1,0 +1,263 @@
+[
+  {
+    "id": "regular_pair_longer_then_constraint",
+    "title": "连续点击8日和10日，先10日，随后尊重8日限制",
+    "entry": "西藏精華-8天 拉薩+珠峰",
+    "known_entry": true,
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "second_card",
+        "text": "西藏全覽-10天 林芝+拉薩+珠峰",
+        "seconds": 11,
+        "checks": [
+          "no_send"
+        ],
+        "expected_route": "tibet_overview_10d"
+      },
+      {
+        "id": "intro",
+        "seconds": 35,
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "兩條都有珠峰"
+          ],
+          [
+            "林芝"
+          ]
+        ],
+        "excludes": [
+          "差珠峰兩天",
+          "差珠峰2天"
+        ]
+      },
+      {
+        "id": "month",
+        "text": "明年6月，我們2位朋友同行，先在這裡看",
+        "checks": [
+          "not_handoff",
+          "no_new_introduction"
+        ]
+      },
+      {
+        "id": "difference",
+        "text": "8天是沒有珠峰嗎？",
+        "checks": [
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "contains_any": [
+          [
+            "都有珠峰",
+            "也有珠峰",
+            "含珠峰",
+            "包含珠峰",
+            "有去珠峰",
+            "有到珠峰",
+            "有珠峰"
+          ]
+        ]
+      },
+      {
+        "id": "shorter",
+        "text": "我只有8天假期，就選精華8天，請介紹",
+        "checks": [
+          "not_handoff"
+        ],
+        "expected_route": "tibet_essence_8d"
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "拉薩集合沒問題，還是兩位朋友",
+        "checks": [
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "expected_route": "tibet_essence_8d"
+      }
+    ]
+  },
+  {
+    "id": "peach_pair_like_mid_intro",
+    "title": "先点11日再9日，点赞不中断介绍，明确不要珠峰才换9日",
+    "entry": "3~4月｜西藏桃花節＋珠峰 11日",
+    "known_entry": true,
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "second_card",
+        "text": "3~4月｜西藏桃花節不上珠峰 9日",
+        "seconds": 11,
+        "checks": [
+          "no_send"
+        ],
+        "expected_route": "peach_11d_2027"
+      },
+      {
+        "id": "start",
+        "seconds": 90,
+        "drain": false,
+        "checks": [
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "like",
+        "text": "👍",
+        "attachments": [
+          {
+            "id": 1025,
+            "file_type": "image",
+            "data_url": "https://app.chatwoot.com/rails/active_storage/blobs/redirect/test/thumb.png"
+          }
+        ],
+        "checks": [
+          "not_handoff"
+        ],
+        "expected_route": "peach_11d_2027",
+        "excludes": [
+          "看不清",
+          "用文字說明",
+          "重新傳"
+        ]
+      },
+      {
+        "id": "party",
+        "text": "我們3位朋友，2027年3月26日，先在這裡看",
+        "checks": [
+          "not_handoff",
+          "no_new_introduction"
+        ]
+      },
+      {
+        "id": "shorter",
+        "text": "我們決定不上珠峰，改選桃花9日，給我看9日的行程",
+        "checks": [
+          "not_handoff"
+        ],
+        "expected_route": "peach_9d_2027"
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "excludes": [
+          "珠峰大本營附近拍到的星空",
+          "絨布旅館"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "9天還有車上的氧氣設備嗎？",
+        "checks": [
+          "not_handoff"
+        ],
+        "expected_route": "peach_9d_2027"
+      }
+    ]
+  },
+  {
+    "id": "like_after_intro_food_followup",
+    "title": "介绍后点赞继续话题，美食兴趣跨沉默保留，避免虚构包含",
+    "entry": "3~4月｜西藏桃花節不上珠峰 9日",
+    "known_entry": true,
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "party",
+        "text": "我們2位朋友，2027年3月26日，先在這裡了解",
+        "checks": [
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "like",
+        "text": "👍",
+        "attachments": [
+          {
+            "id": 1025,
+            "file_type": "image",
+            "data_url": "https://app.chatwoot.com/rails/active_storage/blobs/redirect/test/thumb.png"
+          }
+        ],
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact"
+        ],
+        "excludes": [
+          "看不清",
+          "重新傳",
+          "用文字說明"
+        ]
+      },
+      {
+        "id": "interest",
+        "text": "我最有興趣的是當地美食，尤其氂牛酸奶",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ]
+      },
+      {
+        "id": "plan",
+        "text": "行程先慢慢看，美食你可以再分享給我",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ]
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "text_only",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "酸奶",
+            "冰淇淋",
+            "美食"
+          ]
+        ],
+        "excludes": [
+          "打算什麼時候",
+          "幾位同行",
+          "免費贈送氂牛"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "這些美食是自己買對嗎？",
+        "checks": [
+          "not_handoff"
+        ],
+        "excludes": [
+          "全都免費",
+          "全部包含",
+          "免費贈送"
+        ]
+      }
+    ]
+  }
+]

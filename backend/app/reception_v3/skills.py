@@ -61,6 +61,7 @@ def compile_skills(db, now=None):
             'facts': deepcopy(route['knowledge_facts']),
             'guidance': route.get('ai_guidance', ''),
             'intake': deepcopy(route.get('intake')),
+            'entry_comparison': deepcopy(route.get('entry_comparison')),
             'seasonal_pricing': deepcopy(route.get('seasonal_pricing')),
             'departure_availability': deepcopy(route.get('departure_availability')),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
@@ -159,6 +160,8 @@ class SkillRegistry:
             body += f"\n\n## 当前线路\nID：{route_id}\n版本：{route['version']}"
             if route.get('intake'):
                 body += '\n线路专属开场问题（覆盖通用人数开场）：' + json.dumps(route['intake'], ensure_ascii=False)
+            if route.get('entry_comparison'):
+                body += '\n同时询问配对线路时的默认展示顺序（明确偏好、天数和日期优先）：' + json.dumps(route['entry_comparison'], ensure_ascii=False)
             if route.get('seasonal_pricing'):
                 body += '\n分季报价规则：' + json.dumps(route['seasonal_pricing'], ensure_ascii=False)
             if route.get('departure_availability'):

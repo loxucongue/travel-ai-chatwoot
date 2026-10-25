@@ -72,7 +72,7 @@ def package_delta(original):
     return p
 
 
-def configure_assets(db, media_dir, files):
+def configure_assets(db, media_dir, files, *, photos=None, prefix=PREFIX, source=SOURCE):
     from sqlalchemy import select
     from app.models import KnowledgeVersion, MaterialAsset, StoredMedia, User
     from app.route_packages import KNOWLEDGE_VERSION
@@ -84,7 +84,7 @@ def configure_assets(db, media_dir, files):
     media_dir = Path(media_dir)
     media_dir.mkdir(parents=True, exist_ok=True)
     result = []
-    for topic, spec in PHOTOS.items():
+    for topic, spec in (PHOTOS if photos is None else photos).items():
         raw = Path(files[topic]).read_bytes()
         assert hashlib.sha256(raw).hexdigest() == spec['hash'], 'source_photo_changed'
         path = media_dir / (spec['hash'] + Path(spec['filename']).suffix)
@@ -105,9 +105,9 @@ def configure_assets(db, media_dir, files):
                 available=True, metadata_json={})
             db.add(asset); db.flush()
         replace_asset_binding(db, asset, media, metadata_updates={
-            'route_variants': list(spec['routes']), 'content_group_key': PREFIX + topic,
+            'route_variants': list(spec['routes']), 'content_group_key': prefix + topic,
             'content_family': 'tibet:followup:' + topic, 'review_state': 'approved', 'live_approved': True,
-            'source': SOURCE, 'source_filename': spec['filename'], 'sha256': spec['hash'], 'byte_size':len(raw),
+            'source': source, 'source_filename': spec['filename'], 'sha256': spec['hash'], 'byte_size':len(raw),
             'what_it_shows': spec['shows'], 'feature_points': [spec['name']],
             'recommended_caption': spec['caption'], 'customer_value': '了解西藏旅程體驗與純玩承諾。',
             'avoid_claims': spec['avoid'],

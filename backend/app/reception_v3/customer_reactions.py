@@ -12,7 +12,7 @@ from PIL import Image
 VERIFIED_STICKERS = {
     '9f0a5eafc0cef32f2e39d1fd2e54faaf29f77943a85431dd6243e00a8347da39': 'thumbs_up',
 }
-REACTION_TEXT = '已识别为点赞贴图，意思相当于「嗯嗯／收到」。不是图片咨询，也不表示同意报名、日期、换线、加好友或独立成团。'
+REACTION_TEXT = '已识别为点赞贴图，意思相当于「嗯嗯／收到」。对刚介绍的行程表示认可：介绍中继续原队列，介绍后承接当前行程话题，不要求重发图片。新增承接用text，不另发script_id或asset_keys。不表示同意报名、日期、换线、加好友或独立成团。'
 
 
 def recognize_sticker(encoded):

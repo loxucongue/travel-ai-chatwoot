@@ -8,6 +8,58 @@ ROUTE_DAYS = {'peach_9d_2027': 9, 'peach_11d_2027': 11, LINZHI: 8,
               'tibet_essence_8d': 8, 'tibet_overview_10d': 10, 'tibet_winter_8d': 8}
 
 
+def advertisement_route(text, routes):
+    """Match whole configured product titles, with the same punctuation as labels.
+
+    Short intent aliases such as '不上珠峰' are not advertisement cards.
+    """
+    from app.engagement_labels import normalized, route_title_key
+    text = re.sub(r'^\d{1,2}[~～–-]\d{1,2}月[|｜]', '', normalized(text))
+    matched = []
+    for key, spec in routes.items():
+        titles = [key, spec['name'], *[a for a in spec.get('aliases', [])
+                  if re.search(r'(?:\d+|[一二三四五六七八九十]+)\s*(?:天|日|[dD]|-day)', a)]]
+        if route_title_key(text) in {route_title_key(a) for a in titles}:
+            matched.append(key)
+    return matched[0] if len(matched) == 1 else ''
+
+
+def entry_comparison(messages, routes):
+    """Only consecutive exact advertisement entries, never free-text preferences.
+
+    The caller restricts this to intake before any itinerary has started.
+    Product pairing and customer wording belong to the editable route package.
+    """
+    from datetime import datetime
+    incoming = [m for m in messages if m.get('direction') == 'incoming']
+    if len(incoming) < 2 or any(m.get('attachments') for m in incoming):
+        return None
+    try:
+        elapsed = (datetime.fromisoformat(incoming[-1]['created_at'].replace('Z', '+00:00')) -
+                   datetime.fromisoformat(incoming[0]['created_at'].replace('Z', '+00:00'))).total_seconds()
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return None
+    if not 0 <= elapsed <= 120:
+        return None
+    selected = set()
+    for message in incoming:
+        route = advertisement_route(message.get('content') or '', routes)
+        if not route:
+            return None
+        selected.add(route)
+    if len(selected) != 2:
+        return None
+    first, second = sorted(selected)
+    rule = routes[first].get('entry_comparison') or {}
+    reverse = routes[second].get('entry_comparison') or {}
+    if (rule.get('other_route') != second or reverse.get('other_route') != first
+            or rule.get('preferred_route') != reverse.get('preferred_route')
+            or rule.get('summary') != reverse.get('summary')
+            or rule.get('preferred_route') not in selected or not rule.get('summary')):
+        return None
+    return {'routes': sorted(selected), 'preferred_route': rule['preferred_route'], 'summary': rule['summary']}
+
+
 def pending_offer_acknowledgement(context):
     if context.get('event') != 'customer_message' or not context.get('profile', {}).get('discussion_route'):
         return False
@@ -19,7 +71,7 @@ def pending_offer_acknowledgement(context):
 
 def explicit_selection(text, target, context):
     """A preference update is not permission to send another full itinerary."""
-    if re.search(r'還沒決定|还没决定|先(?:考慮|考虑|想想)|不(?:要|想)(?:換|换|改|看行程|介紹|介绍)', text):
+    if re.search(r'還沒(?:決定|選定)|还没(?:决定|选定)|都可以評估|都可以评估|先(?:考慮|考虑|想想)|不(?:要|想)(?:換|换|改|看行程|介紹|介绍)', text):
         return False
     offered = context.get('profile', {}).get('discussion_route')
     action = bool(re.search(r'改成|改為|改为|改選|改选|就選|就选|選擇|选择|還是選|还是选|那就|我要|想看|給我看|给我看|請介紹|请介绍|改變主意|改变主意', text))
@@ -69,6 +121,19 @@ def rejected_asset(key, materials, profile):
 
 def choice_error(decision, context):
     routes = context['skills']['routes']
+    # A delivered reference map is evidence of a preview, not a product choice.
+    # Validate this transition independently of product IDs or script wording.
+    if (not context.get('route_variant') and decision['route_variant']
+            and decision['action'] != 'handoff' and not context.get('state', {}).get('human_followup')):
+        from app.reception_v3.material_rules import itinerary_previews
+        maps = itinerary_previews(context['skills'], context.get('available_materials', []),
+                                  context.get('messages', []))
+        if any(a['already_delivered'] for r in maps.values() for a in r['assets']):
+            latest = next((m for m in reversed(context.get('messages', [])) if m.get('direction') == 'incoming'), {})
+            selected_card = advertisement_route(latest.get('content', ''), routes) == decision['route_variant']
+            if (context.get('event') != 'customer_message'
+                    or not (selected_card or explicit_selection(latest.get('content', ''), decision['route_variant'], context))):
+                return '上方只是參考行程圖；詢問詳情或價錢不等於正式選線。保留空route_variant，不開始整套介紹；需討論此線時用recommend及discussion_route。'
     if (not (PEACH_ROUTES & routes.keys() or LINZHI in routes) or decision['action'] == 'handoff'
             or context.get('state', {}).get('human_followup')):
         return None

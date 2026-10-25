@@ -12,7 +12,7 @@ from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
 from app.reception_v3.prompt import SYSTEM_PROMPT
 from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
-from app.reception_v3.route_choice import LINZHI, PEACH_ROUTES, choice_error, pending_offer_acknowledgement
+from app.reception_v3.route_choice import PEACH_ROUTES, choice_error, pending_offer_acknowledgement
 
 
 class Message(BaseModel):
@@ -112,6 +112,11 @@ def run_agent(context: dict):
     # Send actual speech with chat roles so repeated invitations are visible.
     current['state'] = {key: value for key, value in current.get('state', {}).items()
                         if key != 'last_reason'}
+    if context.get('event') == 'customer_message':
+        from app.reception_v3.material_rules import itinerary_previews
+        current['itinerary_previews'] = itinerary_previews(
+            context['skills'], context.get('available_materials', []),
+            context.get('messages', []), context.get('profile', {}))
     if context.get('event') == 'silence_due' or context.get('state', {}).get('followup_return'):
         current['interaction_task'] = {
             'kind': 'returned_after_followup' if context.get('state', {}).get('followup_return') else 'contextual_followup',
@@ -357,7 +362,8 @@ def run_agent(context: dict):
             # entry. This loads context; it does not audit or edit reply text.
             if acknowledgement_only and invalid_ack_decision(decision, context):
                 log.update(status='acknowledgement_guard', rejected_decision=decision)
-                decision = Decision(action='wait', reason='已识别为点赞回应，保留原接待状态，等待客户进一步说明。').model_dump()
+                decision = Decision(action='queue' if context.get('state', {}).get('delivery_kind') == 'introduction' else 'wait',
+                                    reason='已识别为点赞回应，保留当前行程与介绍队列，不据此确认其他事项。').model_dump()
             choice_problem = choice_error(decision, context)
             if choice_problem:
                 log.update(status='route_choice_rejected', validation_error=choice_problem,
@@ -380,7 +386,9 @@ def run_agent(context: dict):
                 continue
             target = proposed or context.get('route_variant', '')
             checking_choice = offered or decision['start_introduction']
-            if target in (PEACH_ROUTES | {LINZHI}) and checking_choice and target not in availability_results:
+            target_spec = context['skills']['routes'].get(target, {})
+            dated_product = bool(target_spec.get('departure_availability') or target_spec.get('seasonal_pricing'))
+            if dated_product and checking_choice and target not in availability_results:
                 # Reuse only persisted date evidence, not dates invented in the
                 # current model response. A change of product invalidates its price.
                 evidence = month_check or (previous_check if not mentions_departure_time(latest.get('content','')) else {})
@@ -406,7 +414,7 @@ def run_agent(context: dict):
                 require_interrupt=(context.get('event') != 'silence_due' or
                                    context.get('state', {}).get('delivery_kind') in ('introduction', 'intake')))
             profile_with_update = {**context.get('profile', {}), **decision['profile']}
-            if (target in (PEACH_ROUTES | {LINZHI}) and checking_choice and target not in availability_results
+            if (dated_product and checking_choice and target not in availability_results
                     and any(profile_with_update.get(k) for k in ('departure_window','departure_date_start'))):
                 quote_problem = '已知出發時間，推薦或開始替代線介紹前須用get_departure_quote核對該線日期；不能沿用另一線的可售或價格判斷。'
             offer_check = availability_results.get(target, {})

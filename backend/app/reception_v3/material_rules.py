@@ -3,6 +3,34 @@ import hashlib
 import json
 
 
+def itinerary_previews(bundle, materials, messages, profile=None):
+    """Expose approved route-map references even before a route Skill is loaded.
+
+    The existing material content-group roles identify maps. Filenames, route
+    IDs and image appearance never decide which attachment is an itinerary.
+    """
+    from app.reception_v3.route_choice import rejects_current_route
+    delivered = [m for m in messages if m.get('direction') == 'outgoing' and m.get('status') in
+                 ('simulated_delivered', 'submitted', 'sent', 'delivered', 'read')]
+    keys = {m.get('asset_key') for m in delivered} - {None, ''}
+    hashes = {m.get('media_hash') for m in delivered} - {None, ''}
+    ids = {m.get('media_id') for m in delivered} - {None}
+    result = {}
+    for route_id, route in bundle['routes'].items():
+        if rejects_current_route(route_id, profile or {}):
+            continue
+        linked = {a for group in route.get('groups', {}).values() for a in group.get('assets', [])}
+        maps = [m for m in materials if m.get('content_type') == 'image'
+                and m.get('content_group_key') in ('itinerary_overview', 'itinerary')
+                and route_id in m.get('routes', []) and m['key'] in linked]
+        if maps:
+            result[route_id] = {'name':route['name'], 'assets':[
+                {'key':m['key'], 'name':m.get('name', ''), 'what_it_shows':m.get('what_it_shows', ''),
+                 'already_delivered':(m['key'] in keys or m.get('media_hash') in hashes or m.get('media_id') in ids)}
+                for m in maps]}
+    return result
+
+
 def rule_digest(rule):
     return hashlib.sha256(json.dumps(rule, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 

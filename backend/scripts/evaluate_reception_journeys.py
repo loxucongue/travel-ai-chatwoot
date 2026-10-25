@@ -250,6 +250,16 @@ def main():
                                     or not photos[0].get('media_hash') or photos[0]['media_hash'] in previous_hashes
                                     or photos[0].get('route_variant') != row.controls.get('route_variant')):
                                 failures.append(check)
+                        if check in ('one_itinerary_map', 'no_itinerary_map'):
+                            from app.reception_v3.material_rules import itinerary_previews
+                            previews = itinerary_previews(bundle,snapshot['materials'],[])
+                            expected = step.get('itinerary_route')
+                            keys = {a['key'] for route,p in previews.items() if not expected or route==expected
+                                    for a in p['assets']}
+                            maps = [m for m in emitted if m.get('content_type')=='image' and m.get('asset_key') in keys]
+                            if ((check=='one_itinerary_map' and (len(maps)!=1 or not maps[0].get('media_id') or not maps[0].get('media_hash')))
+                                    or (check=='no_itinerary_map' and maps)):
+                                failures.append(check)
                         if check=='text_only' and any(m.get('content_type') != 'text' for m in emitted):failures.append(check)
                         if check=='no_third_person' and re.search(r'顧問可以|請顧問|讓顧問|轉人工|轉給顧問|轉接真人|由顧問',text):failures.append(check)
                         if check=='exact_quote':

@@ -88,6 +88,15 @@ def _validate(package: dict, source: Path) -> dict:
             f"route_package_initial_delivery_interval_invalid:{route_id}"
         )
     package["initial_delivery_interval_seconds"] = initial_delivery_interval
+    comparison = package.get("entry_comparison")
+    if comparison is not None:
+        if (not isinstance(comparison, dict)
+                or set(comparison) != {"other_route", "preferred_route", "summary"}
+                or not all(isinstance(v, str) and v.strip() for v in comparison.values())
+                or comparison["other_route"] == route_id
+                or comparison["preferred_route"] not in (route_id, comparison["other_route"])
+                or len(comparison["summary"]) > 500):
+            raise RoutePackageError(f"route_package_entry_comparison_invalid:{route_id}")
     intake = package.get("intake")
     if intake is not None:
         if (not isinstance(intake, dict) or intake.get("field") not in ("party_size", "departure_window")
@@ -344,6 +353,7 @@ def reload_route_packages() -> None:
         "default_entry_message": package["default_entry_message"],
         "ai_guidance": package.get("ai_guidance", ""),
         "intake": deepcopy(package.get("intake")),
+        "entry_comparison": deepcopy(package.get("entry_comparison")),
         "seasonal_pricing": deepcopy(package.get("seasonal_pricing")),
         "departure_availability": deepcopy(package.get("departure_availability")),
         "initial_delivery_interval_seconds": package["initial_delivery_interval_seconds"],

@@ -231,6 +231,22 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
         from app.reception_v3.customer_images import attachment_metadata
         incoming['attachments'] = attachment_metadata(attachments)
     row.messages = [*row.messages, incoming]
+    # Clicking a second configured product card during intake is comparison,
+    # not an answer to the intake question or permission to replay two tours.
+    if (value.get('intake_status') in ('sending', 'waiting')
+            and not value.get('introduction_route') and not value.get('completed_introductions')
+            and not value.get('handoff') and not value.get('opt_out') and not row.memory):
+        from app.reception_v3.route_choice import entry_comparison
+        comparison = entry_comparison(row.messages, compile_skills(db)['routes'])
+        if comparison:
+            row.controls = {**row.controls, 'route_variant': comparison['preferred_route']}
+            value['entry_comparison'] = comparison
+            value['followup_last_customer_at'] = row.virtual_now
+            value['buffered_questions'] = [*value.get('buffered_questions', []), client_key]
+            value['pending_event'] = None
+            save(row, value)
+            row.due_at = None
+            return
     if value.get('delivery_kind') == 'introduction' and mentions_departure_time(content):
         # The customer may answer after the 30-second intake timer fired. Stop
         # delivery immediately, before a model/network round trip can leak old media.
@@ -260,8 +276,8 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
         bundle = compile_skills(db)
         if bundle.get('intake', {}).get('enabled'):
             # Exact configured advertisement titles only; free text is understood by the Agent.
-            route = next((key for key, spec in bundle['routes'].items()
-                          if content.strip() in [key, spec['name'], *spec.get('aliases', [])]), '')
+            from app.reception_v3.route_choice import advertisement_route
+            route = advertisement_route(content, bundle['routes'])
             begin_intake(row, value, bundle, route)
         else:
             value['opening_started'] = True
@@ -383,6 +399,14 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         if not route:
             raise ValueError('v3_introduction_requires_route')
         spec = bundle['routes'][route]
+        from app.reception_v3.material_rules import itinerary_previews
+        preview = itinerary_previews(bundle, list(materials.values()), row.messages).get(route, {})
+        itinerary_keys = {m['key'] for m in preview.get('assets', [])}
+        comparison = state(row).get('entry_comparison') or {}
+        if (comparison.get('preferred_route') == route
+                and not any(m.get('entry_comparison_summary') for m in delivered)):
+            add(comparison['summary'], [])
+            parts[-1]['entry_comparison_summary'] = True
         previous_route = row.controls.get('route_variant', '')
         switching = bool(previous_route and previous_route != route and (
             state(row).get('introduction_route') or state(row).get('completed_introductions')
@@ -391,7 +415,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         for key in sequence or spec['introduction_sequence']:
             group = seasonal_group(spec['groups'][key], row.memory or {})
             add(group['text'], group['assets'], group.get('delivery_mode', 'assets_then_text'),
-                deduplicate=switching)
+                deduplicate=switching or bool(itinerary_keys.intersection(group['assets'])))
     return route, parts
 
 

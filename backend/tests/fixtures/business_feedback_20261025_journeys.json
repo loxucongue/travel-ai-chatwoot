@@ -1,0 +1,308 @@
+[
+  {
+    "id": "two_people_departure",
+    "title": "两人即可发团，单人可报名，但不保证单人出发或两人独享车",
+    "entry": "西藏精華-8天 拉薩+珠峰",
+    "known_entry": true,
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "month",
+        "text": "明年6月，先在這裡了解",
+        "checks": [
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "one_person",
+        "text": "我一個人可以報名嗎？會不會人不夠就不出發？",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "2",
+            "兩"
+          ],
+          [
+            "6",
+            "六"
+          ]
+        ],
+        "excludes": [
+          "4人成團",
+          "滿4人",
+          "滿四人",
+          "一定會出發"
+        ]
+      },
+      {
+        "id": "two_people",
+        "text": "現在有朋友要一起，我們2位就能發團了嗎？",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "2",
+            "兩"
+          ]
+        ],
+        "excludes": [
+          "4人成團",
+          "要再找兩位",
+          "只有你們兩位"
+        ]
+      },
+      {
+        "id": "shared_car",
+        "text": "我們選拼團，車上就只有我們兩個嗎？",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "其他旅客",
+            "其他客人",
+            "其他團友"
+          ]
+        ]
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "excludes": [
+          "4人成團",
+          "滿4人",
+          "滿四人"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "兩位拼團可以自己選任何一天嗎？",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "定班",
+            "週四",
+            "固定",
+            "公布",
+            "團期"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "may_eight_days_no_everest",
+    "title": "从桃花进线，跨轮说明明年五月、八天、不去珠峰，不再推荐冬游",
+    "entry": "3~4月｜西藏桃花節不上珠峰 9日",
+    "known_entry": true,
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "party",
+        "text": "一個人，先在這裡看就好",
+        "checks": [
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "month",
+        "text": "明年5月",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "excludes": [
+          "冬遊冰川8天",
+          "來古冰川",
+          "沒有五月行程"
+        ]
+      },
+      {
+        "id": "constraint",
+        "text": "8天，不去珠峰，可以先了解行程？",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "林芝"
+          ]
+        ],
+        "excludes": [
+          "冬遊冰川",
+          "來古冰川",
+          "沒有現成團期",
+          "目前沒有現成"
+        ]
+      },
+      {
+        "id": "accept",
+        "text": "那就林芝入藏8日，2027年5月11日，給我完整行程",
+        "checks": [
+          "not_handoff"
+        ],
+        "expected_route": "tibet_linzhi_8d",
+        "excludes": [
+          "冬遊冰川",
+          "來古冰川"
+        ]
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "excludes": [
+          "冬遊冰川",
+          "來古冰川",
+          "4人成團"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "這條的卡若拉冰川有安排嗎？",
+        "checks": [
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "有",
+            "安排"
+          ]
+        ],
+        "excludes": [
+          "來古冰川",
+          "冬遊冰川"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "long_drive_shared_group",
+    "title": "长途乘车与停留顾虑，强调小团舒适和休息，不承诺随意改变拼团行程",
+    "entry": "桃花加珠峰11日",
+    "known_entry": true,
+    "now": "2026-10-25T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "party",
+        "text": "我們2位，2027年3月26日，選拼團",
+        "checks": [
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "distance",
+        "text": "景點之間會不會移動太遠？我擔心一直坐車累",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "小團",
+            "人少"
+          ],
+          [
+            "休息",
+            "廁所"
+          ],
+          [
+            "座椅",
+            "座位",
+            "VIP"
+          ]
+        ],
+        "excludes": [
+          "都是短程",
+          "想停就停",
+          "一定不會累"
+        ]
+      },
+      {
+        "id": "stay",
+        "text": "那我能要求每個景點多停一小時嗎？",
+        "checks": [
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "拼團"
+          ],
+          [
+            "不能",
+            "無法",
+            "不適合",
+            "不可以",
+            "沒辦法"
+          ]
+        ],
+        "excludes": [
+          "可以隨意",
+          "想停就停"
+        ]
+      },
+      {
+        "id": "oxygen",
+        "text": "了解，車上供氧和座椅舒服就好。先在這裡看",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "excludes": [
+          "保證不會高反",
+          "隨叫隨停"
+        ]
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction"
+        ],
+        "excludes": [
+          "想停就停",
+          "隨叫隨停",
+          "可以隨意延長"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "沿途會找地方上廁所和休息對嗎？",
+        "checks": [
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "導遊",
+            "司機"
+          ],
+          [
+            "休息",
+            "廁所"
+          ]
+        ]
+      }
+    ]
+  }
+]
