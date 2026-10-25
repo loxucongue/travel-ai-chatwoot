@@ -4,7 +4,8 @@
 <style>body{max-width:1100px;margin:40px auto;padding:0 24px;font:16px/1.7 system-ui;color:#203047}h1{font-size:28px}h2{font-size:21px;margin-top:32px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd5df;padding:12px;text-align:left;vertical-align:top}th{background:#edf3f8}.pending{background:#fff4db;padding:16px;border-left:4px solid #b58320}pre{white-space:pre-wrap;background:#edf3f8;padding:16px}small{color:#536579}</style>
 <h1>10月25日素材与报价补充需求验收记录</h1>
 <p>范围：麗麗10月24日19:50报价格式，以及Linger10月25日16:00–16:01重新整理的五组图文。本文仅记录本批增量，不替代之前的上线清单。</p>
-<p class="pending"><strong>当前状态：五组素材验收通过，准备发布。</strong>52项自动化测试及3条真实模型完整对话通过，共19轮客户输入、23个检查点。生产副本发布预检通过。报价计算等待明确优惠计价单位，生产报价未改动。</p>
+<p class="pending"><strong>五组素材已于2026年10月25日20:30（北京时间）上线。</strong>52项自动化测试及3条真实模型完整对话通过，共19轮客户输入、23个检查点。上线后3个服务正常、5张图片文件和绑定验证通过，旧图片身份保留，没有新增失败运行或近期异常堆栈。本次发布未改报价。随后用户已确认多人优惠按每人扣减，报价单独继续开发。</p>
+<p>发布：<code>feedback-20261025-20261025T121509Z</code>；发布代码：<code>da426f95adb8d2647e145a8a6658799f62dd8507</code>。已保留代码、配置和数据库备份；回滚只恢复本批配置及素材，不回退客户消息历史。</p>
 <h2>素材要求与实现</h2>
 <table><tr><th>主题</th><th>本次处理</th><th>预期业务效果</th></tr>
 <tr><td>日照金山</td><td>更新为本次批准文案，复用原有图片及规则ID。</td><td>按上下文分享景色；“今日份”表示今天分享，不声称今天拍摄；已知日期不再问日期。</td></tr>
@@ -32,7 +33,7 @@
 不含：機票、午晚餐、小費、個人花費</pre>
 <p>原始文件：<a href="../../data/knowledge/china2go/price-sheet-20261014/2027-售價表總表-1002.xlsx">2027-售價表總表-1002.xlsx</a>，工作表“西藏”，单元格A41“参团备注”第6条。已直接读取原始Excel，校验文件哈希及与存档提取内容一致。原文为：“6. 多人優惠政策：4人報名-200，6人報名-400，8人報名-600，10人報名-800..以此列推”。未写明按每人还是整单扣减。</p>
 <p>既有资料确认桃花11日原价12,780元／人、9日10,780元／人；A41第4条的“4人独立成团原价+400/人”是另一条独团加价规则，不能与多人优惠混为一谈。</p>
-<p>例如11日4位拼团，不考虑其他费用：如果每人减200，则12,580元／人；如果整单减200，则12,730元／人。这是实际金额差异，无法仅凭展示模板决定。需明确该单位后，再将经确认的人数规则配置化接入现有报价链路，验证人数变更、拼团／独团、跨线路和完整多轮报价。此项未修改生产报价，也没有把未知金额交给模型猜测。</p>
+<p><strong>用户后续确认：上述多人优惠按每人扣减。</strong>因此11日4位拼团按原价12,780减每人200，为12,580元／人；6位按原价减每人400，为12,380元／人。报价继续单独开发和测试，不包含在本次图文发布内。</p>
 <h2>复现资料</h2>
 <ul><li>导入脚本：<code>backend/scripts/configure_linger_materials_20261025.py</code></li>
 <li>自动化用例：<code>backend/tests/test_linger_materials_revision.py</code></li>
