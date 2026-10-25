@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>四线路上线记录 · 2026-10-14</title>
+<style>
+body{max-width:1120px;margin:auto;padding:30px;font:16px/1.75 system-ui,sans-serif;background:#f5f7fa;color:#193346}
+h1{font-size:28px}h2{font-size:22px;margin-top:28px}table{border-collapse:collapse;width:100%;background:#fff}
+th,td{border:1px solid #d4dce3;padding:12px;text-align:left;vertical-align:top}th{background:#eaf0f5}
+.ok{padding:18px;background:#e1f1e8;border-left:4px solid #20865e}.note{padding:18px;background:#fff1cc;border-left:4px solid #c49321}
+a{color:#116c9c}code{overflow-wrap:anywhere}li{margin:8px 0}
+</style>
+<h1>四线路上线记录 · 2026-10-14</h1>
+<p class="note">本页保留18:25线路发布记录。沉默节奏已被20:34版本替代：<a href="daily-followup-20261014.html">查看最新“次日09:00、每天一次”及接待口吻更新</a>。</p>
+<p class="ok"><strong>已上线。</strong>北京时间 18:25 完成发布，18:27 发布后复核通过。原桃花9日、桃花11日保持启用，新增西藏精华8日、全览10日已启用；三项服务运行正常。</p>
+<p class="note"><strong>已完成代码、配置、自动化及生产就绪检查。整体语言效果验收仍有未完成项。</strong>图片点赞分类尚未实现；4个原模型回放和5个季节承接场景仍待真实模型复测。没有向真实客户发送测试消息；发布后未出现新客户对话，不能把服务健康结果当成实际客户效果验收。</p>
+
+<h2>本次上线内容</h2>
+<ul>
+<li>两条新线路导入正式知识库、素材库及启用目录；7档季节价格已与报价表核对，新增32处图片引用对应20张原图。</li>
+<li>四线路按客户日期核对开放时段；季节不开放时可推荐同期已启用产品，或在客户同意后登记开放通知，由顾问跟进。</li>
+<li>阻止模型绕过季节核价直接报团费；日期查询失败、换线路、改为未开放或特殊时段后，旧报价授权失效。</li>
+<li>通用接待读取当前四线路目录，消除“只有两条桃花线”的旧描述。保留原线路活动价、首次报价起30天规则及现有运营配置。</li>
+<li>原线路人数等待120秒、首小时跟随、后续3小时跟随、静默转人工等既有规则保持有效。</li>
+</ul>
+
+<h2>正式环境复核</h2>
+<table>
+<tr><th>线路</th><th>素材就绪</th><th>AI接待 / 介绍流程</th></tr>
+<tr><td>桃花9日（不上珠峰）</td><td>12 / 12</td><td>就绪</td></tr>
+<tr><td>桃花＋珠峰11日</td><td>13 / 13</td><td>就绪</td></tr>
+<tr><td>西藏精华8日（拉萨＋珠峰）</td><td>14 / 14</td><td>就绪</td></tr>
+<tr><td>西藏全览10日（林芝＋拉萨＋珠峰）</td><td>18 / 18</td><td>就绪</td></tr>
+</table>
+<p>健康接口和就绪接口均返回200。接待、维护、消息接收任务心跳正常；待处理事件、回复、通知均为0；发布后系统错误为0；人工接管会话中的待发AI草稿为0。</p>
+<p>发布先在当前生产数据库副本上完成隔离演练，再暂停服务、备份并应用。复核确认：原线路其他内容、全局策略、环境变量及无关设置未变；未重放历史客户消息，未修改广告开关。</p>
+
+<h2>当前跟随和交接口径</h2>
+<table>
+<tr><th>项目</th><th>当前规则</th></tr>
+<tr><td>原桃花线路开场</td><td>先问人数，无回答等待2分钟开始介绍；有普通回答立即继续。</td></tr>
+<tr><td>新8日 / 10日开场</td><td>按新线路页面问出发月份，等待30秒；已知日期时先核对可售时段。</td></tr>
+<tr><td>首小时跟随</td><td>从首次进入计时，第10、25、40、60分钟；01:00–07:00仍保留首小时节点。错过节点不集中补发。</td></tr>
+<tr><td>后续跟随</td><td>每3小时一次，01:00–07:00跳过；客户回复取消旧计划，答复完成后重新按3小时计时。受渠道发送窗口和每日最多12次限制。</td></tr>
+<tr><td>人工接管</td><td>当轮也不向客户发交接提示；取消待发AI内容，仅创建内部任务并通知顾问。人工控制优先。</td></tr>
+</table>
+
+<h2>测试证据与边界</h2>
+<p>后端488项通过、0失败；前端4项通过及构建成功。16项新增集成/日历测试包括四条线路×2027年365天＝1,460个线路日期组合，检查日期规则及推荐结果。集成测试中的模型响应为模拟响应，不能代替真实语言理解验收。本次发布没有新增付费模型调用。</p>
+<ul>
+<li><a href="business-recheck-20261014.html">27项业务要求、实现及逐项测试结论</a></li>
+<li><a href="../../output/new-routes-20261014/deployment-prepare.json">生产数据库副本发布演练</a></li>
+<li><a href="../../output/new-routes-20261014/deployment-deploy.json">正式部署结果与文件哈希</a></li>
+<li><a href="../../output/new-routes-20261014/deployment-verification.json">发布前后配置与数据核对</a></li>
+<li><a href="../../output/new-routes-20261014/deployment-smoke-observed.json">18:27 生产健康、队列和素材就绪记录</a></li>
+<li><a href="../../output/new-routes-20261014/business-full-tests-final.txt">后端全量测试日志</a> · <a href="../../output/new-routes-20261014/business-frontend-tests.txt">前端测试</a> · <a href="../../output/new-routes-20261014/business-frontend-build.txt">前端构建</a></li>
+</ul>
+<p>仍待完成：图片点赞自动分类与真实附件验证；预算受限的真实模型回放；新线路真实客户对话及渠道图文送达观察。开放通知目前由顾问登记跟进，尚无自动监测产品重新开放的服务。未公布年份、特殊假期报价、冬游独立产品及未明确的优惠叠加不自动销售或编造。</p>
+
+<h2>版本与回滚</h2>
+<p>发布编号：<code>tibet-routes-20261014-20261014T102242Z</code><br>运行版本：<code>reception-v3-32514390e782530c</code><br>备份目录：<code>/opt/china2go-ai/backups/tibet-routes-20261014-20261014T102242Z</code></p>
+<p>已发布归档SHA-256：<code>e514d85dc828c3a914f0c29125152bae71b5a8a7364918f4f131d4ae368fadb5</code>。发布包和原验收快照保留，不重新覆盖。</p>
+<p>需要回滚时，项目目录执行 <code>.venv/Scripts/python.exe output/new-routes-20261014/deploy_release.py rollback</code>。流程暂停服务，恢复备份代码、运行时线路包和原启用配置，再启动并检查健康；保留新产生的客户记录，不整库覆盖。新增图片及素材记录可保留为未使用资源。</p>
+</html>

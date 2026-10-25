@@ -14,6 +14,25 @@ from app.models import AppSetting
 AI_RECEPTION_ROLLOUT_KEY = "ai_reception_rollout"
 
 
+def reception_inbox_ids(db):
+    """Explicit multi-inbox opt-in; absent configuration preserves legacy scope.
+
+    Synced inboxes historically default ai_enabled=True, so that flag alone
+    must not silently opt every newly connected channel into live reception.
+    """
+    from app.operations import setting_value
+    configured = setting_value(db, 'route_reception_config', {}).get('routing', {}).get('live_inbox_ids')
+    if configured is None:
+        return [settings.live_reply_inbox_id]
+    if not isinstance(configured, list) or any(type(x) is not int or x <= 0 for x in configured):
+        return []
+    return list(dict.fromkeys(configured))
+
+
+def reception_inbox_allowed(db, inbox_id):
+    return type(inbox_id) is int and inbox_id in reception_inbox_ids(db)
+
+
 def default_engine_assignment() -> dict[str, str]:
     from app.reception_v3 import release_id
     return {"ai_engine_version": "v3", "ai_engine_release_id": release_id()}

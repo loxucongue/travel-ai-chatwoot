@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>每日跟随与接待口吻 · 2026-10-14</title>
+<style>body{font:16px/1.75 system-ui,sans-serif;max-width:1120px;margin:auto;padding:30px;background:#f5f7fa;color:#193346}h1{font-size:28px}h2{font-size:22px;margin-top:28px}table{border-collapse:collapse;background:white;width:100%}th,td{border:1px solid #d4dce3;padding:12px;text-align:left;vertical-align:top}.ok{background:#e1f1e8;border-left:4px solid #20865e;padding:18px}.note{background:#fff1cc;border-left:4px solid #c49321;padding:18px}a{color:#116c9c}code{overflow-wrap:anywhere}li{margin:8px 0}</style>
+<h1>每日跟随与接待口吻 · 2026-10-14</h1>
+<p class="ok"><strong>20:34 已上线。</strong>本次按19:40–19:42的最新业务反馈，调整对客口吻和沉默计划，包含旧会话重新评估。后端518项通过，前端5项通过，构建成功；测试未调用付费模型，未向客户发送测试消息。</p>
+<p class="note">采用“全部沉默跟随改为每天一次”的口径，默认台北／北京时间次日09:00。这里更新了全局规则，但只有仍符合接待权限、客户意愿及渠道窗口的会话才能实际发送。没有绕过渠道窗口，也没有解除人工接管。</p>
+<h2>业务要求、修改及结论</h2>
+<table><tr><th>要求</th><th>当前行为</th><th>验收</th></tr>
+<tr><td>尽量不要出现“请顾问确认”，前面已发名片</td><td>通用接待指令统一“我／我们”；发送前对明确的第三人称服务转述做有限替换，例如“我可以請顧問接著協助”→“我可以接著協助”，“顧問可以依您的需求提供建議”→“我們可以依您的需求提供建議”。不修改内部任务、客户原话、价格、导游事实或名片姓名。</td><td>典型措辞、重复处理稳定性及内部／对客范围测试通过。真实模型新一轮表达复测未运行；并非对所有含“顾问”的句子做无差别删除。</td></tr>
+<tr><td>沉默跟随每天一次，整个系统隔天跟进</td><td>取消首小时10/25/40/60分钟与后续每3小时的当前配置；正常答复完成后的次日09:00评估一轮。照片与说明合计一轮。当天已有主动触达时不重复；错过日期不补发。</td><td>次日排期、时区、临界时间、每日限额、照片／文字流程测试通过。正常开场、客户主动答疑保持原逻辑。</td></tr>
+<tr><td>旧客户也重新设定</td><td>31个既有会话重新评估：1个排入10月15日09:00，13个超出窗口停止自动排期，17个因人工接管等接待控制保持不动。取消符合迁移条件会话的旧沉默草稿，不重播介绍、不重写历史客户时间。</td><td>生产副本演练和正式迁移结果一致。会话#333已排期；#326已经超窗，未强发。</td></tr>
+<tr><td>客户讨论后也能轻柔承接</td><td>“先和朋友商量”“谢谢”不自动等同拒绝服务；次日仍在窗口可轻柔跟进。明确拒绝联系、人工接管、滥用状态等原有停止条件保留。</td><td>复现#326式晚间回应→次日上午跟进；客户再开口后取消旧计划、答复后重新排期的集成测试通过。</td></tr>
+<tr><td>“洗到Meta关了”</td><td>按当前渠道允许的窗口发送，窗口关闭就跳过。现有系统的发送截止为最后客户来信后23小时55分钟；机器人自己的消息不刷新窗口，不把旧客户时间改成现在。</td><td>边界测试通过。次日09:00若已越窗，也不会发送。当前没有接入可持续多天营销的窗口外授权能力。</td></tr>
+</table>
+<h2>截图#326为何不能现在再发</h2>
+<p>该客户最后来信为2026-10-11 19:22，10月12日09:00的轻柔跟进仍在窗口内。到10月14日已超过三天；系统虽然仍标记AI接待，也不能据此解除发送窗口。客户再次开口后可恢复正常答疑，并按新规则重新评估跟随。</p>
+<p>平台标准接口要求收件人在最近24小时内来信，或具备窗口外接收授权。参考 <a href="https://www.postman.com/meta/messenger-platform-api/documentation/iyp204x/messenger-platform-api">Meta官方 Messenger Send API 说明</a>。本次保留现有23小时55分钟的发送缓冲，不通过人工标签或反复重试扩大自动发送范围。</p>
+<h2>测试和发布证据</h2>
+<ul>
+<li><a href="../../output/daily-followup-20261014/backend-tests.txt">后端全量：518通过、0失败</a> · <a href="../../output/daily-followup-20261014/full-suite.xml">逐项测试结果</a>。新增30项回归；测试外部网络已禁止。</li>
+<li>前端5项测试通过，包含每日模式保存时清除首小时计划、保留每日一次限制；TypeScript检查和正式构建通过。</li>
+<li><a href="../../output/daily-followup-20261014/prepare.json">生产数据库副本演练</a> · <a href="../../output/daily-followup-20261014/deploy.json">正式迁移结果</a>。</li>
+<li><a href="../../output/daily-followup-20261014/verification.json">发布后代码、配置、人工状态及排期核对</a> · <a href="../../output/daily-followup-20261014/smoke.json">服务健康、队列和四线路素材就绪</a>。</li>
+</ul>
+<p>仍需真实客户效果观察：次日实际图文送达及话术自然程度。之前未完成的图片点赞自动分类与受预算限制的真实模型场景，本次没有宣称完成。原线路报价、两条新线的季节价格、人工交接与2分钟／30秒开场规则保持原配置。</p>
+<h2>后台入口与回滚</h2>
+<p>后台“AI接待策略 → 沉默跟进 → 触达时间表”，选择“次日定时，每天最多一次”，可修改每日跟随时间。实际时间须位于允许触达时段内。</p>
+<p>发布：<code>daily-followup-20261014-20261014T123156Z</code><br>备份：<code>/opt/china2go-ai/backups/daily-followup-20261014-20261014T123156Z</code><br>需要回滚时：<code>.venv/Scripts/python.exe output/daily-followup-20261014/release.py rollback</code>。恢复代码、原配置和未继续产生消息的会话计划，不整库覆盖客户历史。</p>
+</html>

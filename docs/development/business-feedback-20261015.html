@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>10月15日业务反馈：原会话诊断与发布验收</title>
+<style>body{font:16px/1.75 system-ui,sans-serif;color:#20332e;background:#f5f7f5;margin:0}main{max-width:1080px;margin:40px auto;padding:32px;background:white;border:1px solid #dce5de;border-radius:16px}h1{font-size:28px}h2{font-size:21px;margin-top:32px}table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;vertical-align:top;padding:13px;border:1px solid #dce5de}th{background:#eef5f0}code{overflow-wrap:anywhere}blockquote{margin:16px 0;padding:14px 20px;background:#eef5f0;border-left:4px solid #368462}.status{padding:16px;background:#e8f4eb;border-radius:8px}.note{padding:16px;background:#fff4dc;border-radius:8px}a{color:#196e54}@media(max-width:700px){main{margin:12px;padding:16px}table{display:block;overflow:auto}}</style>
+<main>
+<h1>10月15日业务反馈：原会话诊断与发布验收</h1>
+<p class="status">后续更新：用户追加20元预算后，真实模型复测、进一步修复及新版本部署已完成。请以<a href="paid-acceptance-20261015.html">真实模型验收与上线报告</a>为当前结论；下文保留上一批发布时间与验证边界。</p>
+<p class="status">已部署并完成生产检查。版本 <code>reception-v3-7edc3274a8224bdd</code>；检查时间：2026-10-15 09:19（北京时间）。后端完整回归 <strong>556 项通过、0 失败</strong>，其中本次新增 38 项；13 条既有依赖弃用警告。</p>
+<p>本次依据业务截图，并读取生产数据库中的原演练会话、模型决策、工具参数与失败记录。截图对应<strong>演练场 #631 和 #632</strong>，没有把它们误当成真实客户会话。没有修改原聊天记录，也没有向真实客户补发测试消息。</p>
+
+<h2>逐项诊断、修改与测试</h2>
+<table><thead><tr><th>业务问题与原始证据</th><th>原因与修改</th><th>验收结果及边界</th></tr></thead><tbody>
+<tr><td><strong>冬季不能只叫客人等开放</strong><br>#631 / run 2392：客人「12-2月」，工具实际查询 2026-12-01 至 2027-02-28；原回复说团期未开放并索取 LINE QR Code。</td><td>旧配置仅识别“当前目录能自动销售的产品”，没有这次新确认的冬季住宿与冰川推荐信息；跨年查询还先进入年份未公布分支。补充独立的“已批准推荐信息”，与可自动报价产品分开。跨年仍可读取冬季推荐，不虚构团期或价格。</td><td>原始 3 条消息、原日期工具调用回放通过；跨年、两条常规线、非冬季和混合月份边界通过。保留全年 1,460 个线路/日期组合检查。冬游完整行程、团期和价格仍由人工确认，未开启自动销售。</td></tr>
+<tr><td><strong>LINE QR Code 被显示成「LINE [已脱敏] Code」</strong><br>#631 / run 2392 和 #632 原始决策及聊天记录均为正确的 QR Code。</td><td>演练 API 的联系账号正则把 QR 当成账号。仅豁免通用的 QR Code / QRCode 等表达；显式 LINE ID、真实号码、邮箱与账号字段继续脱敏。</td><td>多种 QR 写法、嵌套日志、真实账号及日期/价格保留测试通过。上线后读取原 run 2392 的 API 序列化结果，确认已正确显示 LINE QR Code；原消息未改。</td></tr>
+<tr><td><strong>四个人走是否加钱，应答独团加价或交人工</strong><br>#632：前文 AI 已主动提出四位可自己一团；客户询问「4個人走要不要加錢」。runs 2400、2401 为模型调用超时；2402 为 <code>seasonal_quote_not_validated</code>。</td><td>原配置已经有4位独团每人加400元，但整团报价检测会把「原团费基础上每人加400元」误判为未核价的整团报价。修正费用类别识别，并加入对应短答。仅独团适用加价，4位拼团不能照套；问总价仍须按出发日期核价。</td><td>原始 33 条消息回放通过，加价回复能通过实际工具循环和输出渲染；整团报价继续拦截，不能用补差价绕过。上文已建议独团时可先条件式回答再确认偏好。其他未知条件/个别安排仍静默交接。</td></tr>
+<tr><td><strong>失败记录不足，演练连续失败后停住</strong><br>上述失败 run 的 <code>logs=[]</code>，无法回看被拦截候选回复。</td><td>异常对象提供 <code>logs</code>，服务却读取 <code>calls</code>。改正字段并记录校验原因及被拦截候选。连续三次失败后，演练场也显示静默人工接管，和正式会话的终止行为一致；模拟会话不发送真实顾问通知。</td><td>失败证据保存、三次失败、草稿取消和停止自动触达测试通过。正式会话原有失败交接与内部通知规则继续保留；对客仍不发“稍等/转接/收到图片”等消息。没有声称消除了上游模型超时。</td></tr>
+<tr><td><strong>上下文与后续跟进不能矛盾</strong><br>#631 / run 2419 次日仍推荐常规珠峰照片；两条新线的说明里残留旧的首小时多次/每3小时跟进描述。</td><td>保存已核对日期的工具证据，让后续沉默回合继承未开放/冬季限制，阻止用常规线图片代替冬游素材；新日期查询会更新该证据。线路说明统一服从当前每天一次配置。</td><td>冬季照片拦截、文字续聊、新日期解除旧限制测试通过。生产跟进仍为次日09:00、每天最多一轮，原发送窗口、拒绝联系和人工接管限制不变。</td></tr>
+</tbody></table>
+<p class="note">证据限制：历史失败日志已丢失，无法恢复 run 2402 的具体候选句。因此能确认该轮发生报价拦截，并能复现及修复加价句的误拦截；不能断言它当时逐字生成了哪句话。</p>
+
+<h2>本次采用的示例口径</h2>
+<p>冬季首次咨询：</p>
+<blockquote>這段時間的珠峰絨布旅館處於關閉狀態，需要住到山下的珠峰小鎮。我們另外有一條季節限定的冰川行程，您想先了解這條行程嗎？</blockquote>
+<p>上文已提到四位可独团，但客人尚未明确选择：</p>
+<blockquote>如果您們4位獨立成團，需在原團費基礎上每人加人民幣400元；這是獨立成團的加價，參加拼團不適用這項加價。您們比較想自己一團，還是和其他旅客拼團呢？</blockquote>
+<p>已明确选择独团时省去重复二选一；不能将未经确认的优惠价自行加400元算总价。转人工时消息为空，只向内部交接。</p>
+
+<h2>测试与生产检查</h2>
+<ul>
+<li>针对本次及相关季节问题的测试：138 项通过；随后完整后端回归：556 项通过，耗时215.92秒。</li>
+<li>原会话回放：#631 的3条历史、#632 的33条历史，使用实际存储输入，更新配置后通过工具、校验和渲染链路。</li>
+<li>生产数据库副本上禁用网络检查：4条线路、全部线路包校验、冬季推荐、独团短答、QR脱敏及每天一次配置通过。</li>
+<li>正式发布后：10个文件哈希验证、3个服务正常、健康接口正常、4条线路资料就绪；18个人工/拒绝联系会话状态保持不变，人工会话无待发草稿。</li>
+<li>所有应用设置、原有价格及素材保持不变；发件记录650 → 650，测试向客户发送0条，原会话记录未修改。</li>
+</ul>
+<p class="note">真实模型的新口径稳定性尚未付费复测。本轮模型输出采用受控模拟，验证的是程序执行与约束，不能当作真实模型每次都能选对话术的证据。现有评测预算余量不足以预留一次完整请求，本轮新增模型调用费用为0。冬游完整产品资料与自动报价也不在已完成范围内。</p>
+
+<h2>证据与回滚</h2>
+<p>发布批次：<code>business-feedback-20261015-20261015T011545Z</code><br>生产备份：<code>/opt/china2go-ai/backups/business-feedback-20261015-20261015T011545Z</code>。回滚只恢复本批代码与线路配置，不覆盖部署后新增聊天数据。</p>
+<ul>
+<li><a href="../../output/business-feedback-20261015/original-replay.json">原会话回放结果</a></li>
+<li><a href="../../output/business-feedback-20261015/full-suite.xml">完整测试结果（JUnit XML）</a></li>
+<li><a href="../../output/business-feedback-20261015/verification.json">上线验收结果</a></li>
+<li><a href="../../output/business-feedback-20261015/production-diff.txt">与原生产版本的精确差异</a></li>
+<li><a href="../../backend/tests/test_business_feedback_20261015.py">本批回归用例</a></li>
+</ul>
+<p>原始会话及生产配置快照保存在本机 <code>output/business-feedback-20261015/</code>，含内部数据，未作为公开报告附件分发。</p>
+</main></html>

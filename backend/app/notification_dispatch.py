@@ -44,6 +44,21 @@ def process_notification_delivery(session_factory=None) -> bool:
                 db.commit()
                 return True
         channel = config.get("channel", "webhook")
+        from app.reception_rollout import reception_inbox_ids
+        allowed_inboxes = reception_inbox_ids(db)
+        if channel in ('wecom', 'email') and settings.app_profile == 'live_reply':
+            conversation = db.scalar(select(ConversationState).where(
+                ConversationState.tenant_id == notification.tenant_id,
+                ConversationState.chatwoot_conversation_id == notification.conversation_id))
+            connection = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == notification.tenant_id))
+            inbox = conversation.inbox if conversation else None
+            if (not connection or connection.account_id != settings.live_reply_account_id
+                    or not inbox or inbox.tenant_id != notification.tenant_id
+                    or inbox.chatwoot_inbox_id not in allowed_inboxes
+                    or not inbox.ai_enabled or inbox.status != 'active'):
+                delivery.status, delivery.error_code = 'cancelled', 'notification_scope_mismatch'
+                db.commit()
+                return True
         target = None
         if channel == "chatwoot":
             target = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == notification.tenant_id))
@@ -61,6 +76,17 @@ def process_notification_delivery(session_factory=None) -> bool:
                    "target_agent_id": notification.target_agent_id,
                    "title": notification.title, "body": notification.body,
                    "conversation_id": notification.conversation_id, "created_at": notification.created_at}
+        if channel in ('email', 'wecom'):
+            conversation = db.scalar(select(ConversationState).where(
+                ConversationState.tenant_id == notification.tenant_id,
+                ConversationState.chatwoot_conversation_id == notification.conversation_id))
+            connection = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == notification.tenant_id))
+            if not explicit_notification and conversation and conversation.assignee_id:
+                payload['target_agent_id'] = conversation.assignee_id
+            if connection and notification.conversation_id:
+                payload['conversation_url'] = f'{connection.base_url.rstrip("/")}/app/accounts/{connection.account_id}/conversations/{notification.conversation_id}'
+        from app.handoff_text import notification_summary
+        payload['body'] = notification_summary(payload['event'],payload['title'],payload['body'])
         # Persist before network I/O. A process crash must not blindly replay a note.
         db.commit()
     client = None
@@ -74,7 +100,7 @@ def process_notification_delivery(session_factory=None) -> bool:
             client = client_for(target)
             remote = payload_dict(client.get_conversation(payload["conversation_id"]))
             if (settings.app_profile == "live_reply" and
-                    (target.account_id != settings.live_reply_account_id or remote.get("inbox_id") != settings.live_reply_inbox_id)):
+                    (target.account_id != settings.live_reply_account_id or remote.get("inbox_id") not in allowed_inboxes)):
                 raise ValueError("notification_scope_mismatch")
             agents = normalize_collection(client.list_inbox_agents(remote["inbox_id"]))
             assignee = (remote.get("meta") or {}).get("assignee") or {}
@@ -87,9 +113,7 @@ def process_notification_delivery(session_factory=None) -> bool:
             # Keep an existing human owner; only assign an unowned new handoff.
             if config.get("assign_on_handoff") and payload['event'] == 'handoff.created' and not assignee.get('id'):
                 client.assign_conversation(payload["conversation_id"], agent_id)
-            content = (f"[@顾问](mention://user/{agent_id}/advisor)\n"
-                       f"{payload['title']}\n{payload['body']}\n"
-                       f"[ai-notification:{payload['notification_id']}]")
+            content = f"[@顾问](mention://user/{agent_id}/advisor)\n{payload['body']}"
             submitted = True
             result = payload_dict(client.create_private_notification(
                 payload["conversation_id"], content, int(config["bot_id"])))
@@ -98,6 +122,12 @@ def process_notification_delivery(session_factory=None) -> bool:
             sender = result.get("sender") or {}
             if sender.get("type") != "agent_bot" or int(sender.get("id", 0)) != int(config["bot_id"]):
                 raise ValueError("notification_bot_not_confirmed")
+        elif channel in ('wecom', 'email'):
+            from app.advisor_notification_channels import send_advisor_notification
+            def on_submit():
+                nonlocal submitted
+                submitted = True
+            send_advisor_notification(config, payload, on_submit)
         elif channel == "webhook":
             if not config.get("url"):
                 raise ValueError("notification_webhook_url_required")
@@ -113,7 +143,10 @@ def process_notification_delivery(session_factory=None) -> bool:
             raise ValueError("notification_channel_invalid")
     except Exception as exc:
         error = exc.code if isinstance(exc, ChatwootError) else (str(exc) if isinstance(exc, ValueError) else type(exc).__name__)
-        status = "submission_unknown" if channel == "chatwoot" and submitted else "retry"
+        from app.advisor_notification_channels import ProviderRejected
+        status = "submission_unknown" if channel in ('chatwoot','wecom','email') and submitted else "retry"
+        if isinstance(exc, ProviderRejected):
+            status = 'retry'
         # Invalid configuration is terminal; uncertain private submissions stay manual.
         if isinstance(exc, ValueError) and not submitted:
             status = "dead"

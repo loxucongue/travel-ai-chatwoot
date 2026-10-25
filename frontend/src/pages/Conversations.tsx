@@ -40,10 +40,10 @@ interface ConversationFilterOptions {
 }
 
 function stateLabel(value: string) {
-  return ({ AI_ACTIVE: 'AI 接管', HUMAN_HANDOFF: '人工接管', AI_PAUSED_LABEL: '标签关闭', AI_PAUSED_CONVERSATION: '会话关闭', AI_PAUSED_SYNC: '同步异常', AI_PAUSED_INBOX: 'Inbox 关闭', AI_PAUSED_GLOBAL: '全局关闭', CHANNEL_BLOCKED: '渠道阻断' } as Record<string, string>)[value] ?? value;
+  return ({ AI_ACTIVE: 'AI 接管', AI_FOLLOWUP: 'AI 跟进', HUMAN_HANDOFF: '人工接管', AI_PAUSED_LABEL: '标签关闭', AI_PAUSED_CONVERSATION: '会话关闭', AI_PAUSED_SYNC: '同步异常', AI_PAUSED_INBOX: 'Inbox 关闭', AI_PAUSED_GLOBAL: '全局关闭', CHANNEL_BLOCKED: '渠道阻断' } as Record<string, string>)[value] ?? value;
 }
 function stateTone(value: string): 'green' | 'amber' | 'neutral' | 'red' | 'blue' {
-  if (value === 'AI_ACTIVE') return 'green';
+  if (value === 'AI_ACTIVE' || value === 'AI_FOLLOWUP') return 'green';
   if (value === 'HUMAN_HANDOFF') return 'amber';
   if (value === 'CHANNEL_BLOCKED') return 'red';
   return 'neutral';
@@ -59,6 +59,7 @@ function noReplyReason(conversation?: ConversationSummary, detail?: Conversation
   if (conversation.ai_reason === 'ai_opt_in_required' && !conversation.ai_label_present) return '当前接待范围要求 ai 标签：系统只同步客户消息，不会自动回复。';
   if (conversation.ai_sync_status !== 'synced') return 'ai 标签同步异常：为避免误发，自动回复已停止。';
   if (!conversation.can_reply) return 'can_reply=false：Chatwoot 或 Facebook 当前不允许自动回复。';
+  if (conversation.ai_state === 'AI_FOLLOWUP') return 'AI 仅负责沉默跟进；客户回复后自动交回顾问接待。';
   if (conversation.ai_state === 'HUMAN_HANDOFF' || labels.has('人工接管')) return '人工接管：客服已接手，AI 和 SOP 不再发送。';
   if (conversation.ai_state === 'AI_PAUSED_LABEL') return '标签关闭：当前标签组合要求停止 AI。';
   if (conversation.ai_state === 'AI_PAUSED_CONVERSATION') return '会话关闭：当前 Chatwoot 会话不是可接待状态。';
@@ -313,7 +314,7 @@ export default function Conversations({ notify }: { notify: (message: string) =>
 
       <main className="chat-panel">
         {!selected ? <EmptyState title="选择一个会话" description="Webhook 接收到的真实会话会显示在左侧。" /> : <>
-          <header className="chat-header"><div className="chat-identity"><Avatar initials={initials(selected.name)} tone={2} size="lg" /><div><div><strong title={selected.name}>{selected.name}</strong><Badge tone={stateTone(selected.ai_state)}>{stateLabel(selected.ai_state)}</Badge></div><span>{selected.channel} · {selected.inbox} · #{selected.id}</span></div></div><div className="chat-actions"><button className="secondary-button chat-command-button" onClick={() => handoffMutation.mutate()} disabled={handoffMutation.isPending || selected.ai_state !== 'AI_ACTIVE'} title="人工接管"><Headphones size={16} /><span>人工接管</span></button><button className="secondary-button chat-command-button" onClick={openAssignment} title="分配客服" aria-label="分配客服"><UserRoundCog size={16} /><span>分配客服</span></button><button className="secondary-button chat-command-button" onClick={openLabels} title="设置标签" aria-label="设置标签"><Tags size={16} /><span>设置标签</span></button><button className="secondary-button icon-only" onClick={() => window.open(selected.chatwoot_url, '_blank', 'noopener,noreferrer')} title="打开 Chatwoot" aria-label="打开 Chatwoot"><ExternalLink size={16} /></button></div></header>
+          <header className="chat-header"><div className="chat-identity"><Avatar initials={initials(selected.name)} tone={2} size="lg" /><div><div><strong title={selected.name}>{selected.name}</strong><Badge tone={stateTone(selected.ai_state)}>{stateLabel(selected.ai_state)}</Badge></div><span>{selected.channel} · {selected.inbox} · #{selected.id}</span></div></div><div className="chat-actions"><button className="secondary-button chat-command-button" onClick={() => handoffMutation.mutate()} disabled={handoffMutation.isPending || !['AI_ACTIVE', 'AI_FOLLOWUP'].includes(selected.ai_state)} title="人工接管"><Headphones size={16} /><span>人工接管</span></button><button className="secondary-button chat-command-button" onClick={openAssignment} title="分配客服" aria-label="分配客服"><UserRoundCog size={16} /><span>分配客服</span></button><button className="secondary-button chat-command-button" onClick={openLabels} title="设置标签" aria-label="设置标签"><Tags size={16} /><span>设置标签</span></button><button className="secondary-button icon-only" onClick={() => window.open(selected.chatwoot_url, '_blank', 'noopener,noreferrer')} title="打开 Chatwoot" aria-label="打开 Chatwoot"><ExternalLink size={16} /></button></div></header>
           {currentNoReplyReason ? <div className="warning-strip no-reply-reason" role="status"><Info size={16} /><span>{currentNoReplyReason}</span></div> : null}
           {!selected.can_reply ? <div className="warning-strip"><Info size={16} />渠道当前不可回复，Worker 不会发送自动回复。</div> : null}
           {replyIssue ? <div className="warning-strip reply-issue" role="status"><Info size={16} /><span>{replyIssue}</span><time>{displayTime(latestReply!.completed_at || latestReply!.created_at)}</time></div> : null}

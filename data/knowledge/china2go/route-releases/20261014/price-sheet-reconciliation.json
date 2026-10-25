@@ -1,0 +1,176 @@
+{
+  "source": {
+    "source_filename": "2027-售價表總表-1002.xlsx",
+    "source_sha256": "dbaa02984af5f73921cdb946340e6f1cc8bed09c843d3d3001881396ee42f15a",
+    "sheet": "西藏",
+    "extracted_on": "2026-10-14",
+    "method": "openpyxl data_only=True; original retained unchanged"
+  },
+  "new_route_bands": [
+    {
+      "route_variant": "tibet_essence_8d",
+      "script_id": "price_low",
+      "cells": "A3:C3",
+      "nominal_period": "淡季：10/15-3/10",
+      "price_cny": 7980,
+      "single_supplement_cny": 2000,
+      "effective_ranges": [
+        [
+          "01-01",
+          "03-10"
+        ],
+        [
+          "10-15",
+          "12-31"
+        ]
+      ],
+      "amounts_match": true
+    },
+    {
+      "route_variant": "tibet_essence_8d",
+      "script_id": "price_spring",
+      "cells": "A4:C4",
+      "nominal_period": "次旺季：3/11-4/20",
+      "price_cny": 9480,
+      "single_supplement_cny": 2200,
+      "effective_ranges": [
+        [
+          "03-11",
+          "04-20"
+        ]
+      ],
+      "amounts_match": true
+    },
+    {
+      "route_variant": "tibet_essence_8d",
+      "script_id": "price_summer",
+      "cells": "A5:C5",
+      "nominal_period": "次次旺季：5/1-6/30",
+      "price_cny": 9480,
+      "single_supplement_cny": 2300,
+      "effective_ranges": [
+        [
+          "05-06",
+          "06-30"
+        ]
+      ],
+      "amounts_match": true
+    },
+    {
+      "route_variant": "tibet_essence_8d",
+      "script_id": "price_peak",
+      "cells": "A6:C6",
+      "nominal_period": "旺季：7/1-9/30",
+      "price_cny": 9980,
+      "single_supplement_cny": 2800,
+      "effective_ranges": [
+        [
+          "07-01",
+          "09-24"
+        ]
+      ],
+      "amounts_match": true
+    },
+    {
+      "route_variant": "tibet_overview_10d",
+      "script_id": "price_low",
+      "cells": "A10:C10",
+      "nominal_period": "淡季：10/15-3/10",
+      "price_cny": 10480,
+      "single_supplement_cny": 2400,
+      "effective_ranges": [
+        [
+          "01-01",
+          "03-10"
+        ],
+        [
+          "10-15",
+          "12-31"
+        ]
+      ],
+      "amounts_match": true
+    },
+    {
+      "route_variant": "tibet_overview_10d",
+      "script_id": "price_summer",
+      "cells": "A12:C12",
+      "nominal_period": "次次旺季：5/1-6/30",
+      "price_cny": 12280,
+      "single_supplement_cny": 3000,
+      "effective_ranges": [
+        [
+          "05-06",
+          "06-30"
+        ]
+      ],
+      "amounts_match": true
+    },
+    {
+      "route_variant": "tibet_overview_10d",
+      "script_id": "price_peak",
+      "cells": "A13:C13",
+      "nominal_period": "旺季：7/1-9/30",
+      "price_cny": 12880,
+      "single_supplement_cny": 3200,
+      "effective_ranges": [
+        [
+          "07-01",
+          "09-24"
+        ]
+      ],
+      "amounts_match": true
+    }
+  ],
+  "existing_routes": [
+    {
+      "route_variant": "peach_9d_2027",
+      "cells": "A35:C35",
+      "standard_price_cny": 10780,
+      "single_supplement_cny": 2700,
+      "promotion_preserved": true,
+      "valid_for_days": 30,
+      "source_package_sha256": "00b836f50096f2842d2b6bf43aad72945d31e062d7a1a0a7ad3c1f582099c20b"
+    },
+    {
+      "route_variant": "peach_11d_2027",
+      "cells": "A39:C39",
+      "standard_price_cny": 12780,
+      "single_supplement_cny": 3200,
+      "promotion_preserved": true,
+      "valid_for_days": 30,
+      "source_package_sha256": "654862ffb5ae66c10f4c92b8d4b0c9f5ed7e8c34275e10e0570abcf85eb193b2"
+    }
+  ],
+  "price_changes": 0,
+  "production_changed": false,
+  "decisions": [
+    {
+      "cells": "A11:C11",
+      "result": "10日春季11,980/单房差3,000已有依据，但表注桃花节不卖；网页明确3/11–4/30不售，继续禁用该档自动报价。"
+    },
+    {
+      "cells": "A5:C6;A12:C13;A41",
+      "result": "工作表为名义季节；网页已避开长假，保留5/6起、9/24止，不开放5/1–5/5或9/25–10/14的普通价。"
+    },
+    {
+      "cells": "A4:C5",
+      "result": "2026-10-14业务已澄清：8日4/21–4/24属于季节性未开放，推荐同期已开放产品或邀请登记开放通知；4/25起长假另计仍需确认。"
+    },
+    {
+      "cells": "A29:C31",
+      "result": "冬游冰川8日价格已确认9,280/单房差1,500；不是本次精华8日产品，仍缺完整资料和图片，不自动增开。未启用产品以替代行程或开放通知承接，实际留资后顾问接收。"
+    },
+    {
+      "cells": "A41",
+      "result": "允许按当地情况调整行程顺序但不减少景点；8日第2/3天先后不再视为缺失报价资料，酒店分店差异仍待核实。"
+    },
+    {
+      "cells": "A41",
+      "result": "早鸟与多人优惠可叠加，但折扣计价单位、重叠月份边界及与现有12,180活动叠加关系未明确；不自动计算最终折后价。"
+    },
+    {
+      "cells": "A35:C39",
+      "result": "桃花9日标准10,780、11日标准12,780确认；保留已批准11日12,180活动价及首次报价30天固定期限。"
+    }
+  ]
+}

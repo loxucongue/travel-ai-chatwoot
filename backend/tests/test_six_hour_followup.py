@@ -56,7 +56,9 @@ def test_multiple_configured_checkpoints_survive_delivery_or_single_wait(session
 
 def test_schedule_configuration_bounds():
     assert SilenceSettings(intervals_minutes=[360,1020]).intervals_minutes==[360,1020]
-    for values in ([360,1021], [360,0], [360,-1], []):
+    assert SilenceSettings(intervals_minutes=[360,1021]).intervals_minutes==[360,1021]
+    assert SilenceSettings(intervals_minutes=[360,9720]).intervals_minutes==[360,9720]
+    for values in ([360,9721], [10081], [360,0], [360,-1], []):
         with pytest.raises(ValueError): SilenceSettings(intervals_minutes=values)
 
 

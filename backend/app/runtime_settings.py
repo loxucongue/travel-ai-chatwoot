@@ -9,7 +9,7 @@ from app.operations import setting_value
 DEFAULT_REPLY = {"enabled": True, "merge_wait_seconds": 2, "merge_max_seconds": 5, "backlog_seconds": 300}
 
 
-BLOCK_LABELS = {"人工接管", "客诉", "客訴", "拒绝联系", "拒絕聯繫", "黑名单", "黑名單", "AI关闭", "ai_off", "已留资", "已留資", "已成交"}
+BLOCK_LABELS = {"人工接管", "客诉", "客訴", "拒绝联系", "拒絕聯繫", "黑名单", "黑名單", "AI关闭", "ai_off", "已留资", "已留資", "已成交", "加私訊", "加私讯"}
 
 
 def dt(value: str) -> datetime:

@@ -1,0 +1,12 @@
+{
+  "status": "acceptance_only_not_deployed",
+  "route": "tibet_linzhi_8d",
+  "assets": 18,
+  "production_changed": false,
+  "requires_user_approval": true,
+  "review_items": [
+    "冬季林芝8日是否持續銷售；目前只交顧問核對，不自動報價。",
+    "具體高海拔數字、移動氧艙性能不採用未確認內容。",
+    "網站八天後持續跟隨改為現行最後客戶回覆起七天。"
+  ]
+}

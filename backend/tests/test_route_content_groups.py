@@ -63,6 +63,7 @@ def test_price_campaign_fields_survive_content_publish(content_api):
     current, payload, published, put = content_api
     payload['fixed_answers'] = deepcopy(current['fixed_answers'])
     price = next(s for s in payload['fixed_answers'] if s['id'] == 'price')
+    price.pop('valid_for_days', None)  # Explicitly switch to fixed-date validity.
     price.update(valid_from='2026-10-11', valid_until='2026-10-31', fallback_text='Standard price')
     response = put(payload)
     assert response.status_code == 200, response.text

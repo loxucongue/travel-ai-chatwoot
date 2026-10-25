@@ -1,0 +1,608 @@
+{
+  "schema_version": 1,
+  "package_version": "2026-10-20.linzhi8-rc1",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "route_variant": "tibet_linzhi_8d",
+  "branch": "tibet_linzhi_8d",
+  "name": "不上珠峰・林芝入藏8日",
+  "selection_title": "不上珠峰・林芝8天",
+  "selection_aliases": [
+    "不上珠峰 林芝入藏8日",
+    "不上珠峰林芝入藏8日",
+    "不上珠峰・林芝8天",
+    "不上珠峰林芝8日",
+    "林芝入藏8日",
+    "林芝8天",
+    "林芝8日",
+    "林芝希爾頓8日"
+  ],
+  "default_entry_message": "不上珠峰 林芝入藏8日",
+  "match_keywords": [
+    "不上珠峰 林芝入藏8日",
+    "不上珠峰林芝8日",
+    "林芝入藏8日",
+    "林芝8天",
+    "林芝8日"
+  ],
+  "required_slots": [
+    "departure_window",
+    "party_size"
+  ],
+  "initial_delivery_interval_seconds": 2,
+  "intake": {
+    "field": "departure_window",
+    "question": "請問您大概想幾月出發呢？",
+    "options": [
+      "12-2月",
+      "3-4月",
+      "5-6月",
+      "7-8月",
+      "9-11月"
+    ],
+    "wait_seconds": 30
+  },
+  "publication": {
+    "status": "acceptance_only",
+    "activation_allowed": false,
+    "production_enabled": false,
+    "requires_user_approval": true
+  },
+  "source": {
+    "url": "https://china2go.com/1-2/",
+    "modified": "2026-10-20T21:01:43",
+    "snapshot_sha256": "45acc5196cce88244473381674d899a83c76b872cc89f27b354f044678f6af04",
+    "zip_sha256": "fca0255fe689101ddc1eb503b6c472dfc0eda280ca57b9191487f86e3aec48be",
+    "branch_content": "route-releases/20261020-linzhi8/source/business-page.txt"
+  },
+  "ai_guidance": "廣告「不上珠峰 林芝入藏8日」直接識別本線。怕高反或帶長輩是推薦訊號，不等於同意換線；單問高反先回答。明確換本線才route_choice=selected；推薦用recommend和profile.discussion_route，保留原route_variant。明確不上珠峰寫everest_preference=avoid，僅擔心寫altitude_concern=true，不能猜已拒絕珠峰。已知月份人數不重問；中途切線僅發差異介紹，取消舊圖文。三四月按具體日期核對桃花9日，不能把只有8天或4/20等需求硬轉9日。冬季銷售口徑待確認，先推薦冬遊，堅持本線由顧問確認。價格限本線2027工具核價，普通報價不主動提房差。已確認通用接待、人工控制及七天沉默規則優先，不套網頁八天後無限跟隨、反覆索要LINE、假稱平台漏訊息或移動氧艙保證。",
+  "knowledge_facts": [
+    {
+      "id": "tibet_linzhi_8d.scope",
+      "text": "林芝入藏、不上珠峰8日是獨立產品，不是拉薩進出且含珠峰的西藏精華8天，也不是冬遊冰川8天或桃花9日。林芝進、拉薩出。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.itinerary",
+      "text": "D1林芝接機；D2色季拉山遠眺南迦巴瓦峰、魯朗林海、扎西崗村及魯朗騎馬射箭；D3秀巴古堡、巴松措湖心島、前往拉薩；D4扎基寺、色拉寺；D5布達拉宮、大昭寺、八廓街、景觀下午茶；D6羊卓雍措、卡若拉冰川、白居寺、日喀則；D7扎什倫布寺、拉日鐵路回拉薩；D8拉薩送機或送火車。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.hotel",
+      "text": "林芝希爾頓系列、拉薩希爾頓惠庭、日喀則希爾頓，所有酒店有供氧，日喀則升級一晚五星。不上珠峰，不住絨布旅館。不能保證氧氣濃度或供氧時數。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.altitude",
+      "text": "林芝入藏、先住林芝；不去珠峰但仍經色季拉山和卡若拉冰川，並非全程低海拔。供氧及不上珠峰都不保證不會高反；適合與否需個別評估。卡若拉最高海拔數字在業務頁標為待確認，不報5600米或其他猜測值。不作醫療適宜性判定或用藥指導。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.group",
+      "text": "拼團4人成團、最多6人，9座VIP車。4位以上可獨立成團自選日期，仍受季節和長假條件限制；4位獨團每人加400元，6位獨團原價，5位加價未給不能推算。7位以上由顧問安排。獨行不等於單住。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.included",
+      "text": "包含入藏函等旅行文件、行程內門票及觀光車、拉日鐵路票、車、司機、中文導遊、接送、住宿及每日酒店早餐、責任險/座位險及高原保障險50萬人民幣。隨車醫用氧氣鋼瓶4L、葡萄糖、每人一罐便攜氧氣。包含布宮景觀下午茶、旱地拔蔥影片、撒隆達、掛經幡及魯朗騎馬射箭；體驗遇天氣/管制可能調整，藏曆新年騎馬射箭暫停。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.excluded",
+      "text": "不含往返西藏機票或火車票、午晚餐、小費、單房差、個人消費及行程外項目。司機和導遊小費建議每人每天各人民幣30元，共60元。石鍋雞可請導遊協助安排，不包含在團費內，不承諾特殊餐食一定可安排。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.booking",
+      "text": "價格表為2027年、人民幣每人、拼團兩人一間。入藏函按業務要求至少提前30天；不足30天由顧問確認。3/11–4/30本線不售；春節、五一、十一另計。冬季入口和報價表矛盾，1/2/12月先推薦已公布冬遊，堅持本線則顧問確認，不宣稱冬季已停賣或直接報本線價。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    },
+    {
+      "id": "tibet_linzhi_8d.shopping",
+      "text": "純玩無購物，無購物約定寫入合約，違約依約賠償人民幣5000元。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt"
+    }
+  ],
+  "content_groups": {
+    "itinerary_overview": {
+      "approved_text": "先給您看「林芝入藏、不上珠峰8日」的行程圖～從林芝到拉薩、日喀則，最後搭拉日鐵路回拉薩。",
+      "asset_keys": [
+        "tibet_linzhi_8d_itinerary"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "itinerary_overview"
+    },
+    "altitude": {
+      "approved_text": "前兩晚先住林芝，這條不去珠峰；但仍有高海拔景點，不能保證不會高反喔。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_linzhi_8d.altitude"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "altitude"
+    },
+    "lulang": {
+      "approved_text": "會在色季拉山遠眺南迦巴瓦峰，再到魯朗林海，也安排騎馬、射響箭體驗～能否看到山峰要配合當天天氣。",
+      "asset_keys": [
+        "tibet_linzhi_8d_namcha",
+        "tibet_linzhi_8d_lulang_guests"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "lulang"
+    },
+    "castle": {
+      "approved_text": "也會參觀千年歷史的秀巴古堡，看看林芝的人文風景～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "castle"
+    },
+    "basum": {
+      "approved_text": "巴松措和湖心島也有安排，湖水像綠寶石一樣～",
+      "asset_keys": [
+        "tibet_linzhi_8d_basum"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "basum"
+    },
+    "lhasa": {
+      "approved_text": "拉薩安排布達拉宮、大昭寺、八廓街、扎基寺和色拉寺，還有布宮景觀下午茶。",
+      "asset_keys": [
+        "tibet_linzhi_8d_potala",
+        "tibet_linzhi_8d_jokhang"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "lhasa"
+    },
+    "shigatse": {
+      "approved_text": "接著看羊卓雍措、卡若拉冰川與白居寺，再到日喀則參觀扎什倫布寺。",
+      "asset_keys": [
+        "tibet_linzhi_8d_tashilhunpo"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "shigatse"
+    },
+    "railway": {
+      "approved_text": "最後搭拉日鐵路回拉薩，沿途欣賞河谷與高原風景，也減少一段車程。",
+      "asset_keys": [
+        "tibet_linzhi_8d_railway"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "railway"
+    },
+    "hotel_reference": {
+      "approved_text": "所有酒店都有供氧，安排希爾頓系列，日喀則升級一晚五星～這是房內的供氧設備。",
+      "asset_keys": [
+        "tibet_linzhi_8d_hotel"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.hotel"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "hotel_reference"
+    },
+    "vehicle_reference": {
+      "approved_text": "拼團最多6人，安排9座VIP車；隨車有醫用氧氣鋼瓶、葡萄糖及便攜氧氣。",
+      "asset_keys": [
+        "tibet_linzhi_8d_vehicle",
+        "tibet_linzhi_8d_oxygen"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.included"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "vehicle_reference"
+    },
+    "company": {
+      "approved_text": "我們 China2Go 國旅環球接待港澳台與全球外賓，安排純玩小團，無購物約定也寫進合約。",
+      "asset_keys": [
+        "tibet_linzhi_8d_guests"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.shopping"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "company"
+    },
+    "switch_difference": {
+      "approved_text": "這條保留林芝、拉薩與日喀則，不安排珠峰和絨布住宿；前兩晚住林芝，最後搭拉日鐵路回拉薩。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "switch_difference"
+    },
+    "followup_lulang": {
+      "approved_text": "跟您分享團友在魯朗騎馬、射響箭的體驗照～這項體驗有包含在行程裡。",
+      "asset_keys": [
+        "tibet_linzhi_8d_followup_lulang"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.included"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_lulang"
+    },
+    "followup_flags": {
+      "approved_text": "跟您分享團友一起掛經幡的照片～這也是行程安排的在地體驗。",
+      "asset_keys": [
+        "tibet_linzhi_8d_followup_flags"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.included"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_flags"
+    },
+    "followup_forest": {
+      "approved_text": "這是魯朗林海的風景，山谷裡有大片森林，給您看看～",
+      "asset_keys": [
+        "tibet_linzhi_8d_followup_forest"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_forest"
+    },
+    "followup_tashilhunpo": {
+      "approved_text": "跟您分享日喀則扎什倫布寺的風景，這條行程也會到訪～",
+      "asset_keys": [
+        "tibet_linzhi_8d_followup_tashilhunpo"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_tashilhunpo"
+    },
+    "followup_railway": {
+      "approved_text": "回程的拉日鐵路也是行程的一部分，可以從車窗欣賞沿途風景～",
+      "asset_keys": [
+        "tibet_linzhi_8d_followup_railway"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_railway"
+    },
+    "followup_chicken": {
+      "approved_text": "這是林芝的墨脫石鍋雞～午晚餐自理，有興趣可以請導遊協助安排。",
+      "asset_keys": [
+        "tibet_linzhi_8d_followup_chicken"
+      ],
+      "evidence_refs": [
+        "tibet_linzhi_8d.excluded"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_chicken"
+    },
+    "quote_date": {
+      "approved_text": "西藏有淡旺季，請問您預計哪一年、幾月出發呢？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_linzhi_8d.booking"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "quote_date"
+    }
+  },
+  "content_sequence": [
+    "itinerary_overview",
+    "altitude",
+    "lulang",
+    "castle",
+    "basum",
+    "lhasa",
+    "shigatse",
+    "railway",
+    "hotel_reference",
+    "vehicle_reference",
+    "company",
+    "switch_difference",
+    "followup_lulang",
+    "followup_flags",
+    "followup_forest",
+    "followup_tashilhunpo",
+    "followup_railway",
+    "followup_chicken",
+    "quote_date"
+  ],
+  "switch_introduction_sequence": [
+    "itinerary_overview",
+    "switch_difference"
+  ],
+  "fixed_answers": [
+    {
+      "id": "price_low",
+      "name": "淡季報價",
+      "answer_text": "【不上珠峰・林芝8天｜林芝＋拉薩＋日喀則】\n淡季出發：10/15－3/10（每週二出發）\n6人精緻小團：¥8,280/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費\n現在報名還有優惠喔！",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "quote_date",
+      "topics": [
+        "price_low"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "本線2027年相應季節，get_departure_quote返回quoted"
+      ],
+      "negative_examples": [
+        "其他線路",
+        "未問團費",
+        "冬季待確認",
+        "未知日期"
+      ],
+      "status": "active",
+      "answer_origin": "website_verbatim"
+    },
+    {
+      "id": "price_summer",
+      "name": "次次旺季報價",
+      "answer_text": "【不上珠峰・林芝8天｜林芝＋拉薩＋日喀則】\n次次旺季出發：5/6－6/30（每週二出發）\n6人精緻小團：¥9,580/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費\n現在報名還有優惠喔！",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "quote_date",
+      "topics": [
+        "price_summer"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "本線2027年相應季節，get_departure_quote返回quoted"
+      ],
+      "negative_examples": [
+        "其他線路",
+        "未問團費",
+        "冬季待確認",
+        "未知日期"
+      ],
+      "status": "active",
+      "answer_origin": "website_verbatim"
+    },
+    {
+      "id": "price_peak",
+      "name": "旺季報價",
+      "answer_text": "【不上珠峰・林芝8天｜林芝＋拉薩＋日喀則】\n旺季出發：7/1－9/24（每週二出發）\n6人精緻小團：¥9,980/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費\n現在報名還有優惠喔！",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "quote_date",
+      "topics": [
+        "price_peak"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "本線2027年相應季節，get_departure_quote返回quoted"
+      ],
+      "negative_examples": [
+        "其他線路",
+        "未問團費",
+        "冬季待確認",
+        "未知日期"
+      ],
+      "status": "active",
+      "answer_origin": "website_verbatim"
+    },
+    {
+      "id": "altitude",
+      "name": "高反疑慮",
+      "answer_text": "這條從林芝入藏、不去珠峰，但仍有高海拔景點；酒店和車上有供氧，也不能保證不會高反。若擔心身體狀況，可以先帶行程請醫師評估喔。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "altitude",
+      "topics": [
+        "altitude"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.altitude"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "會不會高反",
+        "海拔高嗎"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "tips",
+      "name": "小費",
+      "answer_text": "司機和導遊小費建議每人每天各人民幣30元，一天共60元。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "quote_date",
+      "topics": [
+        "tips"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.excluded"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "小費多少"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "airfare",
+      "name": "機票",
+      "answer_text": "團費不含往返西藏的機票或火車票，行程內的拉日鐵路票有包含喔～",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "quote_date",
+      "topics": [
+        "airfare"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.excluded"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "含機票嗎"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "quote_date",
+      "name": "出發時間",
+      "answer_text": "西藏有淡旺季，請問您預計哪一年、幾月出發呢？",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "quote_date",
+      "topics": [
+        "quote_date"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "詢價但未說年份月份"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "tsozong",
+      "name": "措宗寺",
+      "answer_text": "這是巴松措湖心島上的措宗寺，我們會逛湖心島；只要寺廟有開，導遊都會帶大家逛，通常冬季會有較多時間關閉。",
+      "source_ref": "route-releases/20261020-linzhi8/source/business-page.txt",
+      "content_group_key": "basum",
+      "topics": [
+        "tsozong"
+      ],
+      "fact_ids": [
+        "tibet_linzhi_8d.itinerary"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "措宗寺有去嗎",
+        "錯宗寺有嗎"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    }
+  ],
+  "seasonal_pricing": {
+    "years": [
+      2027
+    ],
+    "minimum_notice_days": 30,
+    "weekday": 1,
+    "private_departure_min_party_size": 4,
+    "advisor_months": [],
+    "review_months": [
+      1,
+      2,
+      12
+    ],
+    "review_reason": "林芝8日冬季入口與價格表銷售口徑不一致，需顧問確認；不代表已停賣，不套冬遊或其他8天價格。",
+    "holiday_ranges": [
+      [
+        "02-01",
+        "02-16"
+      ],
+      [
+        "04-25",
+        "05-05"
+      ],
+      [
+        "09-25",
+        "10-14"
+      ]
+    ],
+    "unavailable_ranges": [
+      [
+        "03-11",
+        "04-30"
+      ]
+    ],
+    "bands": [
+      {
+        "script_id": "price_low",
+        "price_cny": 8280,
+        "single_supplement_cny": 1900,
+        "ranges": [
+          [
+            "01-01",
+            "03-10"
+          ],
+          [
+            "10-15",
+            "12-31"
+          ]
+        ]
+      },
+      {
+        "script_id": "price_summer",
+        "price_cny": 9580,
+        "single_supplement_cny": 2200,
+        "ranges": [
+          [
+            "05-06",
+            "06-30"
+          ]
+        ]
+      },
+      {
+        "script_id": "price_peak",
+        "price_cny": 9980,
+        "single_supplement_cny": 2200,
+        "ranges": [
+          [
+            "07-01",
+            "09-24"
+          ]
+        ]
+      }
+    ]
+  }
+}

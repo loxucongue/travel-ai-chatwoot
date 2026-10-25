@@ -56,8 +56,10 @@ def test_package_corrections_preserve_operator_text_and_materials():
         assert '除了地區條件有限以外' not in encoded
         assert '含75歲' in encoded
         edited = deepcopy(current)
+        edited['ai_guidance'] += '\n运营最新日期条件：4位独团可自选日期。'
         edited['content_groups']['hotel_reference']['approved_text'] = '运营最新自定义住宿'
         after = correct(edited)
+        assert after['ai_guidance'] == edited['ai_guidance']
         assert after['content_groups'] == edited['content_groups']
         assert after['fixed_answers'] == edited['fixed_answers']
         legacy = deepcopy(current)

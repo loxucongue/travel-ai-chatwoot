@@ -1,0 +1,15 @@
+[
+  {"id":"closed_season_contact_then_silent_handoff","entry":"西藏精華8天-拉薩+珠峰","now":"2026-10-14T03:00:00+00:00",
+   "steps":[
+     {"id":"offer_reopening","text":"我們兩位，只能2027年4月22日出發，要8天含珠峰，不考慮改時間。沒有這個團就等下次開放。","checks":["send","not_handoff","no_price","one_question_required_last"],"contains":["開放"],"expected_route":"tibet_essence_8d"},
+     {"id":"register_email_privately","text":"可以，開放後通知我，我的Email是customer@example.test","checks":["handoff","no_send"]}
+   ]},
+  {"id":"closed_season_respects_contact_refusal","entry":"西藏精華8天-拉薩+珠峰","now":"2026-10-14T03:00:00+00:00",
+   "steps":[
+     {"id":"no_contact_after_refusal","text":"我只能2027年4月22日出發，兩位，8天含珠峰；先不留任何聯絡資料，只在這裡問，有團嗎？","checks":["send","not_handoff","no_price","no_contact"],"excludes":["LINE","QR Code","Email"],"expected_route":"tibet_essence_8d"}
+   ]},
+  {"id":"closed_ten_day_offers_same_period_options","entry":"西藏全覽-10天林芝+拉薩+珠峰","now":"2026-10-14T03:00:00+00:00",
+   "steps":[
+     {"id":"offer_without_switching","text":"我們兩位想2027年3月20日到4月10日之間出發，含珠峰，8到11天都可以。10天如果沒有團，還有什麼選擇？","checks":["send","not_handoff","no_price","no_contact"],"excludes":["11,980","9日不上珠峰"],"expected_route":"tibet_overview_10d"}
+   ]}
+]

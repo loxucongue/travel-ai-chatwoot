@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.api import get_connection
 from app.chatwoot_service import client_for
 from app.auth import current_user, require_csrf, require_super_admin_csrf, super_admin
+from app.automation_models import AutomationRun, AutomationSession
 from app.config import settings
 from app.chatwoot import ChatwootError
 from app.conversation_policy import AI_CONTROL_LABEL, compute_state, observe_ai_label
@@ -279,22 +280,31 @@ def set_label_mappings(payload: LabelMappings, user: User = Depends(require_supe
 @router.get("/settings/notifications")
 def get_notification_settings(user: User = Depends(super_admin), db: Session = Depends(get_db)):
     value = setting_value(db, "notification_settings", {"enabled": False, "channel": "webhook", "agent_id": None, "bot_id": None, "url": None, "event_types": ["handoff.created", "handoff.overdue"]})
-    return {**value, "secret_configured": bool(value.get("encrypted_secret")), "encrypted_secret": None}
+    return {**value, "secret_configured": bool(value.get("encrypted_secret")), "encrypted_secret": None,
+            "connection_secret_configured":bool(value.get('encrypted_connection_secret')), 'encrypted_connection_secret':None}
 
 
 @router.patch("/settings/notifications")
 def set_notification_settings(payload: NotificationSettings, user: User = Depends(require_super_admin_csrf), db: Session = Depends(get_db)):
     current = setting_value(db, "notification_settings", {})
-    value = payload.model_dump(exclude={"secret"}, mode="json")
+    value = payload.model_dump(exclude={"secret", "connection_secret"}, mode="json")
     if "assign_on_handoff" not in payload.model_fields_set:
         value["assign_on_handoff"] = current.get("assign_on_handoff", False)
     value["encrypted_secret"] = current.get("encrypted_secret")
     if payload.secret:
         value["encrypted_secret"] = encrypt_secret(payload.secret).decode()
+    identity_fields = ('corp_id','wecom_agent_id') if value['channel'] == 'wecom' else ('smtp_host','smtp_port','smtp_user','smtp_security')
+    same_identity = current.get('channel') == value['channel'] and all(current.get(k) == value.get(k) for k in identity_fields)
+    value['encrypted_connection_secret'] = current.get('encrypted_connection_secret') if same_identity else None
+    if payload.connection_secret:
+        value['encrypted_connection_secret'] = encrypt_secret(payload.connection_secret).decode()
+    if value['enabled'] and value['channel'] in ('wecom','email') and not value['encrypted_connection_secret']:
+        raise HTTPException(422, detail={'code':'notification_connection_secret_required','message':'请配置应用 Secret 或邮箱授权码'})
     save_setting(db, "notification_settings", value)
     audit(db, user, "settings.notifications", "settings")
     db.commit()
-    return {**value, "encrypted_secret": None, "secret_configured": bool(value.get("encrypted_secret"))}
+    return {**value, "encrypted_secret": None, "secret_configured": bool(value.get("encrypted_secret")),
+            'encrypted_connection_secret':None,'connection_secret_configured':bool(value.get('encrypted_connection_secret'))}
 
 
 @router.post("/settings/history-sync")
@@ -346,7 +356,13 @@ def handoff_json(db: Session, task: HandoffTask) -> dict:
     conversation = db.get(ConversationState, task.conversation_state_id)
     contact = conversation.contact
     assignee = db.get(User, task.assignee_user_id) if task.assignee_user_id else None
-    return {"id": task.id, "conversation_id": conversation.chatwoot_conversation_id, "customer_name": contact.name if contact else "未知客户", "inbox": conversation.inbox.name, "inbox_id": conversation.inbox.chatwoot_inbox_id, "reason_code": task.reason_code, "reason_detail": task.reason_detail, "priority": task.priority, "status": task.status, "assignee": assignee.display_name if assignee else None, "assignee_user_id": task.assignee_user_id, "assignment_pending": task.assignment_target_user_id is not None, "assignment_target_agent_id": task.assignment_target_agent_id, "sla_due_at": task.sla_due_at, "created_at": task.created_at, "claimed_at": task.claimed_at, "completed_at": task.completed_at, "version": task.version, "labels": conversation.labels}
+    from app.reception_v3.live import session_for
+    from app.reception_v3.human_followup import enabled, waiting
+    session = session_for(db,conversation.id)
+    followup = enabled(session)
+    from app.handoff_text import handoff_summary
+    summary = handoff_summary(task.reason_code, task.reason_detail)
+    return {"id": task.id, "conversation_id": conversation.chatwoot_conversation_id, "customer_name": contact.name if contact else "未知客户", "inbox": conversation.inbox.name, "inbox_id": conversation.inbox.chatwoot_inbox_id, "reason_code": task.reason_code, "reason_label":summary['scene'], "reason_detail": summary['reason'], "priority": task.priority, "status": task.status, "assignee": assignee.display_name if assignee else None, "assignee_user_id": task.assignee_user_id, "assignment_pending": task.assignment_target_user_id is not None, "assignment_target_agent_id": task.assignment_target_agent_id, "sla_due_at": task.sla_due_at, "created_at": task.created_at, "claimed_at": task.claimed_at, "completed_at": task.completed_at, "version": task.version, "labels": conversation.labels, 'followup_enabled':followup, 'followup_waiting':waiting(session), 'label_sync_status':conversation.ai_sync_status}
 
 
 @router.get("/handoffs")
@@ -566,14 +582,41 @@ def restore_ai(task_id: int, payload: HandoffVersion, user: User = Depends(manag
     session = session_for(db, conversation.id)
     if session:
         v3_service.control(session, 'resume')
-        session.controls = {**session.controls, 'human': False}
+        session.controls = {**session.controls, 'human': False, 'auto_followup_paused': False, 'human_followup': {'enabled': False}}
         value = v3_service.state(session)
-        value.update(handoff=False, handoff_created=False, pending_event=None,
+        value.update(handoff=False, handoff_created=False, human_followup=False, pending_event=None,
                      next_check_at=None, failed_event=None, buffered_questions=[], last_reason='manual_restore')
         v3_service.save(session, value)
+    from app.conversation_labels import queue_labels
+    queue_labels(db,conversation,'ai')
     audit(db, user, "handoff.restore_ai", "handoff", task.id)
     db.commit()
     return {"ok": True, "labels": final, "ai_state": conversation.effective_ai_state}
+
+
+@router.post('/handoffs/{task_id}/return-followup')
+def return_followup(task_id: int, payload: HandoffVersion, user: User = Depends(require_csrf), db: Session = Depends(get_db)):
+    task,conversation=visible_task(db,user,task_id)
+    if task.version != payload.version or task.status not in ('claimed','completed') or task.assignment_target_user_id is not None:
+        raise HTTPException(409,detail={'code':'handoff_conflict','message':'请先领取并处理人工任务后再交回'})
+    if user.role == 'agent' and task.assignee_user_id != user.id:
+        raise HTTPException(403,detail={'code':'permission_denied','message':'只能交回自己负责的会话'})
+    from app.reception_v3.live import session_for
+    from app.reception_v3.human_followup import arm
+    try:
+        # Reserve the version so two advisors cannot arm the same task twice.
+        changed=db.execute(update(HandoffTask).where(HandoffTask.id==task.id,HandoffTask.version==payload.version)
+            .values(version=payload.version+1))
+        if not changed.rowcount:
+            raise HTTPException(409,detail={'code':'handoff_conflict','message':'任务已被更新，请刷新'})
+        db.refresh(task)
+        arm(db,conversation,session_for(db,conversation.id),task,user.id)
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(409,detail={'code':'followup_return_blocked','message':str(exc)}) from exc
+    audit(db,user,'handoff.return_followup','handoff',task.id,{'delay_minutes':30,'reply_mode':'human'})
+    db.commit()
+    return handoff_json(db,task)
 
 
 
@@ -620,8 +663,10 @@ def bi_overview(days: int = 7, inbox_id: int | None = None, user: User = Depends
     conversations = [x for x in conversations if (allowed is None or x.inbox_binding_id in allowed) and (not inbox_id or x.inbox.chatwoot_inbox_id == inbox_id)]
     ids = [x.id for x in conversations]
     messages = db.scalars(select(MessageEvent).where(MessageEvent.conversation_state_id.in_(ids), MessageEvent.created_at >= since)).all() if ids else []
-    ai_ids = {x.conversation_state_id for x in db.scalars(select(AiRun).where(AiRun.conversation_state_id.in_(ids), AiRun.status == "completed", AiRun.action == "reply")).all()} if ids else set()
-    human_ids = {x.conversation_state_id for x in messages if x.direction == "outgoing" and x.attribution in ("human", "inferred_human")}
+    ai_ids = {x.conversation_state_id for x in db.scalars(select(AiRun).where(AiRun.conversation_state_id.in_(ids), AiRun.created_at >= since, AiRun.status == "completed", AiRun.action == "reply")).all()} if ids else set()
+    # V3 replies are recorded as public AI messages, not legacy AiRun rows.
+    ai_ids.update(x.conversation_state_id for x in messages if x.direction == "outgoing" and not x.private and x.attribution == "ai")
+    human_ids = {x.conversation_state_id for x in messages if x.direction == "outgoing" and not x.private and x.attribution in ("human", "inferred_human")}
     handoffs = db.scalars(select(HandoffTask).where(HandoffTask.conversation_state_id.in_(ids), HandoffTask.created_at >= since)).all() if ids else []
     mappings = setting_value(db, "label_mappings", LabelMappings().model_dump())
     cutover = db.scalar(select(Tenant)).analytics_cutover_at or utcnow()
@@ -636,13 +681,20 @@ def bi_overview(days: int = 7, inbox_id: int | None = None, user: User = Depends
     lead_ids = {x.conversation_state_id for x in db.scalars(label_query.where(LabelEvent.label.in_(mappings["lead_labels"]))).all()}
     conversion_ids = {x.conversation_state_id for x in db.scalars(label_query.where(LabelEvent.label.in_(mappings["conversion_labels"]))).all()}
     ai_runs = db.scalars(select(AiRun).where(AiRun.conversation_state_id.in_(ids), AiRun.created_at >= since)).all() if ids else []
-    return {"range_days": days, "conversations": len(conversations), "incoming_messages": sum(x.direction == "incoming" and not x.private for x in messages), "outgoing_messages": sum(x.direction == "outgoing" and not x.private for x in messages), "ai_only": len(ai_ids - human_ids), "mixed": len(ai_ids & human_ids), "human_only": len(human_ids - ai_ids), "ai_handled": len(ai_ids), "handoffs": len(handoffs), "handoff_pending": sum(x.status == "pending" for x in handoffs), "handoff_overdue": sum(x.status in ("pending", "claimed") and x.sla_due_at and x.sla_due_at < utcnow() for x in handoffs), "leads": len(lead_ids), "conversions": len(conversion_ids), "ai_errors": sum(x.status == "failed" for x in ai_runs), "inferred_history": sum(x.attribution == "inferred_human" for x in messages)}
+    v3_errors = db.scalar(select(func.count(AutomationRun.id)).join(AutomationSession).where(
+        AutomationSession.environment == "live", AutomationSession.conversation_state_id.in_(ids),
+        AutomationRun.created_at >= since, AutomationRun.status == "failed",
+    )) if ids else 0
+    ai_errors = sum(x.status == "failed" for x in ai_runs) + v3_errors
+    now = utcnow()
+    overdue = sum(1 for x in handoffs if x.status in ("pending", "claimed") and x.sla_due_at and x.sla_due_at < now)
+    return {"range_days": days, "conversations": len(conversations), "incoming_messages": sum(x.direction == "incoming" and not x.private for x in messages), "outgoing_messages": sum(x.direction == "outgoing" and not x.private for x in messages), "ai_only": len(ai_ids - human_ids), "mixed": len(ai_ids & human_ids), "human_only": len(human_ids - ai_ids), "ai_handled": len(ai_ids), "handoffs": len(handoffs), "handoff_pending": sum(x.status == "pending" for x in handoffs), "handoff_overdue": overdue, "leads": len(lead_ids), "conversions": len(conversion_ids), "ai_errors": ai_errors, "inferred_history": sum(x.attribution == "inferred_human" for x in messages)}
 
 
 @router.get("/bi/trends")
 def bi_trends(days: int = 7, user: User = Depends(manager), db: Session = Depends(get_db)):
     since = date_floor(days)
-    query = select(MessageEvent).join(ConversationState, MessageEvent.conversation_state_id == ConversationState.id).where(MessageEvent.created_at >= since)
+    query = select(MessageEvent).join(ConversationState, MessageEvent.conversation_state_id == ConversationState.id).where(MessageEvent.created_at >= since, MessageEvent.private.is_(False))
     allowed = allowed_inbox_ids(db, user)
     if allowed is not None:
         query = query.where(ConversationState.inbox_binding_id.in_(allowed))
@@ -702,7 +754,8 @@ def notifications(unread_only: bool = False, user: User = Depends(current_user),
     if unread_only:
         query = query.where(NotificationRead.read_at.is_(None))
     rows = db.execute(query.order_by(Notification.created_at.desc(), Notification.id.desc()).limit(50)).all()
-    return {"items": [{"id": x.id, "event_type": x.event_type, "title": x.title, "body": x.body, "conversation_id": x.conversation_id, "read_at": read_at, "created_at": x.created_at} for x, read_at in rows], "unread": unread}
+    from app.handoff_text import notification_summary
+    return {"items": [{"id": x.id, "event_type": x.event_type, "title": x.title, "body": notification_summary(x.event_type,x.title,x.body), "conversation_id": x.conversation_id, "read_at": read_at, "created_at": x.created_at} for x, read_at in rows], "unread": unread}
 
 
 @router.post("/notifications/{notification_id}/read")

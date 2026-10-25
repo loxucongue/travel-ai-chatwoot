@@ -1,0 +1,681 @@
+{
+  "schema_version": 1,
+  "package_version": "2026-10-14.release-1.rongbuk-20261016.winter-spring-20261017",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "route_variant": "tibet_overview_10d",
+  "branch": "tibet_overview_10d",
+  "name": "西藏全覽10天・林芝＋拉薩＋珠峰",
+  "selection_title": "西藏全覽10天・林芝＋珠峰",
+  "selection_aliases": [
+    "西藏全覽-10天林芝+拉薩+珠峰",
+    "西藏全覽10天",
+    "西藏全览10天",
+    "西藏全覽10日",
+    "西藏10天",
+    "西藏10日",
+    "林芝拉薩珠峰10天",
+    "林芝拉萨珠峰10日",
+    "西藏10日遊",
+    "西藏10天遊",
+    "西藏全覽10天（林芝+拉薩+珠峰）"
+  ],
+  "match_keywords": [
+    "西藏全覽-10天林芝+拉薩+珠峰",
+    "西藏全覽10天",
+    "西藏全览10天",
+    "西藏全覽10日",
+    "西藏10天",
+    "西藏10日",
+    "林芝拉薩珠峰10天",
+    "林芝拉萨珠峰10日",
+    "西藏10日遊",
+    "西藏10天遊",
+    "西藏全覽10天（林芝+拉薩+珠峰）"
+  ],
+  "default_entry_message": "西藏全覽-10天林芝+拉薩+珠峰",
+  "required_slots": [
+    "party_size",
+    "departure_window"
+  ],
+  "initial_delivery_interval_seconds": 2,
+  "ai_guidance": "2026-10-14新增常規線，網站2027報價。先問月份，30秒未答就介紹，介紹後才問人數；已知月份先核對季節再介紹。按本線季節表報價，必須用get_departure_quote核算日期，未知日期先問，不借桃花活動價或30天活動截止日。3-4月建議對應桃花線，須尊重客戶是否要珠峰及天數，客戶堅持常規8日則按本線有效日期；10日3/11-4/30不售。冬遊未啟用，不能套常規線。季節性未開放先推薦同時段已啟用且匹配需求的產品；沒有合適選擇，可輕邀聯絡方式登記下次開放通知，僅邀請不轉人工。7人以上、包團、不到30天出發、只能長假需特殊報價時靜默轉人工。1-3人介紹後了解同行與長輩孩童；4-6人先了解長輩孩童，有意願再邀請LINE QR Code或微信。沿用已確認全局沉默節奏與靜默交接規則；不因已讀就當作客戶回答或同意留資。報價後接輕鬆問句；不反覆索取聯絡方式，不說請顧問或假稱檔案太大／平台漏訊息。頁面待確認的氧氣濃度、供氧時數與移動氧艙不對客宣稱。\n2026-10-15最新口徑優先於舊版冬遊未啟用的泛化說明：12–2月先說明絨布旅館關閉、冬季住山下珠峰小鎮，推薦季節限定冰川行程並問興趣；不能只叫客人等開放或立即索QR Code。這是已確認的推薦資訊，不等於冬遊可自動報價或發全套介紹；完整資料、團期、價格由內部靜默交接確認。4位獨立成團加價可用private_group_supplement；單問加價不必先算整團季節價，拼團不套獨團加價。沉默頻率以當前全局daily_at配置為準，舊版首小時多次/3小時不再適用。\n2026-10-15最新報價口徑：普通團費報價不主動列單人房差；保留團費、兩人一間、包含、不含和報價後的輕鬆問句。只有客人主動問單住費用、單人房差或相關差額時，才核對出發日期並讀取single_supplement_cny回答；僅說一位旅客不等於要求單住，不主動補房差。\n2026-10-15 14:50最新業務口徑：4位及以上可獨立成團自選出發日期，4位以下按定班；4位以上若明確選擇和其他旅客拼團，仍按拼團定班。定班星期不是獨團的日期限制。僅有4位不等於已選獨團；可先條件式說明並確認意願，不要求先改日期。獨團與拼團還有日期和費用差異，不能說只差是否有其他旅客。自選日期仍受產品季節開放、年份、長假和入藏函期限限制，不代表已確認名額，亦不允許任意改行程或車型。非定班日返回private_departure只確認可自選日期，不授權套定班報價；只問日期不轉人工，問該日實際獨團總價則靜默交接核對。4位獨團每人加400的既有條件保留；7位以上仍交人工安排，不用定班星期拒絕。\n2026-10-16最新規則：客人回答月份先核對季節，再開始適用產品介紹；四月依通用Skill推薦桃花，已說月份不重問。啟用冬遊目錄時使用其獨立資料，不能把冰川線說成珠峰小鎮線。只有special_departures中指定日期可用已確認春節價，其他日期仍照原規則；特價不疊加其他優惠，房型差價、獨團及7位以上仍需確認。春節常規8/10天若到珠峰，冬季絨布關閉，住宿按已確認的山下珠峰小鎮說明，不發絨布客房照片。",
+  "source": {
+    "url": "https://china2go.com/1013-2/",
+    "status": "verified_authenticated_browser",
+    "archive": "西藏全覽-10天林芝+拉薩+珠峰.zip",
+    "map": "圖A-2・10天林芝希爾頓行程.png",
+    "map_sha256": "da11a085dedc268770fb3cc6f8453bfc034ff1268e0821b178354a9689fe98d3",
+    "snapshot_sha256": "c47f8dc52e576838c1aef77014572fb6a9ee8638c966d4d22c3f30f0154dd415",
+    "branch_content": "data/knowledge/china2go/website-1013-20261014/content.txt",
+    "price_sheet": {
+      "filename": "2027-售價表總表-1002.xlsx",
+      "sha256": "dbaa02984af5f73921cdb946340e6f1cc8bed09c843d3d3001881396ee42f15a",
+      "sheet": "西藏",
+      "heading_cell": "A8",
+      "notes_cell": "A41",
+      "precedence": "Workbook confirms amounts; approved webpage controls sale dates and templates; 2026-10-14 business clarification treats seasonal closures as alternatives/opt-in retention. Holiday exclusions and unavailable dates take precedence over nominal seasons. No automatic discount stacking or activation of unsold products."
+    }
+  },
+  "publication": {
+    "status": "prepared",
+    "activation_allowed": true,
+    "production_enabled": false
+  },
+  "knowledge_facts": [
+    {
+      "id": "tibet_overview_10d.scope",
+      "text": "這條西藏全覽10日從林芝進、拉薩出，安排林芝、拉薩、日喀則及珠峰大本營，回程體驗拉日鐵路。",
+      "source_ref": "user-zip-20261014/圖A-2・10天林芝希爾頓行程.png"
+    },
+    {
+      "id": "tibet_overview_10d.accommodation",
+      "text": "行程圖列出的希爾頓住宿有珠峰例外：珠峰安排供氧絨布旅館。不得說所有晚數都是希爾頓；不從房間照片推斷每間房的設備、供氧時數或濃度。",
+      "source_ref": "user-zip-20261014/圖A-2・10天林芝希爾頓行程.png"
+    },
+    {
+      "id": "tibet_overview_10d.itinerary",
+      "text": "拉薩安排布達拉宮、大昭寺、八廓街、扎基寺和色拉寺；羊卓雍措、卡若拉冰川、白居寺、珠峰大本營、絨布寺（依政策）、薩迦寺、扎什倫布寺及拉日鐵路。林芝另安排魯朗林海、秀巴古堡及巴松措。ZIP與網頁的第2/3天順序或林芝酒店分店存在差異，具體先後/分店尚待確認，不承諾不一致細節。",
+      "source_ref": "website-1013-20261014/content.txt"
+    },
+    {
+      "id": "tibet_overview_10d.included",
+      "text": "包含入藏函等旅行證件辦理、門票及觀光車、回程拉日鐵路票、車、司機、中文導遊、接送、住宿及酒店早餐（珠峰簡易早）、旅行社責任險/車輛座位險/高原保障險50萬人民幣；醫用氧氣鋼瓶4L、葡萄糖、每人一罐便攜氧氣。",
+      "source_ref": "website-1013-20261014/content.txt"
+    },
+    {
+      "id": "tibet_overview_10d.excluded",
+      "text": "不含往返西藏機票或火車票、午晚餐、小費、單房差、個人花費及行程外項目。機票可提供航班建議和協助代訂。司機與導遊小費建議每人每天各人民幣30元，合計60元。此標準只適用本常規線，不能借桃花線的小費標準。",
+      "source_ref": "website-1013-20261014/content.txt"
+    },
+    {
+      "id": "tibet_overview_10d.group",
+      "text": "4人成團，拼團最多6人，9座VIP車，2人一間；4人独立成团原價每人加400，6人独团原價；未確認優惠不自行相減。7人以上或包團交顧問。",
+      "source_ref": "website-1013-20261014/content.txt"
+    },
+    {
+      "id": "tibet_overview_10d.hotel",
+      "text": "希爾頓系列供氧酒店，非冬季珠峰為供氧絨布旅館、獨立衛浴；12–2月絨布旅館關閉，改住山下珠峰小鎮。小鎮酒店名稱、房型及是否獨立衛浴尚未確認，不推斷與絨布相同或不同；客人追問這些未確認設施時靜默交接核對。頁面將12小時與85-90%氧氣濃度列為待確認，不作保證；林芝分店以確認結果為準。",
+      "source_ref": "website-1013-20261014/content.txt"
+    },
+    {
+      "id": "tibet_overview_10d.booking",
+      "text": "本表是2027年價格，其他年份需確認。入藏函按業務要求至少提前30天辦理；不足30天不報價交顧問。65歲以上按行程要求提供醫師評估/健康報告；75歲以上、5歲以下由顧問確認適合的替代線路，不斷言法規禁止。",
+      "source_ref": "website-1013-20261014/content.txt"
+    },
+    {
+      "id": "tibet_overview_10d.shopping",
+      "text": "業務原話：無購物寫入合約，有購物行為賠償5000元。",
+      "source_ref": "website-1013-20261014/content.txt"
+    },
+    {
+      "id": "tibet_overview_10d.cny_departure",
+      "text": "已確認春節指定拼團：2027-02-10出發，人民幣12,980元/人，兩人一間；僅限該日期，不代表庫存。",
+      "source_ref": "Business feedback 2026-10-16 21:26 and 22:41-22:46"
+    }
+  ],
+  "content_groups": {
+    "itinerary_overview": {
+      "approved_text": "先給您看一下我們的10日全覽西藏行程～",
+      "asset_keys": [
+        "tibet_overview_10d_itinerary"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "itinerary_overview"
+    },
+    "nyingchi": {
+      "approved_text": "這條從林芝進藏，會去巴松措、秀巴古堡與魯朗林海，給您看看景點照片～",
+      "asset_keys": [
+        "tibet_overview_10d_basum",
+        "tibet_overview_10d_castle"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "nyingchi"
+    },
+    "lhasa": {
+      "approved_text": "拉薩會安排布達拉宮、大昭寺與八廓街，也到扎基寺和色拉寺，看看當地的人文風景～",
+      "asset_keys": [
+        "tibet_overview_10d_potala",
+        "tibet_overview_10d_zaki",
+        "tibet_overview_10d_sera"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "lhasa"
+    },
+    "hotel_reference": {
+      "approved_text": "其他晚數安排希爾頓系列供氧酒店，給您看看住宿照片～",
+      "asset_keys": [
+        "tibet_overview_10d_hotel_1",
+        "tibet_overview_10d_hotel_2"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.hotel"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "hotel_reference"
+    },
+    "vehicle_reference": {
+      "approved_text": "我們的拼團最多6人，安排9座VIP車，給您看看車內座位～",
+      "asset_keys": [
+        "tibet_overview_10d_vehicle"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.group"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "vehicle_reference"
+    },
+    "vehicle_oxygen": {
+      "approved_text": "隨車配備醫用氧氣鋼瓶、葡萄糖及每人一罐便攜氧氣。",
+      "asset_keys": [
+        "tibet_overview_10d_vehicle_oxygen"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.included"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "vehicle_oxygen"
+    },
+    "everest": {
+      "approved_text": "珠峰大本營也是這條行程的重點，這是團友拍到的日照金山，能否看到要配合當天天氣喔～",
+      "asset_keys": [
+        "tibet_overview_10d_everest"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "everest"
+    },
+    "rongbuk": {
+      "approved_text": "珠峰那晚安排供氧絨布旅館，有獨立衛浴喔～",
+      "asset_keys": [
+        "tibet_overview_10d_rongbuk",
+        "rongbuk-bathroom-20261016"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.hotel"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "rongbuk",
+      "seasonal_override": {
+        "months": [
+          12,
+          1,
+          2
+        ],
+        "text": "冬季絨布旅館關閉，珠峰那晚安排住山下的珠峰小鎮。",
+        "undated_text": "珠峰住宿會依出發季節安排；冬季絨布旅館關閉，改住山下的珠峰小鎮。",
+        "source_ref": "Business feedback 2026-10-15 winter accommodation"
+      }
+    },
+    "company": {
+      "approved_text": "我們 China2Go 國旅環球主要接待港澳台與全球外賓，安排純玩小團。",
+      "asset_keys": [
+        "tibet_overview_10d_lulang_guests"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.scope"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "company"
+    },
+    "no_shopping": {
+      "approved_text": "我們把無購物寫在合約上，有購物行為依約賠償人民幣5,000元。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_overview_10d.shopping"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "no_shopping"
+    },
+    "read_check": {
+      "approved_text": "所以我們的拼團一團最多六人，一個人也能報名喔！請問您們大概幾位呢？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_overview_10d.group"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "read_check"
+    },
+    "followup_sakya": {
+      "approved_text": "行程也安排珠峰下山後去薩迦寺，和您分享這裡的建築風景～",
+      "asset_keys": [
+        "tibet_overview_10d_sakya"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_sakya"
+    },
+    "followup_railway": {
+      "approved_text": "回程安排拉日鐵路回拉薩，可以從車窗欣賞沿途風景～",
+      "asset_keys": [
+        "tibet_overview_10d_railway"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup_railway"
+    },
+    "guest_followup_1": {
+      "approved_text": "給您分享一下我們的團友照片～",
+      "asset_keys": [
+        "tibet_overview_10d_guests_1"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "guest_followup_1"
+    },
+    "guest_followup_2": {
+      "approved_text": "給您分享一下我們的團友照片～",
+      "asset_keys": [
+        "tibet_overview_10d_guests_2"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "guest_followup_2"
+    },
+    "guest_followup_3": {
+      "approved_text": "給您分享一下我們的團友照片～",
+      "asset_keys": [
+        "tibet_overview_10d_guests_3"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "guest_followup_3"
+    },
+    "contact_request": {
+      "approved_text": "方便給我您的 LINE QR Code 或微信嗎？我們可以接著協助您確認詳細安排～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_overview_10d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "contact_request"
+    },
+    "price_reference": {
+      "approved_text": "西藏有淡旺季，我先按出發時間幫您核對價格。請問您預計哪一年、幾月出發呢？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_overview_10d.booking"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "price_reference"
+    }
+  },
+  "content_sequence": [
+    "itinerary_overview",
+    "nyingchi",
+    "lhasa",
+    "hotel_reference",
+    "vehicle_reference",
+    "vehicle_oxygen",
+    "everest",
+    "rongbuk",
+    "company",
+    "no_shopping",
+    "read_check",
+    "followup_sakya",
+    "followup_railway",
+    "guest_followup_1",
+    "guest_followup_2",
+    "guest_followup_3",
+    "contact_request",
+    "price_reference"
+  ],
+  "fixed_answers": [
+    {
+      "id": "price_low",
+      "name": "淡季報價",
+      "answer_text": "【西藏全覽10天｜林芝＋拉薩＋珠峰】\n淡季出發：3/1－3/10、10/15－11/30（每週二出發）\n6人精緻小團：¥10,480/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費\n現在報名還有優惠喔！",
+      "source_ref": "website-1013-20261014/content.txt",
+      "content_group_key": "price_reference",
+      "topics": [
+        "price"
+      ],
+      "fact_ids": [
+        "tibet_overview_10d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "已確認10/15－3/10內的2027出發日期，且不是長假/缺價日期"
+      ],
+      "negative_examples": [
+        "未知日期",
+        "長假",
+        "其他年份",
+        "出發不足30天",
+        "沒有問價"
+      ],
+      "usage_note": "必須先用 get_departure_quote 核對日期與返回的 script_id，原樣引用；不自行套用其他季節。\n2026-10-15最新報價口徑：普通團費報價不主動列單人房差；保留團費、兩人一間、包含、不含和報價後的輕鬆問句。只有客人主動問單住費用、單人房差或相關差額時，才核對出發日期並讀取single_supplement_cny回答；僅說一位旅客不等於要求單住，不主動補房差。",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "price_source_ref": "price-sheet-20261014/2027-售價表總表-1002.xlsx#西藏!A10:C10"
+    },
+    {
+      "id": "price_summer",
+      "name": "次次旺季報價",
+      "answer_text": "【西藏全覽10天｜林芝＋拉薩＋珠峰】\n次次旺季出發：5/6－6/30（每週二出發）\n6人精緻小團：¥12,280/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費\n現在報名還有優惠喔！",
+      "source_ref": "website-1013-20261014/content.txt",
+      "content_group_key": "price_reference",
+      "topics": [
+        "price"
+      ],
+      "fact_ids": [
+        "tibet_overview_10d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "已確認5/6－6/30內的2027出發日期，且不是長假/缺價日期"
+      ],
+      "negative_examples": [
+        "未知日期",
+        "長假",
+        "其他年份",
+        "出發不足30天",
+        "沒有問價"
+      ],
+      "usage_note": "必須先用 get_departure_quote 核對日期與返回的 script_id，原樣引用；不自行套用其他季節。\n2026-10-15最新報價口徑：普通團費報價不主動列單人房差；保留團費、兩人一間、包含、不含和報價後的輕鬆問句。只有客人主動問單住費用、單人房差或相關差額時，才核對出發日期並讀取single_supplement_cny回答；僅說一位旅客不等於要求單住，不主動補房差。",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "price_source_ref": "price-sheet-20261014/2027-售價表總表-1002.xlsx#西藏!A12:C12"
+    },
+    {
+      "id": "price_peak",
+      "name": "旺季報價",
+      "answer_text": "【西藏全覽10天｜林芝＋拉薩＋珠峰】\n旺季出發：7/1－9/24（每週二出發）\n6人精緻小團：¥12,880/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費\n現在報名還有優惠喔！",
+      "source_ref": "website-1013-20261014/content.txt",
+      "content_group_key": "price_reference",
+      "topics": [
+        "price"
+      ],
+      "fact_ids": [
+        "tibet_overview_10d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "已確認7/1－9/24內的2027出發日期，且不是長假/缺價日期"
+      ],
+      "negative_examples": [
+        "未知日期",
+        "長假",
+        "其他年份",
+        "出發不足30天",
+        "沒有問價"
+      ],
+      "usage_note": "必須先用 get_departure_quote 核對日期與返回的 script_id，原樣引用；不自行套用其他季節。\n2026-10-15最新報價口徑：普通團費報價不主動列單人房差；保留團費、兩人一間、包含、不含和報價後的輕鬆問句。只有客人主動問單住費用、單人房差或相關差額時，才核對出發日期並讀取single_supplement_cny回答；僅說一位旅客不等於要求單住，不主動補房差。",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "price_source_ref": "price-sheet-20261014/2027-售價表總表-1002.xlsx#西藏!A13:C13"
+    },
+    {
+      "id": "hotel",
+      "name": "住宿",
+      "answer_text": "行程安排希爾頓系列供氧酒店，珠峰那晚住供氧絨布旅館，有獨立衛浴喔～",
+      "source_ref": "website-1013-20261014/content.txt",
+      "content_group_key": "hotel_reference",
+      "topics": [
+        "hotel"
+      ],
+      "fact_ids": [
+        "tibet_overview_10d.hotel"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "住宿"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "tips",
+      "name": "小費",
+      "answer_text": "司機和導遊小費建議每人每天各人民幣30元，一天合計60元。",
+      "source_ref": "website-1013-20261014/content.txt",
+      "content_group_key": "hotel_reference",
+      "topics": [
+        "tips"
+      ],
+      "fact_ids": [
+        "tibet_overview_10d.excluded"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "小費"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "airfare",
+      "name": "機票",
+      "answer_text": "團費不含往返西藏的機票或火車票，我們可以提供航班建議與協助代訂；行程內的拉日鐵路票有包含喔～",
+      "source_ref": "website-1013-20261014/content.txt",
+      "content_group_key": "hotel_reference",
+      "topics": [
+        "airfare"
+      ],
+      "fact_ids": [
+        "tibet_overview_10d.excluded"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "機票"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "quote_date",
+      "name": "確認日期",
+      "answer_text": "西藏有淡旺季，我先按出發時間幫您核對價格。請問您預計哪一年、幾月出發呢？",
+      "source_ref": "website-1013-20261014/content.txt",
+      "content_group_key": "price_reference",
+      "topics": [
+        "quote_date"
+      ],
+      "fact_ids": [
+        "tibet_overview_10d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "確認日期"
+      ],
+      "negative_examples": [],
+      "status": "active",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "private_group_supplement",
+      "name": "4位獨立成團加價說明",
+      "answer_text": "如果您們4位獨立成團，需在原團費基礎上每人加人民幣400元；這是獨立成團的加價，參加拼團不適用這項加價。您們想自己一團，還是和其他旅客拼團呢？",
+      "source_ref": "Approved group fact + Linger 2026-10-14 21:56",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "content_group_key": "price_reference",
+      "topics": [
+        "private_group_supplement"
+      ],
+      "fact_ids": [],
+      "asset_ids": [],
+      "positive_examples": [
+        "4個人走要不要加錢",
+        "四位獨立成團加多少"
+      ],
+      "negative_examples": [
+        "我們4人參加拼團",
+        "6位獨立成團"
+      ],
+      "usage_note": "僅答4位獨立成團的額外費用。上文已推薦自己一團時可條件式承接；明確選獨團就省去末尾二選一。未知拼團/獨團先區分，不斷言所有4人均加價。要總價仍需核日期；未核實優惠不自行相減；已留資或要真人靜默交接。"
+    },
+    {
+      "id": "price_cny_20270210",
+      "name": "春節指定團期報價",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "source_ref": "Business feedback 2026-10-16 21:26 and 22:41-22:46",
+      "answer_text": "【西藏全覽10天・林芝＋拉薩＋珠峰】\n春節指定出發：2027/02/10\n拼團價格：人民幣¥12,980/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費",
+      "content_group_key": "price_reference",
+      "topics": [
+        "price"
+      ],
+      "fact_ids": [],
+      "asset_ids": [],
+      "positive_examples": [
+        "2027-02-10拼團價格"
+      ],
+      "negative_examples": [
+        "其他日期",
+        "獨團",
+        "7人以上",
+        "沒有問價格"
+      ],
+      "usage_note": "get_departure_quote返回本script_id才可引用。不套普通星期、活動截止日、房差或疊加優惠。"
+    }
+  ],
+  "intake": {
+    "field": "departure_window",
+    "question": "請問您大概想幾月出發呢？",
+    "options": [
+      "12-2月",
+      "3-4月",
+      "5-6月",
+      "7-8月",
+      "9-11月"
+    ],
+    "wait_seconds": 30
+  },
+  "seasonal_pricing": {
+    "years": [
+      2027
+    ],
+    "minimum_notice_days": 30,
+    "weekday": 1,
+    "advisor_months": [
+      12,
+      1,
+      2
+    ],
+    "holiday_ranges": [
+      [
+        "02-01",
+        "02-16"
+      ],
+      [
+        "04-25",
+        "05-05"
+      ],
+      [
+        "09-25",
+        "10-14"
+      ]
+    ],
+    "unavailable_ranges": [
+      [
+        "03-11",
+        "04-30"
+      ]
+    ],
+    "bands": [
+      {
+        "script_id": "price_low",
+        "ranges": [
+          [
+            "01-01",
+            "03-10"
+          ],
+          [
+            "10-15",
+            "12-31"
+          ]
+        ],
+        "price_cny": 10480,
+        "single_supplement_cny": 2400,
+        "source_ref": "price-sheet-20261014/2027-售價表總表-1002.xlsx#西藏!A10:C10"
+      },
+      {
+        "script_id": "price_summer",
+        "ranges": [
+          [
+            "05-06",
+            "06-30"
+          ]
+        ],
+        "price_cny": 12280,
+        "single_supplement_cny": 3000,
+        "source_ref": "price-sheet-20261014/2027-售價表總表-1002.xlsx#西藏!A12:C12"
+      },
+      {
+        "script_id": "price_peak",
+        "ranges": [
+          [
+            "07-01",
+            "09-24"
+          ]
+        ],
+        "price_cny": 12880,
+        "single_supplement_cny": 3200,
+        "source_ref": "price-sheet-20261014/2027-售價表總表-1002.xlsx#西藏!A13:C13"
+      }
+    ],
+    "winter_recommendation": {
+      "months": [
+        12,
+        1,
+        2
+      ],
+      "name": "季節限定冰川行程",
+      "explanation": "這段時間的珠峰絨布旅館處於關閉狀態，需要住到山下的珠峰小鎮；這段時間我們有另外一條季節限定的冰川行程。",
+      "source_ref": "Linger 2026-10-14 21:33 business feedback; recommendation only, dates/prices not published"
+    },
+    "private_departure_min_party_size": 4,
+    "special_departures": [
+      {
+        "date": "2027-02-10",
+        "price_cny": 12980,
+        "script_id": "price_cny_20270210",
+        "group_type": "shared",
+        "room_occupancy": 2,
+        "source_ref": "Business feedback 2026-10-16 21:26 and 22:41-22:46"
+      }
+    ]
+  }
+}

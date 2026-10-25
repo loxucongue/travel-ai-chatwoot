@@ -1,0 +1,21 @@
+{
+  "add_enabled_route_variants": [
+    "tibet_essence_8d",
+    "tibet_overview_10d"
+  ],
+  "preserve_existing_routes": true,
+  "preserve_existing_config_sections": [
+    "reply",
+    "intake",
+    "silence",
+    "handoff",
+    "lead_capture",
+    "common_scripts"
+  ],
+  "route_intake_override": {
+    "field": "departure_window",
+    "wait_seconds": 30
+  },
+  "existing_route_availability_patch": "configure_seasonal_retention_20261014.update_package; preserve all other runtime fields",
+  "deployment_state": "prepared_not_applied"
+}

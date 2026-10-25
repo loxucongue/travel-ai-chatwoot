@@ -259,12 +259,14 @@ def process_assignment(session_factory=None):
         connection = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == conversation.tenant_id))
         record_id, remote_id, inbox_id = record.id, conversation.chatwoot_conversation_id, conversation.inbox.chatwoot_inbox_id
         target, action = record.agent_id, record.action
+        from app.reception_rollout import reception_inbox_allowed
+        inbox_allowed = reception_inbox_allowed(db, inbox_id)
         db.commit()
     client = None
     try:
         if connection is None:
             raise ValueError('Chatwoot连接未配置')
-        if settings.app_profile == 'live_reply' and (connection.account_id != settings.live_reply_account_id or inbox_id != settings.live_reply_inbox_id):
+        if settings.app_profile == 'live_reply' and (connection.account_id != settings.live_reply_account_id or not inbox_allowed):
             raise ValueError('分配不在当前正式接待范围')
         client = client_for(connection)
         remote = payload_dict(client.get_conversation(remote_id))

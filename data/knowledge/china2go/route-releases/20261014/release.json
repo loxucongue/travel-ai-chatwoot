@@ -1,0 +1,17 @@
+{
+  "status": "prepared_not_deployed",
+  "source_snapshot_sha256": "c47f8dc52e576838c1aef77014572fb6a9ee8638c966d4d22c3f30f0154dd415",
+  "routes": [
+    "tibet_essence_8d",
+    "tibet_overview_10d"
+  ],
+  "asset_references": 32,
+  "decisions": [
+    "Original peach packages, pricing and promotions unchanged.",
+    "Global silence schedule and silent handoff retained; route-specific month intake is 30 seconds.",
+    "Winter route is not enabled; offer verified alternatives or reopening notification, do not activate an incomplete fifth route.",
+    "Seasonal closures use alternatives/opt-in retention. Short notice and special holiday quotes still require an advisor.",
+    "Map/source discrepancies: 8-day D2/D3 ordering; 10-day Nyingchi Hilton branch. Exact details not promised.",
+    "Only supplied 8-day guest photo bound to 8-day route; no borrowing of the three 10-day guest photos."
+  ]
+}

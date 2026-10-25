@@ -1,0 +1,467 @@
+{
+  "schema_version": 1,
+  "package_version": "2026-10-17.winter-1.winter-spring-20261017",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "route_variant": "tibet_winter_8d",
+  "branch": "tibet_winter_8d",
+  "name": "冬遊西藏｜冰川藍冰8天",
+  "selection_title": "冬遊西藏・冰川藍冰8天",
+  "selection_aliases": [
+    "冬遊西藏",
+    "冬游西藏",
+    "冰川藍冰8天",
+    "冰川蓝冰8天",
+    "林芝冰川冰湖8日"
+  ],
+  "match_keywords": [
+    "冬遊西藏",
+    "冬游西藏",
+    "冰川藍冰8天",
+    "冰川蓝冰8天",
+    "林芝冰川冰湖8日"
+  ],
+  "default_entry_message": "冬遊西藏・冰川藍冰8天",
+  "required_slots": [
+    "party_size",
+    "departure_window"
+  ],
+  "initial_delivery_interval_seconds": 2,
+  "publication": {
+    "status": "prepared",
+    "activation_allowed": true,
+    "production_enabled": false
+  },
+  "source": {
+    "branch_content": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17",
+    "archive": "-12-2月選項-冬遊西藏.zip"
+  },
+  "intake": {
+    "field": "departure_window",
+    "question": "請問您大概想幾月出發呢？",
+    "options": [
+      "12月",
+      "1月",
+      "2月",
+      "春節"
+    ],
+    "wait_seconds": 30
+  },
+  "ai_guidance": "本線林芝進拉薩出，不含珠峰、絨布旅館或珠峰小鎮。已知月份不重問，先核日期再介紹。以行程圖和本線素材為準，不把舊網頁編號當新圖編號。沒有問價格不報價；普通房差1500僅主動問單住時答，春節特價房差未確認不能套用。不承諾氧氣濃度、時數、醫療效果、冰況或所有團均可上冰。沿用每日一次與靜默交接；不使用半天/三小時索資、已讀續推或檔案太大的舊說法。\n2026-10-16最新規則：客人回答月份先核對季節，再開始適用產品介紹；四月依通用Skill推薦桃花，已說月份不重問。啟用冬遊目錄時使用其獨立資料，不能把冰川線說成珠峰小鎮線。只有special_departures中指定日期可用已確認春節價，其他日期仍照原規則；特價不疊加其他優惠，房型差價、獨團及7位以上仍需確認。春節常規8/10天若到珠峰，冬季絨布關閉，住宿按已確認的山下珠峰小鎮說明，不發絨布客房照片。",
+  "seasonal_pricing": {
+    "years": [
+      2026,
+      2027
+    ],
+    "operating_periods": [
+      [
+        "2026-12-15",
+        "2027-02-28"
+      ]
+    ],
+    "minimum_notice_days": 30,
+    "weekday": 3,
+    "holiday_ranges": [
+      [
+        "02-01",
+        "02-16"
+      ]
+    ],
+    "advisor_months": [],
+    "unavailable_ranges": [],
+    "private_departure_min_party_size": 4,
+    "bands": [
+      {
+        "script_id": "price_winter",
+        "ranges": [
+          [
+            "01-01",
+            "02-28"
+          ],
+          [
+            "12-15",
+            "12-31"
+          ]
+        ],
+        "price_cny": 9280,
+        "single_supplement_cny": 1500
+      }
+    ],
+    "special_departures": [
+      {
+        "date": "2027-02-05",
+        "price_cny": 10980,
+        "script_id": "price_cny_20270205",
+        "group_type": "shared",
+        "room_occupancy": 2,
+        "source_ref": "Business feedback 2026-10-16 21:26 and 22:41-22:46"
+      }
+    ]
+  },
+  "knowledge_facts": [
+    {
+      "id": "tibet_winter_8d.itinerary",
+      "text": "林芝接機；色季拉山、南迦巴瓦峰、魯朗林海；然烏湖、來古冰川；噶朗湖、噶朗村、噶朗王宮、雪山牧場；秀巴古堡、巴松措；布達拉宮、大昭寺、八廓街；羊卓雍措、卡若拉冰川、恰央措；拉薩送機/送火車。不含珠峰或拉日鐵路。",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17"
+    },
+    {
+      "id": "tibet_winter_8d.hotel",
+      "text": "行程圖：林芝希爾頓花園、波密山水供氧酒店、拉薩希爾頓惠庭。雙人一間。冰川線不住絨布或珠峰小鎮；具體房型以安排確認為準。",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17"
+    },
+    {
+      "id": "tibet_winter_8d.group",
+      "text": "4–6人拼團，一人也可報名，VIP車。已確認普通團4人獨立成團每人加400、6人原價；春節及其他未核實組合不套用。",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17"
+    },
+    {
+      "id": "tibet_winter_8d.included",
+      "text": "包含入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐；不含機票、午晚餐、小費。普通團單人房差1500元，僅客人主動詢問時說明。",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17"
+    },
+    {
+      "id": "tibet_winter_8d.equipment",
+      "text": "車上配備供氧設備、緊急氧氣鋼瓶和葡萄糖。設備不是醫療效果保證；不承諾氧氣濃度或供應時數。",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17"
+    },
+    {
+      "id": "tibet_winter_8d.booking",
+      "text": "已確認出發期間2026-12-15至2027-02-28，普通每週四9280元/人，兩人一間；指定特別日期以special_departures為準。入藏函至少提前30天。",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17"
+    },
+    {
+      "id": "tibet_winter_8d.no_shopping",
+      "text": "無購物寫入合約，有購物行為依約賠償人民幣5000元。",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17"
+    },
+    {
+      "id": "tibet_winter_8d.cny_departure",
+      "text": "已確認春節指定拼團：2027-02-05出發，人民幣10,980元/人，兩人一間；僅限該日期，不代表庫存。",
+      "source_ref": "Business feedback 2026-10-16 21:26 and 22:41-22:46"
+    }
+  ],
+  "content_groups": {
+    "itinerary": {
+      "approved_text": "先給您看冬遊西藏的冰川藍冰8天行程～從林芝進、拉薩出，不走珠峰。",
+      "asset_keys": [
+        "tibet_winter_8d_map"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "itinerary"
+    },
+    "nyingchi": {
+      "approved_text": "行程從林芝出發，會到魯朗林海並遠眺南迦巴瓦峰，景觀視當天天氣而定。",
+      "asset_keys": [
+        "tibet_winter_8d_namcha"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "nyingchi"
+    },
+    "ranwu": {
+      "approved_text": "我們會去到G318沿線的然烏湖，給您看看湖景與團友照片～",
+      "asset_keys": [
+        "tibet_winter_8d_ranwu",
+        "tibet_winter_8d_ranwu-guests"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "ranwu"
+    },
+    "laigu": {
+      "approved_text": "這條冬遊線會去來古冰川，給您看看藍冰的參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_laigu"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "laigu"
+    },
+    "basum": {
+      "approved_text": "沿途也安排巴松措，湖心島與雪山都是這裡的特色。",
+      "asset_keys": [
+        "tibet_winter_8d_basum"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "basum"
+    },
+    "lhasa": {
+      "approved_text": "到拉薩會安排布達拉宮、大昭寺與八廓街，看看當地的人文風景。",
+      "asset_keys": [
+        "tibet_winter_8d_potala"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "lhasa"
+    },
+    "qiayang": {
+      "approved_text": "行程也加入恰央措冰湖，這些是團友的參考照片，實際冰況及活動依當天安排。",
+      "asset_keys": [
+        "tibet_winter_8d_qiayang-a",
+        "tibet_winter_8d_qiayang-b",
+        "tibet_winter_8d_qiayang-guests",
+        "tibet_winter_8d_qiayang-guests-rest"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "qiayang"
+    },
+    "hotel": {
+      "approved_text": "林芝與拉薩安排希爾頓系列酒店，波密住山水供氧酒店，給您看看客房參考照。",
+      "asset_keys": [
+        "tibet_winter_8d_hotel-a",
+        "tibet_winter_8d_hotel-b"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.hotel"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "hotel"
+    },
+    "vehicle": {
+      "approved_text": "我們採4–6人小團，安排VIP車，給您看車內座位～",
+      "asset_keys": [
+        "tibet_winter_8d_vehicle"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.group"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "vehicle"
+    },
+    "oxygen": {
+      "approved_text": "車上備有供氧設備、緊急氧氣鋼瓶與葡萄糖。",
+      "asset_keys": [
+        "tibet_winter_8d_oxygen"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.equipment"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "oxygen"
+    },
+    "no_shopping": {
+      "approved_text": "我們把無購物寫在合約上，有購物行為依約賠償人民幣5,000元。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_winter_8d.no_shopping"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets",
+      "purpose": "no_shopping"
+    },
+    "followup-guests": {
+      "approved_text": "冬季團友照，給您看看參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_winter-guests"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup-guests"
+    },
+    "followup-guide": {
+      "approved_text": "冬季團隊參考照，給您看看參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_guide"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup-guide"
+    },
+    "followup-barkhor": {
+      "approved_text": "八廓街，給您看看參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_barkhor"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup-barkhor"
+    },
+    "followup-potala": {
+      "approved_text": "冬季布達拉宮，給您看看參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_winter-potala"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup-potala"
+    },
+    "followup-namcha": {
+      "approved_text": "南迦巴瓦峰參考照，給您看看參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_winter-namcha"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup-namcha"
+    },
+    "followup-yamdrok": {
+      "approved_text": "羊卓雍措，給您看看參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_yamdrok"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup-yamdrok"
+    },
+    "followup-potala-guest": {
+      "approved_text": "布達拉宮團友照，給您看看參考照片～",
+      "asset_keys": [
+        "tibet_winter_8d_potala-guest"
+      ],
+      "evidence_refs": [
+        "tibet_winter_8d.itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "purpose": "followup-potala-guest"
+    },
+    "price_reference": {
+      "approved_text": "請問您預計哪一年、幾月出發呢？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_winter_8d.booking"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    }
+  },
+  "content_sequence": [
+    "itinerary",
+    "nyingchi",
+    "ranwu",
+    "laigu",
+    "basum",
+    "lhasa",
+    "qiayang",
+    "hotel",
+    "vehicle",
+    "oxygen",
+    "no_shopping",
+    "followup-guests",
+    "followup-guide",
+    "followup-barkhor",
+    "followup-potala",
+    "followup-namcha",
+    "followup-yamdrok",
+    "followup-potala-guest",
+    "price_reference"
+  ],
+  "fixed_answers": [
+    {
+      "id": "price_winter",
+      "name": "冬遊普通團報價",
+      "answer_text": "【冬遊西藏｜冰川藍冰8天】\n冬季出發：2026/12/15–2027/02/28（每週四，春節另計）\n6人精緻小團：¥9,280/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "content_group_key": "price_reference",
+      "topics": [
+        "price"
+      ],
+      "fact_ids": [
+        "tibet_winter_8d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "冬遊團期與價格"
+      ],
+      "negative_examples": [
+        "常規8天",
+        "其他產品"
+      ],
+      "usage_note": "價格需get_departure_quote核對成功才引用，輕鬆問句另放一條；春節不能用普通價。"
+    },
+    {
+      "id": "quote_date",
+      "name": "確認日期",
+      "answer_text": "請問您預計哪一年、幾月出發呢？",
+      "source_ref": "website-1013-20261014/content.txt#winter; supplied winter ZIP 2026-10-17",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "content_group_key": "price_reference",
+      "topics": [
+        "price"
+      ],
+      "fact_ids": [
+        "tibet_winter_8d.booking"
+      ],
+      "asset_ids": [],
+      "positive_examples": [
+        "冬遊團期與價格"
+      ],
+      "negative_examples": [
+        "常規8天",
+        "其他產品"
+      ],
+      "usage_note": "價格需get_departure_quote核對成功才引用，輕鬆問句另放一條；春節不能用普通價。"
+    },
+    {
+      "id": "price_cny_20270205",
+      "name": "春節指定團期報價",
+      "status": "active",
+      "answer_origin": "operator_approved",
+      "source_ref": "Business feedback 2026-10-16 21:26 and 22:41-22:46",
+      "answer_text": "【冬遊西藏｜冰川藍冰8天】\n春節指定出發：2027/02/05\n拼團價格：人民幣¥10,980/人（2人一間）\n包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐\n不含：機票、午晚餐、小費",
+      "content_group_key": "price_reference",
+      "topics": [
+        "price"
+      ],
+      "fact_ids": [],
+      "asset_ids": [],
+      "positive_examples": [
+        "2027-02-05拼團價格"
+      ],
+      "negative_examples": [
+        "其他日期",
+        "獨團",
+        "7人以上",
+        "沒有問價格"
+      ],
+      "usage_note": "get_departure_quote返回本script_id才可引用。不套普通星期、活動截止日、房差或疊加優惠。"
+    }
+  ]
+}

@@ -21,10 +21,14 @@ def heartbeat(worker_id):
 
 
 def maintenance_tick(receipts_checked, deadlines):
+    from app.conversation_labels import process_label_sync
+    from app.engagement_labels import process_label_addition
     from app.notification_dispatch import process_handoff_overdue, process_notification_delivery
     from app.advisor_assignment import process_assignment
     errors = deadlines.setdefault("errors", {})
-    tasks = [("assignments", lambda: process_assignment(SessionLocal)),
+    tasks = [("control_labels", lambda: process_label_sync(SessionLocal)),
+             ("business_labels", lambda: process_label_addition(SessionLocal)),
+             ("assignments", lambda: process_assignment(SessionLocal)),
              ("handoffs", lambda: process_handoff_overdue(SessionLocal)),
              ("notifications", lambda: process_notification_delivery(SessionLocal))]
     now = time.monotonic()

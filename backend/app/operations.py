@@ -71,6 +71,20 @@ def ensure_handoff(
     priority: str = "P2",
     *, dispatch: bool = True,
 ) -> HandoffTask:
+    from app.handoff_text import handoff_summary
+    summary = handoff_summary(reason_code, reason_detail)
+    reason_detail = summary['reason']
+    from app.conversation_labels import queue_labels
+    queue_labels(db, conversation, 'human')
+    from app.reception_v3.live import session_for
+    from app.reception_v3 import service
+    session = session_for(db, conversation.id)
+    if session and session.controls.get('human_followup', {}).get('enabled'):
+        service.control(session, 'stop')
+        session.controls = {**session.controls, 'human': True, 'human_followup': {'enabled': False}}
+        value = service.state(session)
+        value['human_followup'] = False
+        service.save(session, value)
     existing = db.scalar(select(HandoffTask).where(HandoffTask.conversation_state_id == conversation.id, HandoffTask.status.in_(["pending", "claimed"])))
     if conversation.effective_ai_state != "HUMAN_HANDOFF":
         conversation.effective_ai_state = "HUMAN_HANDOFF"
@@ -96,7 +110,7 @@ def ensure_handoff(
         routed = emit(db, conversation, [handoff_event(reason_code), 'handoff.created'], f'handoff:{task.id}',
                       {**(session.memory if session else {}),
                        'route_variant': (session.controls if session else {}).get('route_variant',''),
-                       'summary': reason_detail or reason_code})
+                       'summary': summary['text']})
     if dispatch and not (routed and routed.rule_id):
-        create_notification(db, "handoff.created", "新的人工接管任务", reason_detail or reason_code, conversation.chatwoot_conversation_id)
+        create_notification(db, "handoff.created", "需要顾问接待", summary['text'], conversation.chatwoot_conversation_id)
     return task

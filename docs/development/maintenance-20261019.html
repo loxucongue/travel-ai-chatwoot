@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>China2Go 运行维护检查 · 2026-10-19</title>
+<style>
+body{margin:0;background:#f5f7fa;color:#223046;font:15px/1.75 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1150px;margin:32px auto;padding:30px;background:white;border-radius:16px}h1{font-size:27px;margin:0 0 8px}h2{font-size:20px;margin-top:30px}p{margin:10px 0}.meta{color:#66758a}.note{background:#eef7f4;border-left:4px solid #287d69;padding:14px 18px}.risk{background:#fff6df;border-left:4px solid #bd8620;padding:14px 18px}.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:12px;border:1px solid #dce4eb;text-align:left;vertical-align:top}th{background:#f0f4f8}code{overflow-wrap:anywhere;font-size:13px}a{color:#185a9f}li{margin:6px 0}@media(max-width:700px){main{margin:0;padding:18px;border-radius:0}table{min-width:760px}}
+</style><main>
+<h1>China2Go 最近运行检查与维护</h1>
+<p class="note"><b>13:39 清理完成：</b>用户明确要求直接清理、不归档。已删除 382 份历史数据库副本及 124 个闲置附属文件，共 506 个文件，实际释放约 12.32 GiB；可用空间由 1.35 GiB 提升至 13.67 GiB。没有建立归档或新增数据库备份。生产库、145 个媒体引用、当前代码、线路资料及现有备份/回滚文件保留。数据库完整性、4 个 Worker 持续心跳、队列、媒体可用性、公网首页与 health/ready 验证通过，清理后未见新错误。</p>
+<p>直接清理记录：<a href="../../output/maintenance-20261019/cleanup-result.json">506 个文件的删除回执</a>、<a href="../../output/maintenance-20261019/cleanup-verification.json">清理后验证</a>。此次只清理核定副本及附属文件，没有自动删除整批发布目录。</p>
+<p class="meta">检查：2026-10-19 11:38–11:51（北京时间）。业务统计快照：11:38；发布后验证：11:51。覆盖最近 24 小时、48 小时及 7 天。</p>
+<p class="note">当前客户接待正常。发现并上线修复了后台统计空值崩溃、线路管理旧字段兼容、V3 接待统计漏算三项问题。133 项首轮专项通过，统计修正后 21 项复测通过，共覆盖 134 个不同测试。本次没有调用付费模型或向真实客户发送测试消息。</p>
+<h2>运行情况与处理结果</h2><div class="scroll"><table>
+<thead><tr><th>检查项</th><th>证据与结果</th><th>本次处理 / 当前结论</th></tr></thead><tbody>
+<tr><td>核心服务与公网访问</td><td>API、正式 Worker、演练 Worker、Nginx 均 active；4 个当前 Worker 心跳约 1 秒内。前端首页、API health、ready 公网请求均 HTTP 200。</td><td>发布后重新核验通过；旧版 8 月的历史心跳记录不属于当前必需 Worker。</td></tr>
+<tr><td>最近 48 小时正式接待</td><td>99 个正式运行任务 completed，0 failed；另 1 个被更新客户消息替代而取消。82 条客户入站，涉及 26 个会话。</td><td>无待执行或执行中任务积压。运行耗时中位 3.28 秒、P95 8.19 秒；这是任务执行耗时，不含客户输入等待和完整分段发送时间。</td></tr>
+<tr><td>最近 24 小时正式接待</td><td>52 个任务 completed，0 failed；37 条客户入站，涉及 16 个会话。</td><td>该时间窗运行正常，不能据此保证未来模型请求均成功。</td></tr>
+<tr><td>向前 7 天</td><td>246 个正式任务 completed、17 failed、6 cancelled。失败为 9 次 EvaluationCallError、5 次上游 503、2 次并发更新冲突、1 次报价校验拒绝；最近失败发生在 10/16 22:58。</td><td>这些是历史失败，最近 48 小时没有重现。系统性模型稳定性按此前要求暂缓，本轮没有将其宣称为根治。</td></tr>
+<tr><td>消息送达</td><td>48 小时共 474 条正式出站：354 read、115 delivered、5 sent。没有新 failed / unknown。6 条 failed 属于 10/9 的旧会话 #315；另有 8 月旧 submitted 记录。</td><td>保留历史记录，不重发旧消息。sent 仅说明渠道已发送，不能等同客户已收到或已读。</td></tr>
+<tr><td>中继与数据库</td><td>Cloudflare 中继只有 acked：17,580 条，无待领取或租用积压。本地无待处理 Webhook。SQLite quick_check=ok，schema=a036_business_labels。</td><td>48 小时内有 41 次中继 ReadTimeout，最近为 10/18 23:57；现已恢复。没有新增数据库满、磁盘满或 Worker 处理异常。</td></tr>
+<tr><td>统计总览 / 漏斗报错</td><td>生产只读复现 TypeError：人工任务没有 SLA 截止时间时，sum 接收到 None。共发现 16 条 pending/claimed 历史任务没有截止时间。</td><td>已修复上线。仅有有效截止时间且已超时的未完成任务计为逾期，保持原任务数据不变。</td></tr>
+<tr><td>线路管理报错</td><td>冬游包 price_reference 内容组缺少 purpose；原读取接口抛 KeyError，导致整个目录加载失败。</td><td>已兼容缺少 / 空用途字段，回退显示内容组标识。5 条线路均可读取，所需素材均可用，资料正文和价格未改动。</td></tr>
+<tr><td>V3 统计漏算</td><td>旧仪表盘只统计 AiRun，漏掉 V3 的公开 AI 消息和 AutomationRun 失败记录；接口恢复后仍错误显示 7 日 AI 已参与 0。</td><td>已修正上线：7 日界面口径为 AI 参与 47 个会话，AI 单独接待 32、混合接待 15；失败 17 次。排除沙盒运行、内部备注、过期旧运行，并验证收件箱权限范围。</td></tr>
+<tr><td>人工 / AI 标签</td><td>34 条历史控制任务状态均 synced。实际远端复核：31 条仍匹配原目标；#327、#352、#367 随后被手动移除了人工标签，仅保留 ai跟进。</td><td>3 个会话均处于人工控制 / 自动跟进暂停状态，未强行恢复。synced 表示任务曾同步成功，不能当成永久当前状态；单独 ai跟进 不等于授权 AI 接管。</td></tr>
+<tr><td>顾问回复后恢复跟进</td><td>先前标签兼容修复后，#349 已运行并决定继续等待；#375 于 10/19 11:23:22 实际产生 1 条跟进消息，平台状态 sent。两者均已恢复 ai＋ai跟进。</td><td>已有自然业务运行证据。顾问最新公开回复重新计时；静默至少 30 分钟、通过权限与渠道保护、标签同步成功后才允许跟进；到点可判断等待，并非保证强制发送。客户回复交回人工。</td></tr>
+<tr><td>「以開口」新标签</td><td>功能与数据库迁移仍在生产；专项回归通过。11:18 上线至本次 11:51 复核尚无新的客户入站，业务标签队列为空。</td><td>已部署并测试，但仍无自然新增标签样本，不能写成已由真实客户验证。</td></tr>
+</tbody></table></div>
+<h2>保留的问题与业务待办</h2>
+<p class="note">11:51 检查时磁盘可用约 1.36 GiB，容量紧张；13:39 按用户授权直接清理后，可用约 <b>13.67 GiB</b>。现有备份约 16.29 GiB、发布目录约 7.14 GiB、测试目录约 1.43 GiB。每日备份继续保留14天；发布和测试副本的统一自动留存规则尚未实施。</p>
+<div class="scroll"><table><thead><tr><th>项目</th><th>当前证据</th><th>处理边界</th></tr></thead><tbody>
+<tr><td>人工任务 #366 / #356</td><td>本地 pending，Chatwoot open，均已分配 Amber；转人工原因是客户在 AI 跟进阶段回复，顾问通知已送达。</td><td>需要顾问核对接待结果。本次不代替顾问关闭业务任务，也未额外发送催办通知。</td></tr>
+<tr><td>人工任务 #367</td><td>本地 pending；Chatwoot 于 10/18 16:18 标记 resolved，并手动移除人工标签；本地自动跟进已暂停。</td><td>两处任务状态不一致，需要核对并关闭本地任务。未以“已解决”推断顾问已完成图片问题处理。</td></tr>
+<tr><td>宿主机 Aegis 服务</td><td>aegis.service 自 10/16 起为 failed，结果 signal；没有可用服务日志确认原因。</td><td>这是宿主机独立服务，本次未改动其安全配置或擅自重启。应用核心服务健康结论不包含它。</td></tr>
+<tr><td>后续范围</td><td>图片点赞识别、模型系统性稳定性仍暂缓。</td><td>本次磁盘清理已单独授权并执行；长期自动留存策略尚未实施。</td></tr>
+</tbody></table></div>
+<h2>测试与发布证据</h2>
+<ul>
+<li>第一轮复现：5 个新增回归场景中 4 失败、1 通过；修复后连同现有相关测试共 133 通过。之后新增 V3 统计场景先复现失败，修正并追加权限验证后，21 项复测通过。两批存在重叠，共 134 个不同测试，不是 154 个。保留既有 httpx / Starlette 弃用提示，没有升级依赖。</li>
+<li>第一发布：<code>maintenance-20261019-20261019T034643Z</code>；最终发布：<code>maintenance-20261019-20261019T035018Z</code>（11:50）。仅更新 <code>backend/app/ops_api.py</code>、<code>backend/app/automation_api.py</code>。</li>
+<li>发布前用候选代码只读查询生产数据库，禁止网络调用；排空正在发送的任务后发布，备份旧文件，保留配置、会话控制、线路包、出站数量。上线后重读实际文件与线上数据库验证，无代码漂移，无发布后的新错误。</li>
+<li>生产接口逻辑在只读数据库上实际执行成功；公网首页 / health / ready 返回 200。本轮未做登录后的浏览器操作或手机实机推送验收。接待引擎版本仍为 <code>reception-v3-5901f25e228de81a</code>，没有修改模型提示词或客户回复流程。</li>
+<li>运行窗口使用滚动 24 小时、48 小时、7 天；后台 BI 保持原有自然日口径，两者不是同一统计范围。没有新增付费模型调用，既有模型测试余额不变。</li>
+</ul>
+<p>证据目录：<code>output/maintenance-20261019/</code>。关键文件：<a href="../../output/maintenance-20261019/audit-summary.json">运行快照</a>、<a href="../../output/maintenance-20261019/api-before.json">故障复现</a>、<a href="../../output/maintenance-20261019/api-final.json">接口最终复核</a>、<a href="../../output/maintenance-20261019/deployment.json">最终发布记录</a>、<a href="../../output/maintenance-20261019/postcheck.json">发布后检查</a>。</p>
+</main></html>

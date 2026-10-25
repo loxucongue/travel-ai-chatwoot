@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>普通报价不主动列单人房差：验收记录</title>
+<style>body{font:16px/1.75 system-ui,sans-serif;background:#f3f6f5;color:#20332e}main{max-width:960px;margin:32px auto;padding:28px;background:white;border-radius:12px}h1{font-size:26px}h2{font-size:20px}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #dce5de;text-align:left}code{overflow-wrap:anywhere}.ok{background:#e8f4eb;padding:14px}a{color:#196e54}</style><main>
+<h1>普通报价不主动列单人房差</h1>
+<p class="ok">已上线并验证，版本 <code>reception-v3-f914608abf155dcb</code>。91项相关程序回归通过；真实模型8组旅程、11个检查点通过，无失败回合。</p>
+<h2>原会话与原因</h2>
+<p>对应原演练会话 #640 / run2453，时间2026-10-15 14:09（北京时间）。客户先问「一個人多少錢」，后提供「3/25」；模型正确核对2027-03-25并引用8天线的price_spring。房差2,200元来自固定模板；线路指引也明确要求保留房差，属于配置口径调整。原会话还有一条兴趣问句，截图只截取了报价部分，不能据此判定没有收尾。</p>
+<h2>本次改动</h2>
+<ul><li>8天线4档、10天线3档，共7个普通报价模板去掉单人房差行。团费、两人一间、包含/不含、问句继续保留。</li>
+<li>房差金额仍保存在结构化价格数据中；客户主动问单住费用或房差时按日期答复。仅说1位报名不自动推断为单住。</li>
+<li>两条线路的模型指引、源配置生成器和售价表核验同步调整，避免重建配置时恢复旧展示。</li>
+<li>原会话和客户数据未改写；桃花线路模板、跟进频率、转人工策略不变。</li></ul>
+<h2>真实模型验证</h2><table><tr><th>场景</th><th>检查点</th><th>结果</th></tr><tr><td>tibet_essence_8d_spring</td><td>3</td><td>通过</td></tr><tr><td>tibet_essence_8d_low</td><td>1</td><td>通过</td></tr><tr><td>tibet_essence_8d_summer</td><td>1</td><td>通过</td></tr><tr><td>tibet_essence_8d_peak</td><td>1</td><td>通过</td></tr><tr><td>tibet_overview_10d_low</td><td>1</td><td>通过</td></tr><tr><td>tibet_overview_10d_summer</td><td>2</td><td>通过</td></tr><tr><td>tibet_overview_10d_peak</td><td>1</td><td>通过</td></tr><tr><td>solo_not_single_room</td><td>1</td><td>通过</td></tr></table>
+<p>覆盖7档普通报价均不含房差；原#640上下文回放后追问单住，正确回答2,200元；随后改夏季日期，正确改为2,300元；10天夏季追问为3,000元。另验证1位拼团报价不主动补房差。使用生产快照与真实模型，所有发送都在隔离内存会话中模拟；未向真实客户发送测试消息。</p>
+<h2>上线与预算</h2>
+<p>生产检查：4条线路就绪、3个服务正常，7个文件哈希匹配；19个人工/拒绝联系会话状态保留，#631、#632、#640原消息不变。设置、团费和房差数字均保持，发件记录 708 → 708。</p>
+<p>沿用此前新增的20元预算，本次追加模型用量估算约¥0.59；该预算累计用量估算与超时预留约¥4.78。费用估算不等同于供应商结算账单。</p>
+<p>发布：<code>quote-supplement-20261015-20261015T062245Z</code><br>回滚备份：<code>/opt/china2go-ai/backups/quote-supplement-20261015-20261015T062245Z</code>。回滚仅恢复本批文件，不覆盖后续聊天数据。</p>
+<p><a href="../../output/quote-supplement-20261015/model/summary.json">真实模型结果</a> · <a href="../../output/quote-supplement-20261015/full-suite.xml">91项相关回归</a> · <a href="../../output/quote-supplement-20261015/verification.json">上线验证</a> · <a href="../../output/quote-supplement-20261015/production-diff.txt">实际发布差异</a></p>
+</main></html>

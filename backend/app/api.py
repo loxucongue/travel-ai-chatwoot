@@ -795,6 +795,10 @@ def update_conversation_ai_mode(
         if set(row.labels or []).intersection(blocking_labels(db) - {'AI关闭', 'ai_off'}):
             raise HTTPException(409, detail={"code": "ai_restore_blocked", "message": "请先处理停止标签或在人工任务中恢复 AI"})
     desired_mode = "enabled" if payload.enabled else "disabled"
+    from app.reception_v3.live import session_for
+    session = session_for(db, row.id)
+    if session:
+        session.controls = {**session.controls, 'auto_followup_paused': not payload.enabled}
     row.ai_mode = desired_mode
     row.ai_mode_source = "platform"
     row.ai_sync_status = "pending"
@@ -831,13 +835,16 @@ def update_conversation_ai_mode(
             value = v3_service.state(session)
             if payload.enabled:
                 v3_service.control(session, 'resume')
-                session.controls = {**session.controls, 'human': False}
-                value.update(handoff=False, handoff_created=False, pending_event=None,
+                session.controls = {**session.controls, 'human': False, 'human_followup': {'enabled': False}}
+                value.update(handoff=False, handoff_created=False, human_followup=False, pending_event=None,
                              next_check_at=None, failed_event=None, buffered_questions=[], last_reason='manual_restore')
                 v3_service.save(session, value)
             elif not payload.enabled:
                 v3_service.control(session, 'stop')
         sync_local_labels(db, row, final_labels, source="platform")
+        if payload.enabled:
+            from app.conversation_labels import queue_labels
+            queue_labels(db,row,'ai')
         audit(db, user, "conversation.ai_mode.update", "conversation", conversation_id, {
             "enabled": payload.enabled,
             "sync_status": row.ai_sync_status,

@@ -43,12 +43,21 @@ class LabelMappings(BaseModel):
 
 class NotificationSettings(BaseModel):
     enabled: bool = False
-    channel: Literal["webhook", "chatwoot"] = "webhook"
+    channel: Literal["webhook", "chatwoot", "wecom", "email"] = "webhook"
     agent_id: int | None = Field(default=None, gt=0)
     bot_id: int | None = Field(default=None, gt=0)
     assign_on_handoff: bool = False
     url: HttpUrl | None = None
     secret: str | None = Field(default=None, min_length=8)
+    recipients: dict[int, str] = Field(default_factory=dict)
+    corp_id: str = ''
+    wecom_agent_id: int | None = Field(default=None, gt=0)
+    smtp_host: str = ''
+    smtp_port: int = Field(default=465, ge=1, le=65535)
+    smtp_security: Literal['ssl', 'starttls'] = 'ssl'
+    smtp_user: str = ''
+    sender_email: EmailStr | None = None
+    connection_secret: str | None = Field(default=None, min_length=1)
     event_types: list[str] = Field(default_factory=lambda: ["handoff.created", "handoff.overdue"])
 
     @model_validator(mode="after")
@@ -57,6 +66,18 @@ class NotificationSettings(BaseModel):
             raise ValueError("notification_webhook_url_required")
         if self.enabled and self.channel == "chatwoot" and (not self.agent_id or not self.bot_id):
             raise ValueError("notification_agent_and_bot_required")
+        if any(agent <= 0 or not target.strip() or any(c in target for c in ('\r','\n','|')) for agent,target in self.recipients.items()):
+            raise ValueError('notification_recipient_invalid')
+        if self.channel == 'email':
+            from pydantic import TypeAdapter
+            for target in self.recipients.values():
+                TypeAdapter(EmailStr).validate_python(target)
+        if self.enabled and self.channel in ('wecom', 'email') and not self.recipients:
+            raise ValueError('notification_recipient_mapping_required')
+        if self.enabled and self.channel == 'wecom' and (not self.corp_id or not self.wecom_agent_id):
+            raise ValueError('notification_wecom_app_required')
+        if self.enabled and self.channel == 'email' and (not self.smtp_host or not self.smtp_user or not self.sender_email):
+            raise ValueError('notification_smtp_required')
         return self
 
 

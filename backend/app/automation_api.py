@@ -23,7 +23,7 @@ from app.operations import allowed_inbox_ids, is_admin, audit
 from app.route_packages import ROUTES, ROUTE_PACKAGES, RoutePackageError, RUNTIME_PACKAGE_ROOT, _validate, install_route_package, ensure_route_packages_current, remove_runtime_route_package, route_package_summary
 from app.security import encrypt_secret
 from app.reception_config import ReceptionConfiguration, live_silence_enabled, get_reception_configuration, put_reception_configuration
-from app.reception_rollout import reception_rollout
+from app.reception_rollout import reception_rollout, reception_inbox_ids
 from app.reception_v3 import release_id
 from app.reception_v3 import service
 from app.runtime_settings import reply_policy, dt, iso
@@ -538,7 +538,15 @@ def safe_text(value):
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}(?:T[\d:.]+(?:Z|[+-]\d{2}:\d{2})?)?", value): return value
     value = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[邮箱已脱敏]", value)
     value = re.sub(r"(?<!\w)(?:\+?\d[ ()-]?){8,15}(?!\w)", "[号码已脱敏]", value)
-    return re.sub(r"(?i)((?:\bline\b|\bwechat\b|微信|\bweixin\b)\s*(?:id|帳號|账号|號碼|号码)?\s*(?:[:：=]|是|為|为|叫|\s)\s*)[A-Za-z0-9_.@+-]+", r"\1[已脱敏]", value)
+    def contact(match):
+        # QR Code is a method of sharing contact details, not an account ID.
+        # Explicit labels/separators (e.g. LINE ID: QRCode) still mask the value.
+        prefix, token = match.group(1), match.group(2)
+        generic = re.fullmatch(r"(?i)(?:line|wechat|微信|weixin)\s+", prefix)
+        qr = re.fullmatch(r"(?i)qr[-_]?code", token) or (
+            token.lower() == 'qr' and re.match(r"(?i)\s+code\b", value[match.end():]))
+        return match.group(0) if generic and qr else prefix + '[已脱敏]'
+    return re.sub(r"(?i)((?:\bline\b|\bwechat\b|微信|\bweixin\b)\s*(?:id|帳號|账号|號碼|号码)?\s*(?:[:：=]|是|為|为|叫|\s)\s*)([A-Za-z0-9_.@+-]+)", contact, value)
 
 
 def run_json(row):
@@ -658,7 +666,7 @@ def route_products(user: User = Depends(manager), db: Session = Depends(get_db))
             "content_sequence": package["content_sequence"],
             "content_groups": [{
                 "key": group_key,
-                "purpose": group["purpose"],
+                "purpose": group.get("purpose") or group_key,
                 "approved_text": group["approved_text"],
                 "asset_keys": group.get("asset_keys", []),
                 "evidence_refs": group.get("evidence_refs", []),
@@ -715,6 +723,7 @@ def reception_config(user: User = Depends(manager), db: Session = Depends(get_db
             "published_by": history[0].user_id if history else None,
         },
         "runtime": {
+            "live_inbox_ids": reception_inbox_ids(db),
             "live_silence_enabled": live_silence_enabled(db),
             "model": settings.deepseek_model,
             "timeout_seconds": settings.deepseek_timeout_seconds,
@@ -752,10 +761,11 @@ def update_reception_config(
         "reply": {"opening_items", "opening_interval_seconds", "goal", "tone", "tone_guidance", "custom_guidance", "opening_character_limit"},
         "intake": {"enabled", "question", "options", "wait_seconds"},
         "lead_capture": {"enabled", "channels"},
-        "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action"},
+        "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action", "live_inbox_ids"},
         "handoff": {"large_group_enabled", "large_group_minimum"},
-        "silence": {"enabled", "live_enabled", "intervals_minutes", "initial_checkpoints_minutes", "recurring_interval_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
+        "silence": {"material_selection", "enabled", "live_enabled", "advisor_reply_followup_enabled", "daily_at", "intervals_minutes", "initial_checkpoints_minutes", "recurring_interval_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
         "common_scripts": None,
+        "material_rules": None,
     }
     value = deepcopy(before)
     for section, changes in payload.items():

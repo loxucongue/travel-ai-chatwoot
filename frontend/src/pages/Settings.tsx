@@ -158,33 +158,55 @@ function UserSettings({ notify }: { notify: (value: string) => void }) {
 }
 
 function NotificationSettings({ notify }: { notify: (value: string) => void }) {
-  type Config = { enabled: boolean; channel: 'webhook' | 'chatwoot'; agent_id?: number; bot_id?: number; url?: string; event_types: string[]; secret_configured: boolean };
+  type Config = { enabled: boolean; channel: 'webhook' | 'chatwoot' | 'wecom' | 'email'; agent_id?: number; bot_id?: number; url?: string; event_types: string[]; secret_configured: boolean;
+    recipients?: Record<string,string>; corp_id?: string; wecom_agent_id?: number; smtp_host?: string; smtp_port?: number; smtp_security?: 'ssl'|'starttls'; smtp_user?: string; sender_email?: string; connection_secret_configured?: boolean };
   const query = useQuery({ queryKey: ['notification-settings'], queryFn: () => api<Config>('/settings/notifications') });
   const agents = useQuery({ queryKey: ['resources'], queryFn: () => api<{ agents: { id: number; name: string }[] }>('/settings/resources') });
   const [enabled, setEnabled] = useState(false);
-  const [channel, setChannel] = useState<'webhook' | 'chatwoot'>('webhook');
+  const [channel, setChannel] = useState<Config['channel']>('webhook');
+  const [connection, setConnection] = useState<Partial<Config>>({});
+  const [recipients, setRecipients] = useState('');
+  const [connectionSecret, setConnectionSecret] = useState('');
+  useEffect(()=>{if(query.data){setConnection(query.data);setRecipients(Object.entries(query.data.recipients ?? {}).map(([id,target])=>`${id}=${target}`).join('\n'));}},[query.data]);
   const [agentId, setAgentId] = useState('');
   const [botId, setBotId] = useState('');
   const [url, setUrl] = useState('');
   const [secret, setSecret] = useState('');
   useEffect(() => { if (query.data) { const data = query.data; setEnabled(data.enabled); setChannel(data.channel ?? 'webhook'); setAgentId(String(data.agent_id ?? '')); setBotId(String(data.bot_id ?? '')); setUrl(data.url ?? ''); } }, [query.data]);
   const save = useMutation({
-    mutationFn: () => api('/settings/notifications', { method: 'PATCH', body: JSON.stringify({ enabled, channel, agent_id: Number(agentId) || null, bot_id: Number(botId) || null, url: url || null, secret: secret || null, event_types: query.data?.event_types ?? ['handoff.created', 'handoff.overdue'] }) }),
-    onSuccess: () => { setSecret(''); query.refetch(); notify('顾问通知已保存'); },
+    mutationFn: () => {
+      const mapping: Record<string,string> = {};
+      for(const line of recipients.split('\n').filter(l=>l.trim())) {const parts=line.split('=');if(parts.length!==2 || !/^\d+$/.test(parts[0].trim()) || !parts[1].trim()) throw new Error('接收人格式应为：顾问ID=企业微信成员ID或邮箱'); mapping[parts[0].trim()]=parts[1].trim();}
+      return api('/settings/notifications', { method: 'PATCH', body: JSON.stringify({ enabled, channel, agent_id: Number(agentId) || null, bot_id: Number(botId) || null, url: url || null, secret: secret || null,
+        recipients:mapping, corp_id:connection.corp_id ?? '', wecom_agent_id:connection.wecom_agent_id ?? null, smtp_host:connection.smtp_host ?? '',smtp_port:connection.smtp_port ?? 465,smtp_security:connection.smtp_security ?? 'ssl',smtp_user:connection.smtp_user ?? '',sender_email:connection.sender_email || null,connection_secret:connectionSecret || null,
+        event_types: query.data?.event_types ?? ['handoff.created', 'handoff.overdue'] }) });
+    },
+    onSuccess: () => { setSecret(''); setConnectionSecret(''); query.refetch(); notify('顾问通知已保存'); },
     onError: (error: Error) => notify(error.message),
   });
-  const invalid = enabled && (channel === 'chatwoot' ? !agentId || !Number.isInteger(Number(botId)) || Number(botId) <= 0 : !url);
+  const invalid = enabled && (channel === 'chatwoot' ? !agentId || !Number.isInteger(Number(botId)) || Number(botId) <= 0 : channel === 'webhook' ? !url : !recipients.trim());
   return <><header className="settings-section-head"><div><h2>顾问通知</h2><p>转人工和处理超时后提醒顾问；站内通知始终保留。</p></div><Badge tone={enabled ? 'green' : 'neutral'}>{enabled ? '已启用' : '已关闭'}</Badge></header>
     <article className="setting-card"><div className="form-stack">
       <div className="global-toggle-row"><strong>启用顾问通知</strong><Toggle checked={enabled} onChange={setEnabled} label="启用顾问通知" /></div>
-      <label>提醒方式<select value={channel} onChange={(e) => setChannel(e.target.value as Config['channel'])}><option value="chatwoot">Chatwoot 手机提醒</option><option value="webhook">外部通知 Webhook</option></select></label>
+      <label>提醒方式<select value={channel} onChange={(e) => setChannel(e.target.value as Config['channel'])}><option value="chatwoot">Chatwoot 手机提醒</option><option value="webhook">外部通知 Webhook</option><option value="wecom">企业微信应用消息</option><option value="email">邮件（含 QQ 邮箱）</option></select></label>
       <p>通知成功表示接口已接受；手机和手表是否实际收到，仍需在对应设备上确认。</p>
       {channel === 'chatwoot' ? <>
         <div className="info-box"><Bell size={16} /><span>系统会在会话中发一条仅团队可见的备注并提及顾问。请在 Chatwoot 手机端开启提及通知；Apple Watch 接收情况取决于手机和手表的通知设置。</span></div>
         <label>接收顾问<select value={agentId} onChange={(e) => setAgentId(e.target.value)}><option value="">请选择顾问</option>{agents.data?.agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label>
         <label>通知机器人 ID<input type="number" min="1" step="1" value={botId} onChange={(e) => setBotId(e.target.value)} /></label>
         <div className="info-box"><ShieldCheck size={16} /><span>使用已配置的通知机器人，避免顾问账号提及自己而收不到提醒。暂停客户消息发送后，内部提醒仍可发送。</span></div>
-      </> : <><label>Webhook URL<input value={url} onChange={(e) => setUrl(e.target.value)} /></label><label>HMAC Secret<input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={query.data?.secret_configured ? '已配置，留空保持不变' : '至少 8 位'} /></label></>}
+      </> : channel === 'webhook' ? <><label>Webhook URL<input value={url} onChange={(e) => setUrl(e.target.value)} /></label><label>HMAC Secret<input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={query.data?.secret_configured ? '已配置，留空保持不变' : '至少 8 位'} /></label></> : <>
+        <p>按实际分配的顾问通知。没有接收人映射时保留失败记录，不发送给其他人。</p>
+        <label>接收人映射（每行：顾问ID=接收人）<textarea rows={4} value={recipients} onChange={e=>setRecipients(e.target.value)} placeholder={channel==='email' ? '11=advisor@qq.com' : '11=wecom_member_id'}/></label>
+        {channel==='wecom' ? <><label>企业 ID<input value={connection.corp_id ?? ''} onChange={e=>setConnection({...connection,corp_id:e.target.value})}/></label><label>应用 AgentId<input type="number" value={connection.wecom_agent_id ?? ''} onChange={e=>setConnection({...connection,wecom_agent_id:Number(e.target.value)})}/></label></> : <>
+          <label>SMTP 服务器<input value={connection.smtp_host ?? ''} onChange={e=>setConnection({...connection,smtp_host:e.target.value})}/></label>
+          <label>安全连接<select value={connection.smtp_security ?? 'ssl'} onChange={e=>setConnection({...connection,smtp_security:e.target.value as 'ssl'|'starttls',smtp_port:e.target.value==='ssl'?465:587})}><option value="ssl">SSL</option><option value="starttls">STARTTLS</option></select></label>
+          <label>端口<input type="number" value={connection.smtp_port ?? 465} onChange={e=>setConnection({...connection,smtp_port:Number(e.target.value)})}/></label>
+          <label>登录账号<input value={connection.smtp_user ?? ''} onChange={e=>setConnection({...connection,smtp_user:e.target.value})}/></label>
+          <label>发件邮箱<input type="email" value={connection.sender_email ?? ''} onChange={e=>setConnection({...connection,sender_email:e.target.value})}/></label>
+        </>}
+        <label>{channel==='wecom'?'应用 Secret':'邮箱授权码'}<input type="password" value={connectionSecret} onChange={e=>setConnectionSecret(e.target.value)} placeholder={query.data?.connection_secret_configured && query.data.channel===channel ? '已配置，留空保持不变' : '请输入凭据'}/></label>
+      </>}
       {query.isError ? <p role="alert">通知设置读取失败，请刷新后重试。</p> : null}
     </div><div className="setting-actions"><button className="primary-button" onClick={() => save.mutate()} disabled={invalid || save.isPending || !query.data}><Save size={15} />保存通知</button></div></article></>;
 }

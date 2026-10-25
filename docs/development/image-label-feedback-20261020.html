@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>10月20日业务反馈验收</title>
+<style>body{font:16px/1.65 system-ui,sans-serif;max-width:1280px;margin:40px auto;padding:0 24px;color:#173042}h1{font-size:28px}table{border-collapse:collapse;width:100%;font-size:15px}td,th{border:1px solid #d6e1e8;padding:14px;text-align:left;vertical-align:top}th{background:#eaf2f6}.note{padding:16px;background:#fff4dc;border-radius:8px}code{overflow-wrap:anywhere}</style>
+<h1>2026-10-20 业务反馈验收</h1>
+<p>标签接管和两处话术：已上线并核对。图片理解：尚未完成真实模型复测，未启用。</p>
+<table><thead><tr><th>需求</th><th>改动</th><th>线上状态</th><th>验证与限制</th></tr></thead><tbody><tr><td>图片/表情误转人工</td><td>已接入受限附件读取、真实图片输入、表情与二维码区分规则；不可读附件先承接文字或询问。模型端不能下载Chatwoot链接，改为项目读取后内联传图。</td><td>代码已部署，图片识别开关关闭；等待真实模型复测</td><td>下载、格式识别、重定向限制、超时、容量限制、并发新消息及请求内容测试通过。原外链方式真实接口返回400；内联方案尚未完成真实模型验收。</td></tr><tr><td>标签交回AI并立即接续</td><td>取消人工接管后保留/添加ai，将当前会话交回完整AI接待；取消旧人工同步及未发送的交接提醒。未回答问题进入即时处理，已回答内容不重发。</td><td>已上线并核对</td><td>一次换标签、分两步操作、同步任务重试、先收到操作后收到旧事件、历史顾问答复保留、即时生成答复、旧回复取消均通过。未向真实客户发送测试消息。</td></tr><tr><td>酒店话术</td><td>“全酒店”改为“所有酒店”。</td><td>已上线并核对</td><td>扫描5条启用线路；命中桃花11日的现行话术与对应介绍内容，线上编译结果无旧词。</td></tr><tr><td>绒布房量话术</td><td>“不過因為房間數較少，訂完就沒有了喔！”</td><td>已上线并核对</td><td>对应介绍内容和固定话术均已修改，更新可重复执行且不改变其他业务配置。</td></tr></tbody></table>
+<p>后端全量 797 项通过；后续专项 145 项通过（与全量有交集）。现场健康检查：{&#x27;https://ai.luoxuecong.asia&#x27;: 200, &#x27;https://api.luoxuecong.asia/v1/health&#x27;: 200, &#x27;https://api.luoxuecong.asia/v1/health/ready&#x27;: 200}。</p>
+<p>操作方式：移除“人工接管”，保留或添加“ai”。只移除人工而没有ai不会启动；人工标签仍在时也不会强行接管。停止联系、发送结果未知、其他会话仍由人工服务、全局停用及渠道窗口限制继续生效。公开顾问答复后的30分钟沉默跟进规则保持独立，显式交回ai时取消该等待。</p>
+<p class="note">图片真实模型验收受原20元累计测试预算限制。当前账本计费或保守预留19.969401元，剩余0.030599元；失败且无usage的请求保留预留，不能当作实际扣款。已请求追加最多5元，未收到答复前不增加付费测试。绝不将本地模拟通过写成真实模型通过。</p>
+<p>发布：<code>image-label-feedback-20261020-20261020T035159Z</code><br>引擎：<code>reception-v3-95b77c0475db7943</code><br>时间：2026-10-20T03:54:36.659614+00:00</p>
+<p>证据目录：<code>output/image-label-feedback-20261020/</code>。包含原始只读快照、测试XML、接口诊断、候选包、发布预检与上线检查。没有批量解除历史人工接待，没有客户测试发送。</p></html>

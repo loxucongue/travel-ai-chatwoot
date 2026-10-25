@@ -32,7 +32,9 @@ def test_full_cadence_skips_quiet_slots_without_catchup(entry,expected):
         if not target: break
         seen.append(service.date(target).strftime('%H:%M'))
         now=service.later(target,3); value['silence_step']+=1
-    assert seen == expected
+    assert seen[:len(expected)] == expected
+    assert len(seen) > len(expected)  # Legacy cadence also respects the new seven-day horizon.
+    assert service.date(now) < service.date(value['followup_until'])
 
 
 def test_entry_anchor_not_intro_end_and_late_worker_does_not_burst():
@@ -48,7 +50,7 @@ def test_customer_reply_uses_three_hours_and_no_first_hour_override():
     service.schedule_followup(value,spec(),'2026-10-13T00:25:00+08:00',reset=True)
     # 03:25 and 06:25 are skipped; not deferred to 07:00.
     assert service.date(value['next_check_at']).strftime('%H:%M')=='09:25'
-    assert service.followup_intervals(value,spec()['silence']) == [180]*7
+    assert service.followup_intervals(value,spec()['silence']) == [180]*56
 
 
 def test_actual_night_first_hour_sends_four_times_and_then_skips(session_factory,monkeypatch):

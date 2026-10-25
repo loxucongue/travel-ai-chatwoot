@@ -88,6 +88,26 @@ def _validate(package: dict, source: Path) -> dict:
             f"route_package_initial_delivery_interval_invalid:{route_id}"
         )
     package["initial_delivery_interval_seconds"] = initial_delivery_interval
+    intake = package.get("intake")
+    if intake is not None:
+        if (not isinstance(intake, dict) or intake.get("field") not in ("party_size", "departure_window")
+                or not isinstance(intake.get("question"), str) or not 1 <= len(intake['question']) <= 300
+                or type(intake.get('wait_seconds')) is not int or not 10 <= intake['wait_seconds'] <= 600
+                or not isinstance(intake.get('options'), list) or not 1 <= len(intake['options']) <= 10
+                or any(not isinstance(x, str) or not 1 <= len(x) <= 20 for x in intake['options'])):
+            raise RoutePackageError(f"route_package_intake_invalid:{route_id}")
+    if package.get('seasonal_pricing') is not None:
+        from app.reception_v3.seasonal_quotes import validate_pricing
+        try:
+            validate_pricing(package['seasonal_pricing'])
+        except (ValueError, KeyError, TypeError) as exc:
+            raise RoutePackageError(f'route_package_pricing_invalid:{route_id}') from exc
+    if package.get('departure_availability') is not None:
+        from app.reception_v3.seasonal_quotes import validate_availability
+        try:
+            validate_availability(package['departure_availability'])
+        except (ValueError, KeyError, TypeError) as exc:
+            raise RoutePackageError(f'route_package_availability_invalid:{route_id}') from exc
     required_slots = _require(package, "required_slots", list, source)
     facts = _require(package, "knowledge_facts", list, source)
     groups = _require(package, "content_groups", dict, source)
@@ -112,6 +132,12 @@ def _validate(package: dict, source: Path) -> dict:
         fact_ids.add(fact["id"])
     if len(sequence) != len(set(sequence)) or any(key not in groups for key in sequence):
         raise RoutePackageError(f"route_package_sequence_invalid:{route_id}")
+    switch_sequence = package.get('switch_introduction_sequence')
+    if switch_sequence is not None and (
+            not isinstance(switch_sequence, list) or not switch_sequence
+            or any(not isinstance(k, str) or k not in groups for k in switch_sequence)
+            or len(switch_sequence) != len(set(switch_sequence))):
+        raise RoutePackageError(f"route_package_switch_sequence_invalid:{route_id}")
     allowed_evidence = fact_ids | {"service.requirements", "service.safety"}
     for key, group in groups.items():
         if not isinstance(group, dict) or not str(group.get("approved_text") or "").strip():
@@ -127,6 +153,14 @@ def _validate(package: dict, source: Path) -> dict:
         if delivery_mode == "assets_only" and not group.get("asset_keys"):
             raise RoutePackageError(f"route_package_group_assets_only_empty:{route_id}:{key}")
         group["delivery_mode"] = delivery_mode
+        seasonal = group.get('seasonal_override')
+        if seasonal is not None:
+            if (not isinstance(seasonal, dict) or not seasonal.get('months')
+                    or any(type(m) is not int or not 1 <= m <= 12 for m in seasonal['months'])
+                    or not isinstance(seasonal.get('text'), str) or not seasonal['text'].strip()
+                    or not isinstance(seasonal.get('undated_text'), str) or not seasonal['undated_text'].strip()
+                    or not seasonal.get('source_ref')):
+                raise RoutePackageError(f'route_package_seasonal_group_invalid:{route_id}:{key}')
         if any(ref not in allowed_evidence for ref in group.get("evidence_refs", [])):
             raise RoutePackageError(f"route_package_group_evidence_invalid:{route_id}:{key}")
 
@@ -189,6 +223,8 @@ def _validate(package: dict, source: Path) -> dict:
 
     for legacy in ('sop', 'runtime_sop', 'journey_policy', 'policies'):
         package.pop(legacy, None)
+    if package.get('seasonal_pricing') and any(b['script_id'] not in fixed_answer_ids for b in package['seasonal_pricing']['bands']):
+        raise RoutePackageError(f'route_package_pricing_script_missing:{route_id}')
     return package
 
 
@@ -307,10 +343,14 @@ def reload_route_packages() -> None:
         "source": deepcopy(package.get("source", {})),
         "default_entry_message": package["default_entry_message"],
         "ai_guidance": package.get("ai_guidance", ""),
+        "intake": deepcopy(package.get("intake")),
+        "seasonal_pricing": deepcopy(package.get("seasonal_pricing")),
+        "departure_availability": deepcopy(package.get("departure_availability")),
         "initial_delivery_interval_seconds": package["initial_delivery_interval_seconds"],
         "required_slots": package["required_slots"],
         "knowledge_facts": package["knowledge_facts"],
         "introduction_sequence": list(package["content_sequence"]),
+        "switch_introduction_sequence": deepcopy(package.get("switch_introduction_sequence")),
         "sequence": [
             group_key for group_key in package["content_sequence"]
             if not package["content_groups"][group_key].get("initial_only", False)
@@ -324,6 +364,7 @@ def reload_route_packages() -> None:
                 "initial_delivery": bool(group.get("initial_delivery", False)),
                 "initial_only": bool(group.get("initial_only", False)),
                 "delivery_mode": group.get("delivery_mode", "assets_then_text"),
+                **({'seasonal_override': deepcopy(group['seasonal_override'])} if group.get('seasonal_override') else {}),
             }
             for group_key, group in package["content_groups"].items()
         },

@@ -1,0 +1,36 @@
+[
+  {"id":"new10_full_journey","entry":"西藏全覽-10天林芝+拉薩+珠峰","now":"2026-10-14T03:00:00+00:00","steps":[
+    {"id":"before_month_timeout","seconds":29,"checks":["no_send"]},
+    {"id":"month_timeout_introduction","seconds":1,"checks":["send","not_handoff","no_contact"],"contains":["10日","幾位"],"excludes":["85-90","12小時","移動氧艙","12,280"],"expected_route":"tibet_overview_10d"},
+    {"id":"june_quote","text":"我們2位，明年2027年6月1日出發，價格多少？","checks":["send","not_handoff","no_contact","one_question_required_last"],"contains":["12,280","3,000","不含：機票、午晚餐、小費","家人","朋友"],"excludes":["12,180","10,480"],"expected_route":"tibet_overview_10d"},
+    {"id":"silence_photo","next_check":true,"checks":["one_new_photo","no_contact","not_handoff"],"excludes":["12,280"]}
+  ]},
+  {"id":"new8_quote","entry":"西藏精華8天-拉薩+珠峰","now":"2026-10-14T03:00:00+00:00","steps":[
+    {"id":"month_reply_immediate","text":"明年2027年8月","checks":["send","no_contact","not_handoff"],"contains":["8日"],"expected_route":"tibet_essence_8d"},
+    {"id":"august_quote","text":"我們兩位，8月5日出發，費用多少？","checks":["send","not_handoff","no_contact","one_question_required_last"],"contains":["9,980","2,800","家人","朋友"],"excludes":["12,880","12,180"],"expected_route":"tibet_essence_8d"}
+  ]},
+  {"id":"new10_seven_people","entry":"西藏全覽-10天林芝+拉薩+珠峰","now":"2026-10-14T03:00:00+00:00","steps":[
+    {"id":"seven_silent_handoff","text":"我們7位，明年6月","checks":["handoff","no_send"],"expected_route":"tibet_overview_10d"}
+  ]},
+  {"id":"new8_date_gap","entry":"西藏精華8天-拉薩+珠峰","now":"2026-10-14T03:00:00+00:00","steps":[
+    {"id":"introduction","seconds":30,"checks":["send","not_handoff"]},
+    {"id":"closed_season_retention","text":"我們兩位，只能2027年4月22日出發，這條8天含珠峰的多少錢？不要桃花","checks":["send","not_handoff","no_price","one_question_required_last"],"contains":["開放"],"expected_route":"tibet_essence_8d"}
+  ]},
+  {"id":"new10_short_notice","entry":"西藏全覽-10天林芝+拉薩+珠峰","now":"2027-05-03T03:00:00+00:00","steps":[
+    {"id":"introduction","seconds":30,"checks":["send","not_handoff"]},
+    {"id":"short_notice_handoff","text":"只能今年2027年6月1日出發，兩位，團費多少？","checks":["handoff","no_send"]}
+  ]},
+  {"id":"new10_holiday","entry":"西藏全覽-10天林芝+拉薩+珠峰","now":"2026-10-14T03:00:00+00:00","steps":[
+    {"id":"introduction","seconds":30,"checks":["send","not_handoff"]},
+    {"id":"fixed_holiday_handoff","text":"2027年5月1日出發，兩位，只能這天，不可以改，費用多少？","checks":["handoff","no_send"]}
+  ]},
+  {"id":"everest_ambiguous","entry":"我想去看看珠峰","known_entry":false,"entry_checks":["send","not_handoff","no_contact"],"now":"2026-10-14T03:00:00+00:00","steps":[
+    {"id":"no_forced_11day","seconds":1,"checks":["no_send"],"expected_route":""},
+    {"id":"explicit_eight_days","text":"8天，明年2027年6月","checks":["send","not_handoff","no_contact"],"expected_route":"tibet_essence_8d"}
+  ]},
+  {"id":"peach_regression","entry":"西藏桃花節＋珠峰 11日","now":"2026-10-14T03:00:00+00:00","steps":[
+    {"id":"still_waits_120","seconds":119,"checks":["no_send"]},
+    {"id":"old_introduction","seconds":1,"checks":["send","not_handoff","no_contact"]},
+    {"id":"old_quote","text":"我們兩位，價格多少？","checks":["exact_quote","one_question_required_last","not_handoff","no_contact"],"contains":["12,180","家人","朋友"],"excludes":["12,280","12,880"],"expected_route":"peach_11d_2027"}
+  ]}
+]

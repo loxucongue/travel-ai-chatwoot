@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "package_version": "2026-10-14.draft-map-only-1",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "route_variant": "tibet_overview_10d",
+  "branch": "tibet_overview_10d",
+  "name": "西藏全覽10天・林芝＋拉薩＋珠峰",
+  "selection_title": "西藏全覽10天・林芝＋珠峰",
+  "selection_aliases": [
+    "西藏全覽-10天林芝+拉薩+珠峰",
+    "西藏全覽10天",
+    "西藏全览10天",
+    "西藏全覽10日",
+    "西藏10天",
+    "西藏10日",
+    "林芝拉薩珠峰10天",
+    "林芝拉萨珠峰10日"
+  ],
+  "match_keywords": [
+    "西藏全覽-10天林芝+拉薩+珠峰",
+    "西藏全覽10天",
+    "西藏全览10天",
+    "西藏全覽10日",
+    "西藏10天",
+    "西藏10日",
+    "林芝拉薩珠峰10天",
+    "林芝拉萨珠峰10日"
+  ],
+  "default_entry_message": "西藏全覽-10天林芝+拉薩+珠峰",
+  "required_slots": [
+    "party_size",
+    "departure_window"
+  ],
+  "initial_delivery_interval_seconds": 2,
+  "ai_guidance": "未發布草稿。僅從本次行程圖整理行程；最新網站原文、報價、團期、費用包含與不含尚未取得。不得借用桃花9日或11日的價格、日期、團型或優惠。",
+  "source": {
+    "url": "https://china2go.com/1013-2/",
+    "status": "unavailable_http_403",
+    "archive": "西藏全覽-10天林芝+拉薩+珠峰.zip",
+    "map": "圖A-2・10天林芝希爾頓行程.png",
+    "map_sha256": "da11a085dedc268770fb3cc6f8453bfc034ff1268e0821b178354a9689fe98d3"
+  },
+  "publication": {
+    "status": "draft",
+    "activation_allowed": false,
+    "blockers": [
+      "最新網站接待原文",
+      "各季節或日期對應報價",
+      "出發日期／班期與年份",
+      "團費包含與不含、團型及優惠條件"
+    ]
+  },
+  "knowledge_facts": [
+    {
+      "id": "tibet_overview_10d.scope",
+      "text": "這條西藏全覽10日從林芝進、拉薩出，安排林芝、拉薩、日喀則及珠峰大本營，回程體驗拉日鐵路。",
+      "source_ref": "user-zip-20261014/圖A-2・10天林芝希爾頓行程.png"
+    },
+    {
+      "id": "tibet_overview_10d.itinerary",
+      "text": "第1天：林芝24小時接機；休息、適應高原環境；住宿：林芝希爾頓花園供氧酒店\n第2天：色季拉山、遠眺南迦巴瓦峰、魯朗林海觀景台；住宿：林芝希爾頓花園供氧酒店\n第3天：秀巴古堡、巴松措，前往拉薩；住宿：拉薩希爾頓惠庭供氧酒店\n第4天：拉薩一日：布達拉宮、大昭寺、八廓街；布宮景觀下午茶；住宿：拉薩希爾頓惠庭供氧酒店\n第5天：拉薩市區：扎基寺、色拉寺；住宿：拉薩希爾頓惠庭供氧酒店\n第6天：羊卓雍措、卡若拉冰川、白居寺；住宿：日喀則希爾頓供氧酒店\n第7天：加烏拉山口、絨布寺、珠峰大本營；住宿：珠峰供氧絨布旅館\n第8天：嘉措拉山口觀景台、薩迦寺；住宿：日喀則希爾頓供氧酒店\n第9天：扎什倫布寺、拉日鐵路返回拉薩；住宿：拉薩希爾頓惠庭供氧酒店\n第10天：拉薩24小時送機、送火車",
+      "source_ref": "user-zip-20261014/圖A-2・10天林芝希爾頓行程.png"
+    },
+    {
+      "id": "tibet_overview_10d.accommodation",
+      "text": "行程圖列出的希爾頓住宿有珠峰例外：珠峰安排供氧絨布旅館。不得說所有晚數都是希爾頓；不從房間照片推斷每間房的設備、供氧時數或濃度。",
+      "source_ref": "user-zip-20261014/圖A-2・10天林芝希爾頓行程.png"
+    }
+  ],
+  "content_groups": {
+    "itinerary_overview": {
+      "purpose": "行程總覽",
+      "approved_text": "這條西藏全覽10日從林芝進、拉薩出，安排林芝、拉薩、日喀則及珠峰大本營，回程體驗拉日鐵路。",
+      "asset_keys": [
+        "tibet_overview_10d_itinerary"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.scope",
+        "tibet_overview_10d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "guests": {
+      "purpose": "團友合照1",
+      "approved_text": "與您分享業務提供的團友照片。",
+      "asset_keys": [
+        "tibet_overview_10d_guests_1",
+        "tibet_overview_10d_guests_2",
+        "tibet_overview_10d_guests_3",
+        "tibet_overview_10d_lulang_guests"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "hotel": {
+      "purpose": "希爾頓房間照片1",
+      "approved_text": "行程中的希爾頓住宿保留珠峰例外，珠峰安排絨布旅館。",
+      "asset_keys": [
+        "tibet_overview_10d_hotel_1",
+        "tibet_overview_10d_hotel_2"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "vehicle_oxygen": {
+      "purpose": "車內供氧設備",
+      "approved_text": "這是業務提供的車內供氧設備照片。",
+      "asset_keys": [
+        "tibet_overview_10d_vehicle_oxygen"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "everest": {
+      "purpose": "珠峰日照金山",
+      "approved_text": "行程包含珠峰大本營；日照金山需要配合當天天氣。",
+      "asset_keys": [
+        "tibet_overview_10d_everest"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "nyingchi": {
+      "purpose": "巴松措",
+      "approved_text": "行程安排林芝、巴松措與秀巴古堡。",
+      "asset_keys": [
+        "tibet_overview_10d_basum",
+        "tibet_overview_10d_castle"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "vehicle": {
+      "purpose": "車內座椅",
+      "approved_text": "這是業務提供的車內照片。",
+      "asset_keys": [
+        "tibet_overview_10d_vehicle"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "rongbuk": {
+      "purpose": "絨布旅館房間",
+      "approved_text": "珠峰住宿安排供氧絨布旅館。",
+      "asset_keys": [
+        "tibet_overview_10d_rongbuk"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "lhasa": {
+      "purpose": "布達拉宮",
+      "approved_text": "拉薩行程包含布達拉宮、大昭寺、八廓街、扎基寺與色拉寺。",
+      "asset_keys": [
+        "tibet_overview_10d_potala",
+        "tibet_overview_10d_zaki",
+        "tibet_overview_10d_sera"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_sakya": {
+      "purpose": "薩迦寺",
+      "approved_text": "行程也安排薩迦寺，這裡的建築與藏傳佛教文化可以慢慢欣賞。",
+      "asset_keys": [
+        "tibet_overview_10d_sakya"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_railway": {
+      "purpose": "拉日鐵路窗景",
+      "approved_text": "回程安排拉日鐵路返回拉薩，可以從車窗欣賞沿途風景。",
+      "asset_keys": [
+        "tibet_overview_10d_railway"
+      ],
+      "evidence_refs": [
+        "tibet_overview_10d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    }
+  },
+  "content_sequence": [
+    "itinerary_overview",
+    "guests",
+    "hotel",
+    "vehicle_oxygen",
+    "everest",
+    "nyingchi",
+    "vehicle",
+    "rongbuk",
+    "lhasa",
+    "followup_sakya",
+    "followup_railway"
+  ],
+  "fixed_answers": []
+}

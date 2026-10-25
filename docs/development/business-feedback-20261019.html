@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>10月18日业务反馈 · 上线验收</title>
+<style>body{font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif;color:#243342;background:#f5f7fa;margin:0}main{max-width:1120px;margin:auto;padding:38px 24px}h1{font-size:28px}h2{font-size:21px;margin-top:30px}.card{background:white;border:1px solid #dce3e9;border-radius:12px;padding:24px;margin:20px 0}table{border-collapse:collapse;width:100%;background:white}th,td{text-align:left;padding:12px;border:1px solid #dce3e9;vertical-align:top}th{background:#edf3f8}blockquote{border-left:4px solid #127a65;padding:12px 20px;background:#edf8f4;margin:16px 0}a{color:#1261a0}code{overflow-wrap:anywhere;font-size:13px}.muted{color:#5a6875}.ok{color:#117554;font-weight:bold}.scroll{overflow-x:auto}</style>
+<main><h1>措宗寺答复与「以開口」标签已上线</h1>
+<p class="muted">2026年10月19日（北京时间）｜依据麗麗 10月18日 13:59 补充及本次标签需求</p>
+<div class="scroll"><table><thead><tr><th>事项</th><th>当前效果</th><th>验证与上线结论</th></tr></thead><tbody>
+<tr><td>措宗寺参观说明</td><td>桃花9日、桃花＋珠峰11日、全览10天、冬游冰川8天加入批准话术。会逛巴松错湖心岛，寺庙开放时参观，冬季较多关闭。精华8天不会误承诺含巴松措。</td><td><span class="ok">已上线</span>。6个模型场景最终通过，包含截图对应会话 #366 原始上下文、错别字、冬季条件与不适用线路。线上四条资料核验一致。</td></tr>
+<tr><td>客户开口标签</td><td>AI接待期间收到客户有效回复，自动添加 <b>以開口</b>。开场线路、人数、月份按钮及已知广告选项除外；之后自由回复中的数字、月份、表情也计入。支持附件回应，不依赖图片内容识别。</td><td><span class="ok">已上线</span>。Chatwoot标签目录已创建。选项排除、重复回调、失败重试、人工暂停、30分钟等待及AI恢复后的客户回复均有隔离测试；截至本次复核尚无自然新触发样本。</td></tr>
+<tr><td>30分钟恢复AI时标签卡住</td><td>发现历史代码按大写「AI跟进」反复创建标签，而Chatwoot已有小写「ai跟进」，导致422。现按平台实际名称复用并确认；切回人工时也能清除不同大小写的跟进标签。</td><td><span class="ok">已修复上线并观察到恢复</span>。真实会话 #349、#375 都已同步为 ai＋ai跟进，人工标签移除，#375的「加私訊」保留。34条控制标签任务均为synced。</td></tr>
+<tr><td>接待状态保护</td><td>「以開口」是独立业务标签，不授予AI接待权限。等待30分钟时仍是人工；AI真正恢复后客户再回复，记录开口并交回人工。业务标签失败只重试标签。</td><td>人工/AI切换、并发交接、旧回调与其他标签保留均通过回归；没有批量补标历史会话、重开人工暂停或向真实客户发送测试消息。</td></tr>
+</tbody></table></div>
+<div class="card"><h2>批准的线路答复</h2><blockquote>這是巴松錯湖心島上的措宗寺，我們會逛湖心島；只要寺廟有開，導遊都會帶大家逛，通常一年四季只有冬季會較多時間關閉。</blockquote>
+<p>线路未确定时改为“含巴松措的行程会逛湖心岛”，保留开放与冬季关闭条件。现场某天开放时刻、法会及特殊停留安排没有新增事实依据，不能自行承诺。</p>
+<p>原会话初次回放正确补了寺庙，但带出了历史回复中未经核验的九月团期否定；第二次遗漏冬季提醒。补充约束后最终回放通过，历史失败记录仍保留。不是把单元测试等同于实际模型效果。</p></div>
+<div class="card"><h2>测试证据</h2><ul>
+<li>后端全量：752项通过，13项已有依赖弃用警告。</li>
+<li>后续最终专项：107项通过，涵盖新增4项检查；与全量有交集，不相加为859项。当前合计覆盖756个不同用例。</li>
+<li>真实模型：6个场景最终通过。此次合计11次模型HTTP请求，沿用原预算账本；新增保守费用¥0.58839264，累计¥18.653843，余¥1.346157。</li>
+<li>部署前以生产数据库副本升级 a036_business_labels，迁移、模型结构、资料编译结果及既有会话控制保留检查通过。</li>
+<li>部署后13项文件哈希核验、资料digest、健康接口、数据库quick_check及3个服务核验通过；最终标签同步队列34条全部synced。</li>
+<li>此次没有前端代码变更，未重跑前端构建；没有声称手机实机显示或自然「以開口」触发已验证。</li>
+</ul></div>
+<div class="card"><h2>发布与复现</h2>
+<p>主发布：<code>business-feedback-20261019-20261019T031831Z</code>（11:18:59完成）。引擎 <code>reception-v3-5901f25e228de81a</code>。大小写兼容补丁另见下方发布记录。备份保留于各发布对应的 <code>/opt/china2go-ai/backups/</code>，数据库升级仅新增业务标签任务表。</p>
+<p>主发布没有修改既有配置、会话控制或历史消息；大小写补丁上线后，为 #375 解除此前422产生的重试退避时间，其既有AI跟进权限和业务标签保留。后续正常业务自动跟进不计作测试发送。</p>
+<p><a href="../../output/business-feedback-20261019/acceptance.json">模型验收</a> · <a href="../../output/business-feedback-20261019/deployment.json">主发布清单</a> · <a href="../../output/business-feedback-20261019/label-fix-deployment.json">标签补丁发布</a> · <a href="../../output/business-feedback-20261019/postcheck.json">最终线上核验</a> · <a href="../../output/business-feedback-20261019/controls-after-fix.json">两条真实标签恢复记录</a> · <a href="../../data/knowledge/china2go/route-releases/20261019-tsozong/">当前线路包快照</a></p>
+<p class="muted">图片点赞内容识别、模型系统性稳定性、长期磁盘治理仍按此前约定暂缓。此次没有提交或推送Git，原工作区变更保留。</p></div></main></html>

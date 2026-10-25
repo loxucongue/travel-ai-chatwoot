@@ -207,7 +207,7 @@ export async function demoApi<T>(path: string, init: RequestInit = {}): Promise<
     if (conversation) { conversation.ai_state = 'HUMAN_HANDOFF'; conversation.ai_mode = 'disabled'; conversation.labels = [...new Set([...conversation.labels.filter((label) => label !== 'ai'), '人工接管'])]; }
     return clone(created) as T;
   }
-  const handoffAction = pathname.match(/^\/handoffs\/(\d+)\/(claim|assign|complete|restore-ai)$/);
+  const handoffAction = pathname.match(/^\/handoffs\/(\d+)\/(claim|assign|complete|restore-ai|return-followup)$/);
   if (handoffAction) {
     const item = handoffs.find((task) => task.id === Number(handoffAction[1]));
     if (!item) return {} as T;
@@ -215,6 +215,11 @@ export async function demoApi<T>(path: string, init: RequestInit = {}): Promise<
     if (action === 'claim') { item.status = 'claimed'; item.assignee = '演示管理员'; item.assignee_user_id = 1; }
     if (action === 'assign') { const user = platformUsers.find((candidate) => candidate.id === Number(body.user_id)); item.status = 'claimed'; item.assignee = user?.display_name ?? '演示客服'; item.assignee_user_id = user?.id; }
     if (action === 'complete') item.status = 'completed';
+    if (action === 'return-followup') {
+      Object.assign(item, { status: 'completed', followup_enabled: true, label_sync_status: 'synced', labels: ['ai', 'AI跟进'] });
+      const conversation = conversations.find(candidate => candidate.id === item.conversation_id);
+      if (conversation) { conversation.ai_state = 'AI_FOLLOWUP'; conversation.labels = ['ai', 'AI跟进']; }
+    }
     if (action === 'restore-ai') { item.status = 'completed'; const conversation = conversations.find((candidate) => candidate.id === item.conversation_id); if (conversation) { conversation.ai_state = 'AI_ACTIVE'; conversation.ai_mode = 'enabled'; conversation.labels = [...new Set([...conversation.labels.filter((label) => label !== '人工接管'), 'ai'])]; } }
     item.version += 1;
     return clone(item) as T;

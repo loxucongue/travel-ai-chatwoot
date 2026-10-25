@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>绒布旅馆照片更新验收 · 2026-10-16</title>
+<style>body{margin:0;background:#f4f7fa;color:#25374a;font:15px/1.8 system-ui,"Microsoft Yahei",sans-serif}main{max-width:980px;margin:32px auto;background:white;padding:32px;border-radius:16px}h1{font-size:26px}h2{font-size:19px;margin-top:28px}.ok{background:#e5f6ed;color:#176143;padding:12px 18px;border-radius:10px}table{border-collapse:collapse;width:100%}th,td{padding:12px;text-align:left;border-bottom:1px solid #dee7ef;vertical-align:top}th{background:#edf3f9}.photos{display:flex;gap:24px;flex-wrap:wrap}figure{margin:0;flex:1;min-width:240px}img{width:100%;height:360px;object-fit:contain;background:#f3f5f7}a{color:#1769a0}code{overflow-wrap:anywhere;font-size:12px}@media(max-width:700px){main{margin:0;padding:20px}table{display:block;overflow:auto}}</style>
+<main><h1>绒布旅馆照片更新验收</h1><p>2026-10-16 · 真实会话核对、配置更新、生产复核</p>
+<p class="ok">已上线。含绒布旅馆的三条线路统一使用新客房照与卫浴照；相关回归 93 项通过，生产素材解析复核通过。</p>
+<h2>真实会话证据</h2><p>截图对应 Chatwoot <strong>#343 · 翠璧 蔡</strong>，共读取 26 条会话消息。客户原话是“西藏精華-8天 拉薩+珠峰”，实际接待线路为 <code>tibet_essence_8d</code>。系统发出“珠峰那晚安排供氧絨布旅館，有獨立衛浴喔～”后，发送了截图中的旧双床房照片。</p>
+<p>旧照片消息 ID：<code>925249972</code>；素材键：<code>tibet_essence_8d_rongbuk</code>。8 天和 10 天素材文件哈希相同，确认使用同一张旧照。11 日原客房照与本次提供的客房照逐字节相同，只需要新增卫浴照。</p>
+<h2>适用线路</h2><table><thead><tr><th>线路</th><th>本次修改</th><th>结果</th></tr></thead><tbody>
+<tr><td>西藏精华 8 天 · 拉萨＋珠峰</td><td>旧客房照替换为新照，并补上卫浴照</td><td>已生效</td></tr>
+<tr><td>西藏全览 10 天 · 林芝＋拉萨＋珠峰</td><td>旧客房照替换为新照，并补上卫浴照</td><td>已生效</td></tr>
+<tr><td>桃花＋珠峰 11 日</td><td>沿用与本次相同的客房照，并补上卫浴照</td><td>已生效</td></tr>
+<tr><td>桃花 9 日</td><td>不上珠峰，继续排除绒布旅馆照片</td><td>已核对</td></tr>
+<tr><td>冬季珠峰小镇替代住宿</td><td>保留冬季绒布关闭与替代线路推荐逻辑，不以这组照片代表冬季住宿</td><td>已核对</td></tr>
+</tbody></table>
+<h2>生效的两张原图</h2><div class="photos">
+<figure><img alt="绒布旅馆双床客房" src="../../data/knowledge/china2go/route-releases/20261016-rongbuk/f3dca50af44720837223b6ef43ec5e75.png"><figcaption>客房照 · 744 × 914 · 原图未修改</figcaption></figure>
+<figure><img alt="绒布旅馆卫浴" src="../../data/knowledge/china2go/route-releases/20261016-rongbuk/f4b8314b4a01b52cb5c4aa8adbb6f124.jpg"><figcaption>卫浴照 · 1279 × 1706 · 原图未修改</figcaption></figure>
+</div>
+<h2>验收结论</h2><ul>
+<li>三条线路首轮介绍分别解析出客房、卫浴两张图，文件哈希与用户提供的原图一致。</li>
+<li>住宿追问与跟进回复的素材选择能解析同一对图片；11 日住宿固定答复的图片引用同步更新。</li>
+<li>未发送草稿支持切换至新图；已发送历史保持原样，不重复补发。发布时没有需要迁移的旧图草稿。</li>
+<li>重复执行配置不新增媒体、不重复归档、不追加重复图片。</li>
+<li>其他线路设置、报价、全局接待配置和已发消息均未变更。三个服务健康检查通过。</li>
+</ul><p>测试包括生产数据库副本预检、重复配置检查、素材解析与图文计划验证，以及 93 项线路内容/近期业务/季节规则回归。没有向 #343 或其他客户发送测试图片；本次模型调用 0 次。</p>
+<p>发布备份：<code>/opt/china2go-ai/backups/rongbuk-photos-20261016-20261016T035718Z</code>。</p>
+<p>证据：<a href="../../output/rongbuk-photos-20261016/verify-result.json">生产复核结果</a> · <a href="../../output/rongbuk-photos-20261016/regression.log">93 项回归日志</a> · <a href="../../output/rongbuk-photos-20261016/preflight-result.json">隔离预检</a> · <a href="../../data/knowledge/china2go/route-releases/20261016-rongbuk/manifest.json">素材发布清单</a></p>
+</main></html>

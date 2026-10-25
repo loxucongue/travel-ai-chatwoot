@@ -1,0 +1,42 @@
+[
+  {
+    "id": "latest_quote625_hook", "entry": "西藏桃花節＋珠峰11日",
+    "replay_context": {
+      "now": "2026-10-14T03:00:00+00:00", "route_variant": "peach_11d_2027",
+      "profile": {"party_size": 2}, "event": "customer_message",
+      "state": {"opening_started": true, "intake_status": "done", "completed_introductions": ["peach_11d_2027"], "introduction_route": "peach_11d_2027", "buffered_questions": ["question"], "handoff": false, "opt_out": false},
+      "messages": [{"id": "question", "direction": "incoming", "content_type": "text", "content": "費用呢？", "created_at": "2026-10-14T03:00:00+00:00"}]
+    },
+    "steps": [{"id": "complete_quote_then_hook", "checks": ["send", "not_handoff", "exact_quote", "no_contact", "one_question_required_last", "no_third_person"], "contains": ["12,180", "包含", "不含", "2026/11/13", "家人", "朋友"], "excludes": ["單房差", "3,200", "400"]}]
+  },
+  {
+    "id": "text_emoji_continue", "entry": "西藏桃花節不上珠峰9日",
+    "replay_context": {
+      "now": "2026-10-14T03:00:00+00:00", "route_variant": "peach_9d_2027",
+      "profile": {"party_size": 2}, "event": "customer_message",
+      "state": {"opening_started": true, "intake_status": "done", "completed_introductions": ["peach_9d_2027"], "introduction_route": "peach_9d_2027", "buffered_questions": ["question"], "handoff": false, "opt_out": false},
+      "messages": [{"id": "question", "direction": "incoming", "content_type": "text", "content": "👍😊", "created_at": "2026-10-14T03:00:00+00:00"}]
+    },
+    "steps": [{"id": "emoji_not_handoff_or_contact_capture", "checks": ["not_handoff", "no_contact", "no_price", "text_only"], "excludes": ["圖片我收到了", "轉人工"]}]
+  },
+  {
+    "id": "unknown_image_silent_handoff", "entry": "西藏桃花節不上珠峰9日",
+    "replay_context": {
+      "now": "2026-10-14T03:00:00+00:00", "route_variant": "peach_9d_2027",
+      "profile": {"party_size": 2}, "event": "customer_message",
+      "state": {"opening_started": true, "intake_status": "done", "completed_introductions": ["peach_9d_2027"], "introduction_route": "peach_9d_2027", "buffered_questions": ["question"], "handoff": false, "opt_out": false},
+      "messages": [{"id": "question", "direction": "incoming", "content_type": "image", "content": "這張圖片上的安排可以嗎？", "attachments": [{"id": 999001, "file_type": "image"}], "created_at": "2026-10-14T03:00:00+00:00"}]
+    },
+    "steps": [{"id": "no_public_acknowledgement", "checks": ["handoff", "no_send"]}]
+  },
+  {
+    "id": "later_year_retention", "entry": "西藏桃花節＋珠峰11日",
+    "replay_context": {
+      "now": "2026-10-14T03:00:00+00:00", "route_variant": "peach_11d_2027",
+      "profile": {"party_size": 2}, "event": "customer_message",
+      "state": {"opening_started": true, "intake_status": "done", "completed_introductions": ["peach_11d_2027"], "introduction_route": "peach_11d_2027", "buffered_questions": ["question"], "handoff": false, "opt_out": false},
+      "messages": [{"id": "question", "direction": "incoming", "content_type": "text", "content": "很想去看桃花，但是明年三月安排了行程，只能後年再安排了，謝謝！", "created_at": "2026-10-14T03:00:00+00:00"}]
+    },
+    "steps": [{"id": "other_travel_options_without_fake_dates", "checks": ["send", "not_handoff", "no_price", "no_third_person", "one_question_required_last"], "contains": ["中國"], "excludes": ["3/20", "4/10", "後年也是", "顧問可以"]}]
+  }
+]

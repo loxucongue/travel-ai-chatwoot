@@ -53,15 +53,21 @@ export type OpeningItem = {
   media_name?: string;
 };
 
+export type MaterialRule = {
+  id: string; name: string; enabled: boolean; purpose: 'reply' | 'followup' | 'both';
+  route_variants: string[]; any_labels: string[]; scenario: string; approved_text: string; asset_keys: string[];
+};
+
 export type ReceptionConfig = {
+  material_rules?: MaterialRule[];
   schema_version: number;
   intake: { enabled: boolean; question: string; options: string[]; wait_seconds: number };
   common_scripts: {id: string; name: string; scenario: string; text: string; enabled: boolean}[];
   reply: { opening_message: string; opening_messages: string[]; opening_items: OpeningItem[]; opening_interval_seconds: number; goal: string; tone: 'friendly_professional' | 'concise' | 'warm'; tone_guidance: string; opening_character_limit: number; custom_guidance: string };
   lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[] };
-  routing: { enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' | 'consult_advisor' };
+  routing: { live_inbox_ids?: number[] | null; enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' | 'consult_advisor' };
   handoff: { large_group_enabled: boolean; large_group_minimum: number };
-  silence: { live_enabled?: boolean | null; enabled: boolean; initial_checkpoints_minutes?: number[] | null; recurring_interval_minutes?: number; intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
+  silence: { material_selection?: 'route_catalog' | 'configured_rules'; advisor_reply_followup_enabled?: boolean; live_enabled?: boolean | null; enabled: boolean; daily_at?: string | null; initial_checkpoints_minutes?: number[] | null; recurring_interval_minutes?: number; intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
 };
 
 export type ReceptionVersion = {
@@ -76,7 +82,7 @@ export type ReceptionHistory = {
 export type ConfigResponse = {
   config: ReceptionConfig;
   version: ReceptionVersion;
-  runtime: {live_silence_enabled: boolean; model: string; timeout_seconds: number; concurrency: number};
+  runtime: {live_inbox_ids?: number[]; live_silence_enabled: boolean; model: string; timeout_seconds: number; concurrency: number};
   history: ReceptionHistory[];
   hard_guards: Record<string, boolean | string>;
   outbound: false;
@@ -105,7 +111,8 @@ export function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value))
 export function normalizeConfig(value: ReceptionConfig): ReceptionConfig {
   const result = clone(value);
   result.common_scripts ??= [];
-  result.intake ??= {enabled: true, question: '您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）', options: ['自己一位','2～3位','4～6位','7～10位','10位以上'], wait_seconds: 120};
+  result.material_rules ??= [];
+  result.intake ??= {enabled: true, question: '您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）', options: ['自己一位','2～3位','4～6位','7～10位','10位以上'], wait_seconds: 90};
   result.silence.intervals_minutes ??= [360];
   result.reply.tone_guidance ??= '';
   result.reply.opening_message ??= '您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？';
@@ -136,9 +143,9 @@ export function configurationChanges(before: ReceptionConfig, after: ReceptionCo
   const fields: Record<string,string[]> = {
     intake: ['enabled','question','options','wait_seconds'],
     reply: ['opening_items','opening_interval_seconds','goal','tone','tone_guidance','custom_guidance'],
-    lead_capture: ['enabled','channels'], routing: ['outside_catalog_action'],
+    lead_capture: ['enabled','channels'], routing: ['outside_catalog_action','live_inbox_ids'],
     handoff: ['large_group_enabled','large_group_minimum'],
-    silence: ['enabled','live_enabled','initial_checkpoints_minutes','recurring_interval_minutes','intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
+    silence: ['material_selection','enabled','live_enabled','advisor_reply_followup_enabled','daily_at','initial_checkpoints_minutes','recurring_interval_minutes','intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
   };
   const result: Record<string,unknown> = {};
   for (const [section, keys] of Object.entries(fields)) {
@@ -148,12 +155,13 @@ export function configurationChanges(before: ReceptionConfig, after: ReceptionCo
     if (Object.keys(changes).length) result[section]=changes;
   }
   if (JSON.stringify(before.common_scripts)!==JSON.stringify(after.common_scripts)) result.common_scripts=after.common_scripts;
+  if (JSON.stringify(before.material_rules)!==JSON.stringify(after.material_rules)) result.material_rules=after.material_rules;
   return result;
 }
 
 export const followupCheckpoints = (intervals: number[]) => intervals.map((_, index) => intervals.slice(0,index+1).reduce((sum,value) => sum+value,0));
 export const followupIntervals = (points: number[]) => points.map((point,index) => point-(points[index-1] ?? 0));
-export const FOLLOWUP_WINDOW_MINUTES = 23 * 60;
+export const FOLLOWUP_WINDOW_MINUTES = 7 * 24 * 60;
 export const validFollowupIntervals = (intervals: number[]) => intervals.length > 0 && intervals.length <= 20
   && intervals.every(value => Number.isInteger(value) && value >= 1)
   && intervals.reduce((sum,value) => sum+value,0) <= FOLLOWUP_WINDOW_MINUTES;

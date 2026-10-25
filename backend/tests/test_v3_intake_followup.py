@@ -31,7 +31,7 @@ def create(db, monkeypatch, entry='九日', model=None, wait_seconds=60):
     return row
 
 
-@pytest.mark.parametrize('wait_seconds', [60, 120])
+@pytest.mark.parametrize('wait_seconds', [60, 90, 120])
 def test_intake_actual_delivery_anchors_configured_wait_and_restarts(session_factory, monkeypatch, wait_seconds):
     with session_factory() as db:
         row=create(db,monkeypatch,wait_seconds=wait_seconds)
@@ -56,7 +56,7 @@ def test_intake_actual_delivery_anchors_configured_wait_and_restarts(session_fac
 
 
 @pytest.mark.parametrize('reply,profile',[('4～6位',{'party_size_range':'4～6位'}),('先介紹吧',{}),('在哪裡集合？',{})])
-@pytest.mark.parametrize('wait_seconds', [60, 120])
+@pytest.mark.parametrize('wait_seconds', [60, 90, 120])
 def test_any_ordinary_answer_starts_intro_and_keeps_question(session_factory,monkeypatch,reply,profile,wait_seconds):
     seen=[]
     def model(context):
@@ -142,7 +142,7 @@ def test_late_worker_skips_missed_slots_and_expired_window(session_factory,monke
         step(db,row,20*60)
         assert service.state(row)['next_check_at']==service.later(anchor,60*60)
         before=db.scalar(select(AutomationRun).order_by(AutomationRun.id.desc())).id
-        step(db,row,24*3600)
+        step(db,row,8*24*3600)
         assert not service.state(row)['next_check_at']
         assert db.scalar(select(AutomationRun).order_by(AutomationRun.id.desc())).id==before
 
@@ -232,6 +232,8 @@ def test_configuration_controls_intake_and_supports_followups_after_six_hours(au
     response=client.get('/v1/automation/reception-config')
     assert response.json()['config']['silence']['intervals_minutes']==[360,720]
     response=client.patch('/v1/automation/reception-config',headers={'X-CSRF-Token':csrf},json={'silence':{'intervals_minutes':[360,1021]}})
+    assert response.status_code==200
+    response=client.patch('/v1/automation/reception-config',headers={'X-CSRF-Token':csrf},json={'silence':{'intervals_minutes':[360,9721]}})
     assert response.status_code==422
 
 
@@ -248,7 +250,7 @@ def test_two_minute_intake_save_preserves_entry_followup_schedule(authenticated)
     after=client.get('/v1/automation/reception-config').json()['config']
     assert after['intake']['wait_seconds']==120
     assert after['silence']==before['silence']
-    assert IntakeSettings().wait_seconds==120
+    assert IntakeSettings().wait_seconds==90
 
 
 def test_migration_preserves_actual_greeting_assets_and_live_switches():

@@ -1,0 +1,64 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>林芝8日开发与测试验收</title><style>
+body{font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif;color:#163333;background:#f4f7f7;margin:0}
+main{max-width:1100px;margin:40px auto;padding:32px;background:white;border-radius:16px}
+h1{font-size:28px;margin:0 0 12px}h2{font-size:21px;margin-top:30px}.notice{padding:16px;background:#fff4d7;border-left:5px solid #d39325}
+table{width:100%;border-collapse:collapse}td,th{padding:12px;text-align:left;border-bottom:1px solid #dfe8e8;vertical-align:top}
+th{background:#edf4f3}a{color:#087b72}.stats{display:flex;gap:15px;flex-wrap:wrap;margin:20px 0}.stat{padding:12px 22px;background:#e8f4ef;border-radius:10px}
+blockquote{background:#edf5fb;padding:14px;border-radius:10px;margin:12px 0}.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+.gallery img{width:100%;height:140px;object-fit:cover;border-radius:8px}.gallery figure{margin:0}.map{max-width:420px;width:100%}
+details{margin:15px 0}small{color:#53676a}code{overflow-wrap:anywhere}
+</style><main><h1>林芝入藏、不上珠峰8日：开发与测试验收</h1>
+<div class="notice"><b>未上线，等待审批。</b>开发和离线执行测试已完成。真实模型语义效果尚未验收，不能将下方固定话术预览当作模型实测。</div>
+<div class="stats"><div class="stat">离线测试：<b>861 通过</b></div><div class="stat">新产品测试：43项</div><div class="stat">素材：18张</div><div class="stat">生产变更：0</div></div>
+<p>测试阻断外网连接，未发送客户消息，未修改生产数据库或服务。新线路只在本地隔离数据库中启用，所有新素材的生产发送审批标记为未批准。</p>
+<table><thead><tr><th>场景</th><th>当前行为</th><th>验证结果</th></tr></thead><tbody>
+<tr><td>广告直接进入</td><td>8个标题/别名进入独立林芝8日，不误认精华8天</td><td>自动化通过</td></tr>
+<tr><td>高反疑虑与选线分开</td><td>程序区分推荐/选择；语义分类仍需真实模型验收</td><td>执行验证通过；模型待测</td></tr>
+<tr><td>拒绝珠峰后停旧图文</td><td>模型等待期间暂停；决定转荐后取消未发内容</td><td>自动化通过</td></tr>
+<tr><td>确认换线</td><td>保留月份、人数、联系方式及AI/人工控制，差异介绍不重发地图</td><td>自动化通过</td></tr>
+<tr><td>重新想去珠峰</td><td>允许客户主动改回；沉默事件不能替客户选择</td><td>自动化通过</td></tr>
+<tr><td>日期与价格</td><td>逐日核对2027年365天；8280/9580/9980独立核价，不主动列房差</td><td>自动化通过</td></tr>
+<tr><td>不匹配日期</td><td>4月20日不推荐已过期桃花；换线重新核对日期</td><td>自动化通过</td></tr>
+<tr><td>冬季口径冲突</td><td>保留待核对状态，不声称停卖、不自动套冬游价</td><td>自动化通过；业务口径待确认</td></tr>
+<tr><td>沉默跟随</td><td>沿用每天一轮、最后回复起七天；拒绝原线后不再推旧线</td><td>相关回归通过</td></tr>
+<tr><td>素材与发布隔离</td><td>18张原图哈希验证并解析；六线路仅载入本地隔离库</td><td>通过；未上线</td></tr>
+</tbody></table><h2>对客内容预览</h2><p>以下来自候选配置，为固定素材和排版预览，未调用真实模型。</p>
+<h3>中途确认换线后的简短介绍</h3>
+<blockquote>先給您看「林芝入藏、不上珠峰8日」的行程圖～從林芝到拉薩、日喀則，最後搭拉日鐵路回拉薩。</blockquote>
+<img class="map" alt="林芝8日行程图" src="../../data/knowledge/china2go/route-releases/20261020-linzhi8/assets/ea80d39c1be477b3d72a406da9f369793b52ba12e999852ff55cbd4a60dae7d3.png">
+<blockquote>這條保留林芝、拉薩與日喀則，不安排珠峰和絨布住宿；前兩晚住林芝，最後搭拉日鐵路回拉薩。</blockquote>
+<p>若地图在推荐阶段已经发过，正式换线时只补文字。日期、人数、同行情况及联系方式保留，不重复开场问候。</p>
+<details><summary>首次完整介绍配置（11组文字）</summary>
+<blockquote>先給您看「林芝入藏、不上珠峰8日」的行程圖～從林芝到拉薩、日喀則，最後搭拉日鐵路回拉薩。</blockquote>
+<blockquote>前兩晚先住林芝，這條不去珠峰；但仍有高海拔景點，不能保證不會高反喔。</blockquote>
+<blockquote>會在色季拉山遠眺南迦巴瓦峰，再到魯朗林海，也安排騎馬、射響箭體驗～能否看到山峰要配合當天天氣。</blockquote>
+<blockquote>也會參觀千年歷史的秀巴古堡，看看林芝的人文風景～</blockquote>
+<blockquote>巴松措和湖心島也有安排，湖水像綠寶石一樣～</blockquote>
+<blockquote>拉薩安排布達拉宮、大昭寺、八廓街、扎基寺和色拉寺，還有布宮景觀下午茶。</blockquote>
+<blockquote>接著看羊卓雍措、卡若拉冰川與白居寺，再到日喀則參觀扎什倫布寺。</blockquote>
+<blockquote>最後搭拉日鐵路回拉薩，沿途欣賞河谷與高原風景，也減少一段車程。</blockquote>
+<blockquote>所有酒店都有供氧，安排希爾頓系列，日喀則升級一晚五星～這是房內的供氧設備。</blockquote>
+<blockquote>拼團最多6人，安排9座VIP車；隨車有醫用氧氣鋼瓶、葡萄糖及便攜氧氣。</blockquote>
+<blockquote>我們 China2Go 國旅環球接待港澳台與全球外賓，安排純玩小團，無購物約定也寫進合約。</blockquote>
+</details><h3>普通报价预览：2027年6月</h3><blockquote>【不上珠峰・林芝8天｜林芝＋拉薩＋日喀則】<br>次次旺季出發：5/6－6/30（每週二出發）<br>6人精緻小團：¥9,580/人（2人一間）<br>包含：入藏函、車、司機、導遊、保險、住宿、門票、酒店早餐<br>不含：機票、午晚餐、小費<br>現在報名還有優惠喔！</blockquote>
+<p>仅客户问价、日期核对通过后使用。单房差保留在内部报价数据，客户主动询问时再回答。</p>
+<h2>跟随素材</h2><div class="gallery">
+<figure><img loading="lazy" src="../../data/knowledge/china2go/route-releases/20261020-linzhi8/assets/e7f73fd7e27e9556ccfb2f10dc86583acf7bb46ff0d44d6671e924a33dc1ddd0.png" alt="魯朗騎馬射箭"><figcaption>跟您分享團友在魯朗騎馬、射響箭的體驗照～這項體驗有包含在行程裡。</figcaption></figure>
+<figure><img loading="lazy" src="../../data/knowledge/china2go/route-releases/20261020-linzhi8/assets/bb481a80cb97bd0d5daae07dc9f098378e395bf60723395b55f48e0a2e00887f.png" alt="團友掛經幡"><figcaption>跟您分享團友一起掛經幡的照片～這也是行程安排的在地體驗。</figcaption></figure>
+<figure><img loading="lazy" src="../../data/knowledge/china2go/route-releases/20261020-linzhi8/assets/81acdc1f66dc32db654ff7aa3d1b32397fac2c9fc4197d6b750c9d24b8d822e2.webp" alt="扎什倫布寺風景"><figcaption>跟您分享日喀則扎什倫布寺的風景，這條行程也會到訪～</figcaption></figure>
+<figure><img loading="lazy" src="../../data/knowledge/china2go/route-releases/20261020-linzhi8/assets/a8cc273ff404ebd1d4f90498d9f8cd77d6ef8f5698c8011c67c72c5503a7a1a6.png" alt="鐵路風景"><figcaption>回程的拉日鐵路也是行程的一部分，可以從車窗欣賞沿途風景～</figcaption></figure>
+<figure><img loading="lazy" src="../../data/knowledge/china2go/route-releases/20261020-linzhi8/assets/4336fc3c6a6787d0639baee45acc3ae54d9639e751e87b460426bd975fb3863d.png" alt="墨脫石鍋雞"><figcaption>這是林芝的墨脫石鍋雞～午晚餐自理，有興趣可以請導遊協助安排。</figcaption></figure>
+<figure><img loading="lazy" src="../../data/knowledge/china2go/route-releases/20261020-linzhi8/assets/7b5a8705956863f3ac121d08e2f7d3752533e52523f16f316f0fefbead3fb37d.png" alt="魯朗林海"><figcaption>這是魯朗林海的風景，山谷裡有大片森林，給您看看～</figcaption></figure>
+</div><h2>待完成的真实模型验收</h2>
+<p>已准备13个真实模型场景，目前执行0个。本轮模型费用为0元。此前20元额度累计计费或预留19.9694元，剩余约0.0306元；追加最多5元的测试预算尚未批准，原账本未清零。</p>
+<ul><li>广告直接进入并回答月份人数</li><li>只问高反</li><li>想看珠峰但担心</li><li>带长辈不等于改线</li><li>拒绝珠峰先推荐</li><li>接受替代线</li><li>新日期不可售</li><li>只有八天不能硬转九日</li><li>冬季推荐不等于选冰川</li><li>新线路六月报价</li><li>可以改回珠峰</li><li>医生劝阻不判断可参加</li><li>未接受替代线时不发旧线</li></ul>
+<p>语义验收通过后仍需用户单独审批上线。冬季林芝8日的销售口径未统一时，保持“顾问核对”的处理，不自动报价。</p>
+<h2>证据</h2><ul>
+<li><a href="../../output/linzhi8-acceptance-20261020/offline-tests.xml">861项离线测试结果</a></li>
+<li><a href="../../output/linzhi8-acceptance-20261020/summary.json">验收状态与费用边界</a></li>
+<li><a href="../../output/linzhi8-acceptance-20261020/model-cases.json">真实模型待测用例</a></li>
+<li><a href="../../output/linzhi8-acceptance-20261020/tested-sources.json">候选代码与资料哈希</a></li>
+<li><a href="../../data/knowledge/china2go/route-releases/20261020-linzhi8/tibet-linzhi-8d/route-package.json">候选线路配置</a></li>
+<li><a href="https://china2go.com/1-2/">业务来源页面</a>（保存的页面更新时间：2026-10-20 21:01:43）</li>
+</ul></main></html>

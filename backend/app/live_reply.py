@@ -8,6 +8,7 @@ from app.operations import setting_value, ensure_handoff
 from app.outbound_control import global_message_sending_enabled
 from app.runtime_settings import dt
 from app.delivery_status import apply_receipt
+from app.reception_rollout import reception_inbox_allowed
 from app.reception_v3.live import accept, cancel, permitted, enable_new_customer, record_human_reply, human_owned
 
 class ReplyBlocked(Exception):
@@ -48,7 +49,7 @@ def mirror_event(db, event):
                  and (not incoming or payload.get('created_at') and fresh(payload['created_at'])))
     state, message, context, _=upsert_mirrors(db,event,side_effects=False,update_controls=current)
     if (state and current and event.event in ('conversation_created', 'conversation_updated')
-            and state.inbox.chatwoot_inbox_id == settings.live_reply_inbox_id
+            and reception_inbox_allowed(db, state.inbox.chatwoot_inbox_id)
             and context.get('previous_labels') != (state.labels or [])):
         from app.reception_v3.live import apply_label_change
         apply_label_change(db, state, context.get('previous_labels', []))
@@ -59,9 +60,18 @@ def mirror_event(db, event):
             apply_receipt(db,out,payload.get('status'))
         elif current and event.event=='message_created' and message.direction=='outgoing' and not message.private:
             sender = payload.get('sender') or {}
-            if sender.get('type') != 'agent_bot':
+            if sender.get('type') != 'agent_bot' and not (payload.get('content_attributes') or {}).get('external_echo'):
                 record_human_reply(db,state,message)
         if incoming and current:
+            from app.engagement_labels import observe_reply
+            if context.get('new_message'):
+                observe_reply(db, state, message)
+            from app.reception_v3.human_followup import customer_replied
+            from app.reception_v3.live import session_for
+            if customer_replied(db, state, session_for(db, state.id)):
+                event.status,event.processed_at='live_observed',utcnow()
+                db.commit()
+                return
             from app.advisor_assignment import incoming as assignment_incoming
             assignment_incoming(db, state, message)
             if human_owned(db,state):
@@ -69,10 +79,29 @@ def mirror_event(db, event):
                 cancel(db,state.id,'human_contact')
             else:
                 enable_new_customer(db,state,message)
+                if context.get('new_message'):
+                    observe_reply(db, state, message)
                 accept(db,state,message)
         elif incoming and policy.get('armed_at') and message.created_at>=policy['armed_at'] and not fresh(message.created_at) and permitted(db,state):
             ensure_handoff(db,state,'reply_queue_overdue','客户消息等待超时，请人工接待。')
-    if state and current and not permitted(db,state):
+    if state and current and not permitted(db,state,purpose='followup'):
+        from app.reception_v3.live import session_for
+        from app.conversation_labels import sync_ready
+        from app.reception_v3.human_followup import waiting
+        row = session_for(db,state.id)
+        from app.models import ConversationLabelSync
+        sync = db.get(ConversationLabelSync, state.id)
+        if (row and sync and sync.target == 'ai' and sync.status == 'pending'
+                and row.controls.get('v3', {}).get('last_reason') == 'operator_ai_label_return'):
+            # Preserve the pending answer while removal of AI跟进 is confirmed.
+            event.status,event.processed_at='live_observed',utcnow()
+            db.commit()
+            return
+        if row and row.controls.get('human_followup',{}).get('enabled') and (not sync_ready(db,state)
+                or waiting(row) and not row.controls.get('auto_followup_paused')):
+            event.status,event.processed_at='live_observed',utcnow()
+            db.commit()
+            return
         cancel(db,state.id,'control_changed')
     event.status,event.processed_at='live_observed',utcnow()
     db.commit()

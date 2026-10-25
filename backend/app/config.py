@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"
+    deepseek_vision_model: str = "deepseek-flash"
+    customer_image_vision_enabled: bool = False
+    customer_sticker_recognition_enabled: bool = False
+    customer_image_allowed_hosts: str = "app.chatwoot.com"
+    customer_image_storage_hosts: str = "prod-chatwoot-assets.s3.amazonaws.com"
     deepseek_timeout_seconds: int = 20
     deepseek_max_input_characters: int = 300000
     evaluation_poll_interval_seconds: float = 1

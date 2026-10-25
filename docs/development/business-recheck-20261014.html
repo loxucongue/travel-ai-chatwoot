@@ -1,0 +1,335 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>业务回复效果全量复核 · 2026-10-14</title><style>body{max-width:1200px;margin:auto;padding:28px;font:16px/1.7 system-ui;background:#f5f7fa;color:#193346}h1{font-size:28px}table{border-collapse:collapse;width:100%;background:white}th,td{border:1px solid #d4dce3;padding:12px;text-align:left;vertical-align:top}th{background:#eaf0f5}.note{padding:18px;background:#fff1cc;border-left:4px solid #c49321}details{font-size:13px}a{color:#116c9c}pre{white-space:pre-wrap;overflow-wrap:anywhere}.stats{padding:14px;background:#e1f1e8}li{margin:8px 0}</style>
+<h1>业务回复效果全量复核 · 2026-10-14</h1>
+<p class="note">本页保留上一轮27项验收记录。首小时／每3小时的沉默节奏已被20:34版本替代；<a href="daily-followup-20261014.html">查看最新每日一次规则、旧客户迁移及518项回归结果</a>。</p>
+<p class="note"><strong>代码与四线路配置已部署，发布后健康和素材检查通过；整体业务效果仍有以下未完成项。</strong>图片点赞分类仍未实现；原4个模型回放受预算限制，本次5个季节承接场景尚待真实模型复测。历史11个模型场景中“缺价/冬季直接交接”的2项已被最新业务口径取代，不能作为当前通过证据。</p><p><a href="tibet-routes-production-20261014.html">查看上线结果、复核证据和回滚记录</a></p>
+<p class="stats">后端 488 项通过 / 0 失败 · 前端4项通过及构建成功 · 32处素材引用 / 20张原图 · 本轮新增模型费用 ¥0.00</p>
+<h2>这轮发现并修复</h2><ol><li>旧报价迁移会混用固定截止日与30天有效期：保留新版滚动报价，修正固定日期测试前提，增加防回退测试。</li><li>普通数字/RMB写法可绕过季节核价：团费自由报价统一拦截，仍允许回答小费、单房差等独立问题。</li><li>“不主动报价”的效果检查器仅识别桃花价格：现在覆盖所有已配置季节价格，防止漏判新线路。</li><li>补测两条线路真实导入、编辑、保存与运行时读取；30秒月份开场及价格表保留，原全局配置不受影响。</li></ol>
+<h2>本次继续测试：新增发现与验证</h2><p>新增16项集成/日历测试，其中逐日检查四线路2027全年共1460个线路日期组合，同时反查每条推荐线路在该日确实开放。前端4项测试与构建已重新执行。</p><ul><li>复现并修复：先查到有效报价后，再查日期若缺参数、JSON损坏或参数为null，旧报价授权可能继续被使用。现在失败即撤销相应授权，禁止复用旧价格；保留初次失败及修复后记录。</li><li>再次扩展报价格式：仅写人民币¥7,980或“这条行程只要7980元”也不能绕过核价；独立房差/机票/小费、已知赔偿和客户预算不混为团费，并补测其边界。</li><li>验证真实运行时工具循环：查团期→发现错误介绍→要求修正→取消旧文字/图片→保留当前线路；连续错误不会返回可发送决策。</li><li>验证核价授权不跨线路、改为长假/未开放/错误日期后旧价格失效；完整报价原文及末尾问题能进入实际交付层。</li><li>清理通用提示中“当前只有两条桃花线”的过时描述，按当前启用目录判断。</li></ul><p>这16项测试采用模拟模型响应，验证代码约束和交付衔接，不能替代真实模型对客户语言的理解验收。<a href="../../output/new-routes-20261014/business-recheck/runtime-first.txt">工具参数修复前失败复现</a> · <a href="../../output/new-routes-20261014/business-recheck/runtime-fixed.txt">相关60项修复后回归</a> · <a href="../../output/new-routes-20261014/business-recheck/price-format-first.txt">报价写法补测失败复现</a> · <a href="../../output/new-routes-20261014/business-recheck/price-format-fixed.txt">报价格式修复后回归</a></p>
+<h2>资料核对与边界</h2><ul><li>已核对补交的2027-售價表總表-1002.xlsx：新增两线7档金额/单房差与网页一致；已保存原件、哈希、单元格出处及对照结果。早前误发的账号导出未使用。</li><li>业务最新澄清：8日4/21–4/24等季节性未开放时段不再当作缺价直接交接，先推荐同期产品或邀请开放通知。长假特殊报价仍缺，其他年份团期尚未公布。10日春季虽列11,980元但不开放自动销售。</li><li>冰川冬游8日价格已从表内确认9,280元/单房差1,500元；它是另一产品，完整资料/素材仍未提供，本次不自动销售。</li><li>表内A41允许按当地安排调整顺序但不减少景点，8日第2/3天先后不作为价格缺失阻塞；10日林芝酒店具体分店仍待确认。</li><li>表内早鸟与多人优惠允许叠加，但计价单位、月份边界及与已批准活动价的叠加关系未明确，不自动计算折后金额。桃花11日12,180活动价及首次报价30天规则保留。</li><li>图片点赞分类属于尚未完成的能力，不是价格资料问题。</li></ul>
+<p><a href="../../data/knowledge/china2go/price-sheet-20261014/2027-售價表總表-1002.xlsx">报价表原件（未修改）</a> · <a href="../../data/knowledge/china2go/route-releases/20261014/price-sheet-reconciliation.json">逐档核对及规则取舍</a>。本轮没有改动价格数字；配置新增出处，重建隔离四线路环境验证导入。</p>
+<table><tr><th>新增线路</th><th>Excel西藏页单元格 / 名义季节</th><th>团费 / 单房差（人民币）</th><th>核对</th></tr><tr><td>精华8日</td><td>A3:C3 / 淡季：10/15-3/10</td><td>7,980 / 2,000</td><td>与配置一致；长假限制优先</td></tr><tr><td>精华8日</td><td>A4:C4 / 次旺季：3/11-4/20</td><td>9,480 / 2,200</td><td>与配置一致；长假限制优先</td></tr><tr><td>精华8日</td><td>A5:C5 / 次次旺季：5/1-6/30</td><td>9,480 / 2,300</td><td>与配置一致；长假限制优先</td></tr><tr><td>精华8日</td><td>A6:C6 / 旺季：7/1-9/30</td><td>9,980 / 2,800</td><td>与配置一致；长假限制优先</td></tr><tr><td>全览10日</td><td>A10:C10 / 淡季：10/15-3/10</td><td>10,480 / 2,400</td><td>与配置一致；长假限制优先</td></tr><tr><td>全览10日</td><td>A12:C12 / 次次旺季：5/1-6/30</td><td>12,280 / 3,000</td><td>与配置一致；长假限制优先</td></tr><tr><td>全览10日</td><td>A13:C13 / 旺季：7/1-9/30</td><td>12,880 / 3,200</td><td>与配置一致；长假限制优先</td></tr></table>
+<h2>27项业务要求与对应验收</h2><p>采用最近确认口径。旧版6小时、单句简价、不写不含、季节未开放直接交接等已被后续要求覆盖。表中的“自动化”验证日期、状态、配置和交付，不冒充真实模型语言效果验收。</p><table><tr><th>编号 / 业务要求</th><th>当前实现</th><th>验收结论 / 证据</th></tr>
+<tr><td>01 · 客户选线后必须有开场，后加 ai 标签也不能漏接</td><td>新鲜未答消息可补启动；旧消息、已答、人工占有不重放。</td><td>自动化通过<details><summary>自动化测试证据</summary><pre>tests.test_business_feedback_20261011::test_model_recognized_route_wait_still_sends_actual_intake
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[answered]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[fresh]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[human]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[old]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[unknown]</pre></details></td></tr>
+<tr><td>02 · 人数不答等待2分钟，有回答立即往下</td><td>桃花线120秒；新增8/10日按网页问月份、30秒。</td><td>自动化通过；两种开场隔离<details><summary>自动化测试证据</summary><pre>tests.test_tibet_release_20261014::test_new_route_intake_month_30s_preserves_old_party_120s
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-4\uff5e6\u4f4d-profile0]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\u5148\u4ecb\u7d39\u5427-profile1]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\u5728\u54ea\u88e1\u96c6\u5408\uff1f-profile2]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-4\uff5e6\u4f4d-profile0]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\u5148\u4ecb\u7d39\u5427-profile1]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\u5728\u54ea\u88e1\u96c6\u5408\uff1f-profile2]
+tests.test_v3_intake_followup::test_intake_actual_delivery_anchors_configured_wait_and_restarts[120]
+tests.test_v3_intake_followup::test_intake_actual_delivery_anchors_configured_wait_and_restarts[60]</pre></details></td></tr>
+<tr><td>03 · 不要多问已知人数，介绍中问题不能丢</td><td>已知人数跳过开场；介绍中的问题保存，完成介绍后回答。</td><td>自动化通过；自然表达保留模型历史证据<details><summary>自动化测试证据</summary><pre>tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-4\uff5e6\u4f4d-profile0]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\u5148\u4ecb\u7d39\u5427-profile1]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\u5728\u54ea\u88e1\u96c6\u5408\uff1f-profile2]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-4\uff5e6\u4f4d-profile0]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\u5148\u4ecb\u7d39\u5427-profile1]
+tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\u5728\u54ea\u88e1\u96c6\u5408\uff1f-profile2]
+tests.test_v3_intake_followup::test_first_message_known_party_skips_intake</pre></details></td></tr>
+<tr><td>04 · 未问价格不主动报价，不展开额外差价</td><td>介绍和跟随不报价；普通问价使用本线路整段模板。最新要求保留“包含/不含”。</td><td>配置/自动化通过；当前模型扩展复测受预算限制<details><summary>自动化测试证据</summary><pre>tests.test_price_presentation::test_brief_quote_preserves_facts_and_unrelated_operator_configuration[11-12,780]
+tests.test_price_presentation::test_brief_quote_preserves_facts_and_unrelated_operator_configuration[9-10,780]
+tests.test_price_presentation::test_unrelated_route_is_not_modified
+tests.test_restore_quote_template_20261013::test_effective_full_template_keeps_fixed_customer_deadline_and_expiry[11-12,180-12,780]
+tests.test_restore_quote_template_20261013::test_effective_full_template_keeps_fixed_customer_deadline_and_expiry[9-10,780-10,780]
+tests.test_restore_quote_template_20261013::test_invalid_price_does_not_silently_invent_amount
+tests.test_restore_quote_template_20261013::test_nonstandard_route_amount_is_read_from_configuration
+tests.test_restore_quote_template_20261013::test_restores_full_quote_preserves_amount_and_is_idempotent[11-12180]
+tests.test_restore_quote_template_20261013::test_restores_full_quote_preserves_amount_and_is_idempotent[9-10780]
+tests.test_tibet_release_20261014::test_effect_checker_catches_new_route_prices[10480]
+tests.test_tibet_release_20261014::test_effect_checker_catches_new_route_prices[12280]
+tests.test_tibet_release_20261014::test_effect_checker_catches_new_route_prices[12880]
+tests.test_tibet_release_20261014::test_effect_checker_catches_new_route_prices[7980]
+tests.test_tibet_release_20261014::test_effect_checker_catches_new_route_prices[9480]
+tests.test_tibet_release_20261014::test_effect_checker_catches_new_route_prices[9980]</pre></details></td></tr>
+<tr><td>05 · 报价结束必须有轻松问题</td><td>关系未知问家人还是朋友；已知关系不重复追问，独行不硬问同行。</td><td>模板回归通过；#625式真实模型复测受预算限制<details><summary>自动化测试证据</summary><pre>tests.test_quote_engagement_20261013::test_effective_quote_omits_exclusions_and_preserves_operator_usage[2026-10-13-12,180-False]
+tests.test_quote_engagement_20261013::test_effective_quote_omits_exclusions_and_preserves_operator_usage[2026-10-13-12,180-True]
+tests.test_quote_engagement_20261013::test_effective_quote_omits_exclusions_and_preserves_operator_usage[2026-11-13-12,780-False]
+tests.test_quote_engagement_20261013::test_effective_quote_omits_exclusions_and_preserves_operator_usage[2026-11-13-12,780-True]
+tests.test_quote_engagement_20261013::test_quote_migration_preserves_all_other_facts_scripts_and_configuration[11]
+tests.test_quote_engagement_20261013::test_quote_migration_preserves_all_other_facts_scripts_and_configuration[9]
+tests.test_quote_engagement_20261013::test_unrelated_route_is_untouched
+tests.test_restore_quote_template_20261013::test_effective_full_template_keeps_fixed_customer_deadline_and_expiry[11-12,180-12,780]
+tests.test_restore_quote_template_20261013::test_effective_full_template_keeps_fixed_customer_deadline_and_expiry[9-10,780-10,780]
+tests.test_restore_quote_template_20261013::test_invalid_price_does_not_silently_invent_amount
+tests.test_restore_quote_template_20261013::test_nonstandard_route_amount_is_read_from_configuration
+tests.test_restore_quote_template_20261013::test_restores_full_quote_preserves_amount_and_is_idempotent[11-12180]
+tests.test_restore_quote_template_20261013::test_restores_full_quote_preserves_amount_and_is_idempotent[9-10780]</pre></details></td></tr>
+<tr><td>06 · 不要一介绍完就索取LINE</td><td>结束介绍轻松了解同行；沉默节点不催联系方式。</td><td>配置回归通过；自然表达沿用历史模型结果<details><summary>自动化测试证据</summary><pre>tests.test_v3_business_corrections::test_family_wording_upgrade_preserves_custom_script_and_switches
+tests.test_v3_business_corrections::test_invitation_scenario_upgrade_is_narrow_and_idempotent
+tests.test_v3_business_corrections::test_route_invitation_upgrade_preserves_sop_facts_and_script_text</pre></details></td></tr>
+<tr><td>07 · 把LINE ID改成LINE QR Code</td><td>邀请用QR Code；客户主动给有效ID或Email仍可接收，不强迫再传图。</td><td>自动化通过；渠道语义仍需模型验收<details><summary>自动化测试证据</summary><pre>tests.test_line_qr::test_image_source_survives_live_intake_and_handoff_stops_followup
+tests.test_line_qr::test_incoming_image_caption_and_source_reach_model_as_customer_attachment
+tests.test_line_qr::test_wording_migration_preserves_other_config_and_is_idempotent
+tests.test_v3_business_corrections::test_contact_capture_refusal_survives_into_silence_without_global_optout
+tests.test_v3_business_corrections::test_contact_script_migration_keeps_opening_and_custom_authoring</pre></details></td></tr>
+<tr><td>08 · 首次报价起30天，同一客户固定</td><td>按客户和线路保存截止日；重复报价不续期，过期使用标准价。新常规线使用季节表。</td><td>自动化通过；补防旧迁移覆盖新优惠<details><summary>自动化测试证据</summary><pre>tests.test_business_feedback_20261011::test_historical_migration_cannot_downgrade_current_rolling_offer
+tests.test_followup_offer_20261013::test_actual_night_first_hour_sends_four_times_and_then_skips
+tests.test_followup_offer_20261013::test_api_accepts_rolling_and_rejects_ambiguous_validity
+tests.test_followup_offer_20261013::test_customer_reply_uses_three_hours_and_no_first_hour_override
+tests.test_followup_offer_20261013::test_delivery_crossing_one_am_skips_later_touches_only[False-True]
+tests.test_followup_offer_20261013::test_delivery_crossing_one_am_skips_later_touches_only[True-False]
+tests.test_followup_offer_20261013::test_entry_anchor_not_intro_end_and_late_worker_does_not_burst
+tests.test_followup_offer_20261013::test_first_quote_plus_thirty_calendar_days[2026-10-13-2026/11/12]
+tests.test_followup_offer_20261013::test_first_quote_plus_thirty_calendar_days[2026-12-20-2027/01/19]
+tests.test_followup_offer_20261013::test_first_quote_plus_thirty_calendar_days[2028-02-01-2028/03/02]
+tests.test_followup_offer_20261013::test_full_cadence_skips_quiet_slots_without_catchup[2026-10-13T00:00:00+08:00-expected2]
+tests.test_followup_offer_20261013::test_full_cadence_skips_quiet_slots_without_catchup[2026-10-13T02:00:00+08:00-expected1]
+tests.test_followup_offer_20261013::test_full_cadence_skips_quiet_slots_without_catchup[2026-10-13T09:00:00+08:00-expected0]
+tests.test_followup_offer_20261013::test_new_incoming_cancels_queued_photo_caption
+tests.test_followup_offer_20261013::test_offer_shared_by_contact_across_live_conversations
+tests.test_followup_offer_20261013::test_quote_starts_only_when_quoted_repeat_and_expiry_fixed
+tests.test_followup_offer_20261013::test_silence_validation_accepts_confirmed_schedule
+tests.test_followup_offer_20261013::test_stale_concurrent_quote_uses_existing_customer_deadline</pre></details></td></tr>
+<tr><td>09 · 首小时10、25、40、60分钟触达</td><td>以首次进入为锚点；延迟任务跳过错过节点，不集中补发。</td><td>自动化通过<details><summary>自动化测试证据</summary><pre>tests.test_followup_offer_20261013::test_actual_night_first_hour_sends_four_times_and_then_skips
+tests.test_followup_offer_20261013::test_entry_anchor_not_intro_end_and_late_worker_does_not_burst
+tests.test_followup_offer_20261013::test_full_cadence_skips_quiet_slots_without_catchup[2026-10-13T00:00:00+08:00-expected2]
+tests.test_followup_offer_20261013::test_full_cadence_skips_quiet_slots_without_catchup[2026-10-13T02:00:00+08:00-expected1]
+tests.test_followup_offer_20261013::test_full_cadence_skips_quiet_slots_without_catchup[2026-10-13T09:00:00+08:00-expected0]</pre></details></td></tr>
+<tr><td>10 · 后续每3小时；1点到7点跳过，首小时保留</td><td>只跳过后续夜间节点；客户回复取消旧计划，答复完成后重新按3小时计时。</td><td>自动化通过；遵守渠道窗口，不无限发送<details><summary>自动化测试证据</summary><pre>tests.test_followup_offer_20261013::test_customer_reply_uses_three_hours_and_no_first_hour_override
+tests.test_followup_offer_20261013::test_delivery_crossing_one_am_skips_later_touches_only[False-True]
+tests.test_followup_offer_20261013::test_delivery_crossing_one_am_skips_later_touches_only[True-False]
+tests.test_followup_offer_20261013::test_new_incoming_cancels_queued_photo_caption</pre></details></td></tr>
+<tr><td>11 · 沉默跟随要有照片，不能第一波介绍后就没了</td><td>未发送图片按哈希去重，每节点一张加说明；新路线32处图片引用可实际解析。</td><td>图片交付自动化及本地素材演练通过<details><summary>自动化测试证据</summary><pre>tests.test_followup_photos::test_followup_catalog_uses_delivery_history_and_hashes_across_aliases
+tests.test_followup_photos::test_followup_photo_uses_live_attachment_outbox_then_caption[0]
+tests.test_followup_photos::test_followup_photo_uses_live_attachment_outbox_then_caption[1]
+tests.test_followup_photos::test_followup_photo_uses_live_attachment_outbox_then_caption[None]
+tests.test_followup_photos::test_six_hour_photo_and_caption_are_delivered_once_in_order
+tests.test_tibet_release_20261014::test_sent_photo_hash_excludes_alias_from_another_route
+tests.test_tibet_route_drafts_20261014::test_followup_photos_are_bound_but_not_in_the_initial_wave</pre></details></td></tr>
+<tr><td>12 · 模型不能随意取消后续唤醒</td><td>普通wait或stop_followup不取消整套计划；拒绝、人工、明确预约等才暂停。</td><td>自动化通过；旧6小时测试仅验证可配置机制<details><summary>自动化测试证据</summary><pre>tests.test_six_hour_followup::test_multiple_configured_checkpoints_survive_delivery_or_single_wait[False]
+tests.test_six_hour_followup::test_multiple_configured_checkpoints_survive_delivery_or_single_wait[True]
+tests.test_v3_business_corrections::test_last_configured_round_cannot_be_extended_by_model
+tests.test_v3_intake_followup::test_six_hour_timeline_survives_skip_stop_flag_and_delivery_time</pre></details></td></tr>
+<tr><td>13 · 客户回来、换线、人工介入时不发过时消息</td><td>取消旧草稿和跟随；发送前复查权限，未知送达不盲目重发。</td><td>自动化通过<details><summary>自动化测试证据</summary><pre>tests.test_conversation_controls::test_unknown_delivery_blocks_restore_before_remote_write
+tests.test_followup_offer_20261013::test_new_incoming_cancels_queued_photo_caption
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[human]
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[opt_out]
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[unknown]
+tests.test_v3_delivery_conflicts::test_before_submission_conflict_reloads_without_false_handoff[False]
+tests.test_v3_delivery_conflicts::test_before_submission_conflict_reloads_without_false_handoff[True]
+tests.test_v3_delivery_conflicts::test_conflict_after_submission_stays_unknown_and_never_reposts</pre></details></td></tr>
+<tr><td>14 · 人工标签与ai标签的影响范围要明确</td><td>人工/拒绝等阻断优先；明确恢复AI需完成任务，不能覆盖同客其他人工会话。</td><td>自动化通过<details><summary>自动化测试证据</summary><pre>tests.test_conversation_controls::test_active_handoff_cannot_restore_ai
+tests.test_conversation_controls::test_ai_mode_always_uses_exact_ai_label
+tests.test_conversation_controls::test_ai_mode_toggle_readds_missing_control_label
+tests.test_conversation_controls::test_ai_mode_toggle_updates_chatwoot_label_and_local_state
+tests.test_conversation_controls::test_assignment_pauses_ai_before_assigning_agent
+tests.test_conversation_controls::test_completed_handoff_restores_explicit_disabled_mode
+tests.test_conversation_controls::test_facebook_quick_reply_is_sent_once_and_persisted
+tests.test_conversation_controls::test_label_update_merges_changes_from_chatwoot
+tests.test_conversation_controls::test_route_quick_reply_options_are_bounded_for_messenger
+tests.test_conversation_controls::test_unknown_delivery_blocks_restore_before_remote_write
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[answered]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[fresh]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[human]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[old]
+tests.test_label_handoff_transitions::test_ai_added_after_customer_message_starts_only_fresh_unanswered_session[unknown]
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[human]
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[opt_out]
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[unknown]
+tests.test_label_handoff_transitions::test_all_stopping_labels_block_replies_and_followup[\u4eba\u5de5\u63a5\u7ba1]
+tests.test_label_handoff_transitions::test_all_stopping_labels_block_replies_and_followup[\u5ba2\u8a34]
+tests.test_label_handoff_transitions::test_all_stopping_labels_block_replies_and_followup[\u5df2\u6210\u4ea4]
+tests.test_label_handoff_transitions::test_all_stopping_labels_block_replies_and_followup[\u5df2\u7559\u8cc7]
+tests.test_label_handoff_transitions::test_all_stopping_labels_block_replies_and_followup[\u62d2\u7d55\u806f\u7e6b]
+tests.test_label_handoff_transitions::test_all_stopping_labels_block_replies_and_followup[\u9ed1\u540d\u55ae]
+tests.test_label_handoff_transitions::test_all_stopping_labels_block_replies_and_followup[ai_off]
+tests.test_label_handoff_transitions::test_contact_block_prevents_current_conversation_delivery
+tests.test_label_handoff_transitions::test_explicit_ai_switch_can_release_human_reply_without_task
+tests.test_label_handoff_transitions::test_explicit_ai_switch_rejects_active_handoff_before_remote_write
+tests.test_label_handoff_transitions::test_label_handoff_creates_one_private_notification_and_stops_drafts
+tests.test_label_handoff_transitions::test_other_inbox_label_does_not_create_production_notification
+tests.test_label_handoff_transitions::test_remove_and_readd_ai_resumes_without_replaying_cancelled_reply
+tests.test_label_handoff_transitions::test_restore_does_not_override_another_conversation_of_same_customer
+tests.test_label_handoff_transitions::test_stale_handoff_label_event_does_not_create_task</pre></details></td></tr>
+<tr><td>15 · 所有转人工当轮也不要发给客户消息</td><td>文字、图片、已排队介绍全部停止；只建内部接管任务和通知。</td><td>自动化通过<details><summary>自动化测试证据</summary><pre>tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_image]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_reported]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[custom]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[knowledge]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[other]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[party_size]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[requested]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[trip_days]
+tests.test_silent_handoff::test_playground_same_turn_handoff_suppresses_text_and_images
+tests.test_silent_handoff::test_pre_release_handoff_draft_never_sends[running]
+tests.test_silent_handoff::test_pre_release_handoff_draft_never_sends[stopped]
+tests.test_silent_handoff::test_system_handoff_cancels_queued_messages</pre></details></td></tr>
+<tr><td>16 · 顾问接收通知，指定事件均分给顾问</td><td>内部通知、均分、优先级、重复事件去重，保留已有人工负责人。</td><td>自动化通过；实际线上通知未发送测试<details><summary>自动化测试证据</summary><pre>tests.test_advisor_assignment::test_concurrent_rotation_and_duplicate_webhook
+tests.test_advisor_assignment::test_configuration_api_validates_agents_and_round_robin
+tests.test_advisor_assignment::test_handoff_typed_event_single_notification_after_sync
+tests.test_advisor_assignment::test_incoming_ad_then_actual_response_is_not_two_first_customers
+tests.test_advisor_assignment::test_network_timeout_reconciles_same_target_and_respects_manual_owner
+tests.test_advisor_assignment::test_notification_uses_routed_advisor_and_private_bot_message
+tests.test_advisor_assignment::test_notify_selected_advisor_preserves_different_conversation_owner
+tests.test_advisor_assignment::test_overdue_assignment_is_cancelled_after_advisor_accepts
+tests.test_advisor_assignment::test_priority_route_numeric_conditions
+tests.test_advisor_assignment::test_profile_rule_stops_introduction_before_any_delivery[party_size-7-8]
+tests.test_advisor_assignment::test_profile_rule_stops_introduction_before_any_delivery[party_size_range-7-7\uff5e10\u4f4d]
+tests.test_advisor_assignment::test_profile_rule_stops_introduction_before_any_delivery[trip_days-12-15]
+tests.test_advisor_assignment::test_rotation_unique_event_and_existing_owner
+tests.test_advisor_assignment::test_stopped_pool_no_random_fallback_and_retry_target_stays
+tests.test_runtime_reliability::test_handoff_to_private_notification_while_public_sending_paused</pre></details></td></tr>
+<tr><td>17 · 人数/天数/留资/无法回答等正确转人工</td><td>新增常规线7人以上硬约束；其他事件遵循既有规则；交接均静默。</td><td>自动化通过；原全局人数阈值8人未擅自改写<details><summary>自动化测试证据</summary><pre>tests.test_advisor_assignment::test_profile_rule_stops_introduction_before_any_delivery[party_size-7-8]
+tests.test_advisor_assignment::test_profile_rule_stops_introduction_before_any_delivery[party_size_range-7-7\uff5e10\u4f4d]
+tests.test_advisor_assignment::test_profile_rule_stops_introduction_before_any_delivery[trip_days-12-15]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_image]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_reported]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[custom]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[knowledge]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[other]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[party_size]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[requested]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[trip_days]
+tests.test_tibet_release_20261014::test_new_route_seven_people_cannot_start_automated_introduction
+tests.test_v3_business_corrections::test_self_reported_contact_handoffs_without_fabricated_id</pre></details></td></tr>
+<tr><td>18 · 用“我们可以协助”，保持接待口吻一致</td><td>普通答疑第一人称；实际交接不发过渡语，不冒称某位真人。</td><td>配置/静默控制通过；当前语言复测受预算限制<details><summary>自动化测试证据</summary><pre>tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_image]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_reported]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[custom]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[knowledge]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[other]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[party_size]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[requested]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[trip_days]
+tests.test_silent_handoff::test_playground_same_turn_handoff_suppresses_text_and_images
+tests.test_silent_handoff::test_pre_release_handoff_draft_never_sends[running]
+tests.test_silent_handoff::test_pre_release_handoff_draft_never_sends[stopped]
+tests.test_silent_handoff::test_system_handoff_cancels_queued_messages
+tests.test_v3_business_corrections::test_contact_script_migration_keeps_opening_and_custom_authoring</pre></details></td></tr>
+<tr><td>19 · 客户改期/后年再去，不要直接结束销售</td><td>可说明西藏其他季节和中国其他目的地，适时邀请联系；不编未来团期。</td><td>配置回归通过；本轮后年场景模型复测受预算限制<details><summary>自动化测试证据</summary><pre>tests.test_v3_business_corrections::test_invitation_scenario_upgrade_is_narrow_and_idempotent
+tests.test_v3_business_corrections::test_route_invitation_upgrade_preserves_sop_facts_and_script_text</pre></details></td></tr>
+<tr><td>20 · 拒绝留LINE不等于拒绝所有服务</td><td>保留渠道偏好，明确拒绝联系才停；已留资不反复索取。</td><td>自动化通过<details><summary>自动化测试证据</summary><pre>tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[human]
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[opt_out]
+tests.test_label_handoff_transitions::test_ai_label_cannot_override_human_optout_or_unknown_delivery[unknown]
+tests.test_reception_v3::test_optout_allows_passive_question_without_restoring_timer
+tests.test_v3_business_corrections::test_contact_capture_refusal_survives_into_silence_without_global_optout
+tests.test_v3_business_corrections::test_self_reported_contact_handoffs_without_fabricated_id
+tests.test_v3_intake_followup::test_optout_during_intake_then_question_does_not_restart_intro</pre></details></td></tr>
+<tr><td>21 · 文字点赞/表情继续接待</td><td>现有文本处理无需看图；需验证模型不误判交接、留资或人数。</td><td>本轮真实模型测试被预算拦截，未算通过<details><summary>自动化测试证据</summary><pre>无当前自动化语义证据</pre></details></td></tr>
+<tr><td>22 · 图片点赞不误转人工</td><td>当前没有图片语义分类；作为图片附件的点赞仍可能进入人工核对。</td><td>未完成：需要图片分类能力及真实附件验证<details><summary>自动化测试证据</summary><pre>无当前自动化语义证据</pre></details></td></tr>
+<tr><td>23 · 普通图片提醒人工；二维码不能虚称识别成功</td><td>未知图片/待核二维码只做内部交接，不对客说“收到图片”“已加好友”。</td><td>静默控制通过；本轮图片语义模型复测受预算限制<details><summary>自动化测试证据</summary><pre>tests.test_line_qr::test_image_source_survives_live_intake_and_handoff_stops_followup
+tests.test_line_qr::test_incoming_image_caption_and_source_reach_model_as_customer_attachment
+tests.test_line_qr::test_wording_migration_preserves_other_config_and_is_idempotent
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_image]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[contact_reported]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[custom]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[knowledge]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[other]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[party_size]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[requested]
+tests.test_silent_handoff::test_live_handoff_is_silent_immediate_and_idempotent[trip_days]
+tests.test_silent_handoff::test_playground_same_turn_handoff_suppresses_text_and_images
+tests.test_silent_handoff::test_pre_release_handoff_draft_never_sends[running]
+tests.test_silent_handoff::test_pre_release_handoff_draft_never_sends[stopped]
+tests.test_silent_handoff::test_system_handoff_cancels_queued_messages</pre></details></td></tr>
+<tr><td>24 · 新增8/10日价格按日期和线路匹配</td><td>7套季节表已逐格核对Excel；未开放日期不报价，长假和不足30天仍需顾问确认；季节未开放按第27项承接。重新查日期失败，前一次报价授权失效。</td><td>自动化通过；补测四线路2027全年1460个日期组合及实际工具循环<details><summary>自动化测试证据</summary><pre>tests.test_seasonal_runtime_journeys::test_2027_full_calendar_and_all_alternative_departures[peach_11d_2027]
+tests.test_seasonal_runtime_journeys::test_2027_full_calendar_and_all_alternative_departures[peach_9d_2027]
+tests.test_seasonal_runtime_journeys::test_2027_full_calendar_and_all_alternative_departures[tibet_essence_8d]
+tests.test_seasonal_runtime_journeys::test_2027_full_calendar_and_all_alternative_departures[tibet_overview_10d]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_failed_repair_never_returns_a_sendable_decision
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check0]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check1]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check2]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check3]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check4]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check5]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_quote_authorization_does_not_cross_routes
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_quote_tool_template_and_hook_reach_delivery
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[peach_11d_2027-2027-06-01-2027-06-30]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[tibet_essence_8d-2027-04-21-2027-04-24]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[tibet_overview_10d-2027-03-20-2027-04-10]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-03-18-2027-03-18-quoted-9480]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-04-21-2027-04-24-unavailable-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-04-25-2027-05-05-holiday-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-06-01-2027-06-01-ask_date-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-06-03-2027-06-03-quoted-9480]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-08-05-2027-08-05-quoted-9980]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-09-24-2027-10-20-holiday-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-2027-11-04-2027-11-04-quoted-7980]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_essence_8d-unknown--ask_date-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-02-01-2027-02-16-holiday-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-03-02-2027-03-02-quoted-10480]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-03-11-2027-03-19-unavailable-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-04-11-2027-04-24-unavailable-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-05-01-2027-05-31-holiday-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-06-01-2027-06-01-quoted-12280]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-06-01-2027-06-30-quoted-12280]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-06-29-2027-07-02-ask_date-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-06-30-2027-06-01-ask_date-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-08-03-2027-08-03-quoted-12880]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2027-12-01-2027-12-31-unavailable-None]
+tests.test_tibet_release_20261014::test_departure_date_price_boundaries[tibet_overview_10d-2028-06-01-2028-06-30-unavailable-None]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[8\u5929\u662f7,980\u5143/\u4eba\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u4eba\u6c11\u5e63\xa5 7,980\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u55ae\u623f\u5dee\u4eba\u6c11\u5e632,000\u5143\u3001\u5718\u8cbb\u4eba\u6c11\u5e637,980\u5143\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u5718\u8cbb RMB 7,980\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u5718\u8cbb\u662f 7980 \u5143\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u8cbb\u7528\u662f CNY 7,980 /\u4eba\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u8cbb\u7528\u70ba RMB 7,980\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u9019\u689d\u7dda\xa57,980/\u4eba\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u9019\u689d\u884c\u7a0b\u53ea\u89817980\u5143\u3002]
+tests.test_tibet_release_20261014::test_free_text_price_cannot_bypass_seasonal_date_check[\u9019\u689d\u884c\u7a0b\u6bcf\u4eba7980\u5143\u3002]
+tests.test_tibet_release_20261014::test_notice_30_days_is_not_the_peach_offer_expiry
+tests.test_tibet_workbook_reconciliation::test_eight_day_product_is_not_confused_with_nyingchi_eight_day
+tests.test_tibet_workbook_reconciliation::test_price_sheet_disagreement_aborts_without_changing_input[price_cny]
+tests.test_tibet_workbook_reconciliation::test_price_sheet_disagreement_aborts_without_changing_input[single_supplement_cny]
+tests.test_tibet_workbook_reconciliation::test_workbook_does_not_activate_unsold_spring_price
+tests.test_tibet_workbook_reconciliation::test_workbook_nominal_seasons_preserve_specific_sale_restrictions[10-2027-05-01-2027-05-05-holiday]
+tests.test_tibet_workbook_reconciliation::test_workbook_nominal_seasons_preserve_specific_sale_restrictions[10-2027-09-25-2027-09-30-holiday]
+tests.test_tibet_workbook_reconciliation::test_workbook_nominal_seasons_preserve_specific_sale_restrictions[10-2027-12-21--unavailable]
+tests.test_tibet_workbook_reconciliation::test_workbook_nominal_seasons_preserve_specific_sale_restrictions[8-2027-04-22--unavailable]
+tests.test_tibet_workbook_reconciliation::test_workbook_nominal_seasons_preserve_specific_sale_restrictions[8-2027-05-01-2027-05-05-holiday]
+tests.test_tibet_workbook_reconciliation::test_workbook_nominal_seasons_preserve_specific_sale_restrictions[8-2027-09-25-2027-09-30-holiday]
+tests.test_tibet_workbook_reconciliation::test_workbook_nominal_seasons_preserve_specific_sale_restrictions[8-2027-12-16--unavailable]
+tests.test_tibet_workbook_reconciliation::test_workbook_prices_match_actual_xlsx_cells_and_approved_templates[10]
+tests.test_tibet_workbook_reconciliation::test_workbook_prices_match_actual_xlsx_cells_and_approved_templates[8]
+tests.test_tibet_workbook_reconciliation::test_workbook_standard_price_preserves_existing_approved_promotion[11-39-12780]
+tests.test_tibet_workbook_reconciliation::test_workbook_standard_price_preserves_existing_approved_promotion[9-35-10780]</pre></details></td></tr>
+<tr><td>25 · 新增线路配置能导入、再编辑、保存</td><td>真实API导入和修改后保留线路开场与价格规则；原线路和全局策略不被覆盖。</td><td>自动化通过；本地四线路实库配置通过<details><summary>自动化测试证据</summary><pre>tests.test_tibet_configuration_acceptance::test_new_route_import_and_edit_preserve_pricing_and_global_controls[tibet_essence_8d]
+tests.test_tibet_configuration_acceptance::test_new_route_import_and_edit_preserve_pricing_and_global_controls[tibet_overview_10d]</pre></details></td></tr>
+<tr><td>26 · 不能把所有珠峰需求都带到桃花11日</td><td>含糊珠峰需求先澄清；明确8天含珠峰不强行切到不上珠峰9日。</td><td>路由配置回归通过；此前真实模型场景通过<details><summary>自动化测试证据</summary><pre>tests.test_tibet_configuration_acceptance::test_new_route_import_and_edit_preserve_pricing_and_global_controls[tibet_essence_8d]
+tests.test_tibet_configuration_acceptance::test_new_route_import_and_edit_preserve_pricing_and_global_controls[tibet_overview_10d]
+tests.test_tibet_release_20261014::test_sent_photo_hash_excludes_alias_from_another_route</pre></details></td></tr>
+<tr><td>27 · 季节未开放先推荐同期产品，或登记下次开放通知</td><td>四线路提供日期核对；只返回同期已启用团期，不自动切线。无合适选择时轻邀一种联系方式；停止原介绍/报价，留资后静默交接顾问跟进。拒绝、不留资、已有联系方式等约束仍有效。</td><td>工具核对→拦截错误决策→取消旧图文的集成测试通过；邀请语气/偏好识别仍待真实模型复测<details><summary>自动化测试证据</summary><pre>tests.test_seasonal_retention::test_availability_migration_preserves_every_other_field_and_operator_changes
+tests.test_seasonal_retention::test_checked_closed_product_cannot_continue_intake_introduction_or_quote[fields0]
+tests.test_seasonal_retention::test_checked_closed_product_cannot_continue_intake_introduction_or_quote[fields1]
+tests.test_seasonal_retention::test_checked_closed_product_cannot_continue_intake_introduction_or_quote[fields2]
+tests.test_seasonal_retention::test_checked_closed_product_cannot_continue_intake_introduction_or_quote[fields3]
+tests.test_seasonal_retention::test_checked_closed_product_cannot_continue_intake_introduction_or_quote[fields4]
+tests.test_seasonal_retention::test_closed_ten_day_spring_returns_dated_enabled_alternatives_not_a_handoff
+tests.test_seasonal_retention::test_closure_offer_does_not_create_task_or_switch_route
+tests.test_seasonal_retention::test_disabled_or_undated_product_is_never_recommended
+tests.test_seasonal_retention::test_fixed_customer_date_does_not_silently_move_to_another_weekday
+tests.test_seasonal_retention::test_malformed_departure_availability_is_rejected[change0]
+tests.test_seasonal_retention::test_malformed_departure_availability_is_rejected[change1]
+tests.test_seasonal_retention::test_malformed_departure_availability_is_rejected[change2]
+tests.test_seasonal_retention::test_malformed_departure_availability_is_rejected[change3]
+tests.test_seasonal_retention::test_no_matching_product_offers_reopening_notification[tibet_essence_8d-2027-04-21-2027-04-24-season_closed]
+tests.test_seasonal_retention::test_no_matching_product_offers_reopening_notification[tibet_essence_8d-2027-12-16--winter_catalog_unavailable]
+tests.test_seasonal_retention::test_no_matching_product_offers_reopening_notification[tibet_overview_10d-2028-06-01-2028-06-30-year_unpublished]
+tests.test_seasonal_retention::test_peach_in_season_uses_existing_quote_template_without_changing_offer
+tests.test_seasonal_retention::test_peach_outside_flowering_season_recommends_supported_summer_products
+tests.test_seasonal_retention::test_reopening_consent_and_contact_reach_advisor_without_customer_message
+tests.test_seasonal_retention::test_short_notice_still_requires_advisor
+tests.test_seasonal_retention::test_special_quotes_and_partial_date_windows_are_not_called_closed[tibet_essence_8d-2027-04-19-2027-04-24-ask_date]
+tests.test_seasonal_retention::test_special_quotes_and_partial_date_windows_are_not_called_closed[tibet_essence_8d-2027-04-25-2027-05-05-holiday]
+tests.test_seasonal_retention::test_special_quotes_and_partial_date_windows_are_not_called_closed[tibet_overview_10d-2027-05-01-2027-05-05-holiday]
+tests.test_seasonal_retention::test_special_quotes_and_partial_date_windows_are_not_called_closed[tibet_overview_10d-2027-06-29-2027-07-02-ask_date]
+tests.test_seasonal_retention::test_special_quotes_and_partial_date_windows_are_not_called_closed[tibet_overview_10d-2027-09-25-2027-10-14-holiday]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_failed_repair_never_returns_a_sendable_decision
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[peach_11d_2027-2027-06-01-2027-06-30]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[tibet_essence_8d-2027-04-21-2027-04-24]
+tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[tibet_overview_10d-2027-03-20-2027-04-10]</pre></details></td></tr>
+</table><h2>测试范围与记录</h2>
+<p>上述隔离测试使用临时/内存数据库，真实外部网络连接被禁止；本地事件循环的回环连接允许。上一轮4项模型回放在预算预留阶段被阻止，本轮仅离线预检真实请求大小，未发起付费调用。隔离测试未写生产配置，没有向客户发送测试消息。前端4项测试与构建本轮重新执行通过。后续实际部署及其复核单独记录。</p>
+<p>第一次全量回归400通过、2失败；修复后运行全量回归，结果见下方日志。另保留报价绕过的5个失败复现用例。最初测试网络隔离误拦Windows内部回环，测试框架异常退出，该次未计入通过结果。</p>
+<ul><li><a href="../../output/new-routes-20261014/business-full-tests-final.txt">最终全量后端日志</a> / <a href="../../output/new-routes-20261014/business-recheck/final-suite.xml">逐项JUnit结果</a></li><li><a href="../../output/new-routes-20261014/business-frontend-tests.txt">前端测试</a> / <a href="../../output/new-routes-20261014/business-frontend-build.txt">构建</a></li><li><a href="../../output/new-routes-20261014/staging-seasonal-retention/summary.json">季节承接修改后四线路本地配置与真实素材演练</a></li><li><a href="../../output/new-routes-20261014/business-recheck/model/summary.json">4项模型复测阻塞记录</a></li><li><a href="new-tibet-routes-20261014.html">此前线路验收与11个历史模型场景</a></li><li><a href="../../output/new-routes-20261014/business-recheck/summary.json">完整业务验收矩阵JSON</a></li></ul>
+<p>模型原20元账本累计计费/保留 ¥19.3245（已知用量折算¥11.2576，历史未确认请求保留¥8.0669），剩余约¥0.6755；本轮离线预检4个完整请求均需预留约¥0.72–0.74，未调用模型、未改动账本。<a href="../../output/new-routes-20261014/business-recheck/model-budget-preflight.json">预算预检证据</a>。没有清零历史账本或借用附件账号。</p>
+<h2>尚未完成</h2><ul><li>图片点赞语义分类与真实附件验证</li><li>原4个预算阻塞的模型回放及本次季节承接5个场景复测</li><li>新线路真实客户对话与渠道实际图文送达效果待观察；上线健康和素材就绪检查已通过</li><li>开放通知由顾问跟进，尚无自动监测产品重新开放的服务</li></ul></html>

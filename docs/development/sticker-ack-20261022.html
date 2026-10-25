@@ -1,0 +1,14 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8">
+<title>点赞贴图承接：2026-10-22 本地验收</title>
+<style>body{font:16px/1.7 system-ui,sans-serif;max-width:1060px;margin:36px auto;padding:0 24px;color:#243344}h1{font-size:26px}table{border-collapse:collapse;width:100%}th,td{text-align:left;vertical-align:top;border:1px solid #d7dde5;padding:10px}th{background:#eef3f8}.status{padding:14px;background:#fff4d8;border-left:4px solid #b77c00}code{background:#eef3f8;padding:2px 5px}img{width:100px;image-rendering:auto}</style>
+<h1>点赞贴图按“嗯嗯／收到”承接</h1>
+<p class="status">本地候选版本，未上线。160项离线测试通过，其中点赞专项43项、相关回归117项。真实模型调用0次；没有向客户发送消息。</p>
+<p>业务依据：麗麗2026-10-22 11:56反馈。只读定位到截图对应的“这张图片没能看清楚”回复；它处理的是10/18收到的蓝色点赞图。原始附件与10/20反馈样本一致，已逐图核验。</p>
+<img src="../../backend/tests/fixtures/verified-blue-thumb.png" alt="已核验蓝色点赞贴图">
+<p>采用原始像素指纹确认语义；识别本身不调用视觉模型。把核验含义交给现有接待模型，同时阻止单独点赞被误解为客户承诺、联系方式或人工请求。</p>
+<table><thead><tr><th>场景</th><th>处理方式</th><th>测试结果</th></tr></thead><tbody><tr><td>已核验原始点赞图</td><td>识别为“嗯嗯／收到”，不再带“图片未读取”标记</td><td>原图及重新压缩的同像素PNG通过</td></tr><tr><td>仅点赞，模型误判看图或留资</td><td>屏蔽看不清、重发、索取二维码、误转人工；本轮等待</td><td>模拟错误输出拦截通过</td></tr><tr><td>点赞后紧接文字或选线</td><td>保留明确问题和选择，按正常接待处理</td><td>前后顺序及同条配文通过</td></tr><tr><td>明确要求人工</td><td>有文字请求时保留人工交接</td><td>不被点赞规则吞掉</td></tr><tr><td>历史点赞再次进入接待</td><td>保存核验结果，按历史回应理解，不重新读取已核验图片</td><td>恢复及沉默事件通过</td></tr><tr><td>人数、日期、选线、拒联状态</td><td>点赞不能更新或确认这些资料</td><td>状态保护通过</td></tr><tr><td>其他图片／混合附件</td><td>未知图片、二维码、文件不被归为点赞</td><td>变更像素、缩放、动图、未知附件通过</td></tr><tr><td>七天窗口／并发消息</td><td>重处理旧点赞不延长窗口，新消息到来后旧决策作废</td><td>两项边界测试通过</td></tr></tbody></table>
+<p>测试说明：识别测试使用真实原始图片；模型决策测试使用模拟输出，包括主动注入原错误回复验证拦截。自然语言承接效果尚未做真实模型验收；此前追加模型测试预算仍待确认，本次未产生模型费用。</p>
+<p>范围：覆盖这张72×72蓝色大拇指及像素一致的重新编码图片。其他样式、缩放、改图和动图不猜测；对已有消息点反应按钮的独立事件不在本次新增范围内。原有人工接管与顾问跟进权限保持原规则。</p>
+<p>启用：验收与上线审批后，发布对应代码、规则，并设置<code>CUSTOMER_STICKER_RECOGNITION_ENABLED=true</code>。当前默认关闭。不得直接发布整个工作区夹带尚未批准的林芝8日候选内容。</p>
+<p>验收证据：<a href="../../output/sticker-ack-20261022/summary.json">状态与文件指纹</a> · <a href="../../output/sticker-ack-20261022/offline-tests.xml">离线测试结果</a></p>
+</html>

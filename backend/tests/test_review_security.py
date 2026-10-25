@@ -43,8 +43,8 @@ def scoped_data(session_factory):
 
 def test_notifications_enforce_scope_for_listing_and_read(client, session_factory, scoped_data):
     with session_factory() as db:
-        ensure_handoff(db, db.get(ConversationState, 1), "manual", "allowed detail")
-        ensure_handoff(db, db.get(ConversationState, 2), "manual", "restricted detail")
+        ensure_handoff(db, db.get(ConversationState, 1), "manual", "本会话的接待说明。")
+        ensure_handoff(db, db.get(ConversationState, 2), "manual", "无权查看的接待说明。")
         db.add(Notification(tenant_id=1, event_type="system", title="admin only", body="operational detail"))
         db.add(Notification(tenant_id=1, user_id=2, event_type="system", title="personal"))
         db.add(Notification(tenant_id=1, user_id=3, event_type="system", title="someone else"))
@@ -56,7 +56,7 @@ def test_notifications_enforce_scope_for_listing_and_read(client, session_factor
     assert client.get("/v1/conversations/200").status_code == 404
     response = client.get("/v1/notifications").json()
     assert len(response["items"]) == 2
-    assert {item["body"] for item in response["items"]} == {"allowed detail", ""}
+    assert {item["body"] for item in response["items"]} == {"场景：人工接待\n原因：本会话的接待说明。", ""}
     assert client.post(f"/v1/notifications/{forbidden}/read", headers=headers).status_code == 404
     assert client.post(f"/v1/notifications/{ids['orphan']}/read", headers=headers).status_code == 404
 

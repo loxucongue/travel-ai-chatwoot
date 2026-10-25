@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-10-17 17:21:24",
+  "release": "lili-feedback-20261017-20261017T090930Z",
+  "engine": "reception-v3-2d1c16368c6bd182",
+  "routes": [
+    "peach_11d_2027",
+    "peach_9d_2027",
+    "tibet_essence_8d",
+    "tibet_overview_10d",
+    "tibet_winter_8d"
+  ],
+  "winter_asset_manifest": "../20261017-winter/asset-manifest.json"
+}

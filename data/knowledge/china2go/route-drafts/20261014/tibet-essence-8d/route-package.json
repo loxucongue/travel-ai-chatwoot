@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "package_version": "2026-10-14.draft-map-only-1",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "route_variant": "tibet_essence_8d",
+  "branch": "tibet_essence_8d",
+  "name": "西藏精華8天・拉薩＋珠峰",
+  "selection_title": "西藏精華8天・拉薩＋珠峰",
+  "selection_aliases": [
+    "西藏精華8天-拉薩+珠峰",
+    "西藏精華8日",
+    "西藏精华8天",
+    "西藏8天",
+    "西藏8日",
+    "拉薩珠峰8日",
+    "拉萨珠峰8天"
+  ],
+  "match_keywords": [
+    "西藏精華8天-拉薩+珠峰",
+    "西藏精華8日",
+    "西藏精华8天",
+    "西藏8天",
+    "西藏8日",
+    "拉薩珠峰8日",
+    "拉萨珠峰8天"
+  ],
+  "default_entry_message": "西藏精華8天-拉薩+珠峰",
+  "required_slots": [
+    "party_size",
+    "departure_window"
+  ],
+  "initial_delivery_interval_seconds": 2,
+  "ai_guidance": "未發布草稿。僅從本次行程圖整理行程；最新網站原文、報價、團期、費用包含與不含尚未取得。不得借用桃花9日或11日的價格、日期、團型或優惠。",
+  "source": {
+    "url": "https://china2go.com/1013-2/",
+    "status": "unavailable_http_403",
+    "archive": "西藏精華8天-拉薩+珠峰.zip",
+    "map": "圖B-2・西藏8天精華地圖.png",
+    "map_sha256": "659a33f0da04f1bf4000fae1092369bc2525a857b93a532227a75826c9b753b4"
+  },
+  "publication": {
+    "status": "draft",
+    "activation_allowed": false,
+    "blockers": [
+      "最新網站接待原文",
+      "各季節或日期對應報價",
+      "出發日期／班期與年份",
+      "團費包含與不含、團型及優惠條件"
+    ]
+  },
+  "knowledge_facts": [
+    {
+      "id": "tibet_essence_8d.scope",
+      "text": "這條西藏精華8日從拉薩進出，安排拉薩、日喀則及珠峰大本營，回程體驗拉日鐵路。",
+      "source_ref": "user-zip-20261014/圖B-2・西藏8天精華地圖.png"
+    },
+    {
+      "id": "tibet_essence_8d.itinerary",
+      "text": "第1天：拉薩24小時接機、接火車；休息、適應海拔；住宿：拉薩希爾頓惠庭供氧酒店\n第2天：拉薩一日：扎基寺、色拉寺；住宿：拉薩希爾頓惠庭供氧酒店\n第3天：拉薩一日：布達拉宮、大昭寺、八廓街；布宮景觀下午茶；住宿：拉薩希爾頓惠庭供氧酒店\n第4天：羊卓雍措、卡若拉冰川、白居寺；住宿：日喀則希爾頓供氧酒店\n第5天：加烏拉山口、絨布寺、珠峰大本營；住宿：珠峰供氧絨布旅館\n第6天：嘉措拉山口觀景台、薩迦寺；住宿：日喀則希爾頓供氧酒店\n第7天：扎什倫布寺、拉日鐵路返回拉薩；住宿：拉薩希爾頓惠庭供氧酒店\n第8天：拉薩24小時送機、送火車",
+      "source_ref": "user-zip-20261014/圖B-2・西藏8天精華地圖.png"
+    },
+    {
+      "id": "tibet_essence_8d.accommodation",
+      "text": "行程圖列出的希爾頓住宿有珠峰例外：珠峰安排供氧絨布旅館。不得說所有晚數都是希爾頓；不從房間照片推斷每間房的設備、供氧時數或濃度。",
+      "source_ref": "user-zip-20261014/圖B-2・西藏8天精華地圖.png"
+    }
+  ],
+  "content_groups": {
+    "itinerary_overview": {
+      "purpose": "行程總覽",
+      "approved_text": "這條西藏精華8日從拉薩進出，安排拉薩、日喀則及珠峰大本營，回程體驗拉日鐵路。",
+      "asset_keys": [
+        "tibet_essence_8d_itinerary"
+      ],
+      "evidence_refs": [
+        "tibet_essence_8d.scope",
+        "tibet_essence_8d.itinerary"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "everest": {
+      "purpose": "珠峰日照金山",
+      "approved_text": "行程包含珠峰大本營；日照金山需要配合當天天氣。",
+      "asset_keys": [
+        "tibet_essence_8d_everest"
+      ],
+      "evidence_refs": [
+        "tibet_essence_8d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "rongbuk": {
+      "purpose": "絨布旅館房間",
+      "approved_text": "珠峰住宿安排供氧絨布旅館。",
+      "asset_keys": [
+        "tibet_essence_8d_rongbuk"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "guests": {
+      "purpose": "團友合照",
+      "approved_text": "與您分享業務提供的團友照片。",
+      "asset_keys": [
+        "tibet_essence_8d_guests"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "vehicle_oxygen": {
+      "purpose": "車內供氧設備",
+      "approved_text": "這是業務提供的車內供氧設備照片。",
+      "asset_keys": [
+        "tibet_essence_8d_vehicle_oxygen"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "lhasa": {
+      "purpose": "布達拉宮",
+      "approved_text": "拉薩行程包含布達拉宮、大昭寺、八廓街、扎基寺與色拉寺。",
+      "asset_keys": [
+        "tibet_essence_8d_potala",
+        "tibet_essence_8d_barkhor",
+        "tibet_essence_8d_sera",
+        "tibet_essence_8d_zaki"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "hotel": {
+      "purpose": "希爾頓房間照片1",
+      "approved_text": "行程中的希爾頓住宿保留珠峰例外，珠峰安排絨布旅館。",
+      "asset_keys": [
+        "tibet_essence_8d_hotel_1",
+        "tibet_essence_8d_hotel_2"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "vehicle": {
+      "purpose": "車內座椅",
+      "approved_text": "這是業務提供的車內照片。",
+      "asset_keys": [
+        "tibet_essence_8d_vehicle"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_sakya": {
+      "purpose": "薩迦寺",
+      "approved_text": "行程也安排薩迦寺，這裡的建築與藏傳佛教文化可以慢慢欣賞。",
+      "asset_keys": [
+        "tibet_essence_8d_sakya"
+      ],
+      "evidence_refs": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_railway": {
+      "purpose": "拉日鐵路窗景",
+      "approved_text": "回程安排拉日鐵路返回拉薩，可以從車窗欣賞沿途風景。",
+      "asset_keys": [
+        "tibet_essence_8d_railway"
+      ],
+      "evidence_refs": [
+        "tibet_essence_8d.scope"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    }
+  },
+  "content_sequence": [
+    "itinerary_overview",
+    "everest",
+    "rongbuk",
+    "guests",
+    "vehicle_oxygen",
+    "lhasa",
+    "hotel",
+    "vehicle",
+    "followup_sakya",
+    "followup_railway"
+  ],
+  "fixed_answers": []
+}

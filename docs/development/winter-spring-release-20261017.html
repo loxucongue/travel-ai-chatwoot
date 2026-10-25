@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>10月17日接待修正与冬游准备</title>
+<style>body{font:16px/1.7 system-ui,sans-serif;color:#18232b;background:#f6f8fa;max-width:1000px;margin:40px auto;padding:0 24px}h1{font-size:28px}h2{font-size:21px;margin-top:30px}table{width:100%;border-collapse:collapse;background:white}td,th{padding:12px;border:1px solid #d7dfe4;text-align:left;vertical-align:top}code{overflow-wrap:anywhere}a{color:#156085}.note{padding:16px;background:#fff4d5;border-left:4px solid #b57a00}.ok{padding:16px;background:#e9f6ef;border-left:4px solid #2b8352}small{color:#53626d}</style>
+<div class="ok">后续状态已更新：用户明确以麗麗为准，冬游和春节三笔特价现已上线。请查看<a href="lili-feedback-acceptance-20261017.html">最新验收报告</a>。下方保留10:03历史记录。</div><h1>接待修正已上线；冬游及春节特价待事实确认</h1>
+<p>核验时间：2026-10-17 10:03（Asia/Shanghai）。发布：<code>winter-spring-20261017-20261017T020136Z</code>。引擎：<code>reception-v3-376b47698b658bae</code>。</p>
+<div class="ok">已上线：桃花团期话术简化；收到月份时先核对季节；发送中的旧介绍立即暂停，适用时推荐并介绍桃花线路。生产数据库写入与服务已恢复。</div>
+<h2>真实会话、根因与结果</h2>
+<table><tr><th>证据</th><th>根因</th><th>变更与验收</th></tr>
+<tr><td>Chatwoot #352，内部正式会话657，运行2552/2553</td><td>固定departure_question包含每周几；回答四月后又重复完整团期并追问几号。</td><td>固定原话改为“這條行程是3/20–4/10出發。請問您大概計劃什麼時候出發呢？”；已答月份不重问、不重播完成的介绍。原上下文真实模型回放5.141秒，改为简短承接及兴趣问题。</td></tr>
+<tr><td>Chatwoot #353，映射658，运行2555/2556/2557</td><td>30秒等待到期已启动介绍；客户随后回复4月，模型核对期间旧10天线仍在发图。</td><td>入站月份触发待核对状态，演练和正式传输均暂停旧草稿；简单月份预先核对整月范围；新决定取消不适用计划。原上下文真实模型回放7.515秒，推荐桃花＋珠峰11日并开始介绍，明确仅到4/10。普通插问保留原队列行为。</td></tr></table>
+<p>上述是隔离模型回放与线上代码/配置验证。测试未向真实客户发送消息，不把回放等同于客户设备收图。客户明确晚于4/10、限制天数或拒绝改线时，不能强推桃花。仅回答月份不自动索取联系方式。</p>
+<h2>冬游与春节配置准备</h2>
+<p>用户ZIP的22张图片已按内容映射、校验SHA256，并在隔离数据库逐张验证可解析。新图编号与旧网页不同，按真实景点匹配。冬游8天从林芝进、拉萨出，不含珠峰、绒布旅馆或珠峰小镇；不混用常规8/10天住宿素材。</p>
+<table><tr><th>指定日期（待确认年份与适用条件）</th><th>线路</th><th>业务给定金额</th></tr>
+<tr><td>2/5</td><td>冬游冰川8天</td><td>人民币10,980元/人</td></tr>
+<tr><td>2/6</td><td>拉萨精华8天</td><td>人民币11,480元/人</td></tr>
+<tr><td>2/10</td><td>西藏全览10天</td><td>人民币12,980元/人</td></tr></table>
+<p>代码已支持指定日期覆盖该日常规星期、冬季和长假限制；不外推邻日或整月，不叠加独团、早鸟优惠或常规房差。7人以上、独团实际价格及不足30天仍需人工确认。实际配置尚未启用，不能对业务说春节广告接待已完成。</p>
+<div class="note">待用户确认两项事实：① 普通冬游实际出发期间是2026/12/15–2027/2/28，还是截至2027/2/20（旧介绍与报价冲突）；② 三个春节价格是否均为2027年指定日期的拼团、两人一间每人价。确认前冬游包activation_allowed=false，生产仍启用四条线路。冬游Skill代码已部署，但未进入启用目录。</div>
+<h2>生产磁盘故障处理</h2>
+<p>09:44现场磁盘可用空间0，正式Worker与演练Worker均报database or disk is full，演练重启计数517且继续增长。先对4份不含SQLite侧文件的旧测试DB异地压缩归档，逐一校验原文哈希；再将19份无活动进程引用的旧测试DB连同WAL/SHM等侧文件在服务器压缩留存，验证归档内容后移除原副本。保留了生产数据库、上传媒体和原有回滚备份。</p>
+<p>恢复后约2.7GiB空闲；本次部署备份后10:03约2.43GiB空闲。三个服务active，数据库quick_check=ok，4个运行Worker心跳持续更新，最近5分钟无磁盘满/tick_failed错误。27条控制标签同步均为synced，无processing运行积压。历史6条failed外发保留，未擅自重发；1条submitted保留按回执跟踪。新发布的预检DB使用后立即移除。日常备份与长期容量策略仍需后续治理，不能宣称磁盘永不再满。</p>
+<h2>验证与预算</h2>
+<ul><li>后端全量：651 passed，223.89秒；既有依赖弃用告警13条。</li><li>冬游/春节专项：23 passed，含随后补充的22张素材隔离安装与解析；其中多数已包含于全量，不相加计数。</li><li>生产副本预检、重复执行幂等、实际部署与读回核验通过；价格、团期、每日09:00配置、人工控制状态与其他设置保留。</li><li>两个原会话真实模型回放共3次HTTP请求，无失败；本轮保守核算¥0.18820768，原20元账本累计¥15.14844620，剩余¥4.85155380。</li><li>费用沿用<a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing/">DeepSeek官方价格表</a>高峰费率保守核算，未重置账本。</li><li>本轮未修改前端、未重跑前端构建。图片点赞分类、普通复杂报价全面优化、手机设备收图与推送仍未完成。</li></ul>
+<h2>复核入口</h2>
+<ul><li><a href="../../output/winter-spring-20261017/live-before.json">受控本地原始诊断（含客户上下文，不对外传播）</a></li>
+<li><a href="../../output/winter-spring-20261017/paid-results.json">原会话模型回放</a></li>
+<li><a href="../../output/winter-spring-20261017/deployment.json">部署清单及备份位置</a> · <a href="../../output/winter-spring-20261017/final-code-verification.json">线上与本地代码核对</a></li>
+<li><a href="../../output/winter-spring-20261017/recovery-20261017T020332.json">部署后运行核验</a></li>
+<li><a href="../../data/knowledge/china2go/route-releases/20261017-winter/asset-manifest.json">冬游素材清单</a> · <a href="../../data/knowledge/china2go/route-releases/20261017-winter/tibet-winter-8d/route-package.json">未启用冬游配置</a></li></ul>
+<p><small>本轮保留全部既有工作区，未reset、未提交或强推Git；完整本地文件清单包括已上线但尚未跟踪的模块，不能从旧HEAD直接重建生产。</small></p>
+</html>

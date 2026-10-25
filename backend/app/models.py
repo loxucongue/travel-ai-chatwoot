@@ -153,6 +153,33 @@ class ConversationState(Base):
     contact: Mapped[Contact | None] = relationship()
 
 
+class ConversationLabelSync(Base):
+    """Durable control-label intent; remote confirmation gates automatic sends."""
+    __tablename__ = 'conversation_label_syncs'
+    conversation_state_id: Mapped[int] = mapped_column(ForeignKey('conversation_states.id'), primary_key=True)
+    revision: Mapped[int] = mapped_column(default=1)
+    __mapper_args__ = {'version_id_col': revision}
+    target: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20), default='pending')
+    attempts: Mapped[int] = mapped_column(default=0)
+    due_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+    error: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    updated_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+
+
+class ConversationLabelAddition(Base):
+    """A business label intent, independent of reception ownership."""
+    __tablename__ = 'conversation_label_additions'
+    conversation_state_id: Mapped[int] = mapped_column(ForeignKey('conversation_states.id'), primary_key=True)
+    label: Mapped[str] = mapped_column(String(100), primary_key=True)
+    source_message_id: Mapped[int] = mapped_column(ForeignKey('message_events.id'))
+    status: Mapped[str] = mapped_column(String(20), default='pending')
+    attempts: Mapped[int] = mapped_column(default=0)
+    due_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+    error: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    updated_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+
+
 class ConversationJourney(Base):
     """Durable, route-scoped progress for the live tourism assistant."""
     __tablename__ = "conversation_journeys"

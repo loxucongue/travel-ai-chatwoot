@@ -14,7 +14,7 @@ from test_runtime_reliability import mock_chatwoot
 
 
 @pytest.mark.parametrize('condition', ['fresh', 'old', 'answered', 'unknown', 'human'])
-def test_ai_added_after_customer_message_starts_only_fresh_unanswered_session(session_factory, monkeypatch, condition):
+def test_ai_added_answers_pending_history_without_repeating_advisor_reply(session_factory, monkeypatch, condition):
     from datetime import timedelta
     from app.models import MessageEvent, utcnow
     from app.runtime_settings import dt, iso
@@ -40,12 +40,12 @@ def test_ai_added_after_customer_message_starts_only_fresh_unanswered_session(se
         labels = ['ai', '人工接管'] if condition == 'human' else ['ai']
         event(db, 'conversation_updated', labels, 20)
         row = live.session_for(db, 1)
-        if condition != 'fresh':
+        if condition in ('unknown','human'):
             assert row is None
             return
         assert row is not None
         assert any(m['content'] == message.content for m in row.messages)
-        assert service.state(row)['pending_event'] == 'customer_message'
+        assert service.state(row)['pending_event'] == (None if condition=='answered' else 'customer_message')
         event(db, 'conversation_updated', labels, 21)
         assert live.session_for(db, 1).id == row.id
         assert len([m for m in row.messages if m.get('id') == 'cw-100']) == 1
@@ -65,7 +65,6 @@ def test_label_handoff_creates_one_private_notification_and_stops_drafts(session
         assert db.scalar(select(func.count(HandoffTask.id))) == 1
         assert db.scalar(select(func.count(NotificationDelivery.id))) == 1
         event(db, 'conversation_updated', ['ai', '人工接管'], 11)
-        event(db, 'conversation_updated', ['ai'], 12)
         assert not live.permitted(db, db.get(ConversationState, 1))
         assert db.scalar(select(func.count(Notification.id))) == 1
     with respx.mock() as router:
@@ -84,8 +83,8 @@ def test_remove_and_readd_ai_resumes_without_replaying_cancelled_reply(session_f
         event(db, 'conversation_updated', [], 10)
         event(db, 'conversation_updated', ['ai'], 11)
         assert row.controls['simulation']['status'] == 'running'
-        assert row.messages[0]['status'] == 'cancelled'
-        assert not service.state(row).get('pending_event')
+        assert next(m for m in row.messages if m['id']=='old')['status'] == 'cancelled'
+        assert service.state(row).get('pending_event') == 'customer_message'
         assert db.get(ConversationState, 1).effective_ai_state == 'AI_ACTIVE'
         event(db, 'message_created', ['ai'], 12, 111, 'incoming')
         assert service.state(row)['pending_event'] == 'customer_message'
@@ -177,8 +176,8 @@ def test_contact_block_prevents_current_conversation_delivery(session_factory, m
         assert live.restore_blocker(db, db.get(ConversationState, 1))
 
 
-@pytest.mark.parametrize('condition', ['human', 'opt_out', 'unknown'])
-def test_ai_label_cannot_override_human_optout_or_unknown_delivery(session_factory, monkeypatch, condition):
+@pytest.mark.parametrize('condition', ['opt_out', 'unknown'])
+def test_ai_label_cannot_override_optout_or_unknown_delivery(session_factory, monkeypatch, condition):
     setup(session_factory, monkeypatch)
     with session_factory() as db:
         row = session(db)

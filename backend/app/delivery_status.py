@@ -54,11 +54,12 @@ def reconcile_live_delivery(checked=None):
     checked = checked if checked is not None else {}
     cutoff = (datetime.fromisoformat(utcnow()) - timedelta(hours=48)).isoformat()
     with SessionLocal() as db:
+        from app.reception_rollout import reception_inbox_ids
         candidates = db.scalars(select(ConversationState).join(InboxBinding).join(
             ChatwootConnection, ChatwootConnection.tenant_id == ConversationState.tenant_id).join(
             OutboundMessage, OutboundMessage.conversation_state_id == ConversationState.id).where(
                 ChatwootConnection.account_id == settings.live_reply_account_id,
-                InboxBinding.chatwoot_inbox_id == settings.live_reply_inbox_id,
+                InboxBinding.chatwoot_inbox_id.in_(reception_inbox_ids(db)),
                 OutboundMessage.idempotency_key.like("live%"),
                 OutboundMessage.chatwoot_message_id.is_not(None),
                 OutboundMessage.status.in_(["submitted", "sent", "delivered"]),

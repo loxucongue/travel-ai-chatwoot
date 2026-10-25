@@ -46,7 +46,7 @@ def corrected_package(package):
         if 'peach_highlights' in sequence and 'hotel_reference' in sequence:
             sequence.remove('peach_highlights')
             sequence.insert(sequence.index('hotel_reference'), 'peach_highlights')
-    result['ai_guidance'] = '以AI.docx、AI(1).docx、AI(2).docx的业务答复口径为准；官网补充未覆盖的线路事实。优先使用适用原话，按content_sequence发完整介绍，再回答期间的问题。需要询问时，把一个必要问题放在整轮最后。'
+    result.setdefault('ai_guidance', '以AI.docx、AI(1).docx、AI(2).docx的业务答复口径为准；官网补充未覆盖的线路事实。优先使用适用原话，按content_sequence发完整介绍，再回答期间的问题。需要询问时，把一个必要问题放在整轮最后。')
     for script in result['fixed_answers']:
         original_text = script['answer_text']
         if script['id'] in ('contact_request', 'contact_after_read') and script.get('usage_note') == PREVIOUS_CONTACT_NOTE:

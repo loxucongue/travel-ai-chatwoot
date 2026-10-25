@@ -65,6 +65,7 @@ class LeadSettings(BaseModel):
 
 
 class RoutingSettings(BaseModel):
+    live_inbox_ids: list[int] | None = Field(default=None, max_length=100)
     enabled_route_variants: list[str] = Field(default_factory=lambda: list(ROUTE_PACKAGES), min_length=1)
     allow_route_switch: bool = True
     preserve_profile_on_switch: bool = True
@@ -72,6 +73,10 @@ class RoutingSettings(BaseModel):
 
     @model_validator(mode="after")
     def supported_routes_only(self):
+        if self.live_inbox_ids is not None:
+            if any(type(value) is not int or value <= 0 for value in self.live_inbox_ids):
+                raise ValueError('invalid_live_inbox_ids')
+            self.live_inbox_ids = list(dict.fromkeys(self.live_inbox_ids))
         unknown = set(self.enabled_route_variants) - set(ROUTE_PACKAGES)
         if unknown:
             raise ValueError(f"unsupported_route_variants:{','.join(sorted(unknown))}")
@@ -97,7 +102,7 @@ class IntakeSettings(BaseModel):
     enabled: bool = True
     question: str = Field(default="您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）", min_length=1, max_length=500)
     options: list[str] = Field(default_factory=lambda: ['自己一位', '2～3位', '4～6位', '7～10位', '10位以上'], min_length=1, max_length=10)
-    wait_seconds: int = Field(default=120, ge=1, le=300)
+    wait_seconds: int = Field(default=90, ge=1, le=300)
 
     @model_validator(mode="after")
     def valid(self):
@@ -106,12 +111,35 @@ class IntakeSettings(BaseModel):
         return self
 
 
+class MaterialRule(BaseModel):
+    id: str = Field(min_length=1, max_length=100)
+    name: str = Field(min_length=1, max_length=100)
+    enabled: bool = True
+    purpose: Literal['reply', 'followup', 'both'] = 'reply'
+    route_variants: list[str] = Field(min_length=1, max_length=100)
+    any_labels: list[str] = Field(default_factory=list, max_length=30)
+    scenario: str = Field(min_length=1, max_length=1000)
+    approved_text: str = Field(min_length=1, max_length=4000)
+    asset_keys: list[str] = Field(default_factory=list, max_length=20)
+
+    @model_validator(mode='after')
+    def normalize(self):
+        for field in ('route_variants', 'any_labels', 'asset_keys'):
+            setattr(self, field, list(dict.fromkeys(x.strip() for x in getattr(self, field) if x.strip())))
+        if not self.route_variants or any(not getattr(self, f).strip() for f in ('id', 'name', 'scenario', 'approved_text')):
+            raise ValueError('material_rule_incomplete')
+        return self
+
+
 class SilenceSettings(BaseModel):
+    material_selection: Literal['route_catalog', 'configured_rules'] = 'route_catalog'
+    advisor_reply_followup_enabled: bool = False
     enabled: bool = True
     live_enabled: bool = False
     intervals_minutes: list[int] = Field(default_factory=lambda:[360],min_length=1,max_length=20)
     initial_checkpoints_minutes: list[int] | None = Field(default=None, min_length=3, max_length=5)
     recurring_interval_minutes: int = Field(default=180, ge=60, le=1380)
+    daily_at: str | None = None
     active_start: str = "09:00"
     active_end: str = "21:00"
     max_proactive_messages_per_day: int = Field(default=6,ge=1,le=20)
@@ -120,10 +148,19 @@ class SilenceSettings(BaseModel):
     def valid(self):
         from datetime import time
         time.fromisoformat(self.active_start);time.fromisoformat(self.active_end)
-        if any(x<1 or x>1440 for x in self.intervals_minutes):
+        if self.daily_at is not None:
+            clock = time.fromisoformat(self.daily_at)
+            if len(self.daily_at) != 5 or clock.tzinfo or self.initial_checkpoints_minutes is not None:
+                raise ValueError('daily_followup_requires_HH_MM_and_no_initial_checkpoints')
+            start, end = self.active_start, self.active_end
+            if not (start <= self.daily_at < end if start < end else self.daily_at >= start or self.daily_at < end):
+                raise ValueError('daily_followup_must_be_in_active_hours')
+            if self.max_proactive_messages_per_day != 1:
+                raise ValueError('daily_followup_limit_must_be_one')
+        if any(x<1 or x>7*24*60 for x in self.intervals_minutes):
             raise ValueError("silence_interval_out_of_range")
-        if sum(self.intervals_minutes)>23*60:
-            raise ValueError('silence_window_exceeds_23_hours')
+        if sum(self.intervals_minutes)>7*24*60:
+            raise ValueError('silence_window_exceeds_seven_days')
         points = self.initial_checkpoints_minutes
         if points is not None and (points != sorted(set(points)) or points[0] < 1 or points[-1] != 60):
             raise ValueError('first_hour_checkpoints_must_increase_and_end_at_60')
@@ -138,6 +175,14 @@ class ReceptionConfiguration(BaseModel):
     handoff: HandoffSettings = Field(default_factory=HandoffSettings)
     silence: SilenceSettings = Field(default_factory=SilenceSettings)
     common_scripts: list[CommonScript] = Field(default_factory=list,max_length=100)
+    material_rules: list[MaterialRule] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode='after')
+    def unique_material_rules(self):
+        keys = [rule.id for rule in self.material_rules]
+        if len(keys) != len(set(keys)):
+            raise ValueError('duplicate_material_rule_ids')
+        return self
 
 def default_reception_configuration():
     return ReceptionConfiguration().model_dump()

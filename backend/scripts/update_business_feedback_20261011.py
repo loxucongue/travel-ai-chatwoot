@@ -25,8 +25,15 @@ def update_package(package):
     entry = '西藏桃花節＋珠峰 11日' if days == 11 else '西藏桃花節不上珠峰 9日'
     result['selection_aliases'] = list(dict.fromkeys([*result.get('selection_aliases', []), entry]))
     text = quotation(days, 12180 if days == 11 else 10780, days == 11)
+    # A historical migration must not downgrade a later customer-specific offer.
+    rolling = next((s for s in result.get('fixed_answers', [])
+                    if s['id'] == 'price' and s.get('valid_for_days')), None)
+    if rolling:
+        text = rolling['answer_text']
     for script in result.get('fixed_answers', []):
         if script['id'] == 'price':
+            if rolling:
+                continue
             script.update(answer_text=text, usage_note='业务2026-10-11报价模板。客户问费用才发送；不主动附加房差或独团加价。')
             if days == 11:
                 script.update(valid_from='2026-10-11', valid_until='2026-10-31',

@@ -83,9 +83,25 @@ def test_price_validity_survives_configuration_api_roundtrip():
     from app.automation_api import RouteFixedAnswerInput
     from app.route_packages import PACKAGE_ROOT
     package = json.loads((PACKAGE_ROOT/'peach-11d-2027/route-package.json').read_text(encoding='utf8'))
+    # Exercise the historical fixed-date mode, not the current rolling offer.
+    next(s for s in package['fixed_answers'] if s['id'] == 'price').pop('valid_for_days', None)
     price = next(s for s in update_package(package)['fixed_answers'] if s['id'] == 'price')
     saved = RouteFixedAnswerInput.model_validate(price).model_dump()
     assert saved['valid_until'] == '2026-10-31'
     saved['valid_from'] = None
     assert '12,180' in effective_price_scripts([saved], datetime(2026,10,11,tzinfo=ZoneInfo('Asia/Taipei')))[0]['answer_text']
     assert '12,780' in effective_price_scripts([saved], datetime(2026,11,1,tzinfo=ZoneInfo('Asia/Taipei')))[0]['answer_text']
+
+
+def test_historical_migration_cannot_downgrade_current_rolling_offer():
+    import json
+    from app.route_packages import PACKAGE_ROOT
+    from app.automation_api import RouteFixedAnswerInput
+    package = json.loads((PACKAGE_ROOT/'peach-11d-2027/route-package.json').read_text(encoding='utf8'))
+    original = next(s for s in package['fixed_answers'] if s['id'] == 'price')
+    assert original['valid_for_days'] == 30
+    updated = update_package(package)
+    price = next(s for s in updated['fixed_answers'] if s['id'] == 'price')
+    assert price == original
+    assert RouteFixedAnswerInput.model_validate(price).valid_for_days == 30
+    assert updated['content_groups']['price_reference']['approved_text'] == price['answer_text']

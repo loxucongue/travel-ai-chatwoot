@@ -77,6 +77,24 @@ def test_optional_script_reference_null_does_not_retry_or_rewrite(monkeypatch):
     assert decision['messages'][0]['script_id'] is None
 
 
+@pytest.mark.parametrize('empty_type', ['', None])
+@pytest.mark.parametrize('action', ['reply', 'handoff'])
+def test_empty_handoff_classification_preserves_decision_without_repair(monkeypatch, empty_type, action):
+    messages = [{'text': '單人房差人民幣2,200元。'}] if action == 'reply' else []
+    response = {'content': json.dumps({'action': action, 'handoff_type': empty_type,
+                                      'messages': messages}, ensure_ascii=False)}
+    requests = model(monkeypatch, [response])
+    decision, logs, _ = runtime.run_agent(context('peach_9d_2027'))
+    assert len(requests) == 1 and logs[-1]['status'] == 'completed'
+    assert decision['action'] == action and decision['handoff_type'] == 'other'
+    assert [m['text'] for m in decision['messages']] == [m['text'] for m in messages]
+
+
+def test_unknown_nonempty_handoff_classification_is_still_rejected():
+    with pytest.raises(ValueError):
+        runtime.Decision.model_validate({'action': 'handoff', 'handoff_type': 'invented'})
+
+
 def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
     requests = model(monkeypatch, [
         {'content': None, 'reasoning_content': 'Need both route sources.', 'tool_calls': [tool('load_skill', {'name': 'peach-9d-2027'}),
@@ -190,7 +208,7 @@ def test_switch_loads_new_route_without_losing_conversation(monkeypatch):
     c['messages'] = [{'direction': 'incoming', 'content': '改成11日，我们两位'}]
     requests = model(monkeypatch, [
         {'content': None, 'tool_calls': [tool('load_skill', {'name': 'peach-11d-2027'})]},
-        final(route_variant='peach_11d_2027', interrupt=True, start_introduction=True, profile={'party_size': 2})])
+        final(route_variant='peach_11d_2027', route_choice='selected', interrupt=True, start_introduction=True, profile={'party_size': 2})])
     decision, _, _ = runtime.run_agent(c)
     assert decision['profile']['party_size'] == 2
     assert '改成11日' in requests[1]['messages'][1]['content']

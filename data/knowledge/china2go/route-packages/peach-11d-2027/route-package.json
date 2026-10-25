@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-10-04-document-live-11d.business-20261006.business-20261011",
+  "package_version": "2026-10-04-document-live-11d.business-20261006.business-20261011.rongbuk-20261016",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "peach_11d_2027",
   "branch": "peach_11d",
@@ -19,7 +19,7 @@
   ],
   "default_entry_message": "想了解2027桃花加珠峰11日行程",
   "initial_delivery_interval_seconds": 2,
-  "ai_guidance": "以AI.docx、AI(1).docx、AI(2).docx的业务答复口径为准；官网补充未覆盖的线路事实。优先使用适用原话，按content_sequence发完整介绍，再回答期间的问题。需要询问时，把一个必要问题放在整轮最后。",
+  "ai_guidance": "以AI.docx、AI(1).docx、AI(2).docx的业务答复口径为准；官网补充未覆盖的线路事实。优先使用适用原话，按content_sequence发完整介绍，再回答期间的问题。需要询问时，把一个必要问题放在整轮最后。\n2026-10-15 14:50最新業務口徑：4位及以上可獨立成團自選出發日期，4位以下按定班；4位以上若明確選擇和其他旅客拼團，仍按拼團定班。定班星期不是獨團的日期限制。僅有4位不等於已選獨團；可先條件式說明並確認意願，不要求先改日期。獨團與拼團還有日期和費用差異，不能說只差是否有其他旅客。自選日期仍受產品季節開放、年份、長假和入藏函期限限制，不代表已確認名額，亦不允許任意改行程或車型。非定班日返回private_departure只確認可自選日期，不授權套定班報價；只問日期不轉人工，問該日實際獨團總價則靜默交接核對。4位獨團每人加400的既有條件保留；7位以上仍交人工安排，不用定班星期拒絕。",
   "source": {
     "url": "https://china2go.com/7693-2/",
     "snapshot_manifest": "data/knowledge/china2go/website-7693-full/manifest.json",
@@ -263,7 +263,8 @@
       "purpose": "介绍珠峰段住宿",
       "approved_text": "這是絨布旅館的住宿環境，有獨立廁所以及供氧，不過真的是限量喔！！！！",
       "asset_keys": [
-        "routes12-rongbuk-room"
+        "routes12-rongbuk-room",
+        "rongbuk-bathroom-20261016"
       ],
       "evidence_refs": [
         "route.11.rongbuk"
@@ -1229,7 +1230,8 @@
         "route.11.rongbuk"
       ],
       "asset_ids": [
-        "routes12-rongbuk-room"
+        "routes12-rongbuk-room",
+        "rongbuk-bathroom-20261016"
       ],
       "source_ref": "website-7693-full/01-peach-everest-11d/content.md",
       "answer_origin": "website_verbatim",
@@ -1577,5 +1579,25 @@
   "script_source": {
     "url": "https://china2go.com/7693-2/",
     "document": "website-7693-full/01-peach-everest-11d/content.md"
+  },
+  "departure_availability": {
+    "years": [
+      2027
+    ],
+    "ranges": [
+      [
+        "03-20",
+        "04-10"
+      ]
+    ],
+    "weekdays": [
+      4,
+      5,
+      6,
+      0
+    ],
+    "minimum_notice_days": 30,
+    "source_ref": "Existing approved peach departure window and weekdays; business clarification 2026-10-14",
+    "private_departure_min_party_size": 4
   }
 }

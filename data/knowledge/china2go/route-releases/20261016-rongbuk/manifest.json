@@ -1,0 +1,21 @@
+{
+  "source_conversation": 343,
+  "confirmed_route": "tibet_essence_8d",
+  "photos": {
+    "room": {
+      "filename": "f3dca50af44720837223b6ef43ec5e75.png",
+      "sha256": "647c1d2962263336c00ad477316837cb5abf4f2071b2c7f3ab385ecc0d2e4a4d",
+      "size": 765730
+    },
+    "bathroom": {
+      "filename": "f4b8314b4a01b52cb5c4aa8adbb6f124.jpg",
+      "sha256": "bd20dd87b98e28d718bb80f80ce6ab7d8ec04b2dcf4598fda78888b249911e97",
+      "size": 157872
+    }
+  },
+  "routes": [
+    "peach_11d_2027",
+    "tibet_essence_8d",
+    "tibet_overview_10d"
+  ]
+}

@@ -213,6 +213,7 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
     message = None
     if ctx["message_id"]:
         message = db.scalar(select(MessageEvent).where(MessageEvent.conversation_state_id == row.id, MessageEvent.chatwoot_message_id == int(ctx["message_id"])))
+        ctx['new_message'] = message is None
         if not message:
             message = MessageEvent(conversation_state_id=row.id, chatwoot_message_id=int(ctx["message_id"]), direction=ctx["message_type"] or "unknown")
             db.add(message)

@@ -9,7 +9,10 @@ from app import model_metering
     (19.5, 17.4, .7, True),
     (18, 17.4, .7, False),
     (19.5, 19.2, .4, False),
-    (100, 19.8, .3, False),
+    (50, 19.8, .3, True),
+    (50, 49.8, .3, False),
+    (0, 0, .3, False),
+    (float('inf'), 0, .3, False),
 ])
 def test_reservations_respect_configured_and_authorized_total(tmp_path, monkeypatch, limit, spent, reserve, allowed):
     path = tmp_path / 'cost.json'

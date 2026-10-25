@@ -1,0 +1,542 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>春季推荐与林芝切线 · 开发及多轮验收</title><style>
+body{font:16px/1.7 system-ui,"Microsoft YaHei",sans-serif;margin:0;background:#f3f6fa;color:#17304a}main{max-width:1280px;margin:auto;padding:36px 28px}h1{font-size:30px;margin-bottom:8px}h2{font-size:21px;margin-top:32px}.note{background:#fff1cd;border-left:5px solid #d39312;padding:18px 22px}.cards{display:flex;gap:16px;flex-wrap:wrap;margin:22px 0}.card{background:white;padding:18px 25px;border-radius:10px;flex:1;min-width:170px}.num{font-size:30px;font-weight:700}table{width:100%;border-collapse:collapse;background:white}th,td{text-align:left;vertical-align:top;padding:14px;border:1px solid #dbe3eb}th{background:#17304a;color:white}td:first-child{width:26%}td:last-child{width:15%}p{margin:7px 0}details{background:white;padding:14px 20px;margin:12px 0}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;font-size:13px;color:#455b70}a{color:#155f9e}.small{font-size:14px;color:#52687e}</style><main>
+<p class="small">2026-10-24 · 第一组 L1 + H01 · 本地候选版本</p><h1>三四月桃花优先，与林芝8日衔接</h1>
+<div class="note"><b>仅在本地开发和隔离测试，未上线。</b><p>用户已追加最多20元测试额度。真实连续对话、失败修复、费用和逐段审阅结果请看<a href="spring-routing-model-review-20261024.html">最新模型验收报告</a>。下面保留开发目标和各场景检查设计。</p></div>
+<div class="cards"><div class="card">离线回归通过<div class="num">329 / 329</div></div><div class="card">完整场景 / 客户消息<div class="num">9 / 56</div></div><div class="card">本批真实模型调用<div class="num">120</div></div><div class="card">发送给真实客户<div class="num">0</div></div></div><h2>本批改动及目标</h2><table><tr><th>模块</th><th>改动</th><th>期望效果</th></tr>
+<tr><td>接待策略与线路推荐</td><td>统一三月、四月入口；按真实团期、天数及珠峰意愿推荐。含珠峰优先桃花11日，不上珠峰先核对桃花9日，其他适用月份核对林芝8日。</td><td>不把3/15、4月下旬或只能8天强行变成桃花团。</td></tr>
+<tr><td>会话状态与偏好</td><td>推荐与选线分开，记录推荐中、接受、拒绝及来源消息。保存桃花/珠峰偏好。嗯嗯、了解不等于同意换线。</td><td>接受后持续承接；拒绝后不反复推荐，只有客户改口才恢复。</td></tr>
+<tr><td>团期与报价核对</td><td>推荐前加载新线路资料；保存推荐时的日期证据，接受时沿用并重新核对新线。清除旧线报价证据。</td><td>不串年份、日期或价格；人数和明确条件保留。</td></tr>
+<tr><td>介绍和跟进队列</td><td>推荐时暂停旧介绍；切线取消未发旧图文。未确认推荐时不发原线路跟进照片。客户拒绝的产品图片被过滤。</td><td>客户补充条件时不继续发送过时图片。</td></tr></table>
+<h2>完整场景安排</h2><p>每条从入口消息开始，用同一个会话累计真实模型回复和状态，不预填理想的历史回答。包含补充条件、比较/确认、沉默到期及客户再次回复。模型与接待引擎真实执行；数据库、时钟和对外投递在隔离环境模拟，因此不等于真实渠道验收。</p>
+<table><tr><th>场景</th><th>连续客户动作</th><th>当前状态</th></tr><tr><td><b>三月优先桃花，补人数不等于接受，确认后才介绍</b><p>西藏全覽-10天林芝+拉薩+珠峰</p></td><td>三月 → 我們2位，先問一下是什麼酒店？ → 嗯嗯，了解 → 等待沉默节点 → 好，那改成桃花加珠峰11日，給我看行程 → 我們夫妻同房就好，珠峰那晚有獨立衛浴嗎？ → 等待沉默节点 → 剛剛看完了，措宗寺會去嗎？</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>四月不上珠峰，9日接受后保持，不回常规10日</b><p>西藏全覽-10天林芝+拉薩+珠峰</p></td><td>四月 → 我們2位，不上珠峰，也有時間看桃花 → 那就桃花9日，請介紹 → 所有酒店都有供氧嗎？ → 等待沉默节点 → 我們想2027年4月3日出發，2個人拼團費用多少？</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>不喜欢桃花，酒店追问和沉默都不能推回，客户改口后才恢复</b><p>西藏精華8天-拉薩+珠峰</p></td><td>三月 → 不喜歡桃花，我只想去珠峰 → 可以改6月，我們2位，精華8天就好 → 珠峰那晚住宿怎樣？ → 等待沉默节点 → 車子坐起來舒服嗎？ → 朋友想看桃花，我改變主意了，可以2027年4月3日出發，也可以11天，改成桃花加珠峰11日</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>三月中不是桃花团期，先说明差异，客户调整后才能推荐</b><p>西藏全覽-10天林芝+拉薩+珠峰</p></td><td>目前想2027年3月15日出發，2位 → 桃花行程最早是什麼時候？ → 那2027年3月26日可以，我們想去珠峰，11天也沒問題 → 好，就選桃花加珠峰11天 → 等待沉默节点 → 請給我兩個人的拼團報價</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>只8天和4月下旬不强推9/11日，调整到6月才介绍林芝8日</b><p>不上珠峰 林芝入藏8日</p></td><td>2027年4月20日出發，只有8天，不上珠峰，兩位 → 那改6月呢？還是只有8天 → 好，確定2027年6月1日出發，林芝8天，請給行程 → 所有酒店都有供氧嗎？ → 等待沉默节点 → 兩人拼團，團費多少？</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>高反担忧不等于拒绝，明确不上后推荐林芝，确认才切，之后可改回</b><p>西藏全覽-10天林芝+拉薩+珠峰</p></td><td>明年6月，2位 → 很想看珠峰，但是怕高反 → 想了一下還是不上珠峰，有林芝8天可選嗎？ → 好，改林芝8日，給我看行程 → 等待沉默节点 → 我改變主意了，還是選原本全覽10天含珠峰，2027年6月1日出發</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>介绍发到一半才回复月份，暂停旧队列、客户接受后换线</b><p>西藏全覽-10天林芝+拉薩+珠峰</p></td><td>等待介绍开始 → 三月，2位 → 先讓我想一下，我還沒決定要改 → 討論好了，就選桃花加珠峰11日 → 2位是拼團對吧，車上幾個人？ → 等待沉默节点 → 謝謝，巴松錯有安排嗎？</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>保持未来年份，改到未公布年份不能套2027价格，恢复日期后重新核价</b><p>不上珠峰 林芝入藏8日</p></td><td>6月 → 兩位，想2027年6月1日，先看看費用 → 如果改成2028年6月1日呢？ → 還是2027年6月1日，林芝8日，兩人拼團 → 等待沉默节点 → 請再給我這個日期的報價</td><td>完整执行及逐段审阅通过</td></tr><tr><td><b>常规答疑和次日跟进后追问未公布卫浴，本轮静默交接且后续不再自动发言</b><p>不上珠峰 林芝入藏8日</p></td><td>2027年6月，兩位 → 所有酒店都有供氧嗎？ → 我們是拼團，車上幾位客人？ → 等待沉默节点 → 每一家酒店都能保證獨立衛浴嗎？ → 兩個人費用是多少？</td><td>完整执行及逐段审阅通过</td></tr></table>
+<h2>达标条件</h2><p>所有关键断言必须通过：不违背日期和天数、不串产品和价格、不发被拒绝产品的图文、不把轻回应误认为同意、不重复询问已知人数和月份。每轮保留输入、回复、图片标识、工具核对结果及状态。发生失败就保留失败记录，修复后重跑相关完整对话。</p>
+<p>自动检查通过后还要逐段审阅：答复是否自然、是否回答当前问题、有无多余推销或事实承诺。未完成真实模型运行及文字审阅时保持“待验收”，不会申请上线。上线仍需要用户明确审批。</p>
+<h2>逐轮检查明细</h2><details><summary>三月优先桃花，补人数不等于接受，确认后才介绍</summary><ol><li><b>三月</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_price&quot;,
+    &quot;no_contact&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;discussion_route&quot;: &quot;peach_11d_2027&quot;
+  },
+  &quot;offer_status&quot;: &quot;offered&quot;,
+  &quot;contains_any&quot;: [
+    [
+      &quot;2027&quot;
+    ]
+  ]
+}</pre></li><li><b>我們2位，先問一下是什麼酒店？</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_reask_month&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2
+  }
+}</pre></li><li><b>嗯嗯，了解</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;
+  ],
+  &quot;offer_status&quot;: &quot;offered&quot;
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;text_only&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true,
+  &quot;offer_status&quot;: &quot;offered&quot;
+}</pre></li><li><b>好，那改成桃花加珠峰11日，給我看行程</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;offer_status&quot;: &quot;accepted&quot;,
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2
+  }
+}</pre></li><li><b>我們夫妻同房就好，珠峰那晚有獨立衛浴嗎？</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_reask_month&quot;,
+    &quot;no_extra_opening&quot;
+  ]
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>剛剛看完了，措宗寺會去嗎？</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;contains_any&quot;: [
+    [
+      &quot;湖心島&quot;,
+      &quot;湖心岛&quot;
+    ]
+  ]
+}</pre></li></ol></details><details><summary>四月不上珠峰，9日接受后保持，不回常规10日</summary><ol><li><b>四月</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;discussion_route&quot;: &quot;peach_11d_2027&quot;
+  },
+  &quot;offer_status&quot;: &quot;offered&quot;
+}</pre></li><li><b>我們2位，不上珠峰，也有時間看桃花</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2,
+    &quot;everest_preference&quot;: &quot;avoid&quot;,
+    &quot;discussion_route&quot;: &quot;peach_9d_2027&quot;
+  },
+  &quot;offer_status&quot;: &quot;offered&quot;
+}</pre></li><li><b>那就桃花9日，請介紹</b><p>预期选线：2027 林芝桃花 9 日（不上珠峰）</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;offer_status&quot;: &quot;accepted&quot;
+}</pre></li><li><b>所有酒店都有供氧嗎？</b><p>预期选线：2027 林芝桃花 9 日（不上珠峰）</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_reask_month&quot;
+  ]
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：2027 林芝桃花 9 日（不上珠峰）</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>我們想2027年4月3日出發，2個人拼團費用多少？</b><p>预期选线：2027 林芝桃花 9 日（不上珠峰）</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_surcharge&quot;
+  ]
+}</pre></li></ol></details><details><summary>不喜欢桃花，酒店追问和沉默都不能推回，客户改口后才恢复</summary><ol><li><b>三月</b><p>预期选线：西藏精華8天・拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;discussion_route&quot;: &quot;peach_11d_2027&quot;
+  }
+}</pre></li><li><b>不喜歡桃花，我只想去珠峰</b><p>预期选线：西藏精華8天・拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;peach_preference&quot;: &quot;avoid&quot;,
+    &quot;everest_preference&quot;: &quot;want&quot;
+  },
+  &quot;offer_status&quot;: &quot;rejected&quot;
+}</pre></li><li><b>可以改6月，我們2位，精華8天就好</b><p>预期选线：西藏精華8天・拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2,
+    &quot;peach_preference&quot;: &quot;avoid&quot;
+  }
+}</pre></li><li><b>珠峰那晚住宿怎樣？</b><p>预期选线：西藏精華8天・拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;peach_preference&quot;: &quot;avoid&quot;
+  },
+  &quot;excludes&quot;: [
+    &quot;推薦桃花&quot;,
+    &quot;推薦您看桃花&quot;
+  ]
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：西藏精華8天・拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>車子坐起來舒服嗎？</b><p>预期选线：西藏精華8天・拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_new_introduction&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;peach_preference&quot;: &quot;avoid&quot;
+  }
+}</pre></li><li><b>朋友想看桃花，我改變主意了，可以2027年4月3日出發，也可以11天，改成桃花加珠峰11日</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;peach_preference&quot;: &quot;want&quot;,
+    &quot;party_size&quot;: 2
+  },
+  &quot;offer_status&quot;: &quot;accepted&quot;
+}</pre></li></ol></details><details><summary>三月中不是桃花团期，先说明差异，客户调整后才能推荐</summary><ol><li><b>目前想2027年3月15日出發，2位</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2
+  }
+}</pre></li><li><b>桃花行程最早是什麼時候？</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;
+  ],
+  &quot;contains_any&quot;: [
+    [
+      &quot;2027&quot;,
+      &quot;3月20&quot;,
+      &quot;3/20&quot;
+    ]
+  ]
+}</pre></li><li><b>那2027年3月26日可以，我們想去珠峰，11天也沒問題</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;offer_status&quot;: &quot;accepted&quot;
+}</pre></li><li><b>好，就選桃花加珠峰11天</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_extra_opening&quot;
+  ],
+  &quot;offer_status&quot;: &quot;accepted&quot;
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>請給我兩個人的拼團報價</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_surcharge&quot;
+  ]
+}</pre></li></ol></details><details><summary>只8天和4月下旬不强推9/11日，调整到6月才介绍林芝8日</summary><ol><li><b>2027年4月20日出發，只有8天，不上珠峰，兩位</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2,
+    &quot;trip_days&quot;: 8
+  }
+}</pre></li><li><b>那改6月呢？還是只有8天</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_price&quot;
+  ]
+}</pre></li><li><b>好，確定2027年6月1日出發，林芝8天，請給行程</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ]
+}</pre></li><li><b>所有酒店都有供氧嗎？</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_reask_month&quot;
+  ]
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>兩人拼團，團費多少？</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;contains_any&quot;: [
+    [
+      &quot;9,580&quot;,
+      &quot;9580&quot;
+    ]
+  ],
+  &quot;excludes&quot;: [
+    &quot;11,480&quot;,
+    &quot;11480&quot;,
+    &quot;單人房差&quot;
+  ]
+}</pre></li></ol></details><details><summary>高反担忧不等于拒绝，明确不上后推荐林芝，确认才切，之后可改回</summary><ol><li><b>明年6月，2位</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2
+  }
+}</pre></li><li><b>很想看珠峰，但是怕高反</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_altitude_guarantee&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;everest_preference&quot;: &quot;want&quot;,
+    &quot;altitude_concern&quot;: true
+  }
+}</pre></li><li><b>想了一下還是不上珠峰，有林芝8天可選嗎？</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;everest_preference&quot;: &quot;avoid&quot;,
+    &quot;discussion_route&quot;: &quot;tibet_linzhi_8d&quot;
+  },
+  &quot;offer_status&quot;: &quot;offered&quot;
+}</pre></li><li><b>好，改林芝8日，給我看行程</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;offer_status&quot;: &quot;accepted&quot;,
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2
+  }
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>我改變主意了，還是選原本全覽10天含珠峰，2027年6月1日出發</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2,
+    &quot;everest_preference&quot;: &quot;want&quot;
+  },
+  &quot;offer_status&quot;: &quot;accepted&quot;
+}</pre></li></ol></details><details><summary>介绍发到一半才回复月份，暂停旧队列、客户接受后换线</summary><ol><li><b>等待发送</b><p>预期选线：保持当前</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;seconds&quot;: 31,
+  &quot;drain&quot;: false
+}</pre></li><li><b>三月，2位</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;previous_drafts_cancelled&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;discussion_route&quot;: &quot;peach_11d_2027&quot;,
+    &quot;party_size&quot;: 2
+  },
+  &quot;offer_status&quot;: &quot;offered&quot;
+}</pre></li><li><b>先讓我想一下，我還沒決定要改</b><p>预期选线：西藏全覽10天・林芝＋拉薩＋珠峰</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;
+  ]
+}</pre></li><li><b>討論好了，就選桃花加珠峰11日</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;offer_status&quot;: &quot;accepted&quot;
+}</pre></li><li><b>2位是拼團對吧，車上幾個人？</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;
+  ]
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>謝謝，巴松錯有安排嗎？</b><p>预期选线：2027 林芝桃花＋珠峰 11 日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_new_introduction&quot;
+  ]
+}</pre></li></ol></details><details><summary>保持未来年份，改到未公布年份不能套2027价格，恢复日期后重新核价</summary><ol><li><b>6月</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ]
+}</pre></li><li><b>兩位，想2027年6月1日，先看看費用</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2
+  },
+  &quot;contains_any&quot;: [
+    [
+      &quot;9,580&quot;,
+      &quot;9580&quot;
+    ]
+  ]
+}</pre></li><li><b>如果改成2028年6月1日呢？</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_price&quot;,
+    &quot;no_new_introduction&quot;
+  ]
+}</pre></li><li><b>還是2027年6月1日，林芝8日，兩人拼團</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ]
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>請再給我這個日期的報價</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;
+  ],
+  &quot;contains_any&quot;: [
+    [
+      &quot;9,580&quot;,
+      &quot;9580&quot;
+    ]
+  ]
+}</pre></li></ol></details><details><summary>常规答疑和次日跟进后追问未公布卫浴，本轮静默交接且后续不再自动发言</summary><ol><li><b>2027年6月，兩位</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_extra_opening&quot;,
+    &quot;no_rejected_material&quot;
+  ],
+  &quot;profile_equals&quot;: {
+    &quot;party_size&quot;: 2
+  }
+}</pre></li><li><b>所有酒店都有供氧嗎？</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;,
+    &quot;no_reask_party&quot;
+  ]
+}</pre></li><li><b>我們是拼團，車上幾位客人？</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;send&quot;,
+    &quot;not_handoff&quot;
+  ]
+}</pre></li><li><b>到下一跟进节点</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;not_handoff&quot;,
+    &quot;no_new_introduction&quot;,
+    &quot;no_rejected_material&quot;,
+    &quot;no_reask_party&quot;,
+    &quot;no_price&quot;
+  ],
+  &quot;next_check&quot;: true
+}</pre></li><li><b>每一家酒店都能保證獨立衛浴嗎？</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;handoff&quot;,
+    &quot;no_send&quot;
+  ]
+}</pre></li><li><b>兩個人費用是多少？</b><p>预期选线：不上珠峰・林芝入藏8日</p><pre>{
+  &quot;checks&quot;: [
+    &quot;handoff&quot;,
+    &quot;no_send&quot;
+  ]
+}</pre></li></ol></details>
+<h2>交付边界</h2><p>本批仅开发春季推荐与林芝切线衔接。个性化洗单、洗單回、图库管理、分单及通知仍按其他需求逐项推进。小改动的独立发布候选保持原样，不能直接把整个混合工作区上传。</p>
+<p class="small">数据文件：output/spring-routing-20261024/status.json、journeys.json、final-regression.xml。真实运行逐轮保存于 model-run 系列目录；本页不生成虚构回复。</p></main></html>

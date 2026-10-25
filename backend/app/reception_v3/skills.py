@@ -60,6 +60,9 @@ def compile_skills(db, now=None):
                 route.get('default_entry_message', '')]))),
             'facts': deepcopy(route['knowledge_facts']),
             'guidance': route.get('ai_guidance', ''),
+            'intake': deepcopy(route.get('intake')),
+            'seasonal_pricing': deepcopy(route.get('seasonal_pricing')),
+            'departure_availability': deepcopy(route.get('departure_availability')),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
                          'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
                          'topics', 'usage_note', 'status', 'quote_offer') if k in s}
@@ -67,6 +70,7 @@ def compile_skills(db, now=None):
             'groups': deepcopy(route['groups']),
             'introduction_sequence': [k for k in route['introduction_sequence']
                                       if route['groups'][k].get('initial_delivery')],
+            'switch_introduction_sequence': deepcopy(route.get('switch_introduction_sequence')),
             'interval_seconds': route['initial_delivery_interval_seconds'],
             'version': route['package_version'],
             'quote_policy': next((deepcopy(s) for s in route.get('fixed_answers', [])
@@ -78,7 +82,11 @@ def compile_skills(db, now=None):
             for group in ('price_reference', 'price_deferral'):
                 if group in routes[key]['groups']:
                     routes[key]['groups'][group]['text'] = price['answer_text']
+    if any(r.get('seasonal_pricing') for r in routes.values()):
+        for route in routes.values():
+            route['aliases'] = [a for a in route['aliases'] if a not in ('有珠峰的', '包含珠峰')]
     bundle = {'routes': routes, 'common_scripts': list(common_scripts.values()),
+              'material_rules': deepcopy(config.get('material_rules', [])),
               'service_knowledge': {'version': service['knowledge_version'], 'facts': service['facts']},
               'reply': config['reply'], 'intake': config['intake'], 'silence': {k: v for k, v in config['silence'].items()
                                                   if not k.startswith('v2_')},
@@ -134,7 +142,7 @@ class SkillRegistry:
             fields = {
                 'reply': ('goal', 'tone', 'tone_guidance', 'custom_guidance'),
                 'intake': ('enabled', 'question', 'options', 'wait_seconds'),
-                'silence': ('enabled', 'intervals_minutes', 'initial_checkpoints_minutes', 'recurring_interval_minutes', 'active_start', 'active_end'),
+                'silence': ('material_selection', 'enabled', 'daily_at', 'intervals_minutes', 'initial_checkpoints_minutes', 'recurring_interval_minutes', 'active_start', 'active_end'),
                 'handoff': ('large_group_enabled', 'large_group_minimum'),
                 'routing': ('enabled_route_variants', 'allow_route_switch', 'preserve_profile_on_switch', 'outside_catalog_action'),
                 'lead_capture': ('enabled', 'channels', 'require_supported_route',
@@ -149,6 +157,12 @@ class SkillRegistry:
                 for s in self.bundle.get('common_scripts', []) if s.get('enabled', True))
         elif route is not None:
             body += f"\n\n## 当前线路\nID：{route_id}\n版本：{route['version']}"
+            if route.get('intake'):
+                body += '\n线路专属开场问题（覆盖通用人数开场）：' + json.dumps(route['intake'], ensure_ascii=False)
+            if route.get('seasonal_pricing'):
+                body += '\n分季报价规则：' + json.dumps(route['seasonal_pricing'], ensure_ascii=False)
+            if route.get('departure_availability'):
+                body += '\n已公布出发团期（不代表库存保证）：' + json.dumps(route['departure_availability'], ensure_ascii=False)
             if route.get('guidance'):
                 body += '\n接待说明：' + route['guidance']
             body += f"\n\n## 完整介绍原文\n逐条间隔：{route['interval_seconds']} 秒\n"
@@ -157,6 +171,8 @@ class SkillRegistry:
                 body += (f"\n### {index}. {key}\n{group['text']}\n"
                          f"素材：{json.dumps(group.get('assets', []), ensure_ascii=False)}\n"
                          f"图文顺序：{group.get('delivery_mode', 'assets_then_text')}\n")
+                if group.get('seasonal_override'):
+                    body += '季節替換（優先於上文，冬季/日期未知不發此組客房圖）：' + json.dumps(group['seasonal_override'], ensure_ascii=False) + '\n'
             body += '\n## 场景原话\n' + '\n\n'.join(
                 f"### {s.get('name', s['id'])} [{s['id']}]\n"
                 + '适用场景：' + json.dumps(s.get('positive_examples', []), ensure_ascii=False)

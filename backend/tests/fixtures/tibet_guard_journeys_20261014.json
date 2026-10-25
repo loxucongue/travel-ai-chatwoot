@@ -1,0 +1,11 @@
+[
+  {"id":"new8_unknown_departure_quote","entry":"西藏精華8天-拉薩+珠峰","now":"2026-10-14T03:00:00+00:00",
+   "replay_context":{"now":"2026-10-14T03:00:00+00:00","route_variant":"tibet_essence_8d","profile":{"party_size":2},"event":"customer_message",
+     "state":{"opening_started":true,"intake_status":"done","completed_introductions":["tibet_essence_8d"],"introduction_route":"tibet_essence_8d","buffered_questions":["ask-price"],"handoff":false,"opt_out":false},
+     "messages":[{"id":"ask-price","client_key":"ask-price","direction":"incoming","content_type":"text","content":"我們兩位，這條8天含珠峰多少錢？","created_at":"2026-10-14T03:00:00+00:00"}]},
+   "steps":[{"id":"ask_date_before_price","checks":["send","not_handoff","no_contact","one_question_required_last"],"contains":["出發"],"excludes":["7,980","9,480","9,980","12,180"],"expected_route":"tibet_essence_8d"}]},
+  {"id":"winter_is_not_regular_eight","entry":"西藏全覽-10天林芝+拉薩+珠峰","now":"2026-10-14T03:00:00+00:00",
+   "steps":[{"id":"winter_retention","text":"明年2027年1月，我們兩位想看冰川藍冰","checks":["send","not_handoff","no_price","one_question_required_last"],"excludes":["9,280","12,180","8天含珠峰很適合"]}]},
+  {"id":"eight_spring_keeps_everest","entry":"西藏精華8天-拉薩+珠峰","now":"2026-10-14T03:00:00+00:00",
+   "steps":[{"id":"spring_not_forced_to_nine","text":"明年2027年3到4月，只能8天，一定要去珠峰，不看桃花","checks":["send","not_handoff","no_contact"],"expected_route":"tibet_essence_8d","excludes":["12,180","10,780"]}]}
+]

@@ -30,9 +30,10 @@ def _update(record, *, reserve=False):
         ledger = json.loads(path.read_text(encoding='utf8')) if path.exists() else {'limit_cny': 18, 'calls': []}
         if reserve:
             spent = sum(r['charged_or_reserved_cny'] for r in ledger['calls'])
-            # Default to an 18 CNY allowance; a final isolated replay may use
-            # more of the explicitly authorized 20 CNY without resetting usage.
-            if spent + record['charged_or_reserved_cny'] > min(20, float(ledger.get('limit_cny', 18))):
+            # Each isolated run has its own explicitly authorized ledger.
+            # Never reset old usage or embed a one-off approval in runtime code.
+            limit = float(ledger.get('limit_cny', 18))
+            if not 0 < limit < float('inf') or spent + record['charged_or_reserved_cny'] > limit:
                 raise RuntimeError('model_test_budget_exhausted')
             ledger['calls'].append(record.copy())
         else:

@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4位独团自选日期：原会话诊断与上线验收</title>
+<style>body{font:16px/1.75 system-ui,sans-serif;background:#f3f6f5;color:#20332e;margin:0}main{max-width:1040px;margin:32px auto;padding:30px;background:white;border:1px solid #dce5de;border-radius:12px}h1{font-size:27px}h2{font-size:21px}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #dce5de;text-align:left;vertical-align:top}code{overflow-wrap:anywhere}.ok,blockquote{padding:16px;background:#e8f4eb}a{color:#196e54}@media(max-width:700px){main{margin:12px;padding:16px}table{display:block;overflow:auto}}</style><main>
+<h1>4位独团自选日期：原会话诊断与上线验收</h1>
+<p class="ok">已部署并完成生产检查。版本 <code>reception-v3-4632330375e51dd9</code>，检查时间 <code>2026-10-15T07:09:53.127197+00:00</code>（接口原始时间）。完整后端回归<strong>601项通过</strong>，13条既有依赖警告；随后仅补充“已选独团不再确认团型”的话术，相关回归通过。真实模型：主轮12组14检查点通过，话术补充后5组9检查点通过，共17组23检查点。</p>
+<h2>业务口径与实际原会话</h2>
+<p>业务2026-10-15 14:49–14:50确认：“我们4人可以自己选出发日期；4人以下才要跟着我们的定班走。”按独立成团的自选日期处理；4位以上明确选择与其他旅客拼团时仍使用定班。7位以上继续由人工安排，不用星期限制拒绝。</p>
+<p>读取原演练会话<strong>#642 / run2470</strong>（14:49）。profile已记录4位，客户输入“8/8”；工具实际查询2027-08-08，因不是周四返回ask_date，模型照此要求改到周四。此前run2468还说两种团型“差别只在是否有其他旅客”，漏掉日期与费用差异。原记录保持未改写。</p>
+<h2>根因及修改</h2>
+<table><tr><th>层面</th><th>诊断与处理</th></tr>
+<tr><td>团期工具</td><td>旧工具只有线路和日期，没有人数与团型输入。增加可选人数和shared/private/undecided参数；兼容旧调用时读取已知人数。客户人数或选择更新时用最新参数，记录核对依据。</td></tr>
+<tr><td>业务配置</td><td>四条线路增加4位独团自选日期门槛。日期不在拼团星期、但满足人数及季节等条件时返回private_departure，表示可按独团选择该日，不代表确认库存或拼团价。</td></tr>
+<tr><td>回复指引</td><td>4位未选团型时先条件式说明可独团自选，再确认意愿；已选独团不再问一次团型。明确拼团或不足4位按定班；人数未知先问人数，不先要求改日期。不再说独团和拼团只有同行旅客区别。</td></tr>
+<tr><td>日期与报价边界</td><td>保留季节停开、年份、长假、入藏函期限等限制；不足30天优先交人工，避免被“年份未公布”误导到等待开放。自选日期不能自动套带定班星期的拼团报价；只问日期正常回答，询问该日实际独团总报价静默交接。4位每人加400的已知差额仍可答，客户未问不主动报。</td></tr>
+<tr><td>配置维护</td><td>旧话术迁移脚本会覆盖新追加的ai_guidance，改为保留既有业务指引。源配置生成器同步保留4位规则，避免重建后退回旧逻辑。所有售价、房差、报价模板及素材保持。</td></tr></table>
+<h2>原场景现在的实际回复</h2><blockquote>8/8不是我們拼團的固定出發日（我們拼團是每週四出發），不過您們4位可以選擇自己一團、自選8/8出發喔～獨團和拼團在出發日期和費用上也會有些不同。您們想自己一團出發嗎？</blockquote>
+<p>客户随后明确选择4位独团并问加价，回复每人加400元，不重复确认团型；问8/8实际独团总报价，静默交人工，不向客户发转接提示。</p>
+<h2>真实模型验收记录</h2><table><tr><th>场景</th><th>检查点</th><th>结果</th></tr><tr><td>original642_four</td><td>3</td><td>通过</td></tr><tr><td>four_shared</td><td>1</td><td>通过</td></tr><tr><td>three_schedule</td><td>1</td><td>通过</td></tr><tr><td>six_private</td><td>1</td><td>通过</td></tr><tr><td>ten_private</td><td>1</td><td>通过</td></tr><tr><td>peach_private</td><td>1</td><td>通过</td></tr><tr><td>peach_three</td><td>1</td><td>通过</td></tr><tr><td>unknown_party</td><td>1</td><td>通过</td></tr><tr><td>closed_season</td><td>1</td><td>通过</td></tr><tr><td>holiday</td><td>1</td><td>通过</td></tr><tr><td>short_notice</td><td>1</td><td>通过</td></tr><tr><td>seven_private</td><td>1</td><td>通过</td></tr><tr><td>original642_repeat1</td><td>3</td><td>通过</td></tr><tr><td>original642_repeat2</td><td>3</td><td>通过</td></tr><tr><td>four_shared</td><td>1</td><td>通过</td></tr><tr><td>unknown_party</td><td>1</td><td>通过</td></tr><tr><td>previous_quote_scope</td><td>1</td><td>通过</td></tr></table>
+<p>覆盖4位未选团型、4位明确拼团、改为3位、6位独团、10天线、桃花线3/4位对照、未知人数、季节停开、长假、临近出发、7位交接；补测原场景两轮和上一批不主动列房差的报价。初轮保留失败证据：日期写法“8月8日”被过严的“8/8”字符串断言误判，已改为接受等价写法；临近出发处理及迁移脚本问题已修复。</p>
+<p>初轮有模型连续超时；主轮最终验收中10天场景出现两次超时后重试成功。工具补充经过规则核对的邻近定班日期，减少模型自行计算日期；没有声称消除上游超时。自动化日期边界包括所有四条线及报价隔离，不能把未知或未开放日期当成随意可售。</p>
+<h2>上线与预算</h2>
+<ul><li>生产副本禁用网络预检通过。上线后13个文件哈希匹配，3个服务正常，4条线路就绪。</li>
+<li>19个人工/拒绝联系会话状态保留；#631、#632、#640、#642原消息未改。发件记录710 → 710，本批测试没有向真实客户外发。</li>
+<li>沿用每天09:00、每天最多一轮的跟进策略及静默人工交接，不重置旧客户。</li>
+<li>发布预检发现磁盘剩余不足阈值，已清理已完成发布的可重建candidate副本，并在验证后清理本批副本；正式数据库、发布压缩包及回滚备份保留。</li></ul>
+<p>沿用新增20元预算。本批已知模型用量估算¥1.4296，无用量返回的超时调用保守预留¥3.8229；本批合计占用¥5.2525，该20元预算累计占用¥10.0357、剩余约¥9.9643。预留不等于已确认扣费，实际以供应商账单为准。</p>
+<p>发布批次 <code>private-departure-20261015-20261015T070838Z</code><br>备份 <code>/opt/china2go-ai/backups/private-departure-20261015-20261015T070838Z</code>。回滚仅恢复本批文件，不覆盖后续聊天。</p>
+<p><a href="../../output/private-departure-20261015/model-final/summary.json">主轮真实模型结果</a> · <a href="../../output/private-departure-20261015/model-refinement/summary.json">话术补充后复测</a> · <a href="../../output/private-departure-20261015/full-suite.xml">601项完整回归</a> · <a href="../../backend/tests/test_private_departure_20261015.py">新增37项日期边界回归</a> · <a href="../../output/private-departure-20261015/verification.json">上线验证</a> · <a href="../../output/private-departure-20261015/production-diff.txt">发布差异</a></p>
+</main></html>
