@@ -6,15 +6,31 @@ def validate_party_pricing(policy):
     if type(base) is not int or base <= 0 or not policy.get('source_ref'):
         raise ValueError('party_pricing_base_invalid')
     discounts = policy.get('discounts_per_person', {})
+    progression = policy.get('discount_progression')
     supplements = policy.get('private_supplements_per_person', {})
-    if not discounts or not isinstance(discounts, dict) or not isinstance(supplements, dict):
+    if not isinstance(discounts, dict) or not isinstance(supplements, dict):
+        raise ValueError('party_pricing_rates_invalid')
+    if progression is not None:
+        if (discounts or not isinstance(progression, dict)
+                or any(type(progression.get(k)) is not int or not 1 <= progression[k] <= 10000
+                       for k in ('starts_at', 'party_size_step', 'amount_step_cny'))
+                or type(policy.get('auto_quote_party_size_max')) is not int
+                or not 1 <= policy['auto_quote_party_size_max'] <= 100):
+            raise ValueError('party_pricing_progression_invalid')
+        if discount_per_person(policy, policy['auto_quote_party_size_max']) >= base:
+            raise ValueError('party_pricing_rate_invalid')
+    elif not discounts:
         raise ValueError('party_pricing_rates_invalid')
     for rates in (discounts, supplements):
         for count, value in rates.items():
             if (not isinstance(count, str) or not count.isdigit() or not 1 <= int(count) <= 100
                     or type(value) is not int or value < 0):
                 raise ValueError('party_pricing_rate_invalid')
-    if any(value >= base for value in discounts.values()) or set(supplements)-set(discounts):
+    if any(value >= base for value in discounts.values()):
+        raise ValueError('party_pricing_rate_invalid')
+    if progression is None and set(supplements)-set(discounts):
+        raise ValueError('party_pricing_rate_invalid')
+    if progression is not None and any(int(n) > policy['auto_quote_party_size_max'] for n in supplements):
         raise ValueError('party_pricing_rate_invalid')
     for key in ('shared_template', 'private_template'):
         template = policy.get(key, '')
@@ -29,12 +45,26 @@ def validate_party_pricing(policy):
         raise ValueError('party_pricing_legacy_invalid')
 
 
+def discount_per_person(policy, count):
+    """A reached tier applies until the next threshold; group fees stay separate."""
+    if type(count) is not int or count < 1:
+        raise ValueError('party_size_invalid')
+    progression = policy.get('discount_progression')
+    if progression is None:
+        return policy['discounts_per_person'].get(str(count))
+    steps = max(0, 1 + (count - progression['starts_at']) // progression['party_size_step'])
+    return steps * progression['amount_step_cny']
+
+
 def price_scripts(policy, *, legacy_ceiling=None):
     validate_party_pricing(policy)
     result = []
+    counts = (range(1, policy['auto_quote_party_size_max'] + 1) if policy.get('discount_progression')
+              else [int(n) for n in policy['discounts_per_person']])
     for group in ('shared', 'private'):
-        for count, discount in policy['discounts_per_person'].items():
-            supplement = policy['private_supplements_per_person'].get(count)
+        for count in counts:
+            discount = discount_per_person(policy, count)
+            supplement = policy['private_supplements_per_person'].get(str(count))
             if group == 'private' and supplement is None:
                 continue
             amount = policy['base_price_cny'] - discount + (supplement if group == 'private' else 0)
@@ -82,7 +112,7 @@ def quote_error(decision, bundle, previous, default_route=''):
     expected = f'price_{group}_{count}'
     script = next((s for s in spec['scripts'] if s['id']==expected), None)
     if script is None:
-        return '這個確切人數／團型的優惠尚未配置，不能猜相鄰檔位或自行算價格；需要實際報價時靜默交接核對。'
+        return '尚無此人數／團型的完整最終報價模板，不能推斷獨團加價或套用其他團型價格；需要實際報價時靜默交接核對。'
     if len(pricing) != 1 or any(m.get('script_id')!=expected or m.get('text') for m in pricing):
         return f'本輪核價只能引用{expected}，text留空，系統發送最終每人價與包含／不含；不可自行改寫金額或重複報價。'
     return None

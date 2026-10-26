@@ -1,0 +1,16 @@
+[
+  {
+    "id":"odd_party_count_changes",
+    "title":"3人进线、5人拼团报价，沉默回流后改3人，再改回5人",
+    "entry":"3~4月｜西藏桃花節＋珠峰 11日",
+    "known_entry":true,
+    "now":"2026-10-26T02:00:00+00:00",
+    "steps":[
+      {"id":"party3","text":"我們3位朋友，先看看11天行程。","checks":["not_handoff","no_price"]},
+      {"id":"quote5","text":"人數確定改成5位朋友，明年2027年3月26日參加拼團，每人費用多少？請給完整包含和不含，不用再追問。","checks":["send","not_handoff"],"contains_any":[["12,580","12580"],["包含："],["不含："]],"excludes":["早鳥","限時","截至","12,380","12,780","優惠檔位未確認"]},
+      {"id":"silence","next_check":true,"checks":["not_handoff","no_price","no_new_introduction"]},
+      {"id":"return3","text":"剛剛確認最後只有3位，日期不變，還是參加拼團，每人最終價格是多少？不用追問。","checks":["send","not_handoff"],"contains_any":[["12,780","12780"],["包含："],["不含："]],"excludes":["早鳥","限時","截至","12,580","12,380"]},
+      {"id":"return5","text":"那兩位朋友又能去了，現在確定總共5位拼團了，請再給每人價格就好。","checks":["send","not_handoff"],"contains_any":[["12,580","12580"],["包含："],["不含："]],"excludes":["早鳥","限時","截至","12,380","12,780","優惠檔位未確認"]}
+    ]
+  }
+]
