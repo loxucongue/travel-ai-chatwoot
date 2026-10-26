@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-v4-flash"
     deepseek_vision_model: str = "deepseek-flash"
     customer_image_vision_enabled: bool = False
+    reception_repeat_review_enabled: bool = False
     customer_sticker_recognition_enabled: bool = False
     customer_image_allowed_hosts: str = "app.chatwoot.com"
     customer_image_storage_hosts: str = "prod-chatwoot-assets.s3.amazonaws.com"

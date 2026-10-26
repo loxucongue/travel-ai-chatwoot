@@ -1,0 +1,471 @@
+[
+  {
+    "id": "private_entry_pause_resume",
+    "title": "包团新客完整接待、收尾后连续两天、主动回来",
+    "entry": "我人數有4位以上，想自己包團",
+    "known_entry": false,
+    "entry_checks": [
+      "one_itinerary_map",
+      "not_handoff",
+      "no_price"
+    ],
+    "now": "2026-10-26T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "month",
+        "text": "我們想2027年3月底去。",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_reask_party"
+        ],
+        "excludes": [
+          "每週五",
+          "每周五",
+          "自己一團",
+          "自選",
+          "自己選",
+          "獨團",
+          "独团",
+          "獨立成團",
+          "独立成团"
+        ]
+      },
+      {
+        "id": "days",
+        "text": "大概可以排11天，我想先看圖和家人商量，不用再傳整套介紹。",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction",
+          "no_reask_party"
+        ]
+      },
+      {
+        "id": "close",
+        "text": "我先看看謝謝",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_reask_party",
+          "no_reask_month"
+        ],
+        "excludes": [
+          "？",
+          "?",
+          "自選日期",
+          "自己一團",
+          "每週",
+          "LINE"
+        ]
+      },
+      {
+        "id": "day1",
+        "next_check": true,
+        "checks": [
+          "no_send",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "day2",
+        "next_check": true,
+        "checks": [
+          "no_send",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "我想再問，這行程有購物站嗎？我們不喜歡購物站。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_price",
+          "no_reask_party",
+          "no_reask_month"
+        ],
+        "contains_any": [
+          [
+            "無購物",
+            "沒有購物",
+            "不安排購物",
+            "零購物"
+          ]
+        ]
+      },
+      {
+        "id": "explicit_reask",
+        "text": "剛剛沒看清楚，包團是不是可以自己選出發日期？請再說一次就好。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_price",
+          "no_reask_party"
+        ],
+        "contains_any": [
+          [
+            "自選",
+            "自己選",
+            "自行選",
+            "依您",
+            "依你",
+            "可以選",
+            "由您們選",
+            "由您們決定",
+            "日期由"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "browse_historical_pause",
+    "title": "390截图历史回放：先看看后不连续安慰，主动回来继续答疑",
+    "entry": "五月8天不上珠峰",
+    "known_entry": false,
+    "replay_context": {
+      "now": "2026-10-26T02:00:00+00:00",
+      "event": "customer_message",
+      "route_variant": "",
+      "profile": {
+        "departure_window": "2027-05",
+        "trip_days": 8,
+        "everest_preference": "avoid"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "followup_last_customer_at": "2026-10-26T02:00:00+00:00",
+        "followup_entry_at": "2026-10-26T01:55:00+00:00"
+      },
+      "messages": [
+        {
+          "id": "h1",
+          "direction": "incoming",
+          "content": "明年5月想8天，不上珠峰。",
+          "created_at": "2026-10-26T01:55:00+00:00"
+        },
+        {
+          "id": "h2",
+          "direction": "outgoing",
+          "content": "所以5月要8天又不上珠峰，目前還是沒有現成團期。您想先看哪一條的詳細行程圖呢？",
+          "status": "sent",
+          "created_at": "2026-10-26T01:56:00+00:00"
+        },
+        {
+          "id": "h3",
+          "direction": "incoming",
+          "content": "我先看看謝謝",
+          "created_at": "2026-10-26T02:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "close",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "excludes": [
+          "？",
+          "?",
+          "5月",
+          "8天",
+          "不上珠峰",
+          "LINE"
+        ]
+      },
+      {
+        "id": "day1",
+        "next_check": true,
+        "checks": [
+          "no_send",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "day2",
+        "next_check": true,
+        "checks": [
+          "no_send",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "我還想問，你們有購物站嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "無購物",
+            "沒有購物",
+            "不安排購物",
+            "零購物"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "holiday_reason_historical",
+    "title": "439截图历史回放：补充排假原因不重背发团规则",
+    "entry": "冬游冰川8天",
+    "known_entry": false,
+    "replay_context": {
+      "now": "2026-10-26T02:00:00+00:00",
+      "event": "customer_message",
+      "route_variant": "tibet_winter_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2026-12"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_winter_8d"
+        ],
+        "followup_last_customer_at": "2026-10-26T02:00:00+00:00",
+        "followup_entry_at": "2026-10-26T01:50:00+00:00"
+      },
+      "messages": [
+        {
+          "id": "h1",
+          "direction": "incoming",
+          "content": "一位，想冬游冰川8天，2026年12/18或者12/20出發。",
+          "created_at": "2026-10-26T01:50:00+00:00"
+        },
+        {
+          "id": "h2",
+          "direction": "outgoing",
+          "content": "這條冬季冰川線是每週四出發，12/18和12/20都沒有團，最接近的是12/17或12/24。您12/24出發可以嗎？",
+          "status": "sent",
+          "created_at": "2026-10-26T01:51:00+00:00"
+        },
+        {
+          "id": "h3",
+          "direction": "incoming",
+          "content": "那可能沒辦法耶！沒關係",
+          "created_at": "2026-10-26T01:52:00+00:00"
+        },
+        {
+          "id": "h4",
+          "direction": "outgoing",
+          "content": "了解～12月如果日期比較有彈性，再跟我說一聲就好。",
+          "status": "sent",
+          "created_at": "2026-10-26T01:53:00+00:00"
+        },
+        {
+          "id": "h5",
+          "direction": "incoming",
+          "content": "因為12/18跟20出發我的時間比較好排假期",
+          "created_at": "2026-10-26T02:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reason",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_price"
+        ],
+        "excludes": [
+          "週四",
+          "周四",
+          "星期四",
+          "12/17",
+          "12/24",
+          "調假",
+          "调假",
+          "假期如果",
+          "之後假期",
+          "時間就對不上",
+          "日期有變",
+          "之後有別的假期",
+          "其他假期再"
+        ]
+      },
+      {
+        "id": "close",
+        "text": "日期沒辦法調，我先看看，先不留聯絡方式，謝謝。",
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_contact"
+        ],
+        "excludes": [
+          "週四",
+          "周四",
+          "12/17",
+          "12/24",
+          "？",
+          "?",
+          "日期如果",
+          "日期有變化"
+        ]
+      },
+      {
+        "id": "day1",
+        "next_check": true,
+        "checks": [
+          "no_send",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "day2",
+        "next_check": true,
+        "checks": [
+          "no_send",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "冬游冰川這條會上珠峰嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "不上珠峰",
+            "不含珠峰",
+            "不會上珠峰",
+            "不去珠峰",
+            "沒有珠峰",
+            "沒有安排珠峰",
+            "不走珠峰"
+          ]
+        ],
+        "excludes": [
+          "週四",
+          "周四",
+          "12/17",
+          "12/24"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "active_quote_followup_regression",
+    "title": "正常询价仍提供完整报价和相关未发素材，改人数后正确更新",
+    "entry": "3~4月｜西藏桃花節＋珠峰 11日",
+    "known_entry": true,
+    "now": "2026-10-26T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "party3",
+        "text": "我們3位朋友，先看看11天行程。",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ]
+      },
+      {
+        "id": "quote5",
+        "text": "人數確定改成5位朋友，明年2027年3月26日參加拼團，每人費用多少？請給完整包含和不含，不用再追問。",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "12,580",
+            "12580"
+          ],
+          [
+            "包含："
+          ],
+          [
+            "不含："
+          ]
+        ],
+        "excludes": [
+          "早鳥",
+          "限時",
+          "截至",
+          "12,380",
+          "12,780",
+          "優惠檔位未確認"
+        ]
+      },
+      {
+        "id": "silence",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_price",
+          "no_new_introduction",
+          "send",
+          "one_new_photo"
+        ]
+      },
+      {
+        "id": "return3",
+        "text": "剛剛確認最後只有3位，日期不變，還是參加拼團，每人最終價格是多少？不用追問。",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "12,780",
+            "12780"
+          ],
+          [
+            "包含："
+          ],
+          [
+            "不含："
+          ]
+        ],
+        "excludes": [
+          "早鳥",
+          "限時",
+          "截至",
+          "12,580",
+          "12,380"
+        ]
+      },
+      {
+        "id": "return5",
+        "text": "那兩位朋友又能去了，現在確定總共5位拼團了，請再給每人價格就好。",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "12,580",
+            "12580"
+          ],
+          [
+            "包含："
+          ],
+          [
+            "不含："
+          ]
+        ],
+        "excludes": [
+          "早鳥",
+          "限時",
+          "截至",
+          "12,380",
+          "12,780",
+          "優惠檔位未確認"
+        ]
+      }
+    ]
+  }
+]

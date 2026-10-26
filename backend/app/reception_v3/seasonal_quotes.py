@@ -204,7 +204,9 @@ def _non_scheduled_result(spec, days, today, party_size, group_type):
         return {'status': 'private_departure', 'departure_examples': [d.isoformat() for d in days[:3]],
                 'minimum_party_size': policy['private_departure_min_party_size'],
                 'reason': '已達獨團自選日期的人數門檻，可選所詢日期，不受拼團每週定班限制；不是名額或訂位確認。',
-                'guidance': '先說明可獨立成團自選日期；尚未選獨團可確認意願，不要求改到定班日、不索取聯絡方式。'
+                'guidance': '此結果是日期可用性依據，不是每輪都要重述獨團條件的話術。首次被問能否自選日期時才說明；'
+                            '已解釋過而本輪只補月份、原因或收尾，不再複述人數門檻與自選日期。客人明確重問可針對問題再說明。'
+                            '尚未選獨團且有必要時可確認意願，不要求改到定班日、不索取聯絡方式。'
                             '未問價不報價；若問這個自選日期的實際獨團總報價，靜默交接核對，不能直接套拼團模板。'
                             '4位獨團每人加400元的已知條件仍可單獨回答；優惠叠加與其他未確認費用不猜。'}
     if policy.get('private_departure_min_party_size') and party_size is None and group_type != 'shared':
