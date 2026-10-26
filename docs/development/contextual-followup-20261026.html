@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>接待重复表达优化与验收记录</title>
 <style>body{font:16px/1.7 system-ui,sans-serif;max-width:1050px;margin:36px auto;padding:0 24px;color:#243242}table{border-collapse:collapse;width:100%}th,td{padding:12px;border:1px solid #ccd4dc;text-align:left;vertical-align:top}.status{background:#eef5fa;padding:16px}code{background:#f0f3f6;padding:2px 5px}</style>
 <h1>接待重复表达优化 · 2026-10-26</h1>
-<p class="status" id="release-status">最终版本验收通过，等待本次部署完成后的线上检查。</p>
+<p class="status" id="release-status">已于2026-10-26 15:26（北京时间）部署上线，源文件指纹、开关及线上健康检查通过。</p>
 <table><tr><th>需求与业务效果</th><th>实现</th><th>验证场景</th></tr>
 <tr><td>#390：客人“先看看”，不再每天重复“慢慢看”或旧限制</td><td>通用接待Skill允许没有实质新内容时wait，保留每日评估、原渠道窗口与客户回来后的接待</td><td>按历史继续对话，收尾、连续两天到期检查、客户回来问购物站</td></tr>
 <tr><td>#439：客人解释排假原因，应理解原因，不重新背星期与日期</td><td>把本轮新增意思与近期已发送原话放在决策末尾；发送前识别同义重复，删除旧规则与旧邀约</td><td>解释排假→日期不能动→先看看→两天沉默→回来问是否去珠峰</td></tr>
@@ -17,7 +17,7 @@
 <p>真实模型测试使用生产配置快照和隔离内存会话，模拟实际发送，不向真实客户发送测试消息。两例从新客进线完整运行；两例从截图所示历史继续，不将历史回放冒充完整新客旅程。逐轮检查内容、发送图片、等待、恢复答疑和报价，再人工阅读整段对话。</p>
 <p>前几轮发现的同义重复、正常跟进误停、确认语被误删与句尾逗号均保留失败记录，修正后重新复测。客户明确重问的有效说法如“日期由你们选”纳入断言，避免把正常表达当失败。自动化通过不等于业务效果保证，最终以同版本多轮实测及人工复核验收。</p>
 <h2>发布与回滚</h2>
-<div id="deployment-evidence">尚未部署。</div>
+<div id="deployment-evidence">代码提交：<code>91970a2c5b42813b7e276eed2737d95d73140e09</code>；生产引擎：<code>reception-v3-a27f5ccecff46414</code>。<br>发布：<code>contextual-pause-20261026-20261026T064315Z</code>。3个服务active，API与数据库正常，重复检查已启用；检查时发布后失败运行0，近5分钟异常堆栈0。5张业务图文件及身份核验通过，所有原频道开关、接待配置及价格数据一致。未向真实客户发送测试消息。<br>回滚备份：<code>/opt/china2go-ai/backups/contextual-pause-20261026-20261026T064315Z</code>。本次为发布后即时检查，不代表已经完成长期线上效果观察。</div>
 <p>发布前在服务器克隆代码和数据库做隔离预检，校验6条线路、20条素材规则、139条素材与照片文件。发布时备份原代码、环境文件、配置和数据库，停止服务后替换已验收文件，健康检查失败恢复代码及环境；不回滚客户消息。保持原频道、价格、素材身份及人工权限。</p>
 <p>本次基于China2Go现有生产主线制作独立发布分支，不将另一家公司架构改造混入本次发布。详细模型对话、源文件指纹、费用账本、服务器检查结果位于本工作区 <code>output/contextual-pause-20261026/</code>。</p>
 </html>
