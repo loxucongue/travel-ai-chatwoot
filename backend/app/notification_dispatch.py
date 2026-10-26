@@ -135,7 +135,7 @@ def process_notification_delivery(session_factory=None) -> bool:
             raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()
             signature = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()
             response = httpx.post(config["url"], content=raw, headers={
-                "Content-Type": "application/json", "X-China2Go-Signature": f"sha256={signature}",
+                "Content-Type": "application/json", "X-AI-Signature": f"sha256={signature}",
                 "Idempotency-Key": f"notification:{payload['notification_id']}",
             }, timeout=10)
             response.raise_for_status()

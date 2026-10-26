@@ -1,5 +1,3 @@
-import { demoApi } from './demo-api';
-
 export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/v1';
 
@@ -32,7 +30,10 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  if (DEMO_MODE) return demoApi<T>(path, init);
+  if (import.meta.env.VITE_DEMO_MODE === 'true') {
+    const { demoApi } = await import('./demo-api');
+    return demoApi<T>(path, init);
+  }
   const method = (init.method ?? 'GET').toUpperCase();
   const write = !['GET', 'HEAD', 'OPTIONS'].includes(method);
   if (write && !csrfToken && path !== '/auth/login') {

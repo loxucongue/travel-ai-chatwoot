@@ -6,6 +6,8 @@ from app.runtime_settings import dt, iso
 
 
 def setup(factory, monkeypatch):
+    monkeypatch.setattr(settings, 'live_reply_account_id', 180474)
+    monkeypatch.setattr(settings, 'live_reply_inbox_id', 128859)
     monkeypatch.setattr(settings, 'app_profile', 'live_reply')
     monkeypatch.setattr(settings, 'outbound_mode', 'live')
     monkeypatch.setattr(settings, 'chatwoot_write_enabled', True)

@@ -12,18 +12,14 @@ from threading import RLock
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from app.business_profile import ROOT as BUSINESS_ROOT, PROFILE
+from app.config import settings
 
 
 
-PACKAGE_ROOT = (
-    Path(__file__).resolve().parents[2]
-    / "data"
-    / "knowledge"
-    / "china2go"
-    / "route-packages"
-)
+PACKAGE_ROOT = BUSINESS_ROOT / 'knowledge' / 'route-packages'
 JOURNEY_POLICY_PATH = PACKAGE_ROOT / "reception-journey-policy.json"
-RUNTIME_PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "data" / "route-packages"
+RUNTIME_PACKAGE_ROOT = Path(settings.runtime_package_dir).resolve()
 DEFAULT_INITIAL_DELIVERY_INTERVAL_SECONDS = 2
 DELIVERY_MODES = {"text_only", "assets_only", "text_then_assets", "assets_then_text"}
 
@@ -267,10 +263,8 @@ def load_route_packages() -> dict[str, dict]:
             raise RoutePackageError(f"route_package_duplicate:{route}")
         package["source_path"] = str(source)
         packages[route] = package
-    if not packages:
-        raise RoutePackageError("route_packages_empty")
     versions = {item["knowledge_version"] for item in packages.values()}
-    if len(versions) != 1:
+    if len(versions) > 1:
         raise RoutePackageError("route_package_knowledge_version_mismatch")
     return packages
 
@@ -446,7 +440,7 @@ def remove_runtime_route_package(route_id: str) -> None:
 
 
 reload_route_packages()
-KNOWLEDGE_VERSION = next(iter(ROUTE_PACKAGES.values()))["knowledge_version"]
+KNOWLEDGE_VERSION = next(iter(ROUTE_PACKAGES.values()), {}).get('knowledge_version', PROFILE['knowledge_version'])
 
 
 # A customer may stop replying before choosing a supported route.  That state
@@ -458,9 +452,7 @@ UNCLASSIFIED_SOP_DESCRIPTION = (
     "客户尚未选择具体线路时的沉默旅程：只做一次轻量补充，避免重复催选；"
     "客户回复后立即停止，由模型切换到对应线路旅程。"
 )
-_UNCLASSIFIED_TOUCHES = [
-    "我先幫您把差別說簡單：9日不走珠峰，11日會到珠峰大本營。您這次想安排珠峰嗎？",
-]
+_UNCLASSIFIED_TOUCHES = PROFILE.get('unclassified_touches', [])
 UNCLASSIFIED_SOP_NODES = [
     {
         "key": "route_selection_silence" if index == 0 else f"route_selection_wakeup_{index}",

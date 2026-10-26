@@ -205,7 +205,7 @@ def change_password(payload: ChangePasswordRequest, user: User = Depends(require
 def read_chatwoot(user: User = Depends(super_admin), db: Session = Depends(get_db)):
     value = db.scalar(select(ChatwootConnection))
     if not value:
-        return {"configured": False, "base_url": "https://app.chatwoot.com", "account_id": 180474}
+        return {"configured": False, "base_url": "https://app.chatwoot.com", "account_id": settings.live_reply_account_id}
     return {"configured": bool(value.encrypted_api_token), "base_url": value.base_url, "account_id": value.account_id, "token_last4": value.token_last4, "status": value.status, "last_tested_at": value.last_tested_at, "last_error": value.last_error, "webhook_id": value.webhook_id, "webhook_url": webhook_url(value)}
 
 
@@ -213,7 +213,7 @@ def read_chatwoot(user: User = Depends(super_admin), db: Session = Depends(get_d
 def save_chatwoot(payload: ChatwootConfigRequest, user: User = Depends(require_super_admin_csrf), db: Session = Depends(get_db)):
     tenant = db.scalar(select(Tenant))
     if not tenant:
-        tenant = Tenant(name="china2go")
+        tenant = Tenant(name=settings.company_name)
         db.add(tenant)
         db.flush()
     value = db.scalar(select(ChatwootConnection))
@@ -434,7 +434,7 @@ def conversations(
     total = len(rows)
     rows = rows[(page - 1) * page_size: page * page_size]
     connection = db.scalar(select(ChatwootConnection))
-    account_id = connection.account_id if connection else 180474
+    account_id = connection.account_id if connection else settings.live_reply_account_id
     return {"items": [conversation_json(row, account_id) for row in rows], "page": page, "page_size": page_size, "total": total}
 
 
@@ -461,7 +461,7 @@ def conversation_filters(user: User = Depends(current_user), db: Session = Depen
 def conversation_detail(conversation_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     row = visible_conversation(db, user, conversation_id)
     connection = db.scalar(select(ChatwootConnection))
-    result = conversation_json(row, connection.account_id if connection else 180474)
+    result = conversation_json(row, connection.account_id if connection else settings.live_reply_account_id)
     contact = row.contact
     can_view_pii = user.role in ("super_admin", "admin", "supervisor") or (
         user.role == "agent" and user.chatwoot_agent_id and row.assignee_id == user.chatwoot_agent_id

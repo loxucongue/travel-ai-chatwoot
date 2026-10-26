@@ -121,10 +121,10 @@ class ChatwootClient:
         return self.request("GET", "webhooks")
 
     def create_webhook(self, url: str, events: list[str]):
-        return self.request("POST", "webhooks", json={"webhook": {"url": url, "name": "China2Go AI Event Gateway", "subscriptions": events}})
+        return self.request("POST", "webhooks", json={"webhook": {"url": url, "name": "AI Event Gateway", "subscriptions": events}})
 
     def update_webhook(self, webhook_id: int, url: str, events: list[str]):
-        return self.request("PATCH", f"webhooks/{webhook_id}", json={"webhook": {"url": url, "name": "China2Go AI Event Gateway", "subscriptions": events}})
+        return self.request("PATCH", f"webhooks/{webhook_id}", json={"webhook": {"url": url, "name": "AI Event Gateway", "subscriptions": events}})
 
     def get_conversation(self, conversation_id: int):
         return self.request("GET", f"conversations/{conversation_id}")

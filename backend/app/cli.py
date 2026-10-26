@@ -4,6 +4,7 @@ import getpass
 from sqlalchemy import select
 
 from app.db import Base, SessionLocal, engine
+from app.config import settings
 from app.models import Tenant, User
 from app.security import hash_password
 
@@ -18,7 +19,7 @@ def create_admin(email: str) -> None:
         if db.scalar(select(User).where(User.email == email.lower())):
             raise SystemExit("User already exists")
         if not db.scalar(select(Tenant)):
-            db.add(Tenant(name="china2go"))
+            db.add(Tenant(name=settings.company_name))
         db.add(User(email=email.lower(), display_name=email.split("@")[0], password_hash=hash_password(password), role="super_admin"))
         db.commit()
     print(f"Created super admin: {email}")

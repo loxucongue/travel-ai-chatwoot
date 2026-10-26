@@ -43,7 +43,7 @@ def send_advisor_notification(config, payload, on_submit):
         message['To'] = recipient
         message['Subject'] = payload['title']
         # Stable ID supports tracing; it is not a guarantee of mailbox dedup.
-        message['Message-ID'] = f'<china2go-notification-{payload["notification_id"]}@{config["sender_email"].split("@")[1]}>'
+        message['Message-ID'] = f'<ai-notification-{payload["notification_id"]}@{config["sender_email"].split("@")[1]}>'
         message.set_content(text)
         context = ssl.create_default_context()
         if config.get('smtp_security', 'ssl') == 'ssl':

@@ -88,8 +88,8 @@ function AuthenticatedApp({ onLogout }: { onLogout: () => Promise<void> }) {
 
   return <div className="app-shell">
     <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`}>
-      <div className="brand-block"><span className="brand-symbol"><Sparkles size={21} /></span><div><strong>China2Go</strong><span>AI Operations</span></div><button className="mobile-close" onClick={() => setSidebarOpen(false)} aria-label="关闭导航"><X size={19} /></button></div>
-      <div className="workspace-pill"><span className="workspace-avatar">C2</span><div><strong>china2go</strong><span><i />{DEMO_MODE ? '公开演示' : '接待工作台'}</span></div><ChevronDown size={15} /></div>
+      <div className="brand-block"><span className="brand-symbol"><Sparkles size={21} /></span><div><strong>Rujing2</strong><span>AI Operations</span></div><button className="mobile-close" onClick={() => setSidebarOpen(false)} aria-label="关闭导航"><X size={19} /></button></div>
+      <div className="workspace-pill"><span className="workspace-avatar">R2</span><div><strong>rujing2</strong><span><i />{DEMO_MODE ? '公开演示' : '接待工作台'}</span></div><ChevronDown size={15} /></div>
       <nav className="main-nav" aria-label="主要导航">
         <span className="nav-section-label">运营</span>
         {visibleNavigation.filter((item) => !['products', 'ai-strategy', 'advisor-assignment', 'knowledge', 'settings'].includes(item.id)).map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => go(item.id)}><Icon size={18} /><span>{item.label}</span></button>; })}

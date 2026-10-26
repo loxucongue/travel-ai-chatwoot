@@ -6,6 +6,7 @@ from sqlalchemy import Boolean, Float, ForeignKey, Index, Integer, JSON, LargeBi
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+from app.config import settings
 
 
 def utcnow() -> str:
@@ -15,7 +16,7 @@ def utcnow() -> str:
 class Tenant(Base):
     __tablename__ = "tenants"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120), default="china2go")
+    name: Mapped[str] = mapped_column(String(120), default=lambda: settings.company_name)
     timezone: Mapped[str] = mapped_column(String(80), default="Asia/Shanghai")
     ai_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     analytics_cutover_at: Mapped[str | None] = mapped_column(String(40), nullable=True)
@@ -27,7 +28,7 @@ class ChatwootConnection(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), unique=True)
     base_url: Mapped[str] = mapped_column(String(500), default="https://app.chatwoot.com")
-    account_id: Mapped[int] = mapped_column(Integer, default=180474, unique=True)
+    account_id: Mapped[int] = mapped_column(Integer, default=0, unique=True)
     encrypted_api_token: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     token_last4: Mapped[str | None] = mapped_column(String(4), nullable=True)
     connection_key: Mapped[str] = mapped_column(String(96), unique=True)

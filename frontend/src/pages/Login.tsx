@@ -5,7 +5,7 @@ import { useAuth } from '../auth';
 
 export default function Login() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('admin@luoxuecong.asia');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +20,7 @@ export default function Login() {
 
   return <main className="login-page">
     <section className="login-panel">
-      <header><span><Bot size={22} /></span><div><strong>China2Go</strong><small>AI Operations</small></div></header>
+      <header><span><Bot size={22} /></span><div><strong>Rujing2</strong><small>AI Operations</small></div></header>
       <div className="login-title"><LockKeyhole size={20} /><div><h1>登录运营平台</h1><p>使用本平台账号访问已授权的 Chatwoot 收件箱。</p></div></div>
       <form onSubmit={submit} className="form-stack">
         <label>邮箱<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required /></label>
@@ -28,7 +28,7 @@ export default function Login() {
         {error ? <div className="login-error">{error}</div> : null}
         <button className="primary-button login-submit" disabled={submitting}>{submitting ? <><LoaderCircle className="spin" size={16} />登录中</> : '登录'}</button>
       </form>
-      <footer>首次使用请在本机运行管理员初始化命令。</footer>
+      <footer>账号由管理员提供，首次登录后请修改初始密码。</footer>
     </section>
   </main>;
 }

@@ -1,0 +1,36 @@
+{
+  "name": "China2Go",
+  "common_skill": "tibet-reception",
+  "knowledge_version": "china2go-legacy",
+  "material_catalog_version": "materials-20260826-v1",
+  "website_url": "https://china2go.com/",
+  "website_name": "China2Go 官網全局知識",
+  "route_days": {
+    "peach_9d_2027": 9,
+    "peach_11d_2027": 11,
+    "tibet_linzhi_8d": 8,
+    "tibet_essence_8d": 8,
+    "tibet_overview_10d": 10,
+    "tibet_winter_8d": 8
+  },
+  "peach_routes": [
+    "peach_11d_2027",
+    "peach_9d_2027"
+  ],
+  "everest_routes": [
+    "peach_11d_2027",
+    "tibet_essence_8d",
+    "tibet_overview_10d"
+  ],
+  "linzhi_route": "tibet_linzhi_8d",
+  "unclassified_touches": [
+    "我先幫您把差別說簡單：9日不走珠峰，11日會到珠峰大本營。您這次想安排珠峰嗎？"
+  ],
+  "private_departure_extra_guidance": "4位獨團每人加400元的已知條件仍可單獨回答；優惠叠加與其他未確認費用不猜。",
+  "winter_guidance": "先說明冬季絨布旅館關閉、改住山下珠峰小鎮，推薦季節限定冰川行程並詢問興趣。不能只說等下次開放或立即索取QR Code；不自動換線、不套常規線照片或報價。客人要完整冬遊資料、團期或費用時靜默交接，內部註明冬遊需求。",
+  "minimum_notice_reason": "不足30天辦理入藏函，需先由顧問確認",
+  "seasonal_excluded_aliases": [
+    "有珠峰的",
+    "包含珠峰"
+  ]
+}

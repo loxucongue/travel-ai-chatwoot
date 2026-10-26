@@ -1,0 +1,16 @@
+{
+  "schema_version": 7,
+  "reply": {
+    "opening_message": "您好，请问有什么可以帮您？",
+    "goal": "根据已审核的业务资料回答客户问题；资料不足时交由人工确认。",
+    "tone_guidance": "自然、清楚、专业，使用客户当前使用的语言。",
+    "custom_guidance": "新公司业务资料尚未配置，不推荐未发布产品，不承诺价格、服务或库存。"
+  },
+  "intake": {"enabled": false, "question": "请问您想了解什么？", "options": ["了解产品", "咨询服务"]},
+  "lead_capture": {"enabled": false},
+  "routing": {"live_inbox_ids": [], "enabled_route_variants": [], "outside_catalog_action": "consult_advisor"},
+  "handoff": {"large_group_enabled": false},
+  "silence": {"enabled": false, "live_enabled": false, "advisor_reply_followup_enabled": false},
+  "common_scripts": [],
+  "material_rules": []
+}

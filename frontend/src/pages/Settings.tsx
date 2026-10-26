@@ -93,7 +93,7 @@ function Channels({ notify }: { notify: (value: string) => void }) {
   const queryClient = useQueryClient();
   const config = useQuery({ queryKey: ['chatwoot-config'], queryFn: () => api<ChatwootConfig>('/settings/chatwoot') });
   const inboxes = useQuery({ queryKey: ['inboxes'], queryFn: () => api<Inbox[]>('/settings/inboxes') });
-  const [baseUrl, setBaseUrl] = useState('https://app.chatwoot.com'); const [accountId, setAccountId] = useState(180474); const [token, setToken] = useState('');
+  const [baseUrl, setBaseUrl] = useState('https://app.chatwoot.com'); const [accountId, setAccountId] = useState(0); const [token, setToken] = useState('');
   useEffect(() => { if (config.data) { setBaseUrl(config.data.base_url); setAccountId(config.data.account_id); } }, [config.data]);
   const save = useMutation({ mutationFn: () => api<ChatwootConfig>('/settings/chatwoot', { method: 'PUT', body: JSON.stringify({ base_url: baseUrl, account_id: accountId, api_token: token || null }) }), onSuccess: () => { setToken(''); queryClient.invalidateQueries({ queryKey: ['chatwoot-config'] }); notify('Chatwoot 连接配置已加密保存'); } });
   const test = useMutation({ mutationFn: () => api<{ inbox_count: number }>('/settings/chatwoot/test', { method: 'POST' }), onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ['chatwoot-config'] }); notify(`连接正常，读取到 ${data.inbox_count} 个 Inbox`); } });

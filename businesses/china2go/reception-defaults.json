@@ -1,0 +1,72 @@
+{
+  "schema_version": 7,
+  "reply": {
+    "opening_items": null,
+    "opening_messages": [
+      "您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？"
+    ],
+    "opening_interval_seconds": 2,
+    "opening_message": "您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？",
+    "goal": "先回答客户，再自然取得一种有效联系方式",
+    "tone": "friendly_professional",
+    "tone_guidance": "像台灣旅遊顧問自然聊天，優先使用配置原話，按客戶當前問題選段。",
+    "opening_character_limit": 200,
+    "custom_guidance": ""
+  },
+  "intake": {
+    "enabled": true,
+    "question": "您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）",
+    "options": [
+      "自己一位",
+      "2～3位",
+      "4～6位",
+      "7～10位",
+      "10位以上"
+    ],
+    "wait_seconds": 90
+  },
+  "lead_capture": {
+    "enabled": true,
+    "channels": [
+      "LINE",
+      "微信",
+      "电话",
+      "Email",
+      "WhatsApp"
+    ],
+    "require_supported_route": true,
+    "require_party_size": false,
+    "require_departure_window": false
+  },
+  "routing": {
+    "live_inbox_ids": null,
+    "enabled_route_variants": [
+      "peach_11d_2027",
+      "peach_9d_2027"
+    ],
+    "allow_route_switch": true,
+    "preserve_profile_on_switch": true,
+    "outside_catalog_action": "consult_advisor"
+  },
+  "handoff": {
+    "large_group_enabled": true,
+    "large_group_minimum": 8
+  },
+  "silence": {
+    "material_selection": "route_catalog",
+    "advisor_reply_followup_enabled": false,
+    "enabled": true,
+    "live_enabled": false,
+    "intervals_minutes": [
+      360
+    ],
+    "initial_checkpoints_minutes": null,
+    "recurring_interval_minutes": 180,
+    "daily_at": null,
+    "active_start": "09:00",
+    "active_end": "21:00",
+    "max_proactive_messages_per_day": 6
+  },
+  "common_scripts": [],
+  "material_rules": []
+}

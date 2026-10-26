@@ -178,7 +178,7 @@ def fetch_website(url: str, *, client: httpx.Client | None = None) -> FetchedPag
     http = client or httpx.Client(timeout=httpx.Timeout(20.0), follow_redirects=False)
     try:
         for _ in range(MAX_REDIRECTS + 1):
-            with http.stream("GET", current, headers={"User-Agent": "China2GoKnowledgeBot/1.0"}) as response:
+            with http.stream("GET", current, headers={"User-Agent": "BusinessKnowledgeBot/1.0"}) as response:
                 if response.status_code in {301, 302, 303, 307, 308}:
                     location = response.headers.get("location")
                     if not location:
@@ -442,6 +442,13 @@ def install_curated_global_library(
     user_id: int | None = None,
 ) -> tuple[WebKnowledgeSource, WebKnowledgeRevision]:
     """Install a reviewed candidate without exposing it to AI."""
+    from app.config import settings
+    from app.business_profile import PROFILE
+    website_url = settings.business_website_url or PROFILE.get("website_url", "")
+    if not website_url:
+        raise WebKnowledgeError("business_website_not_configured")
+    website_url = normalize_public_url(website_url)
+    website_name = PROFILE.get("website_name", "公司官网知识")
     modules = payload.get("modules") or []
     if not modules or any(item.get("kind") != "knowledge_module" for item in modules):
         raise WebKnowledgeError("website_curated_modules_invalid")
@@ -452,17 +459,17 @@ def install_curated_global_library(
     digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
     source = db.scalar(select(WebKnowledgeSource).where(
         WebKnowledgeSource.tenant_id == tenant_id,
-        WebKnowledgeSource.name == "China2Go 官網全局知識",
-        WebKnowledgeSource.url == "https://china2go.com/",
+        WebKnowledgeSource.name == website_name,
+        WebKnowledgeSource.url == website_url,
         WebKnowledgeSource.status != "archived",
     ).order_by(WebKnowledgeSource.id))
     if source is None:
-        source = WebKnowledgeSource(tenant_id=tenant_id, name="China2Go 官網全局知識", url="https://china2go.com/")
+        source = WebKnowledgeSource(tenant_id=tenant_id, name=website_name, url=website_url)
         db.add(source)
         db.flush()
-    source.name = "China2Go 官網全局知識"
-    source.url = "https://china2go.com/"
-    source.description = "從 China2Go 繁體中文官網整理，供全部產品線共用的文字知識。"
+    source.name = website_name
+    source.url = website_url
+    source.description = "从当前公司官网整理的已审核知识。"
     source.match_keywords = sorted({
         topic
         for module in modules
@@ -491,8 +498,8 @@ def install_curated_global_library(
         existing = WebKnowledgeRevision(
             source_id=source.id,
             revision_number=number,
-            title="China2Go 官網全局知識",
-            final_url="https://china2go.com/",
+            title=website_name,
+            final_url=website_url,
             content=serialized,
             content_hash=digest,
             content_length=sum(len(str(fact.get("text") or "")) for module in modules for fact in module.get("facts") or []),

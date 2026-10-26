@@ -6,16 +6,17 @@ from app.operations import save_setting,setting_value
 from app.route_packages import ROUTE_PACKAGES
 from app.opening_messages import OpeningItem,delivery_items,opening_media_info
 from app.config import settings
+from app.business_profile import reception_defaults
 SETTING_KEY="route_reception_config"
 SUPPORTED_CONTACT_CHANNELS=["LINE","微信","电话","Email","WhatsApp"]
-DEFAULT_TONE_GUIDANCE="像台灣旅遊顧問自然聊天，優先使用配置原話，按客戶當前問題選段。"
+DEFAULT_TONE_GUIDANCE="自然、清楚、专业，使用客户当前使用的语言。"
 
 
 class ReplySettings(BaseModel):
     opening_items: list[OpeningItem] | None = Field(default=None, min_length=1, max_length=10)
     opening_messages: list[str] | None = Field(default=None, min_length=1, max_length=10)
     opening_interval_seconds: int = Field(default=2, ge=1, le=30)
-    opening_message: str = Field(default="您好～這裡是 China2Go 國旅環球，您想先了解哪一條行程呢？", min_length=1, max_length=200)
+    opening_message: str = Field(default="您好，请问有什么可以帮您？", min_length=1, max_length=200)
     goal: str = Field(default="先回答客户，再自然取得一种有效联系方式", min_length=1, max_length=160)
     tone: Literal["friendly_professional", "concise", "warm"] = "friendly_professional"
     tone_guidance: str = Field(default=DEFAULT_TONE_GUIDANCE, max_length=1200)
@@ -66,7 +67,7 @@ class LeadSettings(BaseModel):
 
 class RoutingSettings(BaseModel):
     live_inbox_ids: list[int] | None = Field(default=None, max_length=100)
-    enabled_route_variants: list[str] = Field(default_factory=lambda: list(ROUTE_PACKAGES), min_length=1)
+    enabled_route_variants: list[str] = Field(default_factory=lambda: list(ROUTE_PACKAGES))
     allow_route_switch: bool = True
     preserve_profile_on_switch: bool = True
     outside_catalog_action: Literal["recommend_supported_routes", "explain_boundary_only", "consult_advisor"] = "consult_advisor"
@@ -185,7 +186,7 @@ class ReceptionConfiguration(BaseModel):
         return self
 
 def default_reception_configuration():
-    return ReceptionConfiguration().model_dump()
+    return ReceptionConfiguration.model_validate(reception_defaults()).model_dump()
 
 def get_reception_configuration(db):
     value=deepcopy(setting_value(db,SETTING_KEY,default_reception_configuration()))

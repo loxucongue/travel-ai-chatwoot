@@ -1,5 +1,11 @@
 import os
 
+# Historical regressions explicitly use their original company's business pack.
+# The new company's isolation tests start fresh subprocesses with rujing2.
+os.environ.setdefault('BUSINESS_PROFILE', 'china2go')
+os.environ.setdefault('LIVE_REPLY_ACCOUNT_ID', '180474')
+os.environ.setdefault('LIVE_REPLY_INBOX_ID', '128859')
+
 # Set these before app.config is imported: a fixture runs too late to prevent
 # startup validation (or initialization) from inheriting a developer's live .env.
 os.environ.update(APP_PROFILE="evaluation", OUTBOUND_MODE="disabled",

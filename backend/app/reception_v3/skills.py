@@ -11,6 +11,7 @@ import yaml
 
 from app.reception_config import get_reception_configuration
 from app.route_packages import ROUTES, PACKAGE_ROOT, ensure_route_packages_current
+from app.business_profile import ROOT as BUSINESS_ROOT, COMMON_SKILL, PROFILE
 
 
 def service_knowledge():
@@ -90,7 +91,7 @@ def compile_skills(db, now=None):
                     routes[key]['groups'][group]['text'] = price['answer_text']
     if any(r.get('seasonal_pricing') for r in routes.values()):
         for route in routes.values():
-            route['aliases'] = [a for a in route['aliases'] if a not in ('有珠峰的', '包含珠峰')]
+            route['aliases'] = [a for a in route['aliases'] if a not in PROFILE.get('seasonal_excluded_aliases', [])]
     bundle = {'routes': routes, 'common_scripts': list(common_scripts.values()),
               'material_rules': deepcopy(config.get('material_rules', [])),
               'service_knowledge': {'version': service['knowledge_version'], 'facts': service['facts']},
@@ -101,7 +102,7 @@ def compile_skills(db, now=None):
     return bundle
 
 
-SKILL_ROOT = Path(__file__).with_name('skills')
+SKILL_ROOT = BUSINESS_ROOT / 'skills'
 
 
 class SkillRegistry:
@@ -125,10 +126,18 @@ class SkillRegistry:
             if name in self.skills:
                 raise ValueError(f'skill_name_duplicate:{name}')
             self.skills[name] = {'name': name, 'description': description, 'body': sections[2].strip()}
+        # New operator products use the same configuration compiler without
+        # requiring a source-code release for a product-specific SKILL.md.
+        for route_id, route in bundle['routes'].items():
+            name = route_id.replace('_', '-')
+            self.skills.setdefault(name, {
+                'name': name, 'description': f"读取{route['name']}的已审核资料和介绍。",
+                'body': '仅使用下方当前产品配置。缺少的事实交由人工确认，不从其他产品推断。',
+            })
 
     def index(self):
         return [{k: item[k] for k in ('name', 'description')} for item in self.skills.values()
-                if item['name'] == 'tibet-reception' or item['name'].replace('-', '_') in self.bundle['routes']]
+                if item['name'] == COMMON_SKILL or item['name'].replace('-', '_') in self.bundle['routes']]
 
     def route_skill(self, route):
         name = route.replace('_', '-')
@@ -141,7 +150,7 @@ class SkillRegistry:
         route_id = name.replace('-', '_')
         route = self.bundle['routes'].get(route_id)
         body = item['body']
-        if name == 'tibet-reception':
+        if name == COMMON_SKILL:
             # Only settings used by V3 reasoning belong in the model context.
             # Opening content and delivery limits are executed by the service;
             # legacy topic-count triggers must not compete with the Skill.

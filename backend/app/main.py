@@ -16,7 +16,7 @@ from app.config import settings
 
 logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
-app = FastAPI(title="China2Go AI Operations API", version="0.1.0")
+app = FastAPI(title=f"{settings.company_name} AI Operations API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=settings.origins, allow_credentials=True, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], allow_headers=["Content-Type", "X-CSRF-Token", "X-Request-ID"])
 
 

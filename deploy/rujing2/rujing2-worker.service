@@ -1,0 +1,20 @@
+[Unit]
+Description=Rujing2 AI Live Worker (enable only after channel configuration)
+After=network.target rujing2-api.service
+
+[Service]
+User=rujing2
+Group=rujing2
+WorkingDirectory=/opt/rujing2-ai/current/backend
+EnvironmentFile=/opt/rujing2-ai/shared/backend.env
+ExecStart=/opt/rujing2-ai/venv/bin/python -m app.live_reply_worker
+Restart=on-failure
+RestartSec=10
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/rujing2-ai/shared
+
+[Install]
+WantedBy=multi-user.target

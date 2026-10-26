@@ -12,10 +12,10 @@ from app.models import MaterialAsset, KnowledgeVersion, StoredMedia, InboxBindin
 from app.automation_models import MaterialDelivery
 from app.route_packages import KNOWLEDGE_VERSION as ROUTES_1_2_VERSION
 from app.asset_narratives import normalized_asset_narrative
+from app.business_profile import PROFILE
 
-CATALOG_VERSION = "materials-20260826-v1"
+CATALOG_VERSION = PROFILE['material_catalog_version']
 CATALOG_VERSIONS = (CATALOG_VERSION, ROUTES_1_2_VERSION)
-ROUTES = {"peach_9d_2027": "2027 桃花9日", "peach_11d_2027": "2027 桃花+珠峰11日"}
 ASSET_REVISIONS_KEY = "revision_archive"
 
 

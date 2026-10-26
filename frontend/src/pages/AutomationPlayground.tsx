@@ -145,15 +145,12 @@ type SessionSummary = {
   engine_version?: 'v1' | 'v2' | 'v3';
 };
 
-const ROUTE_NAMES: Record<RouteVariant, string> = {
-  peach_9d_2027: '桃花 9 日',
-  peach_11d_2027: '桃花＋珠峰 11 日',
-};
+const ROUTE_NAMES: Record<RouteVariant, string> = {};
 
 const QUICK_MESSAGES = [
   '我想先看看有哪些行程',
   '我们2位，明年3月底出发，住宿和价格怎样？',
-  '那11日加珠峰的区别是什么？',
+  '这两个方案有什么区别？',
   '我们12个人想包团',
   '可以用LINE联系吗？',
   '我的LINE是 abc123',
@@ -350,7 +347,7 @@ function ReceptionPlayground() {
 
   useEffect(() => {
     if (inboxId == null && inboxes.data?.length) {
-      const preferred = inboxes.data.find(item => item.chatwoot_inbox_id === 128859) ?? inboxes.data[0];
+      const preferred = inboxes.data[0];
       setInboxId(preferred.id);
     }
   }, [inboxId, inboxes.data]);
@@ -482,7 +479,7 @@ function PlaygroundSidebar(props: {
 }) {
   return <aside className={`ai-chat-sidebar ${props.open ? 'is-open' : ''}`}>
     <div className="ai-chat-sidebar-brand">
-      <a href="#/overview"><span><Sparkles size={18} /></span><strong>China2Go AI</strong></a>
+      <a href="#/overview"><span><Sparkles size={18} /></span><strong>Rujing2 AI</strong></a>
       <button onClick={props.onClose} aria-label="关闭会话列表"><X size={18} /></button>
     </div>
     <button className="ai-chat-new" disabled={props.busy} onClick={props.onCreate}><Plus size={17} />新客户演练</button>

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import hashlib
 import re
 from copy import deepcopy
 from datetime import timedelta
@@ -813,6 +814,14 @@ def import_route_product_draft(
         KnowledgeVersion.tenant_id == tenant.id,
         KnowledgeVersion.version_key == package["knowledge_version"],
     )) if tenant else None
+    # A new company has no seed products or catalog rows. Create only its own
+    # declared catalog; importing another company's version still fails.
+    from app.business_profile import PROFILE
+    if tenant and version is None and package['knowledge_version'] == PROFILE['knowledge_version']:
+        version = KnowledgeVersion(tenant_id=tenant.id, version_key=package['knowledge_version'],
+                                   title=settings.company_name, content_hash=hashlib.sha256(b'{}').hexdigest())
+        db.add(version)
+        db.flush()
     if not tenant or not version:
         fail("route_knowledge_version_missing", 422)
     asset_keys = {
@@ -1240,7 +1249,8 @@ def bind_asset(asset_id:int,payload:AssetBind,user:User=Depends(require_super_ad
 
 @router.get("/materials")
 def shared_materials(inbox_binding_id:int, route_variant:str="", user:User=Depends(manager), db:Session=Depends(get_db)):
-    from app.material_library import catalog_assets, ROUTES
+    from app.material_library import catalog_assets
+    from app.route_packages import ROUTES
     scope(db,user,inbox_binding_id)
     inbox = db.get(InboxBinding,inbox_binding_id)
     items=[]
@@ -1252,7 +1262,7 @@ def shared_materials(inbox_binding_id:int, route_variant:str="", user:User=Depen
             "media_id":meta.get("stored_media_id"),"media_hash":asset.file_hash,"content_type":asset.media_type,
             "content_family":meta.get("content_family"),"route_variants":meta.get("route_variants",[]),
             "ready":ready,"review_state":meta.get("review_state"),"notes":meta.get("review_notes","")})
-    return {"items":items,"routes":ROUTES,"outbound":False}
+    return {"items":items,"routes":{key: value['name'] for key, value in ROUTES.items()},"outbound":False}
 
 
 

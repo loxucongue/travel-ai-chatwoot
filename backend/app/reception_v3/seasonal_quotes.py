@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 import re
 import calendar
+from app.business_profile import PROFILE
 
 
 def seasonal_group(group, profile):
@@ -206,12 +207,12 @@ def _non_scheduled_result(spec, days, today, party_size, group_type):
                 'reason': '已達獨團自選日期的人數門檻，可選所詢日期，不受拼團每週定班限制；不是名額或訂位確認。',
                 'guidance': '先說明可獨立成團自選日期；尚未選獨團可確認意願，不要求改到定班日、不索取聯絡方式。'
                             '未問價不報價；若問這個自選日期的實際獨團總報價，靜默交接核對，不能直接套拼團模板。'
-                            '4位獨團每人加400元的已知條件仍可單獨回答；優惠叠加與其他未確認費用不猜。'}
+                            + PROFILE.get('private_departure_extra_guidance', '费用以当前产品已审核资料为准，不推断未配置的加价或优惠。')}
     if policy.get('private_departure_min_party_size') and party_size is None and group_type != 'shared':
         return {'status': 'ask_date', 'reason_code': 'party_size_required',
-                'reason': '所問日期不是拼團定班日，但人數未知；先問預計幾位。4位起可獨團自選日期，不能先要求改到定班日。'}
+                'reason': f"所问日期不是固定班期，人数未知；先确认人数。当前产品自选日期的门槛为{policy['private_departure_min_party_size']}位，不自行改期。"}
     suggestions = _available_departures(spec, [days[0]+timedelta(days=i) for i in range(1, 8)], today)
-    return {'status': 'ask_date', 'reason': '所問日期不是拼團定班日；不足4位或明確選拼團，需按本線定班日期安排。',
+    return {'status': 'ask_date', 'reason': '所问日期不是固定班期，未满足当前产品自选日期条件，需按已发布班期安排。',
             'scheduled_weekdays': policy.get('weekdays', [policy.get('weekday')]),
             'suggested_departures': suggestions[:3]}
 
@@ -265,9 +266,7 @@ def _unavailable_result(bundle, route, days, today, reason, code, party_size=Non
         # Approved advice is distinct from a bookable route with dates/prices.
         # This also covers Dec -> Feb spanning an unpublished calendar year.
         result.update(next_action='offer_winter_recommendation', winter_recommendation=recommendation,
-                      guidance='先說明冬季絨布旅館關閉、改住山下珠峰小鎮，推薦季節限定冰川行程並詢問興趣。'
-                               '不能只說等下次開放或立即索取QR Code；不自動換線、不套常規線照片或報價。'
-                               '客人要完整冬遊資料、團期或費用時靜默交接，內部註明冬遊需求。')
+                      guidance=PROFILE.get('winter_guidance', '仅使用当前产品配置的季节建议；询问客户意愿，不自动改选产品，不编造价格或团期。'))
     return result
 
 
@@ -332,7 +331,7 @@ def departure_quote(bundle, route, start, end, now, *, party_size=None, group_ty
         return {'status':'ask_date', 'reason':'出發日期已過，先確認年份'}
     days = [begin + timedelta(days=i) for i in range((finish-begin).days+1)]
     if (begin-today).days < policy['minimum_notice_days']:
-        return {'status':'advisor', 'reason':'不足30天辦理入藏函，需先由顧問確認'}
+        return {'status':'advisor', 'reason': PROFILE.get('minimum_notice_reason') or f"未满足当前产品提前{policy['minimum_notice_days']}天的要求，需由人工确认。"}
     if any(y not in policy['years'] for y in range(begin.year, finish.year+1)):
         return _unavailable_result(bundle, route, days, today, '這個年份的本線團期尚未公布，不代表公司沒有其他產品。', 'year_unpublished', party_size, group_type)
     if not any(_within_operating_period(d, policy) for d in days):

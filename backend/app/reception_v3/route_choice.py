@@ -1,11 +1,11 @@
 """Keep an offered alternative separate from a customer's selected itinerary."""
 import re
+from app.business_profile import PROFILE
 
-LINZHI = 'tibet_linzhi_8d'
-EVEREST_ROUTES = frozenset(('peach_11d_2027', 'tibet_essence_8d', 'tibet_overview_10d'))
-PEACH_ROUTES = frozenset(('peach_9d_2027', 'peach_11d_2027'))
-ROUTE_DAYS = {'peach_9d_2027': 9, 'peach_11d_2027': 11, LINZHI: 8,
-              'tibet_essence_8d': 8, 'tibet_overview_10d': 10, 'tibet_winter_8d': 8}
+LINZHI = PROFILE.get('linzhi_route', '')
+EVEREST_ROUTES = frozenset(PROFILE.get('everest_routes', []))
+PEACH_ROUTES = frozenset(PROFILE.get('peach_routes', []))
+ROUTE_DAYS = PROFILE.get('route_days', {})
 
 
 def advertisement_route(text, routes):

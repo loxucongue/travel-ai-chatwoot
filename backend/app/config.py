@@ -1,27 +1,32 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env.rujing2", env_file_encoding="utf-8", extra="ignore")
+
+    business_profile: Literal['rujing2', 'china2go'] = 'rujing2'
+    company_name: str = 'Rujing2'
+    business_website_url: str = ''
 
     app_env: str = "development"
     app_profile: str = "evaluation"
     outbound_mode: str = "disabled"
     chatwoot_write_enabled: bool = False
-    live_reply_account_id: int = 180474
-    live_reply_inbox_id: int = 128859
+    live_reply_account_id: int = 0
+    live_reply_inbox_id: int = 0
     ai_engine_default: str = "v3"
     live_sop_enabled: bool = False
     live_sop_scope: str = "allowlist"
     live_sop_conversation_ids: str = ""
-    public_api_base_url: str = "https://api.luoxuecong.asia"
+    public_api_base_url: str = "http://127.0.0.1:8000"
     app_secret_key: str = "development-only-change-me"
     app_encryption_key: str = ""
-    database_url: str = "sqlite:///./data/app.db"
+    database_url: str = "sqlite:///./data/rujing2/app.db"
     frontend_origins: str = "http://127.0.0.1:5173,http://127.0.0.1:4175"
     session_cookie_domain: str = ""
     session_cookie_secure: bool = False
@@ -39,8 +44,9 @@ class Settings(BaseSettings):
     deepseek_timeout_seconds: int = 20
     deepseek_max_input_characters: int = 300000
     evaluation_poll_interval_seconds: float = 1
-    evaluation_inbox_id: int = 128859
-    business_materials_dir: str = r"E:\AI\codexproject\ai_chatwoot\給ai"
+    evaluation_inbox_id: int = 0
+    business_materials_dir: str = "./data/rujing2/materials"
+    runtime_package_dir: str = "./data/rujing2/route-packages"
     worker_poll_interval_seconds: float = 1
     worker_lease_seconds: int = 60
     live_reply_concurrency: int = Field(default=4, ge=1, le=8)
@@ -51,7 +57,7 @@ class Settings(BaseSettings):
     relay_poll_batch_size: int = 10
     relay_request_timeout_seconds: int = 15
     relay_cleanup_interval_seconds: int = 21600
-    upload_dir: str = "./data/uploads"
+    upload_dir: str = "./data/rujing2/uploads"
     log_level: str = "INFO"
 
     @property

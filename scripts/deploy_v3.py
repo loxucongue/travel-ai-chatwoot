@@ -250,6 +250,8 @@ def remote_phase(phase, stage):
 
 
 def main():
+    if (Path(__file__).resolve().parents[1] / 'businesses/rujing2/profile.json').exists():
+        raise SystemExit('Original-company deployment is disabled on this branch; use scripts/deploy_rujing2.py')
     parser = argparse.ArgumentParser()
     parser.add_argument('phase', choices=['stage', 'deploy', 'check', 'rollback'])
     parser.add_argument('--remote-stage')
