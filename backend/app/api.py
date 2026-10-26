@@ -36,6 +36,7 @@ from app.models import (
     utcnow,
 )
 from app.operations import audit
+from app.channel_ai import channel_settings, save_channel_settings, ChannelSettingsChange
 from app.outbound_control import global_message_sending_enabled
 from app.conversation_views import journey_context
 from app.route_packages import route_quick_reply_titles
@@ -317,6 +318,16 @@ def list_inboxes(user: User = Depends(current_user), db: Session = Depends(get_d
         query = query.where(InboxBinding.id.in_(allowed))
     rows = db.scalars(query).all()
     return [{"id": row.id, "chatwoot_inbox_id": row.chatwoot_inbox_id, "name": row.name, "channel_type": row.channel_type, "ai_enabled": row.ai_enabled, "status": row.status, "last_synced_at": row.last_synced_at} for row in rows]
+
+
+@router.get("/settings/channel-ai")
+def read_channel_ai(user: User = Depends(super_admin), db: Session = Depends(get_db)):
+    return channel_settings(db)
+
+
+@router.patch("/settings/channel-ai")
+def update_channel_ai(payload: ChannelSettingsChange, user: User = Depends(require_super_admin_csrf), db: Session = Depends(get_db)):
+    return save_channel_settings(db, user, payload)
 
 
 @router.patch("/settings/inboxes/{binding_id}")

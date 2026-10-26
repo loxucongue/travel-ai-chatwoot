@@ -5,6 +5,8 @@ import {
   Plus, Save, SlidersHorizontal, Trash2, Users, X,
 } from 'lucide-react';
 import { api, ApiError } from '../api';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../auth';
 import { Badge, EmptyState } from '../components';
 import OpeningItemsEditor from './OpeningItemsEditor';
 import MaterialRulesEditor from './MaterialRulesEditor';
@@ -28,6 +30,7 @@ function Switch({ checked, onChange, disabled = false }: { checked: boolean; onC
 }
 
 export default function AiReceptionStrategy() {
+  const { user } = useAuth();
   const inboxes = useQuery({queryKey:['settings-inboxes'], queryFn:()=>api<{id:number;chatwoot_inbox_id:number;name:string;ai_enabled:boolean}[]>('/settings/inboxes')});
   const products = useQuery({queryKey:['rule-route-names'],queryFn:()=>api<{items:{route_variant:string;name:string}[]}>('/automation/route-products')});
   const queryClient = useQueryClient();
@@ -162,10 +165,9 @@ export default function AiReceptionStrategy() {
             <label className="block-field">未回复时开始介绍（秒）<input type="number" min={1} max={300} value={draft.intake.wait_seconds} onChange={event => patch(config => {config.intake.wait_seconds=Number(event.target.value);})} /></label>
           </section>
           <OpeningItemsEditor config={draft} patch={patch} uploading={uploading} errors={uploadErrors} disabled={publish.isPending} upload={uploadOpening} previewChanged={(key, status) => setPreviewStatus(current => current[key] === status ? current : {...current, [key]: status})} clearError={key => setUploadErrors(current => ({...current, [key]: ''}))} />
-          <section className="reply-expression-editor"><h3>AI 接待频道</h3>
-            <p>仅勾选的频道可进入自动接待。频道自身的 AI 开关、人工接管及停止标签仍优先生效。</p>
-            {inboxes.error && <p role="alert">频道列表读取失败，请刷新后重试。</p>}
-            {(inboxes.data ?? []).map(inbox=><label key={inbox.id}><input type="checkbox" checked={(draft.routing.live_inbox_ids ?? configQuery.data!.runtime.live_inbox_ids ?? []).includes(inbox.chatwoot_inbox_id)} onChange={event=>patch(config=>{const ids=config.routing.live_inbox_ids ?? configQuery.data!.runtime.live_inbox_ids ?? []; config.routing.live_inbox_ids=event.target.checked ? [...ids,inbox.chatwoot_inbox_id] : ids.filter(id=>id!==inbox.chatwoot_inbox_id);})}/>{inbox.name}{!inbox.ai_enabled ? '（频道 AI 开关已关闭）' : ''}</label>)}
+          <section className="reply-expression-editor"><h3>渠道 AI 开关</h3>
+            <p>渠道启停已统一移至系统设置，与所有线路共用。</p>
+            {user?.roles.includes('admin') ? <Link className="secondary-button" to="/settings?section=channel-ai">前往系统设置·渠道 AI</Link> : <p>请管理员在系统设置中管理渠道开关。</p>}
           </section>
           <section className="reply-expression-editor"><h3>回复语气</h3>
             <div className="strategy-segments">{([['friendly_professional', '亲切柔和'], ['concise', '简短有礼'], ['warm', '温柔可亲']] as const).map(([value,label]) => <button key={value} className={draft.reply.tone === value ? 'active' : ''} onClick={() => patch(config => { config.reply.tone=value; })}>{label}</button>)}</div>
