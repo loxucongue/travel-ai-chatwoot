@@ -435,7 +435,9 @@ def quote_error(decision, bundle, checked, availability=None, *, require_interru
                     any(m.get('asset_keys') for m in decision['messages']))
                 or any((m.get('script_id') or '').startswith('price') or contains_trip_quote(m.get('text', ''))
                        for m in decision['messages'])):
-            return ('已核對本線在客人所問時段未開放：本輪不開始介紹、不queue，'
+            return ('上一候选未发送。已核對本線在客人所問時段未開放：即使前一句问过费用，也必须删除本线的所有团费金额和price_*消息，'
+                    '不能一边说无团期一边报本线价格；不能只把script_id改成自由文字保留金额。'
+                    '先回答最新日期是否可行，不为不可售的本线追问核价人数。本輪不開始介紹、不queue，'
                     + ('interrupt=true，' if require_interrupt else '沉默回合沒有進行中的介紹，不要求interrupt=true，') +
                     '停止原介紹且不報價；冬遊推薦只用已確認說明，不發常規線素材；依工具返回的同期產品先推薦，否則依留資偏好輕邀開放通知。'
                     '僅邀請不能直接交接，實際留資或明確要求真人仍靜默handoff。')

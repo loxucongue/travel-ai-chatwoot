@@ -109,6 +109,8 @@ def run_agent(context: dict):
               + '\n\n' + SYSTEM_PROMPT)
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
+    from app.reception_v3.party_quotes import pricing_evidence
+    current['pricing_evidence'] = pricing_evidence(context['skills'])
     # Delivery metadata and earlier model reasons are not customer dialogue.
     # Send actual speech with chat roles so repeated invitations are visible.
     current['state'] = {key: value for key, value in current.get('state', {}).items()
@@ -376,7 +378,11 @@ def run_agent(context: dict):
                 log.update(status='invalid_json', error_code=str(exc))
                 messages.extend([{'role': 'assistant', 'content': message.get('content') or '',
                                   'reasoning_content': message.get('reasoning_content', '')},
-                                 {'role': 'user', 'content': f'只修正 JSON 字段和类型，不审核或改写话术。错误：{exc}'}])
+                                 {'role': 'user', 'content': '上一输出未通过接待决策协议，尚未发送。请返回一个完整JSON对象，'
+                                  '不能只输出给客户的文字、空内容或分析过程。客户答复放在messages中；'
+                                  '保留事实与业务判断，按以下schema修正字段和类型：\n'
+                                  + json.dumps(Decision.model_json_schema(), ensure_ascii=False)
+                                  + f'\n校验错误：{exc}'}])
                 continue
             # The model may identify a route without requesting its body (for
             # example after an earlier comparison). Activate that selected
@@ -469,6 +475,8 @@ def run_agent(context: dict):
                 if quote_repaired:
                     raise ValueError('seasonal_quote_not_validated')
                 quote_repaired = True
+                messages.append({'role':'assistant', 'content':json.dumps(decision,ensure_ascii=False),
+                                 'reasoning_content':message.get('reasoning_content','')})
                 messages.append({'role':'user','content':quote_problem})
                 continue
             log.update(script_ids=[m['script_id'] for m in decision['messages'] if m['script_id']],

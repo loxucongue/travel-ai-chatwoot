@@ -74,7 +74,7 @@ def explicit_selection(text, target, context):
     if re.search(r'還沒(?:決定|選定)|还没(?:决定|选定)|都可以評估|都可以评估|先(?:考慮|考虑|想想)|不(?:要|想)(?:換|换|改|看行程|介紹|介绍)', text):
         return False
     offered = context.get('profile', {}).get('discussion_route')
-    action = bool(re.search(r'改成|改為|改为|改選|改选|就選|就选|選擇|选择|還是選|还是选|那就|我要|想看|給我看|给我看|請介紹|请介绍|改變主意|改变主意', text))
+    action = bool(re.search(r'改成|改為|改为|改選|改选|就選|就选|選擇|选择|還是選|还是选|那就|我要|想看|就看|我(?:們|们)?看|給我看|给我看|請介紹|请介绍|改變主意|改变主意', text))
     days = ROUTE_DAYS.get(target)
     chinese = {8:'八',9:'九',10:'十',11:'十一'}
     day_name = bool(days and re.search(rf'(?:{days}|{chinese.get(days,days)})\s*(?:天|日)', text))

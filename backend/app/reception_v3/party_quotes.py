@@ -91,6 +91,25 @@ def effective_profile(previous, changes):
     return profile
 
 
+def pricing_evidence(bundle):
+    """Expose comparisons from the same configured arithmetic as quote scripts."""
+    result = {}
+    for key, spec in bundle['routes'].items():
+        policy = spec.get('party_pricing')
+        if not policy:
+            continue
+        result[key] = {
+            'source_ref': policy['source_ref'],
+            'per_person_prices': [
+                {'party_size': s['party_size_min'], 'group_type': s['quote_group_type'], 'price_cny': s['price_cny']}
+                for s in price_scripts(policy)],
+            'usage': '人数区间不等于价格不同。比较上表每人价，相同就说明同价，不以不存在的价差催问人数。'
+                     '区间跨档才说明差别；正式最终报价仍按已确认人数和模板。'
+                     '此表不代表日期可售。客户改了月份，先核对日期；该日期不可售就不报原线价格，也不为原线追问核价人数。',
+        }
+    return result
+
+
 def quote_error(decision, bundle, previous, default_route=''):
     from app.reception_v3.seasonal_quotes import contains_trip_quote
     route = decision.get('route_variant') or default_route
