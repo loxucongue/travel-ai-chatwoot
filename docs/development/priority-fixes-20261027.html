@@ -3,7 +3,7 @@
 <title>10月27日优先修复与验收</title>
 <style>body{font:16px/1.65 system-ui,sans-serif;color:#172b3a;background:#f5f7fa;max-width:1160px;margin:36px auto;padding:0 24px}h1{font-size:28px}table{border-collapse:collapse;background:white;width:100%;margin:20px 0}th,td{border:1px solid #dbe2e8;padding:12px;text-align:left;vertical-align:top}th{background:#e9f0f5}code{overflow-wrap:anywhere}.notice{padding:18px;background:#fff3d5;border-left:4px solid #bd8b00}a{color:#1763a1}</style>
 <h1>10月27日优先修复与验收</h1>
-<p id="release-status">发布状态：已分离可发布修复与待补真实模型复测的改动，正在完成可发布版本复核。</p>
+<p id="release-status"><strong>已于2026年10月27日17:10（北京时间）发布已验证子集。</strong>代码提交：<code>04c7085</code>；引擎：<code>reception-v3-d04c4e189246a6c2</code>。模型决策相关候选修复尚未上线。</p>
 <p>依据：<a href="live-effect-audit-20261027.html">生产效果审计</a>。修复沿用现有会话、报价配置、发送与回执架构，没有新增客户页面或改变渠道开关范围。</p>
 <table><thead><tr><th>问题</th><th>实现与预期效果</th><th>验收及发布范围</th></tr></thead><tbody>
 <tr><td>重复点击行程入口误标“以開口”“洗單回”</td><td>行程介绍完成后仍检查完整入口标题；真正补人数、问费用的自由文本继续计为回复。回流标签共用同一过滤。</td><td>确定性多事件测试通过，纳入本批发布。不会批量删除历史标签。</td></tr>
@@ -16,6 +16,7 @@
 <tr><td>JSON格式失败、明确换线被误判</td><td>候选修复提供完整决策schema，保持一次格式修复上限；识别“我们看10天”这类明确选择，并保留拒绝/未决定保护。</td><td><strong>暂不发布。</strong>离线回归通过；真实链路复测遇网络中断和额度预留阻断，不能记为完整验收。</td></tr>
 </tbody></table>
 <h2>测试证据</h2>
+<p>上线核验：API、worker、playground均active，健康检查与数据库正常；10个发布文件、6个运行时线路包逐项一致。#425的2874/2875/2876三条本地发送记录已由submitted同步为read，平台原本已读，没有重发。#384、#386、#394、#422的失败发送记录均命中持久阻断。客户测试发送数为0。</p>
 <p id="test-status">包含候选模型改动的全量回归：1,218项通过。剥离待复测模型改动后，可发布版本独立全量回归：1,214项通过。服务器副本安装与重复执行预检通过；已核对只发布10个后端文件及批准的线路文案。测试没有向真实客户发送消息。</p>
 <p>真实模型回放第一次执行：人数报价三轮完整通过；另一条换线链路前两轮通过，选择10天时暴露额外的明确选线识别问题。补丁完成后再次复测遇到超时/连接失败，不能将后续步骤视为通过。</p>
 <p>本地完整证据：<code>output/audit-priority-20261027/</code>。原始对话和生产副本不提交Git。待复测改动会保留在独立提交，避免与已发布状态混淆。</p>
