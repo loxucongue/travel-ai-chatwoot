@@ -5,6 +5,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, update
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.automation_models import AutomationRun, AutomationSession
 from app.material_library import candidate_materials, resolve_materials, tenant_for_session
@@ -889,54 +890,65 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 logs, digest = [], bundle['digest']
             else:
                 decision, logs, digest = run_agent(context)
-            db.refresh(row)
-            allowed = True
-            if environment == 'live':
-                # Settings/labels can change while the model is running. A
-                # disabled inbox must not apply a stale profile or handoff.
-                from app.models import Tenant
-                conversation = db.get(ConversationState, row.conversation_state_id)
-                db.refresh(conversation)
-                db.refresh(conversation.inbox)
-                db.refresh(db.get(Tenant, conversation.tenant_id))
-                if conversation.contact:
-                    db.refresh(conversation.contact)
-                allowed = permitted(db, conversation, purpose=(
-                    'followup' if row.controls.get('human_followup', {}).get('enabled') else 'reply'))
-            run = db.get(AutomationRun, run_id)
-            run.trace = {'engine_version': 'v3', 'event': event, 'skill_digest': bundle['digest'],
-                         'logs': logs, 'request_hash': digest, 'outbound': False,
-                         'loaded_skills': logs[-1].get('loaded_skills', {}) if logs else {},
-                         'skill_tool_calls': [call for log in logs for call in log.get('tool_calls', [])],
-                         **metrics(http_calls)}
-            run.decision = decision
-            if allowed and row.generation == generation and row.controls.get('simulation', {}).get('status') != 'stopped':
-                from app.reception_v3.customer_reactions import remember_reactions
-                row.messages = remember_reactions(row.messages, logs)
-            if row.generation != generation or row.controls.get('simulation', {}).get('status') == 'stopped':
-                run.status, run.error_code = 'cancelled', 'superseded'
-            elif not allowed:
-                run.status, run.error_code = 'cancelled', 'reception_blocked'
-                control(row, 'stop')
-            elif decision['action'] == 'queue' and context['state'].get('delivery_kind') == 'introduction' and state(row).get('delivery_kind') != 'introduction':
-                # Delivery can finish while this classification call is running.
-                # Keep the buffered questions for the completion turn.
-                if not update_profile(db, row, run, decision):
-                    value = state(row)
-                    value['pending_event'] = 'introduction_completed'
-                    save(row, value)
-                    row.due_at = utcnow()
-                run.status = 'completed'
-            else:
-                # Account for model time without delivering a draft here. This
-                # also anchors a wait decision to evaluation completion.
-                advance(row, wall_now=wall_now, deliver=False)
-                apply_decision(db, row, run, bundle, decision)
-                value = state(row)
-                for key in ('last_error', 'retry_at', 'attempts', 'failed_event'):
-                    value.pop(key, None)
-                save(row, value)
-                run.status = 'completed'
+            # Reapply the same model result to fresh state after a delivery CAS conflict.
+            # Generation and permission checks run on every attempt; no model retry.
+            for persistence_attempt in range(3):
+                try:
+                    db.refresh(row)
+                    allowed = True
+                    if environment == 'live':
+                        # Settings/labels can change while the model is running. A
+                        # disabled inbox must not apply a stale profile or handoff.
+                        from app.models import Tenant
+                        conversation = db.get(ConversationState, row.conversation_state_id)
+                        db.refresh(conversation)
+                        db.refresh(conversation.inbox)
+                        db.refresh(db.get(Tenant, conversation.tenant_id))
+                        if conversation.contact:
+                            db.refresh(conversation.contact)
+                        allowed = permitted(db, conversation, purpose=(
+                            'followup' if row.controls.get('human_followup', {}).get('enabled') else 'reply'))
+                    run = db.get(AutomationRun, run_id)
+                    run.trace = {'engine_version': 'v3', 'event': event, 'skill_digest': bundle['digest'],
+                                 'logs': logs, 'request_hash': digest, 'outbound': False,
+                                 'loaded_skills': logs[-1].get('loaded_skills', {}) if logs else {},
+                                 'skill_tool_calls': [call for log in logs for call in log.get('tool_calls', [])],
+                                 **metrics(http_calls)}
+                    run.decision = decision
+                    if allowed and row.generation == generation and row.controls.get('simulation', {}).get('status') != 'stopped':
+                        from app.reception_v3.customer_reactions import remember_reactions
+                        row.messages = remember_reactions(row.messages, logs)
+                    if row.generation != generation or row.controls.get('simulation', {}).get('status') == 'stopped':
+                        run.status, run.error_code = 'cancelled', 'superseded'
+                    elif not allowed:
+                        run.status, run.error_code = 'cancelled', 'reception_blocked'
+                        control(row, 'stop')
+                    elif decision['action'] == 'queue' and context['state'].get('delivery_kind') == 'introduction' and state(row).get('delivery_kind') != 'introduction':
+                        # Delivery can finish while this classification call is running.
+                        # Keep the buffered questions for the completion turn.
+                        if not update_profile(db, row, run, decision):
+                            value = state(row)
+                            value['pending_event'] = 'introduction_completed'
+                            save(row, value)
+                            row.due_at = utcnow()
+                        run.status = 'completed'
+                    else:
+                        # Account for model time without delivering a draft here. This
+                        # also anchors a wait decision to evaluation completion.
+                        advance(row, wall_now=wall_now, deliver=False)
+                        apply_decision(db, row, run, bundle, decision)
+                        value = state(row)
+                        for key in ('last_error', 'retry_at', 'attempts', 'failed_event'):
+                            value.pop(key, None)
+                        save(row, value)
+                        run.status = 'completed'
+                    run.completed_at, run.lease_until = utcnow(), None
+                    db.commit()
+                    break
+                except StaleDataError:
+                    db.rollback()
+                    if persistence_attempt == 2:
+                        raise
         except Exception as exc:
             db.rollback()
             db.refresh(row)

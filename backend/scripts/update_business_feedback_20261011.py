@@ -18,6 +18,9 @@ def quotation(days, price, promotion=False):
 
 def update_package(package):
     result = deepcopy(package)
+    # The newer head-count policy supersedes this historical promotion.
+    if result.get('party_pricing'):
+        return result
     route = result['route_variant']
     if route not in ('peach_9d_2027', 'peach_11d_2027'):
         return result

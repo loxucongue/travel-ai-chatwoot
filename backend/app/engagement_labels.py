@@ -49,13 +49,12 @@ def initial_option(db, conversation, message, row):
             items = (question.content_attributes or {}).get('items', [])
             if text in {normalized(item.get(k)) for item in items for k in ('title', 'value')}:
                 return True
-    if value.get('introduction_route') or value.get('completed_introductions'):
-        return False
     bundle = compile_skills(db)
     choices = list(ENTRY_OPTIONS)
     for key, route in bundle['routes'].items():
         choices.extend([key, route['name'], *route.get('aliases', [])])
-    if not row or value.get('intake_status') in (None, 'sending', 'waiting'):
+    if not row or (not value.get('introduction_route') and not value.get('completed_introductions')
+                   and value.get('intake_status') in (None, 'sending', 'waiting')):
         intake = {**bundle.get('intake', {}), **(bundle['routes'].get((row.controls or {}).get('route_variant'), {}).get('intake') or {})} if row else bundle.get('intake', {})
         choices.extend(intake.get('options', []))
     # Ads prefix the same route title with e.g. "3~4月｜"; compare the whole
@@ -75,6 +74,7 @@ def observe_followup_return(db, conversation, message):
             or RETURNED_LABEL in (conversation.labels or [])
             or db.get(ConversationLabelAddition, (conversation.id, RETURNED_LABEL))
             or not permitted(db, conversation, purpose='followup')
+            or initial_option(db, conversation, message, row)
             or not followup_response(row.messages)):
         return
     db.add(ConversationLabelAddition(conversation_state_id=conversation.id,

@@ -19,10 +19,19 @@ def test_removes_only_selected_complete_clauses_and_preserves_state():
     assert d['messages'][0]['text']=='三月底在出發區間內。您們可以自己一團。想看珠峰嗎？'
 
 
-def test_removing_old_invitation_closes_acknowledgment():
-    d=Decision(messages=[{'text':'原來是排假的關係，那這次先不勉強，有別的假期再說就好。'}]).model_dump()
-    result=repetition.trim(d,repetition.clauses_for(d),[2])
+def test_removing_old_invitation_preserves_complete_acknowledgment():
+    d=Decision(messages=[{'text':'原來是排假的關係，那這次先不勉強。有別的假期再說就好。'}]).model_dump()
+    result=repetition.trim(d,repetition.clauses_for(d),[1])
     assert result['messages'][0]['text']=='原來是排假的關係，那這次先不勉強。'
+
+
+def test_price_clause_cannot_leave_a_hanging_topic_or_drop_its_condition():
+    d=Decision(messages=[{'text':'六月可以看這條線。費用的話，先確認人數，再按人數核價。'}]).model_dump()
+    clauses=repetition.clauses_for(d)
+    assert len(clauses)==2
+    assert repetition.trim(d,clauses,[1])['messages'][0]['text']=='六月可以看這條線。'
+    d=Decision(messages=[{'text':'如果未達人數，就不能保證發團。'}]).model_dump()
+    assert len(repetition.clauses_for(d))==1
 
 
 @pytest.mark.parametrize('ids', [[-1],[99],[True],['1'],[0,0],None])

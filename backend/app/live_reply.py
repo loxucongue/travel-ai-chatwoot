@@ -57,7 +57,7 @@ def mirror_event(db, event):
         out=db.scalar(select(OutboundMessage).where(OutboundMessage.conversation_state_id==state.id,
                                                    OutboundMessage.chatwoot_message_id==message.chatwoot_message_id))
         if out:
-            apply_receipt(db,out,payload.get('status'))
+            apply_receipt(db,out,payload.get('status'),payload.get('content_attributes'))
         elif current and event.event=='message_created' and message.direction=='outgoing' and not message.private:
             sender = payload.get('sender') or {}
             if sender.get('type') != 'agent_bot' and not (payload.get('content_attributes') or {}).get('external_echo'):

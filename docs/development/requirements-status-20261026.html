@@ -1,6 +1,7 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>业务需求总进度与渠道AI设置</title>
 <style>body{font:15px/1.7 system-ui,sans-serif;color:#25364b;max-width:1400px;margin:auto;padding:28px;background:#f6f8fb}table{border-collapse:collapse;width:100%;background:white}td,th{border:1px solid #d8e0ea;padding:12px;text-align:left;vertical-align:top}th{background:#e9eff7}h2{margin-top:32px}.note{padding:18px;background:#fff7df;border-left:4px solid #b77917}.scroll{overflow:auto}a{color:#145da0}small{color:#536375}</style>
 <h1>业务需求总进度 · 2026-10-26</h1>
+<p class="note">后续实单核查：<a href="live-effect-audit-20261027.html">10月27日线上效果与待决事项</a>。已确认部署生效，但价格解释、删句完整性、重复入口标签、失败重试和回执同步仍有缺陷；企业微信/邮箱未接通，高级自动分单未启用。下文历史“已上线”不代表这些业务场景全部验收通过。</p>
 <p class="note">本表综合10月22日至26日的需求、历史发布记录、测试证据和本次生产只读检查。旧报告中的“未上线”是当时状态，不能直接作为今天的待办。此前已发布的并非全部是小改动：素材规则、指定图库、多频道范围等中等功能也已上线。代码上线、真实模型场景通过、真实渠道/设备验收分别记录。</p>
 <h2>本次确认：渠道AI开关为什么保存后文案不变</h2>
 <p>旧界面有两个独立门禁：公共接待中的频道名单，以及系统设置中的收件箱自身AI开关。名单保存只改第一层；旁边“频道AI开关已关闭”读的是第二层，所以不会随勾选而变化。两个页面还使用不同的缓存查询键，旧开关的保存错误也没有显示在连接表单错误区。这是交互和状态表达缺陷，不能只用“保存成功”解释。</p>

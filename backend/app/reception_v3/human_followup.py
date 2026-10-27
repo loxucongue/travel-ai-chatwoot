@@ -19,6 +19,9 @@ def waiting(row):
 
 
 def scope_enabled(db, conversation):
+    from app.delivery_status import channel_delivery_blocked
+    if channel_delivery_blocked(db, conversation.id):
+        return False
     from app.models import ChatwootConnection, Tenant
     from app.reception_v3.live import settings, global_message_sending_enabled, reception_conversation_allowed
     from app.runtime_settings import reply_policy

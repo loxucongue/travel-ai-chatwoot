@@ -79,7 +79,7 @@ def test_workbook_nominal_seasons_preserve_specific_sale_restrictions(days, star
 
 
 @pytest.mark.parametrize('days,row,price', [(9, 35, 10780), (11, 39, 12780)])
-def test_workbook_standard_price_preserves_existing_approved_promotion(days, row, price):
+def test_workbook_standard_price_preserves_current_approved_party_policy(days, row, price):
     from app.route_packages import PACKAGE_ROOT
     item = json.loads((PACKAGE_ROOT/f'peach-{days}d-2027/route-package.json').read_text(encoding='utf8'))
     after, evidence = reconcile_package(item, read_source())
@@ -87,6 +87,6 @@ def test_workbook_standard_price_preserves_existing_approved_promotion(days, row
     assert read_source()['cells'][f'B{row}'] == price
     if days == 11:
         quote = next(s for s in after['fixed_answers'] if s['id'] == 'price')
-        assert '12,180' in quote['answer_text']
-        assert '12,780' in quote['fallback_text']
-        assert quote['valid_for_days'] == 30
+        assert '12,780' in quote['answer_text']
+        assert not quote.get('valid_for_days')
+        assert after['party_pricing']['base_price_cny'] == price

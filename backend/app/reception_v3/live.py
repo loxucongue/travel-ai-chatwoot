@@ -153,6 +153,9 @@ def cancel(db, conversation_id, reason):
 
 
 def permitted(db, conversation, *, purpose='reply'):
+    from app.delivery_status import channel_delivery_blocked
+    if channel_delivery_blocked(db, conversation.id):
+        return False
     from app.conversation_labels import sync_ready
     from app.reception_v3.human_followup import enabled, waiting
     row = session_for(db, conversation.id)
@@ -271,6 +274,9 @@ def apply_label_change(db, conversation, previous_labels):
 
 def restore_blocker(db, conversation, *, ignore_current_handoff=False):
     """Return the reason an explicit resume cannot release this conversation."""
+    from app.delivery_status import channel_delivery_blocked
+    if channel_delivery_blocked(db, conversation.id):
+        return '渠道已拒收自动消息，等待客户重新来讯后再核对恢复；不会重发失败消息'
     if not ignore_current_handoff and db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
                                             HandoffTask.status.in_(['pending', 'claimed']))):
         return '请先完成当前人工任务后再恢复 AI'

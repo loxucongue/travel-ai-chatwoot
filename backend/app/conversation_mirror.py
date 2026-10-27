@@ -223,7 +223,8 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
         message.direction = ctx["message_type"] or message.direction
         message.private = ctx["private"]
         message.content_type = ctx["content_type"]
-        message.status = ctx["message_status"] or message.status
+        from app.delivery_status import receipt_status
+        message.status = receipt_status(message.status, ctx['message_status']) or ctx['message_status'] or message.status
         message.sender_id = int(payload["sender"]["id"]) if isinstance(payload.get("sender"), dict) and payload["sender"].get("id") else None
         message.attachments = payload.get("attachments") if isinstance(payload.get("attachments"), list) else []
         message.content_attributes = payload.get("content_attributes") if isinstance(payload.get("content_attributes"), dict) else {}
@@ -245,5 +246,6 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
         if side_effects and ctx["event"] == "message_updated":
             outbound = db.scalar(select(OutboundMessage).where(OutboundMessage.chatwoot_message_id == int(ctx["message_id"])))
             if outbound and ctx["message_status"] in ("sent", "delivered", "read", "failed"):
-                outbound.status = ctx["message_status"]
+                from app.delivery_status import apply_receipt
+                apply_receipt(db, outbound, ctx['message_status'], payload.get('content_attributes'))
     return row, message, ctx, conversation_created

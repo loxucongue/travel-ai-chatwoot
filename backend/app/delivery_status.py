@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import time
 
-from sqlalchemy import select, update
+from sqlalchemy import select, or_
 
 from app.chatwoot import ReadOnlyChatwootClient
 from app.config import settings
@@ -22,7 +22,31 @@ def receipt_status(*values):
     return max(known, key=_RANK.get) if known else None
 
 
-def apply_receipt(db, out, status):
+def channel_delivery_blocked(db, conversation_id):
+    """A failed automatic send stays blocked until a newer real customer input.
+
+    The durable outbound record survives session restarts and AI label toggles.
+    Receipt reconciliation may resolve a false failure, but never resends it.
+    """
+    failed = db.scalar(select(OutboundMessage).where(
+        OutboundMessage.conversation_state_id == conversation_id,
+        OutboundMessage.source_type.in_(['ai', 'sop']),
+        OutboundMessage.idempotency_key.like('live%'),
+        OutboundMessage.status == 'failed',
+        OutboundMessage.chatwoot_message_id.is_not(None)
+    ).order_by(OutboundMessage.chatwoot_message_id.desc()).limit(1))
+    if not failed:
+        return False
+    newer = db.scalar(select(MessageEvent.id).where(
+        MessageEvent.conversation_state_id == conversation_id,
+        MessageEvent.direction == 'incoming', MessageEvent.private.is_(False),
+        MessageEvent.content_attributes['external_echo'].as_boolean().is_not(True),
+        MessageEvent.chatwoot_message_id > failed.chatwoot_message_id,
+        MessageEvent.created_at > failed.created_at).limit(1))
+    return newer is None
+
+
+def apply_receipt(db, out, status, attributes=None):
     if status not in RECEIPTS:
         return False
     message = db.scalar(select(MessageEvent).where(
@@ -34,7 +58,12 @@ def apply_receipt(db, out, status):
     if message:
         message.status = final
         message.attribution = out.source_type
-    if changed and final == "failed" and out.source_type in {"ai", "sop"}:
+    external_error = (attributes or {}).get('external_error') or (
+        (message.content_attributes or {}).get('external_error') if message else None)
+    if final == 'failed' and external_error:
+        out.content_attributes = {**(out.content_attributes or {}), 'external_error': str(external_error)[:1000]}
+        out.error_code = 'channel_send_failed'
+    if final == "failed" and out.source_type in {"ai", "sop"} and channel_delivery_blocked(db, out.conversation_state_id):
         pause_failed_delivery(db, out)
     return bool(changed)
 
@@ -50,7 +79,7 @@ def pause_failed_delivery(db, out):
 
 
 def reconcile_live_delivery(checked=None):
-    """Check one recent live conversation, with bounded pagination and no write lock over HTTP."""
+    """Check unresolved receipts including older submissions, without resending."""
     checked = checked if checked is not None else {}
     cutoff = (datetime.fromisoformat(utcnow()) - timedelta(hours=48)).isoformat()
     with SessionLocal() as db:
@@ -62,8 +91,9 @@ def reconcile_live_delivery(checked=None):
                 InboxBinding.chatwoot_inbox_id.in_(reception_inbox_ids(db)),
                 OutboundMessage.idempotency_key.like("live%"),
                 OutboundMessage.chatwoot_message_id.is_not(None),
-                OutboundMessage.status.in_(["submitted", "sent", "delivered"]),
-                OutboundMessage.created_at >= cutoff).distinct()).all()
+                or_(OutboundMessage.status.in_(["submitted", "sent"]),
+                    (OutboundMessage.status == 'delivered') & (OutboundMessage.created_at >= cutoff))
+                ).distinct()).all()
         if not candidates:
             return 0
         state = min(candidates, key=lambda item: checked.get(item.id, 0))
@@ -71,24 +101,33 @@ def reconcile_live_delivery(checked=None):
         checked[state_id] = time.monotonic()
         connection = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == state.tenant_id))
         client_args = (connection.base_url, connection.account_id, decrypt_secret(connection.encrypted_api_token))
-        targets = set(db.scalars(select(OutboundMessage.chatwoot_message_id).where(
+        targets = list(db.scalars(select(OutboundMessage.chatwoot_message_id).where(
             OutboundMessage.conversation_state_id == state_id,
             OutboundMessage.idempotency_key.like("live%"),
             OutboundMessage.chatwoot_message_id.is_not(None),
-            OutboundMessage.created_at >= cutoff)).all())
+            or_(OutboundMessage.status.in_(['submitted', 'sent']),
+                (OutboundMessage.status == 'delivered') & (OutboundMessage.created_at >= cutoff))
+            ).order_by(OutboundMessage.chatwoot_message_id)).all())
+        targets = sorted(targets, key=lambda mid: (checked.get((state_id, mid), 0), mid))[:20]
     client = ReadOnlyChatwootClient(*client_args, timeout=5)
-    receipts, before = {}, None
+    receipts = {}
     try:
         for _ in range(3):
+            missing = [mid for mid in targets if mid not in receipts]
+            if not missing:
+                break
+            # Jump directly to the oldest unresolved target instead of losing
+            # it behind the first 60 recent messages on every polling pass.
+            target = missing[0]
+            before = target + 1
+            checked[(state_id, target)] = time.monotonic()
             messages, _ = unpack_messages(client.get_messages(remote_id, before=before))
-            ids = [m.get("id") for m in messages if isinstance(m.get("id"), int)]
             for message in messages:
                 if (message.get("id") in targets and message.get("status") in RECEIPTS
                         and message.get("message_type") in (1, "outgoing") and not message.get("private")):
-                    receipts[message["id"]] = message["status"]
-            if not ids or targets.issubset(receipts) or (before is not None and min(ids) >= before):
-                break
-            before = min(ids)
+                    receipts[message["id"]] = (message['status'], message.get('content_attributes'))
+            # An absent/deleted remote message must not starve other targets.
+            targets.remove(target)
     finally:
         client.close()
     changed = 0
@@ -97,6 +136,7 @@ def reconcile_live_delivery(checked=None):
                 OutboundMessage.conversation_state_id == state_id,
                 OutboundMessage.idempotency_key.like("live%"),
                 OutboundMessage.chatwoot_message_id.in_(receipts))).all():
-            changed += apply_receipt(db, out, receipts[out.chatwoot_message_id])
+            status, attributes = receipts[out.chatwoot_message_id]
+            changed += apply_receipt(db, out, status, attributes)
         db.commit()
     return changed

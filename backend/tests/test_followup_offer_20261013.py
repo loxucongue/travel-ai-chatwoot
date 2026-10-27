@@ -158,7 +158,9 @@ def test_api_accepts_rolling_and_rejects_ambiguous_validity():
     from app.automation_api import RouteFixedAnswerInput
     from app.route_packages import load_route_packages
     from scripts.update_business_feedback_20261011 import update_package as previous
-    package=update_package(previous(load_route_packages()['peach_11d_2027']))
+    historical=deepcopy(load_route_packages()['peach_11d_2027'])
+    historical.pop('party_pricing',None)
+    package=update_package(previous(historical))
     price=next(s for s in package['fixed_answers'] if s['id']=='price')
     assert RouteFixedAnswerInput.model_validate(price).valid_for_days==30
     for patch in ({'valid_until':'2026-10-31'}, {'answer_text':'missing placeholder'}, {'fallback_text':None}):

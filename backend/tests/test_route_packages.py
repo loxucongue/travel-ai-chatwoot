@@ -63,7 +63,8 @@ def test_route_packages_are_bound_to_the_saved_website_snapshot():
     manifest_path = PACKAGE_ROOT.parent / "website-7693-full" / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     source_html = manifest_path.parent / "source" / "content.html"
-    assert hashlib.sha256(source_html.read_bytes()).hexdigest() == manifest["raw_html_sha256"]
+    # Git autocrlf changes the Windows working copy, not the captured LF source.
+    assert hashlib.sha256(source_html.read_bytes().replace(b'\r\n', b'\n')).hexdigest() == manifest["raw_html_sha256"]
     for package in ROUTE_PACKAGES.values():
         assert package["source"]["snapshot_sha256"] == manifest["raw_html_sha256"]
         assert (PACKAGE_ROOT.parents[3] / package["source"]["branch_content"]).is_file()
