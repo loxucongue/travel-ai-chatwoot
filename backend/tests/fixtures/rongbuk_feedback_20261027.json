@@ -1,0 +1,23 @@
+[
+  {
+    "id": "rongbuk_month_and_inventory",
+    "title": "绒布疑虑先答业务事实，改为冬季保留关闭规则，指定库存交顾问",
+    "entry": "西藏全覽10天",
+    "replay_context": {
+      "now": "2026-10-27T11:30:00+00:00", "event": "customer_message", "route_variant": "tibet_overview_10d",
+      "profile": {"party_size": 3, "group_type": "shared", "departure_window": "2027年6月"},
+      "state": {"opening_started": true, "intake_status": "done", "completed_introductions": ["tibet_overview_10d"], "introduction_route": "tibet_overview_10d"},
+      "messages": [
+        {"id": "h1", "direction": "incoming", "content": "我們三位，明年六月想去林芝跟珠峰，選全覽10天。", "created_at": "2026-10-27T11:20:00+00:00"},
+        {"id": "h2", "direction": "outgoing", "content": "行程圖已給您參考，這條有安排珠峰。", "status": "sent", "created_at": "2026-10-27T11:21:00+00:00"},
+        {"id": "h3", "direction": "incoming", "content": "絨布旅館真的可以住嗎？聽說不好訂，懷疑你們能不能安排。", "created_at": "2026-10-27T11:30:00+00:00"}
+      ]
+    },
+    "steps": [
+      {"id": "summer", "checks": ["send", "not_handoff", "no_price"], "contains_any": [["預留", "先拿", "提前", "部分房"], ["數量", "有限", "不多"], ["合約", "合同"]], "excludes": ["保證入住", "一定住得到", "已幫您保留", "費用的話。"]},
+      {"id": "winter", "text": "如果我們改明年一月呢，還能住絨布嗎？只問住宿，先不用換行程。", "checks": ["send", "not_handoff", "no_price"], "contains_any": [["關閉", "不開", "不開放"], ["小鎮"]], "excludes": ["可以安排的", "已幫您保留", "保證入住"]},
+      {"id": "back_to_summer", "text": "那維持明年六月吧，如果臨時徵用或者天氣不好怎麼辦？", "checks": ["send", "not_handoff", "no_price"], "contains_any": [["合約", "合同", "約定"]], "excludes": ["全額退款", "賠償5000", "保證入住"]},
+      {"id": "confirm_inventory", "text": "請幫我核實2027年6月15日出發那團，珠峰那晚是不是有三個人的房，可以現在幫我鎖房嗎？", "checks": ["handoff", "no_price"], "excludes": ["已鎖房", "已幫您保留", "保證入住"]}
+    ]
+  }
+]

@@ -1,7 +1,13 @@
 {
   "schema_version": 1,
-  "knowledge_version": "2026-10-07.business-short-replies",
+  "knowledge_version": "2026-10-27.rongbuk-availability",
   "sources": [
+    {
+      "id": "business.feedback.20261027",
+      "description": "用户转述麗麗2026-10-27 19:00确认的绒布房源答疑",
+      "snapshot_path": "sources/20261027/rongbuk-business-feedback.txt",
+      "snapshot_sha256": "a0ff786282dcb3bf4b5909a53902ad15990e134a7497a4bba902da0cf8d39625"
+    },
     {
       "id": "china2go.tibet_insurance",
       "url": "https://china2go.com/tibet-insurance/",
@@ -25,6 +31,11 @@
     }
   ],
   "facts": [
+    {
+      "id": "service.rongbuk_reservation_scope",
+      "text": "2026-10-27业务确认：对于包含珠峰且当季安排绒布旅馆的线路，我们已提前拿部分房；小团预留数量有限，晚确认可能订不到。天气、征用等也可能影响安排，行程和合同会说明相关约定。这是团队已有部分房源的说明，不代表已替当前客户锁房、客户指定日期有余房或保证入住。未明确月份先确认月份；12–2月仍按现有冬季规则说明绒布关闭、住山下珠峰小镇，不能用预留房源覆盖关闭规则。不含珠峰的线路不承诺绒布住宿。不编造剩余房数、确认期限、替代酒店、退款或赔付条款。",
+      "source_ref": "business.feedback.20261027#麗麗19:00"
+    },
     {
       "id": "service.medical_preparedness",
       "text": "導遊接受高原旅遊急救培訓，包括高原反應識別、緊急處置演練、氧氣使用程序及與醫院協作轉介。導遊隨車搭配專業血氧儀，隨身背包備有血氧儀、氧氣瓶與急救包；這些是途中支援設備，導遊負責協助而不作醫療診斷。",
@@ -68,6 +79,17 @@
     }
   ],
   "fixed_answers": [
+    {
+      "id": "rongbuk_reservation_reassurance",
+      "name": "绒布旅馆房源与入住顾虑",
+      "status": "active",
+      "topics": ["accommodation"],
+      "answer_text": "可以安排的，我們有先拿一些絨布旅館的房間，但您也知道我們是小團，預留數量不多，太晚確定就可能會住不到。天氣、徵用等因素也可能影響安排；這些我們在行程跟合約裡都會說明清楚喔。您選的出發日期是否還有房，還需要再確認。",
+      "fact_ids": ["service.rongbuk_reservation_scope"],
+      "source_ref": "business.feedback.20261027#麗麗19:00",
+      "positive_examples": ["已知非冬季且含珠峰并安排绒布的线路，客户怀疑是否真的住得到绒布", "客户询问团队是否提前预留绒布房间"],
+      "negative_examples": ["12–2月绒布关闭", "出发月份未知，应先问月份并有条件说明", "线路不含珠峰", "要求保证指定日期有房、锁房或合同退款条款", "只问房间设施，不重复整段房源解释"]
+    },
     {
       "id": "bomi_hilton_short",
       "name": "波密是否希爾頓",

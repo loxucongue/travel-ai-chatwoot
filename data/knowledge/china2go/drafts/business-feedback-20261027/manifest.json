@@ -1,0 +1,161 @@
+{
+  "runtime_enabled": false,
+  "sources": [
+    {
+      "url": "https://china2go.com/0808-2/",
+      "modified": "2026-10-26T14:45:59",
+      "snapshot": "0808-2.txt",
+      "sha256": "52d294264348ac327c65a2c28a95ff04955d6132acb7e8e67cb022735816f648"
+    },
+    {
+      "url": "https://china2go.com/8425-2/",
+      "modified": "2026-10-27T18:55:01",
+      "snapshot": "8425-2.txt",
+      "sha256": "7fdc97999eb85063708cae804a2ba9d17a2cb8938e70d9bf3eb49018c5abbdb0"
+    }
+  ],
+  "archives": [
+    {
+      "filename": "阿里大環線-15天.zip",
+      "sha256": "be59d8f5d819fba2c666e870276c620154547b1573e4c9cc90c667711e5fda9e",
+      "files": [
+        {
+          "filename": "阿里大環線-15天/圖R-11.古格王朝.png",
+          "bytes": 2894835,
+          "sha256": "79b945b4a211aee5f17a94715716ae4067846d6dfc0ca3e72a5bb396eef9793a"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-12-1.物瑪措.png",
+          "bytes": 1688169,
+          "sha256": "b40658fba5c2673488b1a3f5d6a477ce1c24b32e3a4ab725c5af20205b1b694b"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-12-3.無人區野生動物.png",
+          "bytes": 2348947,
+          "sha256": "663d4bf616feb7ed3a74ac310cefb41023d449cd47763819be9ac7bfde5f8343"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-13-1.納木錯.png",
+          "bytes": 1786281,
+          "sha256": "abd48228557f23ca4e1e8780c5b32cf3a284527df83074087928c025cfd9c94d"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-13.大地之樹空拍.png",
+          "bytes": 3580542,
+          "sha256": "0d9fd7ca434c180c3c96b69daebe4d3ad0fd8fd87dfc6b3f4994c5b787023920"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-14-1.塔欽酒店或絨布旅館房間.png",
+          "bytes": 1855889,
+          "sha256": "250f916475e84d25e10954020c64b8addbff367b237e1b8a13e27e25b8a47601"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-16-1.9座VIP保姆車內裝.jpeg",
+          "bytes": 2261882,
+          "sha256": "847b006731d7f7506eae9a6a13ac7b4e6aa96af4af14145ca64529c6f33e9ec5"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-16-2.車上的醫用供氧設備.jpeg",
+          "bytes": 2045772,
+          "sha256": "f3a8572a1d90d99333bab716a20cc78b54665e69947b19a7d56187a075eb9814"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-17-2.客人FB轉山感謝貼文截.png",
+          "bytes": 143840,
+          "sha256": "8537d5fc4f1c93b67d8343fdbd0dfb9bc861101df7f3f51828e2b17ae38473de"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-2.阿里大環線地圖（標出拉薩、珠峰、岡仁波齊、古格、獅泉河、藏北、納木措）.png",
+          "bytes": 2155429,
+          "sha256": "0425e166a671b325691bae3ff4d128fdd1b6591d7d149eb2c595dc9f5073a6ea"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-5.瑪旁雍措.png",
+          "bytes": 2420557,
+          "sha256": "02cef99b24f4de9a3a369ecba585993b436296accd1306c01601e3b830d0a31b"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-7-2人在經幡廣場掛經幡.jpg",
+          "bytes": 298103,
+          "sha256": "b75166f9a7c750d32009621b9995d32363965c15e9e18b4ba61044e80761d721"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-7.岡仁波齊北壁.png",
+          "bytes": 1375538,
+          "sha256": "aca8bb20bcd2639a488b446d23e6b56dceb82d1528797f6516ee7479d1c28cc6"
+        },
+        {
+          "filename": "阿里大環線-15天/圖R-9.客人轉山實拍.jpg",
+          "bytes": 182885,
+          "sha256": "3946fca135cb1cc7d1676499ed5db5239fa4d83e0bf9860530470c1eab4f0525"
+        },
+        {
+          "filename": "阿里大環線-15天/圖洗-1.轉山照.png",
+          "bytes": 2998180,
+          "sha256": "27d81bad5b845cd5a23885c36d664fc184120e3a8b0bed91867168fa4b21f11b"
+        },
+        {
+          "filename": "阿里大環線-15天/圖洗-3格壁畫.png",
+          "bytes": 2815535,
+          "sha256": "c3ec9ad3c2d254487a8d461ad8d2b2d6626bdbbbb5648e135948c16fb2e1f3c8"
+        },
+        {
+          "filename": "阿里大環線-15天/圖洗-4.藏北銀河.png",
+          "bytes": 1673209,
+          "sha256": "348229e116d09c33050e572634f9688e2579fbcfb1bd9c90335769d4a50ab819"
+        },
+        {
+          "filename": "阿里大環線-15天/圖洗-5.湖邊牦牛群.png",
+          "bytes": 2087452,
+          "sha256": "8a3f522c5f7e83408e3c65cdb62eff03d135ae7693f3f92f4f310336fe8849f4"
+        }
+      ]
+    },
+    {
+      "filename": "7 人以上.zip",
+      "sha256": "11a68fd7c90b718f5ea5b9a344fb39331673f1226ce67590b8e1c3dbdd0714cd",
+      "files": [
+        {
+          "filename": "7 人以上/圖E-珠1・珠峰日照金山.png",
+          "bytes": 1579730,
+          "sha256": "7fe25727684d91298cfd2d52662d157b1e34c48d42349ce4f41a1b27d844f826"
+        },
+        {
+          "filename": "7 人以上/圖E-珠2・客人在珠峰大本營紀念碑合照.webp",
+          "bytes": 176492,
+          "sha256": "d5fc2b79bbcb7aae399faef4b9f95a6853c98b109ba368c5ddb3fe39c7e3b704"
+        },
+        {
+          "filename": "7 人以上/圖L-林1・巴松措湖心島.png",
+          "bytes": 1269702,
+          "sha256": "292173bd6d6f22d05b122822f2abbc2f28db8d6aef7dee334784d6f978d04516"
+        },
+        {
+          "filename": "7 人以上/圖P-桃1・秀巴古堡與桃花.png",
+          "bytes": 4611279,
+          "sha256": "2d3e8ffb72f242ce69c423dc0f9da690fab964c222423e57d887229a4b4267ea"
+        },
+        {
+          "filename": "7 人以上/圖R-12-1・物瑪措空拍（湖中公路）.png",
+          "bytes": 1078435,
+          "sha256": "46897f2072982838e14342be92ef99048aeccce26f72bda5cd28add618068bd8"
+        },
+        {
+          "filename": "7 人以上/圖W-冬1・恰央措冰面空拍.png",
+          "bytes": 3178738,
+          "sha256": "d9805ff149af96603118fbaebae243ae640a9c6ac32b95691ae8549fb622439b"
+        },
+        {
+          "filename": "7 人以上/圖客-1・我們的客人合照.png",
+          "bytes": 1213754,
+          "sha256": "fda4c24ac2fc062c81406d666b6a53fbbec37c5e22419dd1e8e5b2e07143373f"
+        },
+        {
+          "filename": "7 人以上/圖客-1・我們的客人合照.webp",
+          "bytes": 140700,
+          "sha256": "edc0a25a00d377ec0fe5965aa064881c2f834ee4d54e2baf652cdd08e925003e"
+        }
+      ]
+    }
+  ]
+}
