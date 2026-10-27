@@ -240,6 +240,12 @@ def _validate(package: dict, source: Path) -> dict:
             validate_party_pricing(package['party_pricing'])
         except (ValueError, KeyError, TypeError) as exc:
             raise RoutePackageError(f'route_package_party_pricing_invalid:{route_id}') from exc
+    if package.get('large_party') is not None:
+        from app.reception_v3.large_party import validate_policy
+        try:
+            validate_policy(package['large_party'], groups)
+        except (ValueError, KeyError, TypeError) as exc:
+            raise RoutePackageError(f'route_package_large_party_invalid:{route_id}') from exc
     return package
 
 
@@ -362,6 +368,7 @@ def reload_route_packages() -> None:
         "entry_comparison": deepcopy(package.get("entry_comparison")),
         "seasonal_pricing": deepcopy(package.get("seasonal_pricing")),
         "party_pricing": deepcopy(package.get("party_pricing")),
+        "large_party": deepcopy(package.get("large_party")),
         "departure_availability": deepcopy(package.get("departure_availability")),
         "initial_delivery_interval_seconds": package["initial_delivery_interval_seconds"],
         "required_slots": package["required_slots"],

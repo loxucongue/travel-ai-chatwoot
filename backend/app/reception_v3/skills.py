@@ -64,6 +64,7 @@ def compile_skills(db, now=None):
             'entry_comparison': deepcopy(route.get('entry_comparison')),
             'seasonal_pricing': deepcopy(route.get('seasonal_pricing')),
             'departure_availability': deepcopy(route.get('departure_availability')),
+            'large_party': deepcopy(route.get('large_party')),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
                          'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
                          'topics', 'usage_note', 'status', 'quote_offer') if k in s}
@@ -176,6 +177,8 @@ class SkillRegistry:
                 body += '\n已公布出发团期（不代表库存保证）：' + json.dumps(route['departure_availability'], ensure_ascii=False)
             if route.get('guidance'):
                 body += '\n接待说明：' + route['guidance']
+            if (route.get('large_party') or {}).get('enabled'):
+                body += '\n优先适用的7人以上介绍后交接规则（覆盖旧直接交接句）：' + json.dumps(route['large_party'], ensure_ascii=False)
             body += f"\n\n## 完整介绍原文\n逐条间隔：{route['interval_seconds']} 秒\n"
             for index, key in enumerate(route['introduction_sequence'], 1):
                 group = route['groups'][key]

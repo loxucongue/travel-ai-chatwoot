@@ -256,6 +256,10 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
         # Pause only; the Agent must distinguish concern, comparison and a real
         # selection before allowing the next image to leave the queue.
         value['route_review_pending'] = True
+    # Even a bare "7" may change the party size. Pause until the pending
+    # classification completes, rather than guessing from units/keywords.
+    if value.get('delivery_kind') in ('large_party', 'introduction'):
+        value['route_review_pending'] = True
     value['buffered_questions'] = [*value.get('buffered_questions', []), client_key]
     value['next_check_at'] = None
     value['next_check_minutes'] = None
@@ -515,8 +519,13 @@ def apply_decision(db, row, run, bundle, decision):
         if (row.memory.get('_departure_check') or {}).get('route') not in (None, decision['route_variant']):
             row.memory = {k:v for k,v in row.memory.items() if k != '_departure_check'}
     route_policy = bundle['routes'].get(decision['route_variant'] or row.controls.get('route_variant', ''), {})
+    from app.reception_v3.large_party import begin as begin_large_party
+    save(row, value)
+    if begin_large_party(db, row, run, bundle, decision):
+        return
+    value = state(row)
     party = row.memory.get('party_size') or row.memory.get('party_size_min')
-    if route_policy.get('seasonal_pricing') and isinstance(party, (int, float)) and party >= 7:
+    if not (route_policy.get('large_party') or {}).get('enabled') and route_policy.get('seasonal_pricing') and isinstance(party, (int, float)) and party >= 7:
         decision = {**decision, 'action':'handoff', 'messages':[], 'start_introduction':False,
                     'handoff_type':'party_size', 'handoff_reason':'常規線7人以上需顧問安排專屬團型。'}
         run.decision = decision
@@ -629,7 +638,11 @@ def complete_delivery(row, target, status):
     else:
         kind = value.pop('delivery_kind', None)
         value['delivery_due_at'] = None
-        if kind == 'introduction':
+        if kind == 'large_party' and value.get('handoff_after_plan'):
+            if not value.get('pending_event'):
+                value['pending_event'] = 'handoff_after_delivery'
+            row.due_at = utcnow()
+        elif kind == 'introduction':
             value['completed_introductions'] = list(dict.fromkeys([
                 *value.get('completed_introductions', []), value.get('introduction_route')]))
             value['pending_event'] = 'introduction_completed'
@@ -711,6 +724,7 @@ def control(row, action):
         row.due_at = None
         row.messages = [{**m, 'status': 'cancelled'} if m.get('status') == 'draft' else m for m in row.messages]
         value = state(row)
+        value.pop('handoff_after_plan', None)
         value.update(pending_event=None, delivery_kind=None, delivery_due_at=None, next_check_at=None, intake_deadline=None)
         save(row, value)
 
@@ -751,6 +765,11 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             if not permitted(db,db.get(ConversationState,row.conversation_state_id),purpose=purpose):
                 continue
         if value.get('failed_event') or (value.get('retry_at') and date(value['retry_at']) > date(utcnow())):
+            continue
+        if event == 'handoff_after_delivery':
+            from app.reception_v3.large_party import finish
+            finish(db, row)
+            db.commit()
             continue
         # Opening is sent once, verbatim, before asking the model to continue.
         if value.get('delivery_kind') == 'opening':

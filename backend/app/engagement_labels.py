@@ -143,8 +143,9 @@ def process_label_addition(session_factory):
             catalog = client.list_labels()
             catalog = catalog.get('payload', []) if isinstance(catalog, dict) else catalog
             if label not in {x.get('title') for x in catalog}:
-                description = ('客戶在已發送的沉默跟進後首次回覆' if label == '洗單回'
-                               else '客戶在 AI 接待期間主動回覆，開場預設選項除外')
+                description = {'洗單回':'客戶在已發送的沉默跟進後首次回覆',
+                    '高價值・獨立成團':'7人以上獨立成團需求，已完成介紹並交顧問'}.get(
+                        label, '客戶在 AI 接待期間主動回覆，開場預設選項除外')
                 client.create_label(label, description, '#0891B2', True)
             current = remote_labels(client, conversation.chatwoot_conversation_id)
             if ownership(db, cid) != owner:

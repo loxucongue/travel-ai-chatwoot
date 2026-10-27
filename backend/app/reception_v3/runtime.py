@@ -30,6 +30,7 @@ class Decision(BaseModel):
     route_choice: Literal['unchanged', 'recommend', 'selected'] = 'unchanged'
     messages: list[Message] = Field(default_factory=list)
     start_introduction: bool = False
+    answer_before_introduction: bool = False
     interrupt: bool = False
     profile: dict = Field(default_factory=dict)
     opt_out: bool | None = None
