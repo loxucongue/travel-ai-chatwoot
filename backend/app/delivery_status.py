@@ -4,7 +4,7 @@ import time
 
 from sqlalchemy import select, or_
 
-from app.chatwoot import ReadOnlyChatwootClient
+from app.chatwoot import ChatwootError, ReadOnlyChatwootClient
 from app.config import settings
 from app.db import SessionLocal
 from app.history_sync import unpack_messages
@@ -111,6 +111,8 @@ def reconcile_live_delivery(checked=None):
                 or_(OutboundMessage.status.in_(["submitted", "sent"]),
                     (OutboundMessage.status == 'delivered') & (OutboundMessage.created_at >= cutoff))
                 ).distinct()).all()
+        candidates = [item for item in candidates
+                      if checked.get(('unavailable_until', item.id), 0) <= time.monotonic()]
         if not candidates:
             return 0
         # Most passes prioritize unresolved sends. Reserve every fifth pass for
@@ -149,7 +151,15 @@ def reconcile_live_delivery(checked=None):
             target = max(missing)
             before = target + 1
             checked[(state_id, target)] = time.monotonic()
-            messages, _ = unpack_messages(client.get_messages(remote_id, before=before))
+            try:
+                messages, _ = unpack_messages(client.get_messages(remote_id, before=before))
+            except ChatwootError as exc:
+                if exc.status_code != 404:
+                    raise
+                # Deleted/inaccessible historical conversations are not send
+                # failures. Recheck later without blocking current receipts.
+                checked[('unavailable_until', state_id)] = time.monotonic() + 15 * 60
+                break
             for message in messages:
                 status = channel_receipt(message.get('status'), message.get('content_attributes'))
                 if (message.get("id") in targets and status in RECEIPTS

@@ -184,3 +184,53 @@ def test_unresolved_target_is_not_hidden_by_twenty_delivered_messages(session_fa
     assert calls[0] == 501
     with session_factory() as db:
         assert db.scalar(select(OutboundMessage).where(OutboundMessage.chatwoot_message_id == 500)).status == 'read'
+
+
+def test_unavailable_history_backs_off_without_false_failure_or_blocking_other_conversations(session_factory, monkeypatch):
+    from app.chatwoot import ChatwootError
+    setup(session_factory, monkeypatch)
+    monkeypatch.setattr(receipts, 'SessionLocal', session_factory)
+    now = [1000]
+    monkeypatch.setattr(receipts.time, 'monotonic', lambda: now[0])
+    calls = []
+    class Client:
+        def __init__(self, *a, **k): pass
+        def close(self): pass
+        def get_messages(self, cid, before=None):
+            calls.append(cid)
+            if cid == 26: raise ChatwootError('chatwoot_request_failed', 'missing', 404)
+            return {'payload': [{'id': 500, 'status': 'read', 'message_type': 1, 'private': False}]}
+    monkeypatch.setattr(receipts, 'ReadOnlyChatwootClient', Client)
+    with session_factory() as db:
+        outgoing(db, 201)
+        db.add(ConversationState(id=2, tenant_id=1, inbox_binding_id=1, contact_id=1, chatwoot_conversation_id=27))
+        db.flush()
+        db.add(OutboundMessage(conversation_state_id=2, idempotency_key='live:new:500',
+                               chatwoot_message_id=500, source_type='ai', status='submitted', content='new'))
+        db.commit()
+    checked = {}
+    assert receipts.reconcile_live_delivery(checked) == 0
+    assert receipts.reconcile_live_delivery(checked) == 1
+    assert receipts.reconcile_live_delivery(checked) == 0
+    assert calls == [26, 27]
+    now[0] += 901
+    receipts.reconcile_live_delivery(checked)
+    assert calls == [26, 27, 26]
+    with session_factory() as db:
+        assert db.scalar(select(OutboundMessage).where(OutboundMessage.chatwoot_message_id == 201)).status == 'submitted'
+        assert db.scalar(select(HandoffTask)) is None
+
+
+def test_receipt_authentication_errors_are_not_hidden_as_missing_history(session_factory, monkeypatch):
+    from app.chatwoot import ChatwootError
+    setup(session_factory, monkeypatch)
+    monkeypatch.setattr(receipts, 'SessionLocal', session_factory)
+    closed = []
+    class Client:
+        def __init__(self, *a, **k): pass
+        def close(self): closed.append(True)
+        def get_messages(self, *a, **k): raise ChatwootError('unauthorized', 'invalid', 401)
+    monkeypatch.setattr(receipts, 'ReadOnlyChatwootClient', Client)
+    with session_factory() as db: outgoing(db); db.commit()
+    with pytest.raises(ChatwootError): receipts.reconcile_live_delivery({})
+    assert closed == [True]
