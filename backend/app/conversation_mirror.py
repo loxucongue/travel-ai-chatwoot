@@ -223,11 +223,15 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
         message.direction = ctx["message_type"] or message.direction
         message.private = ctx["private"]
         message.content_type = ctx["content_type"]
-        from app.delivery_status import receipt_status
-        message.status = receipt_status(message.status, ctx['message_status']) or ctx['message_status'] or message.status
+        from app.delivery_status import receipt_status, channel_receipt
+        receipt = channel_receipt(ctx['message_status'], payload.get('content_attributes')) if ctx['message_type'] in ('outgoing', 1) else ctx['message_status']
+        message.status = receipt_status(message.status, receipt) or receipt or message.status
         message.sender_id = int(payload["sender"]["id"]) if isinstance(payload.get("sender"), dict) and payload["sender"].get("id") else None
         message.attachments = payload.get("attachments") if isinstance(payload.get("attachments"), list) else []
-        message.content_attributes = payload.get("content_attributes") if isinstance(payload.get("content_attributes"), dict) else {}
+        message.content_attributes = {**(message.content_attributes or {}),
+            **(payload.get("content_attributes") if isinstance(payload.get("content_attributes"), dict) else {})}
+        if message.status in ('delivered', 'read'):
+            message.content_attributes = {k: v for k, v in message.content_attributes.items() if k != 'external_error'}
         if message.direction == "incoming":
             message.attribution = "customer"
         elif message.direction == "outgoing":
@@ -245,7 +249,7 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
             message.created_at = message_timestamp(payload.get("created_at") or utcnow())
         if side_effects and ctx["event"] == "message_updated":
             outbound = db.scalar(select(OutboundMessage).where(OutboundMessage.chatwoot_message_id == int(ctx["message_id"])))
-            if outbound and ctx["message_status"] in ("sent", "delivered", "read", "failed"):
+            if outbound and not message.private and ctx['message_type'] in ('outgoing', 1):
                 from app.delivery_status import apply_receipt
                 apply_receipt(db, outbound, ctx['message_status'], payload.get('content_attributes'))
     return row, message, ctx, conversation_created

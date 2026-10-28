@@ -22,6 +22,15 @@ def receipt_status(*values):
     return max(known, key=_RANK.get) if known else None
 
 
+def channel_receipt(status, attributes=None):
+    """Chatwoot can report an external error without a status field."""
+    if status in ('delivered', 'read'):
+        return status
+    if isinstance(attributes, dict) and str(attributes.get('external_error') or '').strip():
+        return 'failed'
+    return status if status in RECEIPTS else None
+
+
 def channel_delivery_blocked(db, conversation_id):
     """A failed automatic send stays blocked until a newer real customer input.
 
@@ -47,11 +56,13 @@ def channel_delivery_blocked(db, conversation_id):
 
 
 def apply_receipt(db, out, status, attributes=None):
-    if status not in RECEIPTS:
-        return False
     message = db.scalar(select(MessageEvent).where(
         MessageEvent.conversation_state_id == out.conversation_state_id,
         MessageEvent.chatwoot_message_id == out.chatwoot_message_id))
+    status = receipt_status(channel_receipt(status, attributes),
+        channel_receipt(message.status, message.content_attributes) if message else None)
+    if status not in RECEIPTS:
+        return False
     final = receipt_status(out.status, message.status if message else None, status)
     changed = out.status != final or (message is not None and message.status != final)
     out.status = final
@@ -63,6 +74,12 @@ def apply_receipt(db, out, status, attributes=None):
     if final == 'failed' and external_error:
         out.content_attributes = {**(out.content_attributes or {}), 'external_error': str(external_error)[:1000]}
         out.error_code = 'channel_send_failed'
+    elif final in ('delivered', 'read'):
+        out.content_attributes = {k: v for k, v in (out.content_attributes or {}).items() if k != 'external_error'}
+        if out.error_code == 'channel_send_failed':
+            out.error_code = None
+        if message:
+            message.content_attributes = {k: v for k, v in (message.content_attributes or {}).items() if k != 'external_error'}
     if final == "failed" and out.source_type in {"ai", "sop"} and channel_delivery_blocked(db, out.conversation_state_id):
         pause_failed_delivery(db, out)
     return bool(changed)
@@ -96,19 +113,30 @@ def reconcile_live_delivery(checked=None):
                 ).distinct()).all()
         if not candidates:
             return 0
-        state = min(candidates, key=lambda item: checked.get(item.id, 0))
+        # Most passes prioritize unresolved sends. Reserve every fifth pass for
+        # delivery/read updates so neither queue can starve the other.
+        unresolved = set(db.scalars(select(OutboundMessage.conversation_state_id).where(
+            OutboundMessage.status.in_(['submitted', 'sent']),
+            OutboundMessage.idempotency_key.like('live%'),
+            OutboundMessage.chatwoot_message_id.is_not(None))).all())
+        checked['passes'] = checked.get('passes', 0) + 1
+        urgent = [item for item in candidates if item.id in unresolved]
+        pool = urgent if urgent and checked['passes'] % 5 else candidates
+        state = min(pool, key=lambda item: checked.get(item.id, 0))
         state_id, remote_id = state.id, state.chatwoot_conversation_id
         checked[state_id] = time.monotonic()
         connection = db.scalar(select(ChatwootConnection).where(ChatwootConnection.tenant_id == state.tenant_id))
         client_args = (connection.base_url, connection.account_id, decrypt_secret(connection.encrypted_api_token))
-        targets = list(db.scalars(select(OutboundMessage.chatwoot_message_id).where(
+        target_rows = db.execute(select(OutboundMessage.chatwoot_message_id, OutboundMessage.status).where(
             OutboundMessage.conversation_state_id == state_id,
             OutboundMessage.idempotency_key.like("live%"),
             OutboundMessage.chatwoot_message_id.is_not(None),
             or_(OutboundMessage.status.in_(['submitted', 'sent']),
                 (OutboundMessage.status == 'delivered') & (OutboundMessage.created_at >= cutoff))
-            ).order_by(OutboundMessage.chatwoot_message_id)).all())
-        targets = sorted(targets, key=lambda mid: (checked.get((state_id, mid), 0), mid))[:20]
+            ).order_by(OutboundMessage.chatwoot_message_id)).all()
+        targets = [mid for mid, status in sorted(target_rows, key=lambda item: (
+            (item[1] not in ('submitted', 'sent')) if checked['passes'] % 5 else False,
+            checked.get((state_id, item[0]), 0), item[0]))[:20]]
     client = ReadOnlyChatwootClient(*client_args, timeout=5)
     receipts = {}
     try:
@@ -116,16 +144,18 @@ def reconcile_live_delivery(checked=None):
             missing = [mid for mid in targets if mid not in receipts]
             if not missing:
                 break
-            # Jump directly to the oldest unresolved target instead of losing
-            # it behind the first 60 recent messages on every polling pass.
-            target = missing[0]
+            # A page ending at the newest selected target covers adjacent
+            # messages in the same batch, rather than fetching one at a time.
+            target = max(missing)
             before = target + 1
             checked[(state_id, target)] = time.monotonic()
             messages, _ = unpack_messages(client.get_messages(remote_id, before=before))
             for message in messages:
-                if (message.get("id") in targets and message.get("status") in RECEIPTS
+                status = channel_receipt(message.get('status'), message.get('content_attributes'))
+                if (message.get("id") in targets and status in RECEIPTS
                         and message.get("message_type") in (1, "outgoing") and not message.get("private")):
-                    receipts[message["id"]] = (message['status'], message.get('content_attributes'))
+                    receipts[message["id"]] = (status, message.get('content_attributes'))
+                    checked[(state_id, message['id'])] = time.monotonic()
             # An absent/deleted remote message must not starve other targets.
             targets.remove(target)
     finally:

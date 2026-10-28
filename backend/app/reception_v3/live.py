@@ -604,7 +604,12 @@ def deliver_one(db, row):
         # Preserve callback receipts, attachment metadata and server timestamps.
         message.attribution = 'ai'
         from app.delivery_status import apply_receipt
-        apply_receipt(db, out, message.status)
+        # A POST's default "sent" only acknowledges Chatwoot acceptance;
+        # preserve submitted until a channel receipt arrives. Explicit failures
+        # (including statusless external_error) must still stop this batch now.
+        response_status = result.get('status')
+        apply_receipt(db, out, response_status if response_status in ('failed', 'delivered', 'read')
+                      else message.status, result.get('content_attributes'))
         db.commit()
         if out.status == 'failed':
             return
