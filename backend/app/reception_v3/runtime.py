@@ -12,6 +12,7 @@ from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
 from app.reception_v3.prompt import SYSTEM_PROMPT
 from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task, validation_error as lead_priority_error
+from app.reception_v3.large_party import reply_contract_error
 from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
 from app.reception_v3.route_choice import PEACH_ROUTES, choice_error, pending_offer_acknowledgement
 
@@ -489,10 +490,18 @@ def run_agent(context: dict):
                                  'reasoning_content':message.get('reasoning_content','')})
                 messages.append({'role':'user','content':quote_problem})
                 continue
+            party_problem = reply_contract_error(decision, context)
+            if party_problem:
+                log.update(status='large_party_reply_rejected', validation_error=party_problem, rejected_decision=decision)
+                if any(item is not log and item.get('status') == 'large_party_reply_rejected' for item in logs):
+                    raise ValueError('large_party_reply_not_validated')
+                messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
+                messages.append({'role':'user', 'content':party_problem})
+                continue
             lead_problem = lead_priority_error(decision, context)
             if lead_problem:
                 log.update(status='lead_priority_rejected', validation_error=lead_problem, rejected_decision=decision)
-                if any(item.get('status') == 'lead_priority_rejected' for item in logs[:-1]):
+                if any(item is not log and item.get('status') == 'lead_priority_rejected' for item in logs):
                     raise ValueError('lead_priority_not_validated')
                 messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
                 messages.append({'role':'user', 'content':lead_problem})

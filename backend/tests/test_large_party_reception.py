@@ -207,6 +207,51 @@ def test_actual_question_is_answered_but_acknowledgement_is_owned_by_config(sess
         assert delivered(row)==['行程不包含機票。','您們7位可獨立成團','請提供聯絡方式']
 
 
+def test_model_repairs_answer_that_executor_would_discard(monkeypatch):
+    from test_reception_v3_skills import context, model, final
+    from app.reception_v3.runtime import run_agent
+    c=context('peach_9d_2027')
+    c['skills']['routes']['peach_9d_2027']['large_party']=configured()['routes']['nine']['large_party']
+    c['profile']={'party_size':7}
+    c['messages']=[{'direction':'incoming','content':'我們7位，機票含嗎？'}]
+    responses=[final(action='handoff',handoff_type='party_size'),final(messages=[{'text':'機票不含。'}]),
+        final(answer_before_introduction=True,messages=[{'text':'機票不含。'},
+            {'text':'請加LINE','purpose':'contact_invitation'}])]
+    # Both forms must be repaired: an omitted answer flag, or an extra invitation.
+    for first in responses:
+        requests=model(monkeypatch,[first,final(answer_before_introduction=True,messages=[{'text':'機票不含。'}])])
+        monkeypatch.setattr('app.reception_v3.repetition.review',lambda d,*a:(d,[{'node':'repetition_review','status':'completed'}],None))
+        result,logs,_=run_agent(c)
+        assert result['answer_before_introduction'] and len(result['messages'])==1
+        assert len(requests)==2 and logs[0]['status']=='large_party_reply_rejected'
+
+
+def test_group_reply_contract_leaves_small_groups_unchanged():
+    c={'skills':configured(),'route_variant':'nine','profile':{'party_size':6}}
+    assert large_party.reply_contract_error(Decision(messages=[{'text':'行程不含機票。'}]).model_dump(),c) is None
+
+
+def test_group_handoff_respects_prior_contact_refusal(session_factory,monkeypatch):
+    with session_factory() as db:
+        row=setup(db,monkeypatch,{'party_size':7,'contact_capture_declined':True},completed=True)
+        step(db,row);drain(db,row)
+        assert delivered(row)==['您們7位可獨立成團']
+        assert service.state(row)['handoff']
+
+
+def test_disabling_contact_after_group_intro_does_not_strand_handoff(session_factory,monkeypatch):
+    with session_factory() as db:
+        row=setup(db,monkeypatch,completed=True)
+        step(db,row);step(db,row)
+        assert delivered(row)==['您們7位可獨立成團']
+        config=configured();config['lead_capture']={'enabled':False}
+        monkeypatch.setattr(service,'compile_skills',lambda db:deepcopy(config))
+        drain(db,row)
+        assert delivered(row)==['您們7位可獨立成團']
+        assert service.state(row)['handoff']
+        assert any(m.get('cancel_reason')=='contact_permission_revoked' for m in row.messages)
+
+
 def test_unknown_route_cannot_send_model_selected_intro_assets(session_factory,monkeypatch):
     with session_factory() as db:
         row=setup(db,monkeypatch)

@@ -202,7 +202,7 @@ def test_model_protocol_repairs_priority_without_sending_first_wash(monkeypatch)
     c['skills']['lead_capture']=configured()['lead_capture']
     requests=model(monkeypatch,[final(messages=[{'text':'看看风景'}]),
         {'content':json.dumps(invitation(),ensure_ascii=False)}])
-    monkeypatch.setattr('app.reception_v3.repetition.review',lambda d,*a:(d,[],None))
+    monkeypatch.setattr('app.reception_v3.repetition.review',lambda d,*a:(d,[{'node':'repetition_review','status':'completed'}],None))
     result,logs,_=runtime.run_agent(c)
     assert result['messages'][0]['purpose']=='contact_invitation'
     assert len(requests)==2 and logs[0]['status']=='lead_priority_rejected'

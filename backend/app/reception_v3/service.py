@@ -717,10 +717,14 @@ def skip_revoked_contact(db, row, part):
             and (not part.get('contact_channels') or part['contact_channels'] == config.get('channels', []))
             and (not part.get('next_day_contact_invitation') or config.get('next_day_invitation_enabled'))):
         return False
-    row.messages = [{**m, 'status': 'cancelled'} if m.get('id') == part['id'] else m for m in row.messages]
+    row.messages = [{**m, 'status': 'cancelled', 'cancel_reason':'contact_permission_revoked'}
+                    if m.get('id') == part['id'] else m for m in row.messages]
     value = state(row)
     value['last_reason'] = 'contact_invitation_permission_changed'
     if not any(m.get('status') == 'draft' for m in row.messages):
+        if value.get('delivery_kind') == 'large_party' and value.get('handoff_after_plan'):
+            value['pending_event'] = 'handoff_after_delivery'
+            row.due_at = utcnow()
         value.update(delivery_kind=None, delivery_due_at=None)
         if value.get('next_check_minutes'):
             schedule_followup(value, bundle, row.virtual_now)

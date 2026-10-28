@@ -24,6 +24,37 @@ def party_description(profile):
     return str(count(profile)) + '位以上'
 
 
+def reply_contract_error(decision, context):
+    """Do not silently discard model answers when replacing the group intro."""
+    profile = {**context.get('profile', {}), **decision.get('profile', {})}
+    route = decision.get('route_variant') or context.get('route_variant', '')
+    if (decision.get('route_choice') == 'recommend'
+            or not policy_for(context.get('skills', {}), route, profile)):
+        return None
+    from app.reception_v3.route_choice import rejects_current_route
+    if rejects_current_route(route, profile):
+        return None
+    if decision['action'] == 'handoff' and decision.get('handoff_type') == 'party_size':
+        return ('本线路已启用大团介绍后交接，不能仅因人数提前handoff。'
+                '请先处理本轮实际问题：有可回答的问题就reply、answer_before_introduction=true、'
+                'messages只写答案；仅补人数就reply、messages=[]。介绍和最终交接由程序完成。'
+                '真正缺少报价或库存事实等其他交接原因仍按对应handoff_type处理。')
+    if decision['action'] != 'reply':
+        return None
+    messages = decision['messages']
+    if messages and not decision.get('answer_before_introduction'):
+        return ('本轮已启用7人以上配置介绍。请重新检查客户最新消息：若有实际问题，'
+                '设置answer_before_introduction=true，messages只保留该问题的直接答案；'
+                '若仅补人数或确认，设置false且messages=[]。独团承接和联系邀请由程序发送，'
+                '不要把真正的问题答案与配置承接一起丢弃。')
+    if decision.get('answer_before_introduction') and (not messages or any(
+            m.get('purpose') == 'contact_invitation' or m.get('script_id') == 'contact_request'
+            for m in messages)):
+        return ('answer_before_introduction=true时messages必须有客户实际问题的答案，'
+                '不能附带联系邀请或独团承接；这两部分由配置负责。')
+    return None
+
+
 def cancel_pending(row, value):
     pending = value.pop('handoff_after_plan', None)
     if pending:
@@ -165,7 +196,12 @@ def begin(db, row, run, bundle, decision):
     answer = []
     if decision.get('answer_before_introduction') and decision['action'] == 'reply' and decision['messages']:
         _, answer = service.parts_for(db, row, bundle, {**decision, 'start_introduction':False})
-    parts = answer + prefix + parts + ([] if closing in texts else [{'content_type':'text', 'content':closing}])
+    contact = bundle.get('lead_capture', {})
+    may_invite = contact.get('enabled', True) and not row.memory.get('contact_capture_declined')
+    closing_parts = [] if closing in texts or not may_invite else [{
+        'content_type':'text', 'content':closing, 'contact_invitation':True,
+        'contact_channels':list(contact.get('channels', []))}]
+    parts = answer + prefix + parts + closing_parts
     # The model may quote the configured closing. Apply exact, whole-message
     # deduplication within this plan without cutting or rewriting sentences.
     from app.reception_v3.service_voice import service_voice
@@ -209,7 +245,9 @@ def finish(db, row):
         value['pending_event'] = 'customer_message'
         service.save(row, value)
         return False
-    if any(m.get('plan_id') == pending['plan_id'] and m.get('status') not in DELIVERED for m in row.messages):
+    if any(m.get('plan_id') == pending['plan_id'] and m.get('status') not in DELIVERED
+           and not (m.get('status') == 'cancelled' and m.get('contact_invitation')
+                    and m.get('cancel_reason') == 'contact_permission_revoked') for m in row.messages):
         return False
     summary = pending['summary'] + ' 人數：' + party_description(row.memory) + '；路線：' + pending['route']
     summary += '；出發：' + str(row.memory.get('departure_date_start') or row.memory.get('departure_window') or '待確認')
