@@ -132,7 +132,7 @@ def main():
     source_paths += [backend/'app/reception_v3/quotes.py', backend/'app/reception_v3/skills.py', backend/'app/reception_config.py']
     source_paths += [backend/'app/config.py', backend/'app/reception_v3/repetition.py']
     source_paths += [backend/'app/reception_v3/seasonal_quotes.py', backend/'app/reception_v3/party_quotes.py']
-    source_paths += [backend/'app/reception_v3/large_party.py']
+    source_paths += [backend/'app/reception_v3/large_party.py', backend/'app/reception_v3/lead_priority.py']
     source_paths += [backend/'app/reception_v3/route_choice.py', backend/'app/reception_v3/customer_reactions.py',
                      backend/'app/reception_v3/followup_window.py', backend/'app/reception_v3/material_rules.py',
                      backend/'app/reception_v3/customer_images.py']
@@ -238,6 +238,8 @@ def main():
                             intake = bundle['routes'].get(row.controls.get('route_variant',''),{}).get('intake') or bundle['intake']
                             if not emitted or emitted[0]['content']!=intake['question']:failures.append(check)
                         if check=='no_send' and emitted:failures.append(check)
+                        if check=='contact_invitation' and not any(m.get('contact_invitation') for m in emitted):failures.append(check)
+                        if check=='no_contact_invitation' and any(m.get('contact_invitation') for m in emitted):failures.append(check)
                         if check=='no_duplicate_messages':
                             texts=[m.get('content','').strip() for m in emitted if m.get('content')]
                             if len(texts)!=len(set(texts)):failures.append(check)

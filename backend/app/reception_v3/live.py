@@ -509,6 +509,9 @@ def deliver_one(db, row):
         db.commit()
         return
     part = drafts[0]
+    if service.skip_revoked_contact(db, row, part):
+        db.commit()
+        return
     if part.get('material_rule_id') or part.get('proactive'):
         from app.reception_v3.skills import compile_skills
         from app.reception_v3.material_rules import eligible_rules, conversation_labels, rule_digest

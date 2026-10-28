@@ -11,6 +11,7 @@ from app.model_transport import _post_with_deadline, _call_log, EvaluationCallEr
 from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
 from app.reception_v3.prompt import SYSTEM_PROMPT
+from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task, validation_error as lead_priority_error
 from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
 from app.reception_v3.route_choice import PEACH_ROUTES, choice_error, pending_offer_acknowledgement
 
@@ -21,6 +22,7 @@ class Message(BaseModel):
     script_id: str | None = ''
     asset_keys: list[str] = Field(default_factory=list)
     material_rule_id: str = ''
+    purpose: Literal['reply', 'contact_invitation'] = 'reply'
 
 
 class Decision(BaseModel):
@@ -40,6 +42,7 @@ class Decision(BaseModel):
     handoff_type: Literal['other', 'contact', 'contact_image', 'contact_reported', 'requested',
                           'party_size', 'trip_days', 'custom', 'knowledge'] = 'other'
     reason: str = ''
+    lead_review: LeadReview | None = None
 
     @field_validator('handoff_type', mode='before')
     @classmethod
@@ -144,6 +147,10 @@ def run_agent(context: dict):
         {'source_message_id': m.get('id'), **{key: m[key] for key in ('content', 'created_at', 'content_type') if key in m},
          'attachments':[{k:a[k] for k in ('id','file_type') if k in a} for a in m.get('attachments',[])]}
         for m in current.get('buffered_questions', [])]
+    priority_task = lead_priority_task(context)
+    if priority_task:
+        current['lead_priority_task'] = {**priority_task, 'evidence_messages': [
+            {key:value for key,value in m.items() if key != 'content'} for m in priority_task['evidence_messages']]}
     # These are already the active, scoped facts selected by the service. Make
     # their short text visible before the model decides something is unknown;
     # the read tool still exposes the complete records and provenance.
@@ -211,6 +218,8 @@ def run_agent(context: dict):
             content = '[已交付附件] ' + json.dumps({key: item[key] for key in
                 ('content_type', 'asset_key', 'name', 'filename') if key in item}, ensure_ascii=False)
         if content:
+            if priority_task and item.get('id'):
+                content = '[历史消息ID，仅作审核证据：' + str(item['id']) + ']\n' + content
             messages.append({'role': 'user' if item.get('direction') == 'incoming' else 'assistant',
                              'content': [{'type':'text','text':content}, *images[item['id']]] if item.get('id') in images else content})
     current['conversation_focus'] = conversation_focus
@@ -479,6 +488,14 @@ def run_agent(context: dict):
                 messages.append({'role':'assistant', 'content':json.dumps(decision,ensure_ascii=False),
                                  'reasoning_content':message.get('reasoning_content','')})
                 messages.append({'role':'user','content':quote_problem})
+                continue
+            lead_problem = lead_priority_error(decision, context)
+            if lead_problem:
+                log.update(status='lead_priority_rejected', validation_error=lead_problem, rejected_decision=decision)
+                if any(item.get('status') == 'lead_priority_rejected' for item in logs[:-1]):
+                    raise ValueError('lead_priority_not_validated')
+                messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
+                messages.append({'role':'user', 'content':lead_problem})
                 continue
             log.update(script_ids=[m['script_id'] for m in decision['messages'] if m['script_id']],
                        asset_keys=[k for m in decision['messages'] for k in m['asset_keys']])

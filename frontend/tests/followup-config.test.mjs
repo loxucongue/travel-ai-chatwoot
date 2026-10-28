@@ -2,6 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {followupCheckpoints, followupIntervals, validFollowupIntervals, configurationChanges} from '../src/pages/reception-config.ts';
 
+test('next day contact priority and threshold survive save independently of followup cadence', () => {
+  const before={intake:{},reply:{},lead_capture:{next_day_invitation_enabled:false,consultation_turn_threshold:3},routing:{},handoff:{},silence:{daily_at:'09:00'}};
+  const after=structuredClone(before);
+  Object.assign(after.lead_capture,{next_day_invitation_enabled:true,consultation_turn_threshold:4});
+  assert.deepEqual(configurationChanges(before,after),{lead_capture:{next_day_invitation_enabled:true,consultation_turn_threshold:4}});
+  assert.deepEqual(configurationChanges(after,before),{lead_capture:{next_day_invitation_enabled:false,consultation_turn_threshold:3}});
+});
+
 test('advisor automatic followup switch is included when enabled and disabled', () => {
   const before={intake:{},reply:{},lead_capture:{},routing:{},handoff:{},silence:{advisor_reply_followup_enabled:false,daily_at:'09:00'}};
   const after=structuredClone(before);

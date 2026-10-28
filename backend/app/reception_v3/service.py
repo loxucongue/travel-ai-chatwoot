@@ -399,6 +399,13 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         offset = len(parts)
         add(message['text'] or (script['text'] if script else ''),
             message['asset_keys'])
+        if message.get('purpose') == 'contact_invitation' or message.get('script_id') == 'contact_request':
+            for part in parts[offset:]:
+                if part.get('content'):
+                    part['contact_invitation'] = True
+                    part['contact_channels'] = bundle.get('lead_capture', {}).get('channels', [])
+                    if followup:
+                        part['next_day_contact_invitation'] = bool(bundle.get('lead_capture', {}).get('next_day_invitation_enabled'))
         if message.get('material_rule_id'):
             original = next(r for r in bundle['material_rules'] if r['id'] == message['material_rule_id'])
             for part in parts[offset:]:
@@ -477,6 +484,30 @@ def update_profile(db, row, run, decision):
 
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
+    from app.reception_v3.lead_priority import validation_error as lead_priority_error, outcome as lead_priority_outcome
+    lead_context = {
+        'event': run.input_snapshot.get('event'), 'now': row.virtual_now,
+        'skills': bundle, 'profile': row.memory or {}, 'state': value,
+        'route_variant': row.controls.get('route_variant', ''), 'messages': row.messages}
+    lead_problem = lead_priority_error(decision, lead_context)
+    if lead_problem:
+        raise ValueError('lead_priority_not_validated:' + lead_problem)
+    if lead_priority_outcome(decision, lead_context) == 'wait':
+        # Move the first eligible touch to tomorrow instead of exhausting a
+        # finite same-day schedule while repeatedly waiting. Keep later gaps.
+        silence = bundle['silence']
+        incoming = [m['created_at'] for m in row.messages if m.get('direction') == 'incoming' and m.get('created_at')]
+        value.update(pending_event=None, last_reason=decision['reason'],
+                     followup_last_customer_at=max(incoming, key=date), followup_settings=deepcopy(silence))
+        schedule_daily_followup(value, {**silence, 'daily_at':silence.get('daily_at') or silence.get('active_start', '09:00')},
+                                row.virtual_now, reset=True)
+        if not silence.get('daily_at') and value.get('next_check_at'):
+            intervals = followup_intervals(value, silence)
+            offset = sum(intervals[:value.get('silence_step', 0) + 1])
+            value['followup_anchor'] = later(value['next_check_at'], -offset * 60)
+        save(row, value)
+        row.due_at = None
+        return
     problem = choice_error(decision, {'skills':bundle, 'route_variant':row.controls.get('route_variant',''),
         'profile':row.memory or {}, 'state':value, 'event':run.input_snapshot.get('event', 'customer_message'),
         'messages':row.messages,
@@ -673,6 +704,30 @@ def skip_quiet_delivery(row, part):
     return True
 
 
+def skip_revoked_contact(db, row, part):
+    """Recheck contact permission for an invitation already waiting in the queue."""
+    if not part.get('contact_invitation'):
+        return False
+    bundle = compile_skills(db)
+    config = bundle.get('lead_capture', {})
+    profile = row.memory or {}
+    if (config.get('enabled', True) and not profile.get('contact_capture_declined')
+            and not profile.get('contact_value')
+            and profile.get('contact_status') not in ('captured', 'self_reported_added', 'provided', 'attachment_pending_verification')
+            and (not part.get('contact_channels') or part['contact_channels'] == config.get('channels', []))
+            and (not part.get('next_day_contact_invitation') or config.get('next_day_invitation_enabled'))):
+        return False
+    row.messages = [{**m, 'status': 'cancelled'} if m.get('id') == part['id'] else m for m in row.messages]
+    value = state(row)
+    value['last_reason'] = 'contact_invitation_permission_changed'
+    if not any(m.get('status') == 'draft' for m in row.messages):
+        value.update(delivery_kind=None, delivery_due_at=None)
+        if value.get('next_check_minutes'):
+            schedule_followup(value, bundle, row.virtual_now)
+    save(row, value)
+    return True
+
+
 def advance(row, wall_now=None, *, deliver=True):
     """Advance wall clock; deliver at most one message, never burst after a stall."""
     simulation = deepcopy(row.controls.get('simulation', {}))
@@ -747,6 +802,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
     rows = db.scalars(query.order_by(AutomationSession.id)).all()
     if advance_clock:
         for row in rows:
+            pending = next((m for m in row.messages if m.get('status') == 'draft'), None)
+            if pending:
+                skip_revoked_contact(db, row, pending)
             advance(row, wall_now)
     db.commit()
     for row in rows:

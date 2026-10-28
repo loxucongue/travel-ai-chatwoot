@@ -56,6 +56,8 @@ class ReplySettings(BaseModel):
 
 class LeadSettings(BaseModel):
     enabled: bool = True
+    next_day_invitation_enabled: bool = False
+    consultation_turn_threshold: int = Field(default=3, ge=1, le=20)
     channels: list[Literal["LINE", "微信", "电话", "Email", "WhatsApp"]] = Field(
         default_factory=lambda: list(SUPPORTED_CONTACT_CHANNELS), min_length=1, max_length=5
     )

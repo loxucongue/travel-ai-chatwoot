@@ -138,6 +138,8 @@ export default function AiReceptionStrategy() {
     if (draft.reply.custom_guidance.length > 40000) return '其他全局说明最多 40000 字。';
     if (draft.reply.opening_character_limit < 80 || draft.reply.opening_character_limit > 200) return '单次回复上限必须在 80–200 字之间。';
     if (draft.lead_capture.enabled && !draft.lead_capture.channels.length) return '开启留资后，至少选择一种联系方式。';
+    const consultationThreshold = draft.lead_capture.consultation_turn_threshold ?? 3;
+    if (!Number.isInteger(consultationThreshold) || consultationThreshold < 1 || consultationThreshold > 20) return '有效咨询次数需为1至20的整数。';
     const intervals = draft.silence.intervals_minutes ?? [];
     if (!validFollowupIntervals(intervals)) return '跟进时间应递增，最多20次，最后一次不超过1380分钟（23小时）。';
     if (!draft.intake.question.trim() || draft.intake.question.length > 500 || !Number.isInteger(draft.intake.wait_seconds) || draft.intake.wait_seconds < 1 || draft.intake.wait_seconds > 300) return '请填写人数问题及1至300秒的等待时间。';
@@ -150,6 +152,8 @@ export default function AiReceptionStrategy() {
   const error = configQuery.error || publish.error;
   if (configQuery.isLoading) return <div className="page-content ai-strategy-page"><section className="panel"><EmptyState type="loading" title="正在读取 AI 接待策略" description="" /></section></div>;
   if (!draft || !configQuery.data) return <div className="page-content ai-strategy-page"><section className="panel"><EmptyState type="error" title="策略读取失败" description={(error as Error)?.message ?? '无法读取策略'} /></section></div>;
+  const priorityEnabled = draft.lead_capture.enabled && !!draft.lead_capture.next_day_invitation_enabled;
+  const prioritySaved = configQuery.data.config.lead_capture.enabled && !!configQuery.data.config.lead_capture.next_day_invitation_enabled;
 
   return <div className="page-content ai-strategy-page">
     {notice ? <div className="config-notice"><CheckCircle2 size={16} />{notice}<button onClick={() => setNotice('')}><X size={14} /></button></div> : null}
@@ -188,6 +192,9 @@ export default function AiReceptionStrategy() {
         </div>}
         {tab === 'lead' && <div className="strategy-section-stack"><div className="strategy-card-title"><h3>主动留资</h3><Switch checked={draft.lead_capture.enabled} onChange={enabled => patch(config => {config.lead_capture.enabled=enabled;})} /></div>
           <div className="strategy-check-grid">{(['LINE','微信','电话','Email','WhatsApp'] as const).map(channel => <label key={channel}><input type="checkbox" checked={draft.lead_capture.channels.includes(channel)} onChange={event => patch(config => {config.lead_capture.channels=event.target.checked ? [...config.lead_capture.channels,channel] : config.lead_capture.channels.filter(item => item!==channel);})} />{channel}</label>)}</div>
+          <div className="strategy-card-title"><h3>次日先邀请私讯</h3><Switch checked={draft.lead_capture.next_day_invitation_enabled ?? false} disabled={!draft.lead_capture.enabled} onChange={enabled => patch(config => {config.lead_capture.next_day_invitation_enabled=enabled;})} /></div>
+          <p><strong>{priorityEnabled !== prioritySaved ? (priorityEnabled ? '待保存：开启次日优先邀请。' : '待保存：关闭次日优先邀请。') : (prioritySaved ? '已开启次日优先邀请。' : '次日优先邀请未启用。')}</strong> 已报价或达到有效咨询次数的客户，次日首次跟进先邀请私讯，后续跟进再评估洗单素材。已邀请、已留资、拒绝留资及顾问接手的客户不重复索取；发送仍受渠道权限与跟进时段限制。</p>
+          <label className="block-field">有效咨询次数<input type="number" min={1} max={20} disabled={!draft.lead_capture.enabled || !draft.lead_capture.next_day_invitation_enabled} value={draft.lead_capture.consultation_turn_threshold ?? 3} onChange={event => patch(config => {config.lead_capture.consultation_turn_threshold=Number(event.target.value);})} /><span>至少达到此次数，或已经收到报价，任一满足即可。广告按钮、点赞、单纯补人数或月份不计入。</span></label>
           <div className="strategy-card-title"><h3>多人咨询交给顾问</h3><Switch checked={draft.handoff.large_group_enabled} onChange={enabled => patch(config => {config.handoff.large_group_enabled=enabled;})} /></div>
           <label className="block-field">达到人数<input type="number" min={2} max={100} value={draft.handoff.large_group_minimum} onChange={event => patch(config => {config.handoff.large_group_minimum=Number(event.target.value);})} /></label>
           <label className="block-field">目录外需求<select value={draft.routing.outside_catalog_action} onChange={event => patch(config => {config.routing.outside_catalog_action=event.target.value as ReceptionConfig['routing']['outside_catalog_action'];})}><option value="consult_advisor">请顾问确认其他安排</option><option value="recommend_supported_routes">推荐现有线路</option><option value="explain_boundary_only">说明范围</option></select></label>
