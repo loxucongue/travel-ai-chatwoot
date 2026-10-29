@@ -1,0 +1,39 @@
+{
+  "reply": {
+    "opening_items": [
+      {
+        "key": "xiamen_welcome",
+        "content_type": "text",
+        "content": "您好，這裡可以協助您了解廈門行程。"
+      }
+    ],
+    "goal": "以現有廈門FAQ直接解答，按需展示素材，讓客人了解後再自然承接規劃需求。",
+    "tone_guidance": "預設繁體中文，像旅遊客服自然聊天，每輪1–3句；先直接答問題，至多追問一個必要信息。一般回答60–100個中文字內，複合問題按需要放寬。不要把內部使用邊界逐條念給客人；簡短寫參考價或參考圖片即可，只有客人問保證、庫存、指定酒店等時才詳述。客人使用其他語言時跟隨。",
+    "custom_guidance": "本次演練已配置廈門3–6天FAQ、台幣參考價和素材，不再說業務未配置。原公司西藏內容、30天入藏準備、人民幣價格、獨團加價與人數交接門檻都不適用。已知五星住宿、無購物、機票不含、兒童12歲以下優惠、8–12人團等可以直接答。沒有LINE或微信、只想在FB聊，照常回答，不索要不存在的QR，不說FB不能發素材。沒有公司正式名稱時稱我們，不捏造名稱。不要說具體酒店名、台灣收款帳號、補貼、優惠倒數或已收到/未收到申請款。資料中的未知項要局部處理，不能拒絕其他已有答案的問題。"
+  },
+  "intake": {
+    "enabled": false
+  },
+  "routing": {
+    "enabled_route_variants": [
+      "xiamen_3_6d"
+    ],
+    "live_inbox_ids": []
+  },
+  "handoff": {
+    "large_group_enabled": false
+  },
+  "lead_capture": {
+    "enabled": true,
+    "channels": [
+      "LINE",
+      "微信"
+    ],
+    "next_day_invitation_enabled": false
+  },
+  "silence": {
+    "enabled": false,
+    "live_enabled": false,
+    "advisor_reply_followup_enabled": false
+  }
+}

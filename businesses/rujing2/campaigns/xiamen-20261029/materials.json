@@ -1,0 +1,160 @@
+{
+  "scope": "rehearsal",
+  "route_variant": "xiamen_3_6d",
+  "items": [
+    {
+      "key": "xiamen_tulou",
+      "filename": "1.png",
+      "sha256": "853cc6694ab1017e333b4507e307f0c095ed4131ea3f37bc5fdc44202d46962d",
+      "display_name": "土樓景色參考",
+      "content_group_key": "scenery",
+      "media_type": "image",
+      "usage": "土樓景色參考",
+      "what_it_shows": "土樓建築及周邊田野",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "先給您看看閩南景色參考，圖片中的景點是否安排，仍依您最後選擇的路線確認。",
+      "avoid_claims": [
+        "不可認定某座土樓已包含門票或已排入行程"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    },
+    {
+      "key": "xiamen_gulangyu",
+      "filename": "2.png",
+      "sha256": "60d1e8ea0ef9b9b83f97edd2cbd77ddd0a892e8f556f80d6ffdaab01dcb6d543",
+      "display_name": "鼓浪嶼圖片參考",
+      "content_group_key": "scenery",
+      "media_type": "image",
+      "usage": "鼓浪嶼圖片參考",
+      "what_it_shows": "鼓浪嶼文字與建築",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "先給您看看閩南景色參考，圖片中的景點是否安排，仍依您最後選擇的路線確認。",
+      "avoid_claims": [
+        "不可推定船票、景點順序及自由活動時間"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    },
+    {
+      "key": "xiamen_hotel",
+      "filename": "3.png",
+      "sha256": "06e6bd8e7ac1e2f5033d1a0e0650bd7b3ab8ded885dd8014cb76f466e3cf6345",
+      "display_name": "客房照片參考",
+      "content_group_key": "hotel",
+      "media_type": "image",
+      "usage": "客房照片參考",
+      "what_it_shows": "雙人床客房照片",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "住宿按五星級酒店安排，具體酒店和房型會依出發日期確認，也可以先看房間參考圖。",
+      "avoid_claims": [
+        "酒店名、房型、實際入住及海景均未確認"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    },
+    {
+      "key": "xiamen_food",
+      "filename": "4.png",
+      "sha256": "93d314dac15df8053592bc6e339a3f6456d379c520ff5b9d0505dd4d4f570964",
+      "display_name": "閩南小吃參考",
+      "content_group_key": "food",
+      "media_type": "image",
+      "usage": "閩南小吃參考",
+      "what_it_shows": "多種閩南小吃拼圖",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "團費包含餐食，先給您看看餐食參考，實際餐次和菜色依確認的行程安排。",
+      "avoid_claims": [
+        "不代表拼圖中所有小吃都包含"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    },
+    {
+      "key": "xiamen_city_stairs",
+      "filename": "5.jpg",
+      "sha256": "0c70e9cd4e48637069ce0bc6a5ae7955397e056afc5e88ad30e6395ead586204",
+      "display_name": "廈門花景步道",
+      "content_group_key": "city",
+      "media_type": "image",
+      "usage": "廈門花景步道",
+      "what_it_shows": "花卉、階梯及廈門字樣，帶抖音水印",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "這是廈門城市風景參考，並非已確認的每日遊覽順序。",
+      "avoid_claims": [
+        "不是無障礙路線證明，不去除來源水印"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    },
+    {
+      "key": "xiamen_city_view",
+      "filename": "6.jpg",
+      "sha256": "f8780ec6e607f06c51c385dd66fa62bca735a3312e76ef45348c956c8279c3ba",
+      "display_name": "廈門城市風景",
+      "content_group_key": "city",
+      "media_type": "image",
+      "usage": "廈門城市風景",
+      "what_it_shows": "雙子塔方向的城市景色，帶抖音水印",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "這是廈門城市風景參考，並非已確認的每日遊覽順序。",
+      "avoid_claims": [
+        "不代表房間視野或已確認行程"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    },
+    {
+      "key": "xiamen_meal_video",
+      "filename": "0.mp4",
+      "sha256": "197f606360a8058fdc0c2397c29e3e30431326b855a1054b4ee8f34a0277a281",
+      "display_name": "桌餐影片參考",
+      "content_group_key": "food",
+      "media_type": "video",
+      "usage": "桌餐影片參考",
+      "what_it_shows": "桌上餐食及海鮮；音軌尚未逐字核驗",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "團費包含餐食，先給您看看餐食參考，實際餐次和菜色依確認的行程安排。",
+      "avoid_claims": [
+        "不保證每天海鮮、同樣菜色或任意餐標"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    },
+    {
+      "key": "xiamen_travelers_video",
+      "filename": "7.mp4",
+      "sha256": "fdef89ce8cb0b739b8b1f50b29011c4a74089a87d38e5f35c0f1d8bf06224bdd",
+      "display_name": "旅客活動氛圍影片",
+      "content_group_key": "travelers",
+      "media_type": "video",
+      "usage": "旅客活動氛圍影片",
+      "what_it_shows": "旅客合影活動，含人物和品牌字幕；音軌尚未逐字核驗",
+      "feature_points": [],
+      "customer_value": "幫助了解相應主題，按參考素材展示",
+      "recommended_caption": "這段影片可用於了解旅遊氛圍，不能作為特定團期、公司資質或已付款的證明。",
+      "avoid_claims": [
+        "不作公司資質、團員組成、訂單或付款證據"
+      ],
+      "live_approved": false,
+      "review_state": "rehearsal_only"
+    }
+  ],
+  "text_sources": [
+    {
+      "filename": "新建 DOC 文档.doc",
+      "use": "已整理35條FAQ，逐條保留原問答與改寫理由"
+    },
+    {
+      "filename": "話術截圖",
+      "use": "用作語氣與跟進參考；催申請款及加好友優惠缺少條件，暫不啟用自動跟進"
+    }
+  ]
+}

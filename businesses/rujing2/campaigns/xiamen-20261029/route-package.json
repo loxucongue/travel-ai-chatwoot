@@ -1,0 +1,886 @@
+{
+  "schema_version": 1,
+  "route_variant": "xiamen_3_6d",
+  "package_version": "20261029-xiamen-rehearsal-v1",
+  "knowledge_version": "rujing2-v1",
+  "currency": "TWD",
+  "branch": "xiamen",
+  "name": "廈門／廈漳泉3–6天諮詢",
+  "selection_title": "廈門3–6天",
+  "selection_aliases": [
+    "廈門",
+    "厦门",
+    "廈漳泉",
+    "厦漳泉",
+    "鼓浪嶼",
+    "鼓浪屿",
+    "土樓",
+    "土楼"
+  ],
+  "match_keywords": [
+    "廈門",
+    "厦门",
+    "廈漳泉",
+    "厦漳泉",
+    "閩南",
+    "闽南"
+  ],
+  "default_entry_message": "想了解廈門行程",
+  "required_slots": [
+    "interest"
+  ],
+  "initial_delivery_interval_seconds": 2,
+  "knowledge_facts": [
+    {
+      "id": "xiamen.price_reference",
+      "text": "一般3–6天行程，每人參考約NT$5,000–8,500，依天數和安排不同。您想玩幾天呢？ 使用邊界：可回答參考範圍；不是指定日期、房型和人數的最終價，不換匯、不把下限當成交價。",
+      "source_ref": "user-doc-20261029:faq-01"
+    },
+    {
+      "id": "xiamen.travel_season",
+      "text": "可以依您方便的月份規劃廈門行程，不同季節有不同景色。您大約想幾月份來呢？ 使用邊界：保留可諮詢月份，不把四季如春當天氣或全年有位保證。",
+      "source_ref": "user-doc-20261029:faq-02"
+    },
+    {
+      "id": "xiamen.recommended_days",
+      "text": "如果時間充裕，會推薦5天，能安排廈門、漳州和泉州三個城市的著名景點。您大約有幾天假期呢？ 使用邊界：只有城市和推薦天數，沒有逐日順序。",
+      "source_ref": "user-doc-20261029:faq-03"
+    },
+    {
+      "id": "xiamen.overview",
+      "text": "我們有3–6天的行程可以選，時間充裕可安排廈門、漳州、泉州。您目前比較想玩幾天呢？ 使用邊界：不能編造D1–D5或把展示照片當確定包含景點。",
+      "source_ref": "user-doc-20261029:faq-04"
+    },
+    {
+      "id": "xiamen.shopping",
+      "text": "我們的行程沒有安排購物站，費用包含和需要另外支付的項目會在確認行程時列清楚。 使用邊界：保留無購物口徑；機票不含，不把公開透明改寫成所有項目都免費。",
+      "source_ref": "user-doc-20261029:faq-05"
+    },
+    {
+      "id": "xiamen.included",
+      "text": "團費包含五星級住宿、行程內景點門票、餐食、全程用車、導遊及司機服務；機票不包含。具體酒店、餐次和景點以確認的行程為準。 使用邊界：沿用本公司FAQ；不推定每餐海鮮或任意景點門票都含。",
+      "source_ref": "user-doc-20261029:faq-06"
+    },
+    {
+      "id": "xiamen.flights",
+      "text": "機票不包含在團費內，可以協助查詢和代訂。您打算從哪個機場出發呢？ 使用邊界：未提供即時票價、代訂費及退款政策，不自行核價或下單。",
+      "source_ref": "user-doc-20261029:faq-07"
+    },
+    {
+      "id": "xiamen.hotel",
+      "text": "住宿按五星級酒店安排，具體酒店和房型會依出發日期確認，也可以先看房間參考圖。 使用邊界：保留公司提供的五星口徑；房圖沒有酒店名稱，不能認作承諾房型或保證海景。普通問酒店不用主動列出所有不保證事項。",
+      "source_ref": "user-doc-20261029:faq-08"
+    },
+    {
+      "id": "xiamen.charter",
+      "text": "可以包車，會依同行人數安排合適車型。請問大約幾位、想安排幾天呢？ 使用邊界：車型、座位、價格未提供，不指定車款。",
+      "source_ref": "user-doc-20261029:faq-09"
+    },
+    {
+      "id": "xiamen.children",
+      "text": "12歲以下的小朋友可以享有優惠價，實際費用還要看年齡和行程安排。小朋友幾歲呢？ 使用邊界：沒有兒童折扣金額，不按成人價乘比例。",
+      "source_ref": "user-doc-20261029:faq-10"
+    },
+    {
+      "id": "xiamen.elderly",
+      "text": "行程有車接車送，也可以先了解長輩的體力與步行需求，再確認合適安排。長輩是否有不方便走路或需要避免的活動呢？ 使用邊界：有接送不等於所有景點無階梯或任何長者都不累。",
+      "source_ref": "user-doc-20261029:faq-11"
+    },
+    {
+      "id": "xiamen.mobility",
+      "text": "可以先協助了解輪椅及行動協助需求，具體安排需依日期和服務方確認。您主要需要哪一方面協助呢？ 使用邊界：提供協助意向；不保證全程無障礙或免票。",
+      "source_ref": "user-doc-20261029:faq-12"
+    },
+    {
+      "id": "xiamen.tickets_only",
+      "text": "我們以行程服務為主，行程合適的話可以協助規劃出行及訂票。您是只需要訂票，還是也想了解行程呢？ 使用邊界：不能保證獨立訂票服務已接受。",
+      "source_ref": "user-doc-20261029:faq-13"
+    },
+    {
+      "id": "xiamen.independent",
+      "text": "自由行也可以協助預訂用車或酒店，您希望我們幫忙哪一部分呢？ 使用邊界：實際供應和費用另確認。",
+      "source_ref": "user-doc-20261029:faq-14"
+    },
+    {
+      "id": "xiamen.one_day",
+      "text": "也可以安排一日遊，會依您的時間和想去的地方規劃。您想去哪裡玩呢？ 使用邊界：尚無一日遊明細價目，不套3–6天參考價。",
+      "source_ref": "user-doc-20261029:faq-15"
+    },
+    {
+      "id": "xiamen.no_contact_app",
+      "text": "沒關係，我們可以先在這裡聊行程，您不用另外註冊LINE或微信。您想先了解哪一部分呢？ 使用邊界：原文在沒有通訊軟體時仍要求QR，改為尊重聯絡偏好。",
+      "source_ref": "user-doc-20261029:faq-16"
+    },
+    {
+      "id": "xiamen.custom",
+      "text": "可以依您的需求定制行程，不一定要跟團。您想安排幾天、大約幾位同行呢？ 使用邊界：定制價格、成團條件需另核實。",
+      "source_ref": "user-doc-20261029:faq-17"
+    },
+    {
+      "id": "xiamen.group_size",
+      "text": "一般安排8–12位的小團，以台灣旅客為主要服務對象。 使用邊界：8–12是本公司團規模，不套用舊公司7人轉人工或獨團加價；不是某日已成團的保證。",
+      "source_ref": "user-doc-20261029:faq-18"
+    },
+    {
+      "id": "xiamen.single_room",
+      "text": "接待動作：客人問到「單房差」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：原文沒有單房差金額；不以找朋友同行迴避，也不計算。",
+      "source_ref": "user-doc-20261029:faq-19"
+    },
+    {
+      "id": "xiamen.facebook_only",
+      "text": "可以先在Facebook這裡了解行程，也可以看我們現有的圖片資料。您方便時再選擇合適的聯絡方式，不用現在加LINE或微信。 使用邊界：不聲稱FB不能發照片，不以換平台作回答前提。",
+      "source_ref": "user-doc-20261029:faq-20"
+    },
+    {
+      "id": "xiamen.card_service",
+      "text": "您說的辦卡是手機SIM卡、銀行卡，還是其他卡片呢？不同服務要分開確認。 使用邊界：卡片類型不明，先澄清，不保證均可代辦。",
+      "source_ref": "user-doc-20261029:faq-21"
+    },
+    {
+      "id": "xiamen.payment",
+      "text": "接待動作：客人問到「付款／台灣帳戶」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：原文沒有付款答案；不虛構台灣帳號、不使用催申請款話術。",
+      "source_ref": "user-doc-20261029:faq-22"
+    },
+    {
+      "id": "xiamen.other_cities",
+      "text": "其他城市也可以協助了解安排，您想去哪個城市呢？具體行程再請規劃師確認。 使用邊界：可詢問目的地，不假造其他城市現成產品。",
+      "source_ref": "user-doc-20261029:faq-23"
+    },
+    {
+      "id": "xiamen.diet",
+      "text": "可以安排素食，也可以提前告知不吃牛肉等忌口，方便用餐時協調。您有哪些需要避開的食材呢？ 使用邊界：不自行保證過敏原完全隔離或任何特殊餐都可供應。",
+      "source_ref": "user-doc-20261029:faq-24"
+    },
+    {
+      "id": "xiamen.agency",
+      "text": "我們是大陸旅行社，可以請規劃師提供公司的營業執照與資質供您核對。 使用邊界：尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。",
+      "source_ref": "user-doc-20261029:faq-25"
+    },
+    {
+      "id": "xiamen.expired_permit",
+      "text": "接待動作：客人問到「台胞證過期」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不沿用直接落地簽即可的未核實結論。",
+      "source_ref": "user-doc-20261029:faq-26"
+    },
+    {
+      "id": "xiamen.passport",
+      "text": "接待動作：客人問到「只有護照」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不沿用身份證、護照、台胞證缺一不可的概括說法。",
+      "source_ref": "user-doc-20261029:faq-27"
+    },
+    {
+      "id": "xiamen.female_guide",
+      "text": "可以提出女導遊的偏好，我們再依您的出發日期協調確認。 使用邊界：可提出偏好不等於未查排班就保證安排。",
+      "source_ref": "user-doc-20261029:faq-28"
+    },
+    {
+      "id": "xiamen.dialysis",
+      "text": "接待動作：客人問到「洗腎安排」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不給醫療建議，不承諾提前到廈門即可安排醫院。",
+      "source_ref": "user-doc-20261029:faq-29"
+    },
+    {
+      "id": "xiamen.meetup",
+      "text": "可以一起了解我們的行程，您們在廈門匯合後的集合和接送安排，再依到達時間確認。您們大約何時抵達呢？ 使用邊界：不因身份不同拒答，也不直接索要聯絡方式。",
+      "source_ref": "user-doc-20261029:faq-30"
+    },
+    {
+      "id": "xiamen.trust",
+      "text": "可以先核對行程包含項目和公司資質，再決定是否預訂。參考費用會依天數與安排不同，具體明細可以請規劃師確認。 使用邊界：未提供補貼依據，不以補貼或合影證明付款安全。",
+      "source_ref": "user-doc-20261029:faq-31"
+    },
+    {
+      "id": "xiamen.undecided",
+      "text": "沒關係，可以先了解3–6天的方向，等您和家人討論後再決定日期與人數。您想先看住宿還是行程介紹呢？ 使用邊界：不要再次追問已表示未定的時間人數。",
+      "source_ref": "user-doc-20261029:faq-32"
+    },
+    {
+      "id": "xiamen.later",
+      "text": "沒關係，您可以先參考，有合適的假期再來聊就好。 使用邊界：本輪簡短收尾，不自行安排沉默追訪。",
+      "source_ref": "user-doc-20261029:faq-33"
+    },
+    {
+      "id": "xiamen.foreign_traveler",
+      "text": "接待動作：客人問到「外籍旅客」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不沿用需有本國簽證的錯誤概括。",
+      "source_ref": "user-doc-20261029:faq-34"
+    },
+    {
+      "id": "xiamen.holidays",
+      "text": "節假日也可以先詢問安排，價格、酒店和名額需要按具體日期確認，不能只憑機票已訂就保證成行。您預計哪幾天呢？ 使用邊界：未有日期價目及庫存，不承諾訂到機票即可安排。",
+      "source_ref": "user-doc-20261029:faq-35"
+    },
+    {
+      "id": "xiamen.material_scope",
+      "text": "用戶提供6張圖片和2個影片用於本次演練。房圖沒有酒店名稱，景點沒有逐日行程映射，圖片影片只能按題材作參考；不推導已包含、已預訂或每餐服務保證。",
+      "source_ref": "user-materials-20261029"
+    }
+  ],
+  "content_groups": {
+    "intro": {
+      "purpose": "廈門行程總覽",
+      "approved_text": "我們有3–6天的行程，時間充裕推薦5天，可安排廈門、漳州、泉州。可以先依您的假期和想玩的方向了解，具體逐日安排再確認。",
+      "asset_keys": [],
+      "initial_delivery": true,
+      "delivery_mode": "text_only",
+      "evidence_refs": [
+        "xiamen.overview",
+        "xiamen.recommended_days"
+      ]
+    },
+    "scenery": {
+      "purpose": "目的地景色參考",
+      "approved_text": "先給您看看閩南景色參考，圖片中的景點是否安排，仍依您最後選擇的路線確認。",
+      "asset_keys": [
+        "xiamen_tulou",
+        "xiamen_gulangyu"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "evidence_refs": [
+        "xiamen.material_scope"
+      ]
+    },
+    "hotel": {
+      "purpose": "住宿與房間參考",
+      "approved_text": "住宿按五星級酒店安排，具體酒店和房型會依出發日期確認，也可以先看房間參考圖。",
+      "asset_keys": [
+        "xiamen_hotel"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "evidence_refs": [
+        "xiamen.hotel"
+      ]
+    },
+    "food": {
+      "purpose": "餐食參考",
+      "approved_text": "團費包含餐食，先給您看看餐食參考，實際餐次和菜色依確認的行程安排。",
+      "asset_keys": [
+        "xiamen_food",
+        "xiamen_meal_video"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "evidence_refs": [
+        "xiamen.included",
+        "xiamen.material_scope"
+      ]
+    },
+    "city": {
+      "purpose": "廈門城市風景",
+      "approved_text": "這是廈門城市風景參考，並非已確認的每日遊覽順序。",
+      "asset_keys": [
+        "xiamen_city_stairs",
+        "xiamen_city_view"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "evidence_refs": [
+        "xiamen.material_scope"
+      ]
+    },
+    "travelers": {
+      "purpose": "旅遊氛圍參考",
+      "approved_text": "這段影片可用於了解旅遊氛圍，不能作為特定團期、公司資質或已付款的證明。",
+      "asset_keys": [
+        "xiamen_travelers_video"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets",
+      "evidence_refs": [
+        "xiamen.material_scope"
+      ]
+    },
+    "faq": {
+      "purpose": "按問題回答FAQ",
+      "approved_text": "按客人本輪問題回答，不一次發送整份FAQ。",
+      "asset_keys": [],
+      "initial_delivery": false,
+      "delivery_mode": "text_only",
+      "evidence_refs": []
+    }
+  },
+  "content_sequence": [
+    "intro"
+  ],
+  "fixed_answers": [
+    {
+      "id": "price_reference",
+      "name": "價格範圍",
+      "answer_text": "一般3–6天行程，每人參考約NT$5,000–8,500，依天數和安排不同。您想玩幾天呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-01",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.price_reference"
+      ],
+      "topics": [
+        "price_reference"
+      ],
+      "positive_examples": [
+        "一個人多少錢？"
+      ],
+      "usage_note": "可回答參考範圍；不是指定日期、房型和人數的最終價，不換匯、不把下限當成交價。"
+    },
+    {
+      "id": "travel_season",
+      "name": "適合出遊時間",
+      "answer_text": "可以依您方便的月份規劃廈門行程，不同季節有不同景色。您大約想幾月份來呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-02",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.travel_season"
+      ],
+      "topics": [
+        "travel_season"
+      ],
+      "positive_examples": [
+        "什麼時候去比較好？"
+      ],
+      "usage_note": "保留可諮詢月份，不把四季如春當天氣或全年有位保證。"
+    },
+    {
+      "id": "recommended_days",
+      "name": "推薦天數",
+      "answer_text": "如果時間充裕，會推薦5天，能安排廈門、漳州和泉州三個城市的著名景點。您大約有幾天假期呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-03",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.recommended_days"
+      ],
+      "topics": [
+        "recommended_days"
+      ],
+      "positive_examples": [
+        "去幾天比較好？"
+      ],
+      "usage_note": "只有城市和推薦天數，沒有逐日順序。"
+    },
+    {
+      "id": "overview",
+      "name": "行程總覽",
+      "answer_text": "我們有3–6天的行程可以選，時間充裕可安排廈門、漳州、泉州。您目前比較想玩幾天呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-04",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.overview"
+      ],
+      "topics": [
+        "overview"
+      ],
+      "positive_examples": [
+        "了解廈門行程？"
+      ],
+      "usage_note": "不能編造D1–D5或把展示照片當確定包含景點。"
+    },
+    {
+      "id": "shopping",
+      "name": "購物與自費",
+      "answer_text": "我們的行程沒有安排購物站，費用包含和需要另外支付的項目會在確認行程時列清楚。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-05",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.shopping"
+      ],
+      "topics": [
+        "shopping"
+      ],
+      "positive_examples": [
+        "有購物行程嗎？"
+      ],
+      "usage_note": "保留無購物口徑；機票不含，不把公開透明改寫成所有項目都免費。"
+    },
+    {
+      "id": "included",
+      "name": "費用包含",
+      "answer_text": "團費包含五星級住宿、行程內景點門票、餐食、全程用車、導遊及司機服務；機票不包含。具體酒店、餐次和景點以確認的行程為準。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-06",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.included"
+      ],
+      "topics": [
+        "included"
+      ],
+      "positive_examples": [
+        "費用包含了什麼？"
+      ],
+      "usage_note": "沿用本公司FAQ；不推定每餐海鮮或任意景點門票都含。"
+    },
+    {
+      "id": "flights",
+      "name": "機票",
+      "answer_text": "機票不包含在團費內，可以協助查詢和代訂。您打算從哪個機場出發呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-07",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.flights"
+      ],
+      "topics": [
+        "flights"
+      ],
+      "positive_examples": [
+        "包含機票嗎？"
+      ],
+      "usage_note": "未提供即時票價、代訂費及退款政策，不自行核價或下單。"
+    },
+    {
+      "id": "hotel",
+      "name": "住宿",
+      "answer_text": "住宿按五星級酒店安排，具體酒店和房型會依出發日期確認，也可以先看房間參考圖。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-08",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.hotel"
+      ],
+      "topics": [
+        "hotel"
+      ],
+      "positive_examples": [
+        "住什麼酒店？"
+      ],
+      "usage_note": "保留公司提供的五星口徑；房圖沒有酒店名稱，不能認作承諾房型或保證海景。普通問酒店不用主動列出所有不保證事項。"
+    },
+    {
+      "id": "charter",
+      "name": "包車",
+      "answer_text": "可以包車，會依同行人數安排合適車型。請問大約幾位、想安排幾天呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-09",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.charter"
+      ],
+      "topics": [
+        "charter"
+      ],
+      "positive_examples": [
+        "可以包車嗎？"
+      ],
+      "usage_note": "車型、座位、價格未提供，不指定車款。"
+    },
+    {
+      "id": "children",
+      "name": "兒童",
+      "answer_text": "12歲以下的小朋友可以享有優惠價，實際費用還要看年齡和行程安排。小朋友幾歲呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-10",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.children"
+      ],
+      "topics": [
+        "children"
+      ],
+      "positive_examples": [
+        "小孩什麼價？"
+      ],
+      "usage_note": "沒有兒童折扣金額，不按成人價乘比例。"
+    },
+    {
+      "id": "elderly",
+      "name": "長者",
+      "answer_text": "行程有車接車送，也可以先了解長輩的體力與步行需求，再確認合適安排。長輩是否有不方便走路或需要避免的活動呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-11",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.elderly"
+      ],
+      "topics": [
+        "elderly"
+      ],
+      "positive_examples": [
+        "11.有適合老人的行程嗎？不要太累"
+      ],
+      "usage_note": "有接送不等於所有景點無階梯或任何長者都不累。"
+    },
+    {
+      "id": "mobility",
+      "name": "行動協助",
+      "answer_text": "可以先協助了解輪椅及行動協助需求，具體安排需依日期和服務方確認。您主要需要哪一方面協助呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-12",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.mobility"
+      ],
+      "topics": [
+        "mobility"
+      ],
+      "positive_examples": [
+        "有殘疾證可以嗎、"
+      ],
+      "usage_note": "提供協助意向；不保證全程無障礙或免票。"
+    },
+    {
+      "id": "tickets_only",
+      "name": "單獨訂票",
+      "answer_text": "我們以行程服務為主，行程合適的話可以協助規劃出行及訂票。您是只需要訂票，還是也想了解行程呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-13",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.tickets_only"
+      ],
+      "topics": [
+        "tickets_only"
+      ],
+      "positive_examples": [
+        "只要订票可以吗？"
+      ],
+      "usage_note": "不能保證獨立訂票服務已接受。"
+    },
+    {
+      "id": "independent",
+      "name": "自由行協助",
+      "answer_text": "自由行也可以協助預訂用車或酒店，您希望我們幫忙哪一部分呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-14",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.independent"
+      ],
+      "topics": [
+        "independent"
+      ],
+      "positive_examples": [
+        "13.自由行可以协助吗？"
+      ],
+      "usage_note": "實際供應和費用另確認。"
+    },
+    {
+      "id": "one_day",
+      "name": "一日遊",
+      "answer_text": "也可以安排一日遊，會依您的時間和想去的地方規劃。您想去哪裡玩呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-15",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.one_day"
+      ],
+      "topics": [
+        "one_day"
+      ],
+      "positive_examples": [
+        "有一日游吗？"
+      ],
+      "usage_note": "尚無一日遊明細價目，不套3–6天參考價。"
+    },
+    {
+      "id": "no_contact_app",
+      "name": "沒有LINE或微信",
+      "answer_text": "沒關係，我們可以先在這裡聊行程，您不用另外註冊LINE或微信。您想先了解哪一部分呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-16",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.no_contact_app"
+      ],
+      "topics": [
+        "no_contact_app"
+      ],
+      "positive_examples": [
+        "14没有赖，没有微信"
+      ],
+      "usage_note": "原文在沒有通訊軟體時仍要求QR，改為尊重聯絡偏好。"
+    },
+    {
+      "id": "custom",
+      "name": "不跟團／定制",
+      "answer_text": "可以依您的需求定制行程，不一定要跟團。您想安排幾天、大約幾位同行呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-17",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.custom"
+      ],
+      "topics": [
+        "custom"
+      ],
+      "positive_examples": [
+        "不跟團可以嗎？"
+      ],
+      "usage_note": "定制價格、成團條件需另核實。"
+    },
+    {
+      "id": "group_size",
+      "name": "團體人數",
+      "answer_text": "一般安排8–12位的小團，以台灣旅客為主要服務對象。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-18",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.group_size"
+      ],
+      "topics": [
+        "group_size"
+      ],
+      "positive_examples": [
+        "你們跟團有幾個人"
+      ],
+      "usage_note": "8–12是本公司團規模，不套用舊公司7人轉人工或獨團加價；不是某日已成團的保證。"
+    },
+    {
+      "id": "facebook_only",
+      "name": "只在Facebook聯絡",
+      "answer_text": "可以先在Facebook這裡了解行程，也可以看我們現有的圖片資料。您方便時再選擇合適的聯絡方式，不用現在加LINE或微信。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-20",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.facebook_only"
+      ],
+      "topics": [
+        "facebook_only"
+      ],
+      "positive_examples": [
+        "只在FB上聯繫不行嗎？"
+      ],
+      "usage_note": "不聲稱FB不能發照片，不以換平台作回答前提。"
+    },
+    {
+      "id": "card_service",
+      "name": "辦卡",
+      "answer_text": "您說的辦卡是手機SIM卡、銀行卡，還是其他卡片呢？不同服務要分開確認。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-21",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.card_service"
+      ],
+      "topics": [
+        "card_service"
+      ],
+      "positive_examples": [
+        "可以幫忙辦卡嗎？"
+      ],
+      "usage_note": "卡片類型不明，先澄清，不保證均可代辦。"
+    },
+    {
+      "id": "other_cities",
+      "name": "其他城市",
+      "answer_text": "其他城市也可以協助了解安排，您想去哪個城市呢？具體行程再請規劃師確認。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-23",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.other_cities"
+      ],
+      "topics": [
+        "other_cities"
+      ],
+      "positive_examples": [
+        "你們只有廈門行程嗎？"
+      ],
+      "usage_note": "可詢問目的地，不假造其他城市現成產品。"
+    },
+    {
+      "id": "diet",
+      "name": "素食與忌口",
+      "answer_text": "可以安排素食，也可以提前告知不吃牛肉等忌口，方便用餐時協調。您有哪些需要避開的食材呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-24",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.diet"
+      ],
+      "topics": [
+        "diet"
+      ],
+      "positive_examples": [
+        "有素食嗎？不吃牛肉"
+      ],
+      "usage_note": "不自行保證過敏原完全隔離或任何特殊餐都可供應。"
+    },
+    {
+      "id": "agency",
+      "name": "旅行社與資質",
+      "answer_text": "我們是大陸旅行社，可以請規劃師提供公司的營業執照與資質供您核對。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-25",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.agency"
+      ],
+      "topics": [
+        "agency"
+      ],
+      "positive_examples": [
+        "有沒有台灣對接的旅行社"
+      ],
+      "usage_note": "尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。"
+    },
+    {
+      "id": "female_guide",
+      "name": "女導遊",
+      "answer_text": "可以提出女導遊的偏好，我們再依您的出發日期協調確認。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-28",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.female_guide"
+      ],
+      "topics": [
+        "female_guide"
+      ],
+      "positive_examples": [
+        "我們要女導遊可以嗎？"
+      ],
+      "usage_note": "可提出偏好不等於未查排班就保證安排。"
+    },
+    {
+      "id": "meetup",
+      "name": "兩地同行匯合",
+      "answer_text": "可以一起了解我們的行程，您們在廈門匯合後的集合和接送安排，再依到達時間確認。您們大約何時抵達呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-30",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.meetup"
+      ],
+      "topics": [
+        "meetup"
+      ],
+      "positive_examples": [
+        "我女朋友是大陸的，我從台灣過去在廈門匯合 可以走你們行程嗎"
+      ],
+      "usage_note": "不因身份不同拒答，也不直接索要聯絡方式。"
+    },
+    {
+      "id": "trust",
+      "name": "信任與價格疑慮",
+      "answer_text": "可以先核對行程包含項目和公司資質，再決定是否預訂。參考費用會依天數與安排不同，具體明細可以請規劃師確認。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-31",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.trust"
+      ],
+      "topics": [
+        "trust"
+      ],
+      "positive_examples": [
+        "27那麼便宜你們是騙子嗎？"
+      ],
+      "usage_note": "未提供補貼依據，不以補貼或合影證明付款安全。"
+    },
+    {
+      "id": "undecided",
+      "name": "時間人數未定",
+      "answer_text": "沒關係，可以先了解3–6天的方向，等您和家人討論後再決定日期與人數。您想先看住宿還是行程介紹呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-32",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.undecided"
+      ],
+      "topics": [
+        "undecided"
+      ],
+      "positive_examples": [
+        "目前還沒確定時間跟人數誒"
+      ],
+      "usage_note": "不要再次追問已表示未定的時間人數。"
+    },
+    {
+      "id": "later",
+      "name": "有興趣暫無計畫",
+      "answer_text": "沒關係，您可以先參考，有合適的假期再來聊就好。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-33",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.later"
+      ],
+      "topics": [
+        "later"
+      ],
+      "positive_examples": [
+        "很感興趣，但是目前還沒計劃什麼時候去"
+      ],
+      "usage_note": "本輪簡短收尾，不自行安排沉默追訪。"
+    },
+    {
+      "id": "holidays",
+      "name": "節假日",
+      "answer_text": "節假日也可以先詢問安排，價格、酒店和名額需要按具體日期確認，不能只憑機票已訂就保證成行。您預計哪幾天呢？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-35",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.holidays"
+      ],
+      "topics": [
+        "holidays"
+      ],
+      "positive_examples": [
+        "30.需要避開節假日嗎？"
+      ],
+      "usage_note": "未有日期價目及庫存，不承諾訂到機票即可安排。"
+    }
+  ],
+  "ai_guidance": "這是依用戶已提供FAQ及素材建立的廈門公司演練資料。先直接回答客人的實際問題，一次最多追加一個必要問題；不要把FAQ未知的付款、單房差等擴大成整個業務都未配置。一般8–12人是團規模，不是8人轉人工門檻。3–6天只是產品範圍，5天是推薦，沒有完整逐日行程時不可編造。團費NT$5,000–8,500是參考範圍，能直接用來回答一般詢價；不承諾某日某人數最終價，也不啟用人數或季節價格計算。問酒店、餐食、風景時可按主題發現有參考素材，先說明再選1個最相關素材；不要只說有圖但不附asset_keys。若客人明確想看影片可選相應video。團友影片僅在明確想看旅遊氛圍時使用，不能用來證明資質或消除詐騙疑慮。原始圖清晰度與水印不阻擋內部演練。付款、單房差確切金額、入境證件、醫療接收轉人工；不要每問一句都轉人工。"
+}

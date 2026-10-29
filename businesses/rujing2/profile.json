@@ -1,6 +1,7 @@
 {
   "name": "Rujing2",
   "currency": "TWD",
+  "rewrite_advisor_referrals": false,
   "common_skill": "business-reception",
   "knowledge_version": "rujing2-v1",
   "material_catalog_version": "rujing2-materials-v1",

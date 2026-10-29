@@ -83,7 +83,7 @@
 本分支已选择移植截至 `origin/main 105c45c` 的消息回调归属、渠道失败处理、统一渠道 AI、报价产品归属、对话去重、多人介绍交接和顾问通知等通用改动。
 本轮只更新维护分支，未发布到服务器；发送和新业务功能默认关闭。
 详见 [同步分析与验证记录](../development/rujing2-platform-sync-20261029.html)。
-新线路请业务填写 [资料收集与调试清单](../business/rujing2-line-intake-20261029.html)，本次提供的厦门初稿尚未导入运行时。
+厦门资料已整理为可选公司资料包并导入本机独立演练环境，见 [现有资料与真实回复记录](../business/rujing2-xiamen-rehearsal.html)。[完整资料清单](../business/rujing2-line-intake-20261029.html) 保留为后续完善参考，不是首轮演练的前置条件。
 币种已确认并在维护分支适配为 TWD：新公司报价使用通用金额字段和明确币种，不能在 `*_cny` 字段填台币，也不会自动换汇。实际线路价目仍待业务审核，未发布到服务器。
 
 ### 台币价格配置约定
@@ -95,7 +95,30 @@
 - 新公司模型回复与实际组装的文字还会检查错误币种；NT$、TWD、NTD、新台幣等常用表达进入既有报价核验。此检查针对文本，不识别图片或视频中嵌入的价格，素材中的金额需业务人工审核。
 - 客户收款币种、账户和手续费由业务单独确认；本次修改不包含收款或支付接口。
 
-业务可使用 [完整可填写清单](../business/rujing2-line-intake-20261029.html) 和 [接待流程图](../business/rujing2-ai-workflow.html)。流程图描述配置完成并启用后的行为，不代表线上 AI 已开始接待。
+业务优先使用 [厦门资料与回复演练](../business/rujing2-xiamen-rehearsal.html)；[完整可填写清单](../business/rujing2-line-intake-20261029.html) 和 [接待流程图](../business/rujing2-ai-workflow.html) 供后续完善。线上 AI 尚未开始接待。
+
+### 厦门资料的本地真实模型演练
+
+资料目录：`businesses/rujing2/campaigns/xiamen-20261029/`。保留 DOC 全部 35 条原问答和来源哈希，29 条可直接答复或调整表达，6 条配置实际转人工；关联 6 图 2 视频。独立资料包不会在空白新公司启动时自动安装。
+
+在仓库根目录使用本项目虚拟环境运行（Windows Python 为 `.venv/Scripts/python.exe`）：
+
+```powershell
+.venv/Scripts/python.exe backend/scripts/rehearse_rujing2_xiamen.py prepare --output output/rujing2-xiamen-rehearsal --model-env backend/.env
+.venv/Scripts/python.exe backend/scripts/rehearse_rujing2_xiamen.py run --output output/rujing2-xiamen-rehearsal --model-env backend/.env
+.venv/Scripts/python.exe backend/scripts/rehearse_rujing2_xiamen.py serve --output output/rujing2-xiamen-rehearsal --model-env backend/.env --port 8013
+```
+
+- `prepare` 只用于首次初始化；数据库存在时拒绝覆盖。已有演练直接 `serve`，更新资料后先 `refresh`。批量 `run` 与网页 worker 不同时运行，避免同时推进会话。
+- `--model-env` 只读取模型 Key、URL 和模型名。数据库、上传、运行时产品、登录用户独立；对客发送、Chatwoot 写入、实发 worker 均关闭。未配置模型 Key 时不能执行真实模型回放。
+- `serve` 要求已有 `frontend/dist` 生产构建（同源 `/v1`）；启动本地 API 和演练 worker，监听 `127.0.0.1:8013`。页面为 `http://127.0.0.1:8013/#/playground`。
+- 登录信息位于演练输出目录 `login.json`；完整结果为 `results.jsonl`；模型用量估算为 `cost.json`。默认演练模型估算上限 5 元人民币，与业务报价台币无关，且不等于供应商实际账单。已有账本保留，`--budget` 只用于创建新账本。
+- 批量回放包含 35 FAQ 和 6 扩展场景，也可 `--cases hotel_material,food_video` 只重跑指定场景。报告记录实际动作、发送素材、模型调用及文本；它不替代业务最终审核。
+- `refresh` 更新线路与接待规则；变更素材文件和绑定时使用新演练输出目录重新 `prepare`，不覆盖旧库。
+
+2026-10-29：41 类真实模型场景分批完成，修正交接动作后复测；原始失败记录保留。页面登录、8 个素材预览接口、餐食视频播放、连续发送问题、实际酒店图文回复均已验证。相关后端测试分批通过（37、61、32 项，存在重复用例，不相加）；本轮未改前端代码。未将这次代码与资料部署到远程服务器。
+
+本次同时修复两项平台行为：顾问称呼替换按公司开关控制；模型输出空回复却填有交接原因时触发既有协议修复，避免会话静默停在等待状态。
 
 ## 验证记录
 
@@ -105,4 +128,4 @@
 - 相关权限、接管、顾问分配、通知、模型传输以及业务规则回归测试。
 - 169 个相关后端用例均已通过（导入初始化修复后重跑隔离用例）；未运行全部历史业务回放集。
 - 前端 7 项测试和生产构建；公网首页及健康检查、浏览器登录与后台页面。
-- 实发渠道和真实模型回复未验证：新公司相应凭据尚未提供。
+- 首次部署时未验证实发渠道和真实模型回复。2026-10-29 已完成上述本地真实模型演练；实发渠道仍未验证。

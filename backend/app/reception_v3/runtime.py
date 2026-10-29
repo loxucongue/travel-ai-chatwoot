@@ -4,7 +4,7 @@ import json
 import time
 import httpx
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.config import settings
 from app.business_profile import COMMON_SKILL
@@ -52,6 +52,14 @@ class Decision(BaseModel):
         # Models sometimes emit an empty optional classification on ordinary
         # replies. Use the existing default; unknown nonempty types stay invalid.
         return 'other' if value in ('', None) else value
+
+    @model_validator(mode='after')
+    def handoff_action_must_be_explicit(self):
+        if (self.action == 'reply' and not self.messages and not self.start_introduction
+                and self.handoff_reason.strip()):
+            raise ValueError('empty_reply_with_handoff_reason: use action=handoff to create the handoff; '
+                             'otherwise clear handoff_reason and provide the intended reply')
+        return self
 
 
 def run_human_followup(context: dict):
