@@ -162,6 +162,9 @@ function UserSettings({ notify }: { notify: (value: string) => void }) {
 
 function NotificationSettings({ notify }: { notify: (value: string) => void }) {
   type Config = { enabled: boolean; channel: 'webhook' | 'chatwoot' | 'wecom' | 'email'; agent_id?: number; bot_id?: number; url?: string; event_types: string[]; secret_configured: boolean;
+    assign_on_handoff?: boolean; handoff_notify_agent_ids?: number[];
+    recipient_access_gaps?: {inbox_id:number; inbox_name:string; agent_ids:number[]}[];
+    recent_recipient_warnings?: {delivery_id:number; conversation_id:number; detail:string; at:string}[];
     recipients?: Record<string,string>; corp_id?: string; wecom_agent_id?: number; smtp_host?: string; smtp_port?: number; smtp_security?: 'ssl'|'starttls'; smtp_user?: string; sender_email?: string; connection_secret_configured?: boolean };
   const query = useQuery({ queryKey: ['notification-settings'], queryFn: () => api<Config>('/settings/notifications') });
   const agents = useQuery({ queryKey: ['resources'], queryFn: () => api<{ agents: { id: number; name: string }[] }>('/settings/resources') });
@@ -175,16 +178,21 @@ function NotificationSettings({ notify }: { notify: (value: string) => void }) {
   const [botId, setBotId] = useState('');
   const [url, setUrl] = useState('');
   const [secret, setSecret] = useState('');
+  const [handoffRecipients, setHandoffRecipients] = useState<number[]>([]);
+  const qc = useQueryClient();
+  const agentName = (id:number) => agents.data?.agents.find(a=>a.id===id)?.name ?? `账号 ${id}`;
+  useEffect(() => { if (query.data) setHandoffRecipients(query.data.handoff_notify_agent_ids ?? []); }, [query.data]);
   useEffect(() => { if (query.data) { const data = query.data; setEnabled(data.enabled); setChannel(data.channel ?? 'webhook'); setAgentId(String(data.agent_id ?? '')); setBotId(String(data.bot_id ?? '')); setUrl(data.url ?? ''); } }, [query.data]);
   const save = useMutation({
     mutationFn: () => {
       const mapping: Record<string,string> = {};
       for(const line of recipients.split('\n').filter(l=>l.trim())) {const parts=line.split('=');if(parts.length!==2 || !/^\d+$/.test(parts[0].trim()) || !parts[1].trim()) throw new Error('接收人格式应为：顾问ID=企业微信成员ID或邮箱'); mapping[parts[0].trim()]=parts[1].trim();}
-      return api('/settings/notifications', { method: 'PATCH', body: JSON.stringify({ enabled, channel, agent_id: Number(agentId) || null, bot_id: Number(botId) || null, url: url || null, secret: secret || null,
+      return api<Config>('/settings/notifications', { method: 'PATCH', body: JSON.stringify({ enabled, channel, agent_id: Number(agentId) || null, bot_id: Number(botId) || null, url: url || null, secret: secret || null,
+        assign_on_handoff: query.data?.assign_on_handoff ?? false, handoff_notify_agent_ids: handoffRecipients,
         recipients:mapping, corp_id:connection.corp_id ?? '', wecom_agent_id:connection.wecom_agent_id ?? null, smtp_host:connection.smtp_host ?? '',smtp_port:connection.smtp_port ?? 465,smtp_security:connection.smtp_security ?? 'ssl',smtp_user:connection.smtp_user ?? '',sender_email:connection.sender_email || null,connection_secret:connectionSecret || null,
         event_types: query.data?.event_types ?? ['handoff.created', 'handoff.overdue'] }) });
     },
-    onSuccess: () => { setSecret(''); setConnectionSecret(''); query.refetch(); notify('顾问通知已保存'); },
+    onSuccess: (data) => { setSecret(''); setConnectionSecret(''); qc.setQueryData(['notification-settings'], data); notify('顾问通知已保存'); },
     onError: (error: Error) => notify(error.message),
   });
   const invalid = enabled && (channel === 'chatwoot' ? !agentId || !Number.isInteger(Number(botId)) || Number(botId) <= 0 : channel === 'webhook' ? !url : !recipients.trim());
@@ -195,7 +203,15 @@ function NotificationSettings({ notify }: { notify: (value: string) => void }) {
       <p>通知成功表示接口已接受；手机和手表是否实际收到，仍需在对应设备上确认。</p>
       {channel === 'chatwoot' ? <>
         <div className="info-box"><Bell size={16} /><span>系统会在会话中发一条仅团队可见的备注并提及顾问。请在 Chatwoot 手机端开启提及通知；Apple Watch 接收情况取决于手机和手表的通知设置。</span></div>
-        <label>接收顾问<select value={agentId} onChange={(e) => setAgentId(e.target.value)}><option value="">请选择顾问</option>{agents.data?.agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label>
+        <label>无负责人时的默认接收顾问<select value={agentId} onChange={(e) => setAgentId(e.target.value)}><option value="">请选择顾问</option>{agents.data?.agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label>
+        <fieldset><legend>同时通知的派单人员</legend><p>转人工及未接单超时提醒会同时提及以下人员和接单顾问，同一人只提醒一次，不改变会话负责人。</p>
+          <div className="checkbox-grid">{agents.data?.agents.map(agent=><label key={agent.id}><input type="checkbox" checked={handoffRecipients.includes(agent.id)} onChange={e=>setHandoffRecipients(current=>e.target.checked?[...current,agent.id]:current.filter(id=>id!==agent.id))}/>{agent.name}</label>)}</div>
+          {handoffRecipients.filter(id=>!agents.data?.agents.some(a=>a.id===id)).map(id=><label key={id}><input type="checkbox" checked onChange={()=>setHandoffRecipients(current=>current.filter(x=>x!==id))}/>{agentName(id)}（成员已失效或名单未同步）</label>)}
+          {agents.isError ? <p role="alert">成员列表读取失败，请刷新后重试。</p> : null}
+          <p role="status">已保存的派单通知名单：{query.data?.handoff_notify_agent_ids?.length ? query.data.handoff_notify_agent_ids.map(agentName).join('、') : '未设置'}</p>
+        </fieldset>
+        {query.data?.recipient_access_gaps?.map(gap=><div className="info-box" key={gap.inbox_id}><AlertTriangle size={16}/><span>已保存名单的权限提示：{gap.inbox_name} 未包含 {gap.agent_ids.map(agentName).join('、')}。该收件箱只会通知有权限的人员；请在 Chatwoot 检查成员权限。名单依据最近同步结果，发送前会再次核对。</span></div>)}
+        {query.data?.recent_recipient_warnings?.map(item=><p role="alert" key={item.delivery_id}>会话 #{item.conversation_id} 的内部提醒已发送，但部分人员无权限，未被提及：{item.detail.split(':')[1]?.split(',').map(id=>agentName(Number(id))).join('、')}。</p>)}
         <label>通知机器人 ID<input type="number" min="1" step="1" value={botId} onChange={(e) => setBotId(e.target.value)} /></label>
         <div className="info-box"><ShieldCheck size={16} /><span>使用已配置的通知机器人，避免顾问账号提及自己而收不到提醒。暂停客户消息发送后，内部提醒仍可发送。</span></div>
       </> : channel === 'webhook' ? <><label>Webhook URL<input value={url} onChange={(e) => setUrl(e.target.value)} /></label><label>HMAC Secret<input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={query.data?.secret_configured ? '已配置，留空保持不变' : '至少 8 位'} /></label></> : <>
