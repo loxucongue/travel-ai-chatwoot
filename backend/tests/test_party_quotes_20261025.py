@@ -8,6 +8,7 @@ from app.automation_models import CustomerQuoteOffer
 from app.reception_v3 import service
 from app.reception_v3.runtime import Decision
 from app.reception_v3.party_quotes import apply_price_scripts, price_scripts, quote_error, validate_party_pricing
+from app.route_packages import PACKAGE_ROOT
 from app.reception_v3.quotes import personalize_quotes, reserve_quoted_offers, subject_key
 from scripts.configure_party_quotes_20261025 import update_package
 from test_reception_v3 import create, bundle
@@ -16,7 +17,7 @@ ROOT=Path(__file__).resolve().parents[2]
 
 
 def package(days=11):
-    return update_package(json.loads((ROOT/f'data/knowledge/china2go/route-packages/peach-{days}d-2027/route-package.json').read_text(encoding='utf8')))
+    return update_package(json.loads((PACKAGE_ROOT/f'peach-{days}d-2027/route-package.json').read_text(encoding='utf8')))
 
 
 def spec(days=11):

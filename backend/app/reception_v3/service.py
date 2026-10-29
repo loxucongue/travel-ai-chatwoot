@@ -5,6 +5,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, update
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.automation_models import AutomationRun, AutomationSession
 from app.material_library import candidate_materials, resolve_materials, tenant_for_session
@@ -255,6 +256,10 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
         # Pause only; the Agent must distinguish concern, comparison and a real
         # selection before allowing the next image to leave the queue.
         value['route_review_pending'] = True
+    # Even a bare "7" may change the party size. Pause until the pending
+    # classification completes, rather than guessing from units/keywords.
+    if value.get('delivery_kind') in ('large_party', 'introduction'):
+        value['route_review_pending'] = True
     value['buffered_questions'] = [*value.get('buffered_questions', []), client_key]
     value['next_check_at'] = None
     value['next_check_minutes'] = None
@@ -318,8 +323,10 @@ def scripts(bundle, route):
 def parts_for(db, row, bundle, decision, *, followup=False):
     from app.reception_v3.seasonal_quotes import seasonal_group
     from app.reception_v3.party_quotes import quote_error as party_quote_error
+    from app.reception_v3.route_choice import reply_route
     route = decision['route_variant'] or row.controls.get('route_variant', '')
-    if route and route not in bundle['routes']:
+    content_route = reply_route(decision, row.memory, route)
+    if (route and route not in bundle['routes']) or (content_route and content_route not in bundle['routes']):
         raise ValueError('v3_unknown_route')
     if party_quote_error(decision, bundle, row.memory or {}, route):
         raise ValueError('party_quote_not_validated')
@@ -349,7 +356,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         if (route != row.controls.get('route_variant', '') or decision['start_introduction']
                 or len(keys) > 1 or any(key not in allowed for key in keys)):
             raise ValueError('invalid_silence_followup_materials')
-    groups = bundle['routes'].get(route, {}).get('groups', {})
+    groups = bundle['routes'].get(content_route, {}).get('groups', {})
     effective_groups = {key: seasonal_group(group, row.memory or {}) for key, group in groups.items()}
     blocked_assets = {asset for key, group in groups.items() for asset in group.get('assets', [])
                       if asset not in effective_groups[key].get('assets', [])}
@@ -383,7 +390,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         media_parts = [{**m, 'content': ''} for m in media]
         text_parts = [{'content': text, 'content_type': 'text'}] if text else []
         parts.extend(media_parts + text_parts if mode == 'assets_then_text' else text_parts + media_parts)
-    available = scripts(bundle, route)
+    available = scripts(bundle, content_route)
     for key, group in effective_groups.items():
         if groups[key].get('seasonal_override'):
             available[key] = {'text': group['text'], 'assets': group['assets']}
@@ -394,6 +401,13 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         offset = len(parts)
         add(message['text'] or (script['text'] if script else ''),
             message['asset_keys'])
+        if message.get('purpose') == 'contact_invitation' or message.get('script_id') == 'contact_request':
+            for part in parts[offset:]:
+                if part.get('content'):
+                    part['contact_invitation'] = True
+                    part['contact_channels'] = bundle.get('lead_capture', {}).get('channels', [])
+                    if followup:
+                        part['next_day_contact_invitation'] = bool(bundle.get('lead_capture', {}).get('next_day_invitation_enabled'))
         if message.get('material_rule_id'):
             original = next(r for r in bundle['material_rules'] if r['id'] == message['material_rule_id'])
             for part in parts[offset:]:
@@ -472,6 +486,30 @@ def update_profile(db, row, run, decision):
 
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
+    from app.reception_v3.lead_priority import validation_error as lead_priority_error, outcome as lead_priority_outcome
+    lead_context = {
+        'event': run.input_snapshot.get('event'), 'now': row.virtual_now,
+        'skills': bundle, 'profile': row.memory or {}, 'state': value,
+        'route_variant': row.controls.get('route_variant', ''), 'messages': row.messages}
+    lead_problem = lead_priority_error(decision, lead_context)
+    if lead_problem:
+        raise ValueError('lead_priority_not_validated:' + lead_problem)
+    if lead_priority_outcome(decision, lead_context) == 'wait':
+        # Move the first eligible touch to tomorrow instead of exhausting a
+        # finite same-day schedule while repeatedly waiting. Keep later gaps.
+        silence = bundle['silence']
+        incoming = [m['created_at'] for m in row.messages if m.get('direction') == 'incoming' and m.get('created_at')]
+        value.update(pending_event=None, last_reason=decision['reason'],
+                     followup_last_customer_at=max(incoming, key=date), followup_settings=deepcopy(silence))
+        schedule_daily_followup(value, {**silence, 'daily_at':silence.get('daily_at') or silence.get('active_start', '09:00')},
+                                row.virtual_now, reset=True)
+        if not silence.get('daily_at') and value.get('next_check_at'):
+            intervals = followup_intervals(value, silence)
+            offset = sum(intervals[:value.get('silence_step', 0) + 1])
+            value['followup_anchor'] = later(value['next_check_at'], -offset * 60)
+        save(row, value)
+        row.due_at = None
+        return
     problem = choice_error(decision, {'skills':bundle, 'route_variant':row.controls.get('route_variant',''),
         'profile':row.memory or {}, 'state':value, 'event':run.input_snapshot.get('event', 'customer_message'),
         'messages':row.messages,
@@ -514,8 +552,13 @@ def apply_decision(db, row, run, bundle, decision):
         if (row.memory.get('_departure_check') or {}).get('route') not in (None, decision['route_variant']):
             row.memory = {k:v for k,v in row.memory.items() if k != '_departure_check'}
     route_policy = bundle['routes'].get(decision['route_variant'] or row.controls.get('route_variant', ''), {})
+    from app.reception_v3.large_party import begin as begin_large_party
+    save(row, value)
+    if begin_large_party(db, row, run, bundle, decision):
+        return
+    value = state(row)
     party = row.memory.get('party_size') or row.memory.get('party_size_min')
-    if route_policy.get('seasonal_pricing') and isinstance(party, (int, float)) and party >= 7:
+    if not (route_policy.get('large_party') or {}).get('enabled') and route_policy.get('seasonal_pricing') and isinstance(party, (int, float)) and party >= 7:
         decision = {**decision, 'action':'handoff', 'messages':[], 'start_introduction':False,
                     'handoff_type':'party_size', 'handoff_reason':'常規線7人以上需顧問安排專屬團型。'}
         run.decision = decision
@@ -628,7 +671,11 @@ def complete_delivery(row, target, status):
     else:
         kind = value.pop('delivery_kind', None)
         value['delivery_due_at'] = None
-        if kind == 'introduction':
+        if kind == 'large_party' and value.get('handoff_after_plan'):
+            if not value.get('pending_event'):
+                value['pending_event'] = 'handoff_after_delivery'
+            row.due_at = utcnow()
+        elif kind == 'introduction':
             value['completed_introductions'] = list(dict.fromkeys([
                 *value.get('completed_introductions', []), value.get('introduction_route')]))
             value['pending_event'] = 'introduction_completed'
@@ -655,6 +702,34 @@ def skip_quiet_delivery(row, part):
     row.messages = [{**m, 'status': 'cancelled'} if m.get('plan_id') == part.get('plan_id') and m.get('status') == 'draft' else m for m in row.messages]
     value.update(delivery_kind=None, delivery_due_at=None, pending_event=None, followup_skip_reason='quiet_hours_before_delivery')
     schedule_followup(value, {'silence': silence}, row.virtual_now)
+    save(row, value)
+    return True
+
+
+def skip_revoked_contact(db, row, part):
+    """Recheck contact permission for an invitation already waiting in the queue."""
+    if not part.get('contact_invitation'):
+        return False
+    bundle = compile_skills(db)
+    config = bundle.get('lead_capture', {})
+    profile = row.memory or {}
+    if (config.get('enabled', True) and not profile.get('contact_capture_declined')
+            and not profile.get('contact_value')
+            and profile.get('contact_status') not in ('captured', 'self_reported_added', 'provided', 'attachment_pending_verification')
+            and (not part.get('contact_channels') or part['contact_channels'] == config.get('channels', []))
+            and (not part.get('next_day_contact_invitation') or config.get('next_day_invitation_enabled'))):
+        return False
+    row.messages = [{**m, 'status': 'cancelled', 'cancel_reason':'contact_permission_revoked'}
+                    if m.get('id') == part['id'] else m for m in row.messages]
+    value = state(row)
+    value['last_reason'] = 'contact_invitation_permission_changed'
+    if not any(m.get('status') == 'draft' for m in row.messages):
+        if value.get('delivery_kind') == 'large_party' and value.get('handoff_after_plan'):
+            value['pending_event'] = 'handoff_after_delivery'
+            row.due_at = utcnow()
+        value.update(delivery_kind=None, delivery_due_at=None)
+        if value.get('next_check_minutes'):
+            schedule_followup(value, bundle, row.virtual_now)
     save(row, value)
     return True
 
@@ -710,6 +785,7 @@ def control(row, action):
         row.due_at = None
         row.messages = [{**m, 'status': 'cancelled'} if m.get('status') == 'draft' else m for m in row.messages]
         value = state(row)
+        value.pop('handoff_after_plan', None)
         value.update(pending_event=None, delivery_kind=None, delivery_due_at=None, next_check_at=None, intake_deadline=None)
         save(row, value)
 
@@ -732,6 +808,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
     rows = db.scalars(query.order_by(AutomationSession.id)).all()
     if advance_clock:
         for row in rows:
+            pending = next((m for m in row.messages if m.get('status') == 'draft'), None)
+            if pending:
+                skip_revoked_contact(db, row, pending)
             advance(row, wall_now)
     db.commit()
     for row in rows:
@@ -750,6 +829,11 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             if not permitted(db,db.get(ConversationState,row.conversation_state_id),purpose=purpose):
                 continue
         if value.get('failed_event') or (value.get('retry_at') and date(value['retry_at']) > date(utcnow())):
+            continue
+        if event == 'handoff_after_delivery':
+            from app.reception_v3.large_party import finish
+            finish(db, row)
+            db.commit()
             continue
         # Opening is sent once, verbatim, before asking the model to continue.
         if value.get('delivery_kind') == 'opening':
@@ -889,54 +973,65 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 logs, digest = [], bundle['digest']
             else:
                 decision, logs, digest = run_agent(context)
-            db.refresh(row)
-            allowed = True
-            if environment == 'live':
-                # Settings/labels can change while the model is running. A
-                # disabled inbox must not apply a stale profile or handoff.
-                from app.models import Tenant
-                conversation = db.get(ConversationState, row.conversation_state_id)
-                db.refresh(conversation)
-                db.refresh(conversation.inbox)
-                db.refresh(db.get(Tenant, conversation.tenant_id))
-                if conversation.contact:
-                    db.refresh(conversation.contact)
-                allowed = permitted(db, conversation, purpose=(
-                    'followup' if row.controls.get('human_followup', {}).get('enabled') else 'reply'))
-            run = db.get(AutomationRun, run_id)
-            run.trace = {'engine_version': 'v3', 'event': event, 'skill_digest': bundle['digest'],
-                         'logs': logs, 'request_hash': digest, 'outbound': False,
-                         'loaded_skills': logs[-1].get('loaded_skills', {}) if logs else {},
-                         'skill_tool_calls': [call for log in logs for call in log.get('tool_calls', [])],
-                         **metrics(http_calls)}
-            run.decision = decision
-            if allowed and row.generation == generation and row.controls.get('simulation', {}).get('status') != 'stopped':
-                from app.reception_v3.customer_reactions import remember_reactions
-                row.messages = remember_reactions(row.messages, logs)
-            if row.generation != generation or row.controls.get('simulation', {}).get('status') == 'stopped':
-                run.status, run.error_code = 'cancelled', 'superseded'
-            elif not allowed:
-                run.status, run.error_code = 'cancelled', 'reception_blocked'
-                control(row, 'stop')
-            elif decision['action'] == 'queue' and context['state'].get('delivery_kind') == 'introduction' and state(row).get('delivery_kind') != 'introduction':
-                # Delivery can finish while this classification call is running.
-                # Keep the buffered questions for the completion turn.
-                if not update_profile(db, row, run, decision):
-                    value = state(row)
-                    value['pending_event'] = 'introduction_completed'
-                    save(row, value)
-                    row.due_at = utcnow()
-                run.status = 'completed'
-            else:
-                # Account for model time without delivering a draft here. This
-                # also anchors a wait decision to evaluation completion.
-                advance(row, wall_now=wall_now, deliver=False)
-                apply_decision(db, row, run, bundle, decision)
-                value = state(row)
-                for key in ('last_error', 'retry_at', 'attempts', 'failed_event'):
-                    value.pop(key, None)
-                save(row, value)
-                run.status = 'completed'
+            # Reapply the same model result to fresh state after a delivery CAS conflict.
+            # Generation and permission checks run on every attempt; no model retry.
+            for persistence_attempt in range(3):
+                try:
+                    db.refresh(row)
+                    allowed = True
+                    if environment == 'live':
+                        # Settings/labels can change while the model is running. A
+                        # disabled inbox must not apply a stale profile or handoff.
+                        from app.models import Tenant
+                        conversation = db.get(ConversationState, row.conversation_state_id)
+                        db.refresh(conversation)
+                        db.refresh(conversation.inbox)
+                        db.refresh(db.get(Tenant, conversation.tenant_id))
+                        if conversation.contact:
+                            db.refresh(conversation.contact)
+                        allowed = permitted(db, conversation, purpose=(
+                            'followup' if row.controls.get('human_followup', {}).get('enabled') else 'reply'))
+                    run = db.get(AutomationRun, run_id)
+                    run.trace = {'engine_version': 'v3', 'event': event, 'skill_digest': bundle['digest'],
+                                 'logs': logs, 'request_hash': digest, 'outbound': False,
+                                 'loaded_skills': logs[-1].get('loaded_skills', {}) if logs else {},
+                                 'skill_tool_calls': [call for log in logs for call in log.get('tool_calls', [])],
+                                 **metrics(http_calls)}
+                    run.decision = decision
+                    if allowed and row.generation == generation and row.controls.get('simulation', {}).get('status') != 'stopped':
+                        from app.reception_v3.customer_reactions import remember_reactions
+                        row.messages = remember_reactions(row.messages, logs)
+                    if row.generation != generation or row.controls.get('simulation', {}).get('status') == 'stopped':
+                        run.status, run.error_code = 'cancelled', 'superseded'
+                    elif not allowed:
+                        run.status, run.error_code = 'cancelled', 'reception_blocked'
+                        control(row, 'stop')
+                    elif decision['action'] == 'queue' and context['state'].get('delivery_kind') == 'introduction' and state(row).get('delivery_kind') != 'introduction':
+                        # Delivery can finish while this classification call is running.
+                        # Keep the buffered questions for the completion turn.
+                        if not update_profile(db, row, run, decision):
+                            value = state(row)
+                            value['pending_event'] = 'introduction_completed'
+                            save(row, value)
+                            row.due_at = utcnow()
+                        run.status = 'completed'
+                    else:
+                        # Account for model time without delivering a draft here. This
+                        # also anchors a wait decision to evaluation completion.
+                        advance(row, wall_now=wall_now, deliver=False)
+                        apply_decision(db, row, run, bundle, decision)
+                        value = state(row)
+                        for key in ('last_error', 'retry_at', 'attempts', 'failed_event'):
+                            value.pop(key, None)
+                        save(row, value)
+                        run.status = 'completed'
+                    run.completed_at, run.lease_until = utcnow(), None
+                    db.commit()
+                    break
+                except StaleDataError:
+                    db.rollback()
+                    if persistence_attempt == 2:
+                        raise
         except Exception as exc:
             db.rollback()
             db.refresh(row)

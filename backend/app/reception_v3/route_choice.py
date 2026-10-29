@@ -8,6 +8,13 @@ PEACH_ROUTES = frozenset(PROFILE.get('peach_routes', []))
 ROUTE_DAYS = PROFILE.get('route_days', {})
 
 
+def reply_route(decision, previous=None, selected_route=''):
+    """Resolve this reply's product without accepting a recommendation for the customer."""
+    if decision.get('route_choice') == 'recommend':
+        return {**(previous or {}), **decision.get('profile', {})}.get('discussion_route', '')
+    return decision.get('route_variant') or selected_route
+
+
 def advertisement_route(text, routes):
     """Match whole configured product titles, with the same punctuation as labels.
 
@@ -74,7 +81,7 @@ def explicit_selection(text, target, context):
     if re.search(r'還沒(?:決定|選定)|还没(?:决定|选定)|都可以評估|都可以评估|先(?:考慮|考虑|想想)|不(?:要|想)(?:換|换|改|看行程|介紹|介绍)', text):
         return False
     offered = context.get('profile', {}).get('discussion_route')
-    action = bool(re.search(r'改成|改為|改为|改選|改选|就選|就选|選擇|选择|還是選|还是选|那就|我要|想看|給我看|给我看|請介紹|请介绍|改變主意|改变主意', text))
+    action = bool(re.search(r'改成|改為|改为|改選|改选|就選|就选|選擇|选择|還是選|还是选|那就|我要|想看|就看|我(?:們|们)?看|給我看|给我看|請介紹|请介绍|改變主意|改变主意', text))
     days = ROUTE_DAYS.get(target)
     chinese = {8:'八',9:'九',10:'十',11:'十一'}
     day_name = bool(days and re.search(rf'(?:{days}|{chinese.get(days,days)})\s*(?:天|日)', text))
@@ -186,7 +193,8 @@ def choice_error(decision, context):
             return '客人已拒絕當前產品的桃花或珠峰安排，停止原介紹；先推薦匹配產品，不queue、不開始舊線介紹。'
         if context.get('state', {}).get('delivery_kind') in ('intake', 'introduction') and not decision['interrupt']:
             return '已拒絕當前線但尚未選定替代線，仍須interrupt=true停止原圖文。'
-        if any((m.get('script_id') or '').startswith('price') for m in decision['messages']):
+        if (choice != 'recommend' and
+                any((m.get('script_id') or '').startswith('price') for m in decision['messages'])):
             return '已拒絕當前線，不能引用原線價格；推薦後等客人確認替代產品。'
         if context.get('event') == 'silence_due' and decision['messages']:
             return '客人已拒絕當前線且尚未選定替代線，本輪wait，不繼續舊線推廣或替客人改線。'

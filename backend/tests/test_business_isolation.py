@@ -38,6 +38,7 @@ from fastapi.testclient import TestClient
 assert not ROUTES and not UNCLASSIFIED_SOP_NODES
 assert 'rujing2' in settings.database_url or settings.database_url.endswith('app.db')
 assert not settings.outbound_enabled and not settings.deepseek_api_key
+assert not settings.reception_repeat_review_enabled
 with SessionLocal() as db:
     db.add(Tenant(name='Test Company'))
     db.add(User(email='admin@example.com', password_hash=hash_password('test-password'), display_name='Admin'))
@@ -63,6 +64,20 @@ with TestClient(app) as client:
         assert 'china2go' not in response.text.lower()
     config = client.get('/v1/automation/reception-config').json()['config']
     assert config['routing']['enabled_route_variants'] == []
+    assert not config['lead_capture']['next_day_invitation_enabled']
+    channels = client.get('/v1/settings/channel-ai')
+    assert channels.status_code == 200
+    assert not channels.json()['global_sending_enabled']
+    enabled = client.patch('/v1/settings/channel-ai', json={
+        'revision': channels.json()['revision'], 'changes':[{'id':1, 'enabled':True}]},
+        headers={'X-CSRF-Token':login.json()['csrf_token']})
+    assert enabled.status_code == 200, enabled.text
+    assert enabled.json()['items'][0]['enabled']
+    assert not enabled.json()['global_sending_enabled']
+    preserved = client.get('/v1/automation/reception-config').json()['config']
+    assert preserved['routing']['live_inbox_ids'] == [1]
+    assert preserved['routing']['enabled_route_variants'] == []
+    assert not preserved['lead_capture']['enabled'] and not preserved['silence']['enabled']
     response = client.patch('/v1/automation/reception-config', json={'reply': {'goal':'Answer approved facts'}},
                             headers={'X-CSRF-Token':login.json()['csrf_token']})
     assert response.status_code == 200, response.text

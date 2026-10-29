@@ -64,7 +64,7 @@ export type ReceptionConfig = {
   intake: { enabled: boolean; question: string; options: string[]; wait_seconds: number };
   common_scripts: {id: string; name: string; scenario: string; text: string; enabled: boolean}[];
   reply: { opening_message: string; opening_messages: string[]; opening_items: OpeningItem[]; opening_interval_seconds: number; goal: string; tone: 'friendly_professional' | 'concise' | 'warm'; tone_guidance: string; opening_character_limit: number; custom_guidance: string };
-  lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[] };
+  lead_capture: { enabled: boolean; channels: ('LINE' | '微信' | '电话' | 'Email' | 'WhatsApp')[]; next_day_invitation_enabled?: boolean; consultation_turn_threshold?: number };
   routing: { live_inbox_ids?: number[] | null; enabled_route_variants: string[]; allow_route_switch: boolean; preserve_profile_on_switch: boolean; outside_catalog_action: 'recommend_supported_routes' | 'explain_boundary_only' | 'consult_advisor' };
   handoff: { large_group_enabled: boolean; large_group_minimum: number };
   silence: { material_selection?: 'route_catalog' | 'configured_rules'; advisor_reply_followup_enabled?: boolean; live_enabled?: boolean | null; enabled: boolean; daily_at?: string | null; initial_checkpoints_minutes?: number[] | null; recurring_interval_minutes?: number; intervals_minutes?: number[]; max_proactive_messages_per_day: number; active_start: string; active_end: string };
@@ -112,6 +112,8 @@ export function normalizeConfig(value: ReceptionConfig): ReceptionConfig {
   const result = clone(value);
   result.common_scripts ??= [];
   result.material_rules ??= [];
+  result.lead_capture.next_day_invitation_enabled ??= false;
+  result.lead_capture.consultation_turn_threshold ??= 3;
   result.intake ??= {enabled: true, question: '您好，請問預計幾位想來旅遊？\n（幫我回答一下大概人數，才能快速幫助您匹配適合的方案跟團型）', options: ['自己一位','2～3位','4～6位','7～10位','10位以上'], wait_seconds: 90};
   result.silence.intervals_minutes ??= [360];
   result.reply.tone_guidance ??= '';
@@ -143,7 +145,7 @@ export function configurationChanges(before: ReceptionConfig, after: ReceptionCo
   const fields: Record<string,string[]> = {
     intake: ['enabled','question','options','wait_seconds'],
     reply: ['opening_items','opening_interval_seconds','goal','tone','tone_guidance','custom_guidance'],
-    lead_capture: ['enabled','channels'], routing: ['outside_catalog_action','live_inbox_ids'],
+    lead_capture: ['enabled','channels','next_day_invitation_enabled','consultation_turn_threshold'], routing: ['outside_catalog_action','live_inbox_ids'],
     handoff: ['large_group_enabled','large_group_minimum'],
     silence: ['material_selection','enabled','live_enabled','advisor_reply_followup_enabled','daily_at','initial_checkpoints_minutes','recurring_interval_minutes','intervals_minutes','max_proactive_messages_per_day','active_start','active_end'],
   };

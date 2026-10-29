@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field, HttpUrl, model_validator
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, PositiveInt, model_validator, field_validator
 
 
 class UserCreate(BaseModel):
@@ -47,6 +47,7 @@ class NotificationSettings(BaseModel):
     agent_id: int | None = Field(default=None, gt=0)
     bot_id: int | None = Field(default=None, gt=0)
     assign_on_handoff: bool = False
+    handoff_notify_agent_ids: list[PositiveInt] = Field(default_factory=list, max_length=50)
     url: HttpUrl | None = None
     secret: str | None = Field(default=None, min_length=8)
     recipients: dict[int, str] = Field(default_factory=dict)
@@ -59,6 +60,11 @@ class NotificationSettings(BaseModel):
     sender_email: EmailStr | None = None
     connection_secret: str | None = Field(default=None, min_length=1)
     event_types: list[str] = Field(default_factory=lambda: ["handoff.created", "handoff.overdue"])
+
+    @field_validator('handoff_notify_agent_ids')
+    @classmethod
+    def unique_handoff_recipients(cls, value):
+        return list(dict.fromkeys(value))
 
     @model_validator(mode="after")
     def validate_destination(self):

@@ -65,6 +65,7 @@ def compile_skills(db, now=None):
             'entry_comparison': deepcopy(route.get('entry_comparison')),
             'seasonal_pricing': deepcopy(route.get('seasonal_pricing')),
             'departure_availability': deepcopy(route.get('departure_availability')),
+            'large_party': deepcopy(route.get('large_party')),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
                          'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
                          'topics', 'usage_note', 'status', 'quote_offer') if k in s}
@@ -161,7 +162,8 @@ class SkillRegistry:
                 'handoff': ('large_group_enabled', 'large_group_minimum'),
                 'routing': ('enabled_route_variants', 'allow_route_switch', 'preserve_profile_on_switch', 'outside_catalog_action'),
                 'lead_capture': ('enabled', 'channels', 'require_supported_route',
-                                 'require_party_size', 'require_departure_window'),
+                                 'require_party_size', 'require_departure_window',
+                                 'next_day_invitation_enabled', 'consultation_turn_threshold'),
             }
             common = {section: {key: self.bundle.get(section, {}).get(key)
                                 for key in keys if key in self.bundle.get(section, {})}
@@ -185,6 +187,8 @@ class SkillRegistry:
                 body += '\n已公布出发团期（不代表库存保证）：' + json.dumps(route['departure_availability'], ensure_ascii=False)
             if route.get('guidance'):
                 body += '\n接待说明：' + route['guidance']
+            if (route.get('large_party') or {}).get('enabled'):
+                body += '\n达到配置人数门槛时优先适用的介绍后交接规则：' + json.dumps(route['large_party'], ensure_ascii=False)
             body += f"\n\n## 完整介绍原文\n逐条间隔：{route['interval_seconds']} 秒\n"
             for index, key in enumerate(route['introduction_sequence'], 1):
                 group = route['groups'][key]

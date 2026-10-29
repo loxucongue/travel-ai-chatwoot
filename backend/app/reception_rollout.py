@@ -23,7 +23,9 @@ def reception_inbox_ids(db):
     from app.operations import setting_value
     configured = setting_value(db, 'route_reception_config', {}).get('routing', {}).get('live_inbox_ids')
     if configured is None:
-        return [settings.live_reply_inbox_id]
+        # Zero marks a fresh company with no channel configured. It must not
+        # enter the persisted positive-ID list when the first channel is saved.
+        return [settings.live_reply_inbox_id] if settings.live_reply_inbox_id > 0 else []
     if not isinstance(configured, list) or any(type(x) is not int or x <= 0 for x in configured):
         return []
     return list(dict.fromkeys(configured))

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "unavailable_month_quote_recovery",
+    "title": "费用和六月七月合并询问：停止桃花报价，换线后继续真实答疑",
+    "entry": "西藏桃花節11日",
+    "replay_context": {
+      "now": "2026-10-27T02:20:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_11d_2027",
+      "profile": {"party_size_range": "2～3位", "party_size_min": 2, "group_type": "shared"},
+      "state": {"opening_started": true, "intake_status": "done", "completed_introductions": ["peach_11d_2027"], "introduction_route": "peach_11d_2027"},
+      "messages": [
+        {"id": "h1", "direction": "incoming", "content": "2～3位", "created_at": "2026-10-27T02:10:00+00:00"},
+        {"id": "h2", "direction": "outgoing", "content": "這條桃花加珠峰11日是2027年3/20至4/10出發，行程圖已給您參考。", "status": "sent", "created_at": "2026-10-27T02:11:00+00:00"},
+        {"id": "h3", "direction": "incoming", "content": "費用多少？", "created_at": "2026-10-27T02:19:52+00:00"},
+        {"id": "h4", "direction": "incoming", "content": "6-7月有嗎？", "created_at": "2026-10-27T02:20:00+00:00"}
+      ]
+    },
+    "steps": [
+      {"id": "combined", "checks": ["send", "not_handoff", "no_price"], "excludes": ["價格不一樣", "價格不同", "价钱不同", "12,780", "12780", "費用的話。"]},
+      {"id": "clarify", "text": "不一定要桃花，但要循序漸進，六月去。", "checks": ["send", "not_handoff", "no_price"], "excludes": ["費用的話。", "2位和3位的每人價格不一樣"]},
+      {"id": "select", "text": "好，我們看林芝進的全覽10天行程，六月出發。", "checks": ["send", "not_handoff"], "excludes": ["費用的話。"]},
+      {"id": "quote", "text": "確定3個人，2027年6月15日拼團，每人多少錢？", "checks": ["send", "not_handoff"], "contains_any": [["12,280", "12280"]], "excludes": ["現在報名還有優惠", "早鳥", "費用的話。", "12,780"]},
+      {"id": "closing", "text": "我先看看謝謝", "checks": ["not_handoff", "no_price"], "excludes": ["？", "?"]},
+      {"id": "next_day", "next_check": true, "checks": ["no_send", "not_handoff"]}
+    ]
+  },
+  {
+    "id": "same_tier_price_explanation",
+    "title": "2与3人同价、5人落4人档：多轮人数修改保留正确报价",
+    "entry": "桃花11日拼團",
+    "replay_context": {
+      "now": "2026-10-27T03:00:00+00:00", "event": "customer_message", "route_variant": "peach_11d_2027",
+      "profile": {"party_size_range": "2～3位", "party_size_min": 2, "group_type": "shared", "departure_window": "2027年3月底"},
+      "state": {"opening_started": true, "intake_status": "done", "completed_introductions": ["peach_11d_2027"], "introduction_route": "peach_11d_2027"},
+      "messages": [
+        {"id": "h1", "direction": "incoming", "content": "明年三月底想看桃花加珠峰，2到3位拼團。", "created_at": "2026-10-27T02:55:00+00:00"},
+        {"id": "h2", "direction": "outgoing", "content": "桃花加珠峰11日是2027年3/20至4/10出發，行程圖已給您參考。", "status": "sent", "created_at": "2026-10-27T02:56:00+00:00"},
+        {"id": "h3", "direction": "incoming", "content": "2個人和3個人每人的團費有差嗎？", "created_at": "2026-10-27T03:00:00+00:00"}
+      ]
+    },
+    "steps": [
+      {"id": "compare", "checks": ["send", "not_handoff"], "contains_any": [["同價", "相同", "一樣", "沒有差", "沒有價差", "无差", "無價差"]], "excludes": ["價格不同", "價格不一樣", "費用的話。"]},
+      {"id": "three", "text": "那先按3位報價，我們是2027年3月26日拼團。", "checks": ["send", "not_handoff"], "contains_any": [["12,780", "12780"]], "excludes": ["早鳥", "現在報名還有優惠"]},
+      {"id": "five", "text": "又多兩個朋友，改成5位一起報名，還是拼團，最終每人多少？", "checks": ["send", "not_handoff"], "contains_any": [["12,580", "12580"]], "excludes": ["12,380", "12380", "早鳥"]}
+    ]
+  }
+]

@@ -9,6 +9,7 @@ from app.outbound_control import global_message_sending_enabled
 from app.runtime_settings import dt
 from app.delivery_status import apply_receipt
 from app.reception_rollout import reception_inbox_allowed
+from app.outgoing_identity import PENDING, defer_unlinked
 from app.reception_v3.live import accept, cancel, permitted, enable_new_customer, record_human_reply, human_owned
 
 class ReplyBlocked(Exception):
@@ -57,10 +58,18 @@ def mirror_event(db, event):
         out=db.scalar(select(OutboundMessage).where(OutboundMessage.conversation_state_id==state.id,
                                                    OutboundMessage.chatwoot_message_id==message.chatwoot_message_id))
         if out:
-            apply_receipt(db,out,payload.get('status'))
-        elif current and event.event=='message_created' and message.direction=='outgoing' and not message.private:
+            apply_receipt(db,out,payload.get('status'),payload.get('content_attributes'))
+            message.attribution = out.source_type
+            if event.error_code == PENDING:
+                event.error_code = None
+        elif (current or event.error_code == PENDING) and event.event=='message_created' and message.direction=='outgoing' and not message.private:
             sender = payload.get('sender') or {}
             if sender.get('type') != 'agent_bot' and not (payload.get('content_attributes') or {}).get('external_echo'):
+                if defer_unlinked(db, event, state, message):
+                    return
+                message.attribution = 'inferred_human'
+                if event.error_code == PENDING:
+                    event.error_code = None
                 record_human_reply(db,state,message)
         if incoming and current:
             from app.engagement_labels import observe_reply

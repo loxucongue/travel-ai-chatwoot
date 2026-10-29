@@ -205,7 +205,9 @@ def _non_scheduled_result(spec, days, today, party_size, group_type):
         return {'status': 'private_departure', 'departure_examples': [d.isoformat() for d in days[:3]],
                 'minimum_party_size': policy['private_departure_min_party_size'],
                 'reason': '已達獨團自選日期的人數門檻，可選所詢日期，不受拼團每週定班限制；不是名額或訂位確認。',
-                'guidance': '先說明可獨立成團自選日期；尚未選獨團可確認意願，不要求改到定班日、不索取聯絡方式。'
+                'guidance': '此結果是日期可用性依據，不是每輪都要重述獨團條件的話術。首次被問能否自選日期時才說明；'
+                            '已解釋過而本輪只補月份、原因或收尾，不再複述人數門檻與自選日期。客人明確重問可針對問題再說明。'
+                            '尚未選獨團且有必要時可確認意願，不要求改到定班日、不索取聯絡方式。'
                             '未問價不報價；若問這個自選日期的實際獨團總報價，靜默交接核對，不能直接套拼團模板。'
                             + PROFILE.get('private_departure_extra_guidance', '费用以当前产品已审核资料为准，不推断未配置的加价或优惠。')}
     if policy.get('private_departure_min_party_size') and party_size is None and group_type != 'shared':
@@ -432,7 +434,9 @@ def quote_error(decision, bundle, checked, availability=None, *, require_interru
                     any(m.get('asset_keys') for m in decision['messages']))
                 or any((m.get('script_id') or '').startswith('price') or contains_trip_quote(m.get('text', ''))
                        for m in decision['messages'])):
-            return ('已核對本線在客人所問時段未開放：本輪不開始介紹、不queue，'
+            return ('上一候选未发送。已核對本線在客人所問時段未開放：即使前一句问过费用，也必须删除本线的所有团费金额和price_*消息，'
+                    '不能一边说无团期一边报本线价格；不能只把script_id改成自由文字保留金额。'
+                    '先回答最新日期是否可行，不为不可售的本线追问核价人数。本輪不開始介紹、不queue，'
                     + ('interrupt=true，' if require_interrupt else '沉默回合沒有進行中的介紹，不要求interrupt=true，') +
                     '停止原介紹且不報價；冬遊推薦只用已確認說明，不發常規線素材；依工具返回的同期產品先推薦，否則依留資偏好輕邀開放通知。'
                     '僅邀請不能直接交接，實際留資或明確要求真人仍靜默handoff。')

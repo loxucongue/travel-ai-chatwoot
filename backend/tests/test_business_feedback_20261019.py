@@ -52,11 +52,28 @@ def test_initial_people_options_are_excluded(session_factory, monkeypatch, conte
     assert queue(session_factory, content) is None
 
 
-def test_product_selection_excluded_but_same_text_later_counts(session_factory, monkeypatch):
+def test_product_selection_excluded_even_after_introduction(session_factory, monkeypatch):
     seed(session_factory, monkeypatch)
     title = next(iter(bundle()['routes'].values()))['name']
     assert queue(session_factory, title) is None
-    assert queue(session_factory, title, complete=True)
+    assert queue(session_factory, title, complete=True) is None
+    assert queue(session_factory, title + '的費用呢？', complete=True)
+
+
+def test_repeated_route_card_after_followup_is_not_wash_return(session_factory, monkeypatch):
+    seed(session_factory, monkeypatch)
+    with session_factory() as db:
+        row=live.session_for(db,1)
+        row.messages=[{'id':'followup','direction':'outgoing','status':'read',
+                       'content':'分享一張照片','proactive':True,'created_at':utcnow()}]
+        db.commit()
+    title=next(iter(bundle()['routes'].values()))['name']
+    assert queue(session_factory,'3~4月｜'+title,complete=True) is None
+    with session_factory() as db:
+        assert db.get(ConversationLabelAddition,(1,engaged.RETURNED_LABEL)) is None
+    assert queue(session_factory,'我們預計3到4位',complete=True)
+    with session_factory() as db:
+        assert db.get(ConversationLabelAddition,(1,engaged.RETURNED_LABEL)) is not None
 
 
 def test_ad_month_prefix_is_still_an_initial_route_option(session_factory, monkeypatch):

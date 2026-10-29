@@ -28,6 +28,7 @@ from app.models import (
     LabelEvent,
     MessageEvent,
     Notification,
+    NotificationDelivery,
     NotificationRead,
     OutboundMessage,
     StoredMedia,
@@ -277,19 +278,41 @@ def set_label_mappings(payload: LabelMappings, user: User = Depends(require_supe
     return payload.model_dump()
 
 
+def notification_settings_view(db, value):
+    ids = value.get('handoff_notify_agent_ids', [])
+    agents = {a.chatwoot_agent_id: a for a in db.scalars(select(ChatwootAgent)).all()}
+    gaps = []
+    for inbox in db.scalars(select(InboxBinding).where(InboxBinding.status == 'active')).all():
+        missing = [i for i in ids if i not in agents or inbox.chatwoot_inbox_id not in (agents[i].inbox_ids or [])]
+        if missing:
+            gaps.append({'inbox_id': inbox.chatwoot_inbox_id, 'inbox_name': inbox.name,
+                         'agent_ids': missing})
+    warnings = db.execute(select(NotificationDelivery, Notification.conversation_id).join(
+        Notification, Notification.id == NotificationDelivery.notification_id).where(
+        NotificationDelivery.error_code.like('notification_recipients_skipped:%')
+    ).order_by(NotificationDelivery.id.desc()).limit(10)).all()
+    return {**value, 'handoff_notify_agent_ids': ids, 'recipient_access_gaps': gaps,
+            'recent_recipient_warnings': [{'delivery_id': d.id, 'conversation_id': cid,
+                'status': d.status, 'detail': d.error_code, 'at': d.delivered_at} for d, cid in warnings],
+            'secret_configured': bool(value.get('encrypted_secret')), 'encrypted_secret': None,
+            'connection_secret_configured': bool(value.get('encrypted_connection_secret')), 'encrypted_connection_secret': None}
+
+
 @router.get("/settings/notifications")
 def get_notification_settings(user: User = Depends(super_admin), db: Session = Depends(get_db)):
     value = setting_value(db, "notification_settings", {"enabled": False, "channel": "webhook", "agent_id": None, "bot_id": None, "url": None, "event_types": ["handoff.created", "handoff.overdue"]})
-    return {**value, "secret_configured": bool(value.get("encrypted_secret")), "encrypted_secret": None,
-            "connection_secret_configured":bool(value.get('encrypted_connection_secret')), 'encrypted_connection_secret':None}
+    return notification_settings_view(db, value)
 
 
 @router.patch("/settings/notifications")
 def set_notification_settings(payload: NotificationSettings, user: User = Depends(require_super_admin_csrf), db: Session = Depends(get_db)):
     current = setting_value(db, "notification_settings", {})
-    value = payload.model_dump(exclude={"secret", "connection_secret"}, mode="json")
-    if "assign_on_handoff" not in payload.model_fields_set:
-        value["assign_on_handoff"] = current.get("assign_on_handoff", False)
+    from pydantic import ValidationError
+    try:
+        merged = NotificationSettings.model_validate({**current, **payload.model_dump(exclude_unset=True)})
+    except ValidationError:
+        raise HTTPException(422, detail={'code': 'notification_settings_invalid', 'message': '通知配置不完整或接收人格式不正确'})
+    value = merged.model_dump(exclude={"secret", "connection_secret"}, mode="json")
     value["encrypted_secret"] = current.get("encrypted_secret")
     if payload.secret:
         value["encrypted_secret"] = encrypt_secret(payload.secret).decode()
@@ -303,8 +326,7 @@ def set_notification_settings(payload: NotificationSettings, user: User = Depend
     save_setting(db, "notification_settings", value)
     audit(db, user, "settings.notifications", "settings")
     db.commit()
-    return {**value, "encrypted_secret": None, "secret_configured": bool(value.get("encrypted_secret")),
-            'encrypted_connection_secret':None,'connection_secret_configured':bool(value.get('encrypted_connection_secret'))}
+    return notification_settings_view(db, value)
 
 
 @router.post("/settings/history-sync")

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="data:,"><title>Rujing2 通用修复同步与新线路准备</title>
+<style>body{margin:0;background:#f3f5f7;color:#243241;font:15px/1.8 "Microsoft YaHei",sans-serif}main{max-width:1050px;margin:30px auto;padding:40px;background:white}h1{font-size:28px;color:#111}h2{font-size:21px;margin-top:32px}table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}th,td{border:1px solid #dbe2e8;text-align:left;padding:10px;vertical-align:top}th{background:#edf3f7}code{font-size:13px;overflow-wrap:anywhere}.note{background:#edf5f8;padding:16px 20px}a{color:#235d80}li{margin:6px 0}tr{break-inside:avoid}@media print{@page{size:A4;margin:15mm}body{background:white;font-size:10pt}main{margin:0;padding:0}table{font-size:9pt}h2{break-after:avoid}thead{display:table-header-group}}@media(max-width:750px){main{padding:20px;margin:0}table{font-size:12px}td,th{padding:7px}}</style>
+<main><p>2026年10月29日 · 维护分支 codex/rujing2</p><h1>Rujing2 通用修复同步与新线路准备</h1>
+<div class="note"><strong>结论</strong><p>近期修复中，消息可靠性、人工接管识别、渠道开关、报价产品归属和对话连续性适用于新团队。本次已选择移植并适配。原公司的线路事实、价目、账号默认值、专项生产配置不直接合并。</p><p>这批厦门资料尚不构成可正式报价的线路包。本轮只盘点和列出补充要求，没有导入产品、发布知识或启用对客发送。</p></div>
+<h2>比较范围</h2><ul><li>本分支原提交 <code>4621d29</code>，运行时使用 <code>businesses/rujing2</code>，默认空产品、空渠道，发送关闭。</li><li>核对已获取的 <code>origin/main 105c45c</code>；平台改动比较基线为 <code>90cbd6f</code>。</li><li>按文件选择三方合并通用实现并处理冲突，保留已完成的业务目录隔离、独立数据库、密钥和发布白名单。没有将旧公司业务包设置为新公司的回退来源。</li><li>旧公司资料仍保存在原业务包及归档中；“去业务化”指新实例不加载、不部署这些资料，并非删除历史。</li></ul>
+<h2>已同步的功能修复</h2>
+<table><thead><tr><th>原提交</th><th>改动及影响</th><th>新分支处理</th></tr></thead><tbody>
+<tr><td><code>538b28f</code></td><td>AI回调先于发送结果入库时，被误判成真人回复，提前触发接管。</td><td>按消息ID核对归属；短暂不确定时暂停交付，超时交人工核对，不凭同一账号或相同文字判为AI，也不自动重发。</td></tr>
+<tr><td><code>04c7085 ea036ca</code></td><td>渠道拒收或仅返回external_error时，后续自动回复仍可能继续；并发保存冲突影响对话状态。</td><td>识别无status的渠道失败，停止后续自动发送，保持人工任务；新的客户来讯才重新核验。并发冲突复用模型结果并重查权限，避免额外模型调用。</td></tr>
+<tr><td><code>a3c60ca</code></td><td>历史消息回执查询遇到不可访问会话，重复请求并阻碍其他回执。</td><td>404暂缓15分钟，继续处理其他会话；历史失败不等于再次发送授权。</td></tr>
+<tr><td><code>42b498a</code></td><td>收件箱AI开关和接待范围分散，页面状态与实际效果不一致。</td><td>统一“渠道AI”设置，事务保存两个条件，版本冲突返回409；开启某渠道不自动打开全局发送。</td></tr>
+<tr><td><code>91970a2</code></td><td>客户补充原因或收尾时反复解释旧规则，沉默节点重复安慰或追问。</td><td>保留真实对话增量和可等待的调度；新公司Prompt补齐去重要求。额外模型复核开关默认关闭，避免新增隐性调用。</td></tr>
+<tr><td><code>e271190 a1269d9</code></td><td>已无可售日期仍夹带旧价、推荐另一产品时引用原产品报价或擅自选线。</td><td>强化日期与报价校验、JSON修复协议、推荐产品的报价与素材归属；正式选择仍由客户确认。</td></tr>
+<tr><td><code>63e1a16</code></td><td>顾问答复后，定时跟进又重答客户旧问题或重新比较价格。</td><td>区分客户、顾问、自动回复和真实已发送状态；顾问待核价时等待，不重答或重新报价。</td></tr>
+<tr><td><code>2c0006d ee0934d</code></td><td>多人接待需先介绍再交顾问，但配置介绍可能覆盖客户刚提出的问题。</td><td>移植可选流程；先回答当前问题，再执行配置介绍和交接。人数门槛由当前线路配置，可使用4人等门槛，不带入旧公司的7人话术。</td></tr>
+<tr><td><code>f26bb86</code></td><td>符合条件的次日联系邀请与普通跟进顺序、重复邀请和撤回权限处理。</td><td>移植为可选能力，默认关闭；依据真实咨询或报价证据，尊重已留资、拒绝、延期；发送前再核验权限。</td></tr>
+<tr><td><code>ad0e3f6</code></td><td>交顾问时还需要通知调度人员，且接收人的收件箱权限可能不足。</td><td>支持配置多个通知人并展示权限缺口；不迁入旧人员ID和通知目的地。</td></tr>
+</tbody></table>
+<h2>针对新公司额外处理</h2><ul>
+<li>修复空公司首次配置渠道时，默认Inbox ID为0混入有效ID数组、导致保存失败的问题。未配置渠道时范围应为空。</li>
+<li>保留Chatwoot Account ID默认0；人工跟进使用当前公司身份和客户语言，不恢复旧公司品牌。</li>
+<li>新增决策字段与中性Prompt保持一致，包括联系邀请标记、留资证据和先答问题再介绍。产品与留资、跟进仍由业务配置启用。</li>
+<li>旧资料测试改读已隔离的业务包，历史路径只作来源记录；针对原公司一次性生产迁移的测试不移植。现存旧脚本仅加“已有新人数价格时不覆盖”的防护，不用于新公司部署。</li>
+<li>部署打包继续排除旧业务目录、测试、历史脚本、私有环境文件和客户数据库。本次生成的审阅包有151个文件。</li>
+</ul>
+<h2>未直接同步的内容</h2><table><thead><tr><th>项目</th><th>原因及后续</th></tr></thead><tbody>
+<tr><td><code>25a7186</code> 绒布寺专项事实</td><td>属于原公司西藏线路的住宿、洗澡和报价条件，不适用于厦门。其资料和专用Skill保持原业务包归属。</td></tr>
+<tr><td>旧公司的大团和留资上线脚本</td><td>包含原线路、素材顺序、价格与生产开关。仅迁移通用执行能力，不执行这些脚本，也不自动启用新公司的策略。</td></tr>
+<tr><td><code>c5f4294</code> 存储保留与定时备份</td><td>有维护价值，但原systemd服务、目录和保留策略属于旧服务器。本轮不复制旧服务配置。新服务器已有发布前一致性备份；建议后续将周期备份、保留时长和恢复演练按rujing2目录单独部署，不在当前未确认范围内清理数据。</td></tr>
+<tr><td>旧生产验收文档与素材</td><td>原公司部署通过不等于新公司业务通过。保留来源提交作追溯，不将旧公司的验收结果包装成厦门验收。</td></tr>
+</tbody></table>
+<h2>新线路的技术边界</h2><ul>
+<li><strong>币种：</strong>人数报价策略当前校验<code>currency=CNY</code>，季节价格也使用<code>price_cny</code>。资料里的台币价格不能直接填入。业务确认后可先使用审核后的明确币种固定文字并关闭自动金额计算，或另做多币种适配和验收。</li>
+<li><strong>资料：</strong>尚无确定的每日行程、适用日期价目、儿童单房规则、酒店名单和退款预订条件。不得从照片、促销话术或历史回复补造事实。</li>
+<li><strong>素材：</strong>4张PNG最长边只有200至302像素；2张JPG带抖音水印；视频分别为桌餐和游客合影。已核对元数据并抽帧查看，未逐字核验音轨。</li>
+<li><strong>运行：</strong>此轮不更改线上服务、不连接新的Chatwoot、不使用付费模型、不发送客户消息。正式上线仍须独立完成HTTPS、模型、渠道、消息消费和小范围对客验收。</li>
+</ul>
+<h2>业务资料交付</h2><p><a href="../business/rujing2-line-intake-20261029.html">打开厦门线路资料收集与调试清单</a>。清单提供68项资料与验收要求、10项附件盘点、9类原稿纠正、4项交付确认，可离线填写后保存副本，也可打印。</p>
+<h2>验证记录</h2><p id="verification">最终一次相关后端回归421项全部通过，耗时132.44秒；前端8项测试通过，TypeScript与Vite生产构建通过。发布白名单打包通过，151个文件，不包含旧公司业务包。空公司迁移、首次产品导入、首次渠道启用、发送总开关保留及新公司内容隔离均有覆盖。资料清单已验证填写与保存副本，并检查浏览器展示和打印输出。</p>
+<p>测试中的原公司线路仅作为历史回归样本，不代表新公司产品已发布。没有运行全部历史业务回放，也没有完成真实模型与Facebook端到端验收。</p>
+</main></html>

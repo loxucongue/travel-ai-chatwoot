@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import ChannelAiSettings from './ChannelAiSettings';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Bell, Bot, CheckCircle2, Database, KeyRound, Link2, RefreshCw, Save, ScrollText, ShieldCheck, Tags, Users, Webhook } from 'lucide-react';
 import { api, ApiError } from '../api';
 import { Badge, EmptyState, PageHeader, StatusDot, Toggle } from '../components';
 
-type Section = 'channels' | 'webhooks' | 'runtime' | 'rollout' | 'history' | 'mappings' | 'users' | 'notifications' | 'audit';
+type Section = 'channel-ai' | 'channels' | 'webhooks' | 'runtime' | 'rollout' | 'history' | 'mappings' | 'users' | 'notifications' | 'audit';
 interface ChatwootConfig { configured: boolean; base_url: string; account_id: number; token_last4?: string; status?: string; last_tested_at?: string; last_error?: string; webhook_url?: string; }
 interface Inbox { id: number; chatwoot_inbox_id: number; name: string; channel_type: string; ai_enabled: boolean; status: string; last_synced_at: string; }
 interface AiReceptionRollout {
@@ -21,9 +23,11 @@ const eventOptions = ['message_created', 'message_updated', 'conversation_create
 const requiredEvents = new Set(['message_created', 'message_updated', 'conversation_updated', 'conversation_status_changed', 'contact_updated']);
 
 export default function Settings({ notify }: { notify: (message: string) => void }) {
-  const [section, setSection] = useState<Section>('channels');
-  const items: { id: Section; label: string; icon: typeof Link2 }[] = [{ id: 'channels', label: '渠道与收件箱', icon: Link2 }, { id: 'webhooks', label: 'Account Webhook', icon: Webhook }, { id: 'history', label: '历史数据', icon: Database }, { id: 'runtime', label: '运行参数', icon: Bot }, { id: 'rollout', label: 'AI 接待范围', icon: ShieldCheck }, { id: 'mappings', label: '标签映射', icon: Tags }, { id: 'users', label: '用户与权限', icon: Users }, { id: 'notifications', label: '顾问通知', icon: Bell }, { id: 'audit', label: '审计日志', icon: ScrollText }];
-  return <div className="page-content"><PageHeader eyebrow="SYSTEM CONFIGURATION" title="系统设置" description="管理 Chatwoot 连接、AI、权限、安全策略与历史数据。" /><section className="settings-shell"><nav className="settings-nav">{items.map((item) => { const Icon = item.icon; return <button key={item.id} className={section === item.id ? 'active' : ''} onClick={() => setSection(item.id)}><Icon size={17} /><span>{item.label}</span></button>; })}</nav><main className="settings-main">{section === 'channels' ? <Channels notify={notify} /> : section === 'webhooks' ? <WebhookSettings notify={notify} /> : section === 'history' ? <HistorySettings notify={notify} /> : section === 'runtime' ? <ReplyTiming notify={notify} /> : section === 'rollout' ? <AiReceptionRolloutSettings notify={notify} /> : section === 'mappings' ? <MappingSettings notify={notify} /> : section === 'users' ? <UserSettings notify={notify} /> : section === 'notifications' ? <NotificationSettings notify={notify} /> : <AuditLogs />}</main></section></div>;
+  const [params, setParams] = useSearchParams();
+  const section = (params.get('section') || 'channel-ai') as Section;
+  const setSection = (value: Section) => setParams({ section: value });
+  const items: { id: Section; label: string; icon: typeof Link2 }[] = [{ id: 'channel-ai', label: '渠道 AI', icon: Bot }, { id: 'channels', label: '渠道与收件箱', icon: Link2 }, { id: 'webhooks', label: 'Account Webhook', icon: Webhook }, { id: 'history', label: '历史数据', icon: Database }, { id: 'runtime', label: '运行参数', icon: Bot }, { id: 'rollout', label: 'AI 接待范围', icon: ShieldCheck }, { id: 'mappings', label: '标签映射', icon: Tags }, { id: 'users', label: '用户与权限', icon: Users }, { id: 'notifications', label: '顾问通知', icon: Bell }, { id: 'audit', label: '审计日志', icon: ScrollText }];
+  return <div className="page-content"><PageHeader eyebrow="SYSTEM CONFIGURATION" title="系统设置" description="管理 Chatwoot 连接、AI、权限、安全策略与历史数据。" /><section className="settings-shell"><nav className="settings-nav">{items.map((item) => { const Icon = item.icon; return <button key={item.id} className={section === item.id ? 'active' : ''} onClick={() => setSection(item.id)}><Icon size={17} /><span>{item.label}</span></button>; })}</nav><main className="settings-main">{section === 'channel-ai' ? <ChannelAiSettings notify={notify} /> : section === 'channels' ? <Channels notify={notify} /> : section === 'webhooks' ? <WebhookSettings notify={notify} /> : section === 'history' ? <HistorySettings notify={notify} /> : section === 'runtime' ? <ReplyTiming notify={notify} /> : section === 'rollout' ? <AiReceptionRolloutSettings notify={notify} /> : section === 'mappings' ? <MappingSettings notify={notify} /> : section === 'users' ? <UserSettings notify={notify} /> : section === 'notifications' ? <NotificationSettings notify={notify} /> : <AuditLogs />}</main></section></div>;
 }
 
 function parseConversationIds(value: string): number[] | null {
@@ -92,16 +96,15 @@ function AiReceptionRolloutSettings({ notify }: { notify: (value: string) => voi
 function Channels({ notify }: { notify: (value: string) => void }) {
   const queryClient = useQueryClient();
   const config = useQuery({ queryKey: ['chatwoot-config'], queryFn: () => api<ChatwootConfig>('/settings/chatwoot') });
-  const inboxes = useQuery({ queryKey: ['inboxes'], queryFn: () => api<Inbox[]>('/settings/inboxes') });
   const [baseUrl, setBaseUrl] = useState('https://app.chatwoot.com'); const [accountId, setAccountId] = useState(0); const [token, setToken] = useState('');
   useEffect(() => { if (config.data) { setBaseUrl(config.data.base_url); setAccountId(config.data.account_id); } }, [config.data]);
   const save = useMutation({ mutationFn: () => api<ChatwootConfig>('/settings/chatwoot', { method: 'PUT', body: JSON.stringify({ base_url: baseUrl, account_id: accountId, api_token: token || null }) }), onSuccess: () => { setToken(''); queryClient.invalidateQueries({ queryKey: ['chatwoot-config'] }); notify('Chatwoot 连接配置已加密保存'); } });
   const test = useMutation({ mutationFn: () => api<{ inbox_count: number }>('/settings/chatwoot/test', { method: 'POST' }), onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ['chatwoot-config'] }); notify(`连接正常，读取到 ${data.inbox_count} 个 Inbox`); } });
-  const sync = useMutation({ mutationFn: () => api<{ inboxes: number }>('/settings/chatwoot/sync', { method: 'POST' }), onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ['inboxes'] }); notify(`已同步 ${data.inboxes} 个 Inbox`); } });
-  const toggle = useMutation({ mutationFn: ({ id, enabled }: { id: number; enabled: boolean }) => api(`/settings/inboxes/${id}`, { method: 'PATCH', body: JSON.stringify({ ai_enabled: enabled }) }), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inboxes'] }) });
+  const sync = useMutation({ mutationFn: () => api<{ inboxes: number }>('/settings/chatwoot/sync', { method: 'POST' }), onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ['inboxes'] }); queryClient.invalidateQueries({ queryKey: ['channel-ai'] }); queryClient.invalidateQueries({ queryKey: ['settings-inboxes'] }); notify(`已同步 ${data.inboxes} 个 Inbox`); } });
+
   const error = save.error || test.error || sync.error;
 
-  return <><header className="settings-section-head"><div><h2>Chatwoot 连接</h2><p>Token 仅发送到本地 FastAPI，并以加密字段保存。</p></div><Badge tone={config.data?.status === 'connected' ? 'green' : 'amber'}><StatusDot tone={config.data?.status === 'connected' ? 'green' : 'amber'} />{config.data?.status ?? '未配置'}</Badge></header><article className="setting-card"><div className="form-stack compact-form"><label>Base URL<input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} /></label><label>Account ID<input type="number" value={accountId} onChange={(event) => setAccountId(Number(event.target.value))} /></label><label>API Token<input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder={config.data?.configured ? `已配置 ····${config.data.token_last4}` : '输入服务账号 Token'} /></label></div>{error ? <div className="login-error">{(error as ApiError).message}</div> : null}<div className="setting-actions"><button className="primary-button" onClick={() => save.mutate()} disabled={save.isPending}><Save size={15} />保存</button><button className="secondary-button" onClick={() => test.mutate()} disabled={!config.data?.configured || test.isPending}><CheckCircle2 size={15} />只读测试</button><button className="secondary-button" onClick={() => sync.mutate()} disabled={!config.data?.configured || sync.isPending}><RefreshCw size={15} />同步资源</button></div></article><article className="panel inbox-panel"><header className="panel-header"><div><h2>收件箱 AI 开关</h2><p>关闭只影响本平台自动回复，不影响 Chatwoot 人工收发。</p></div></header>{inboxes.isLoading ? <EmptyState type="loading" title="正在读取 Inbox" description="" /> : !inboxes.data?.length ? <EmptyState title="尚未同步 Inbox" description="保存连接后执行同步资源。" /> : <div className="responsive-table"><table><thead><tr><th>收件箱</th><th>渠道</th><th>Inbox ID</th><th>状态</th><th>AI 自动回复</th></tr></thead><tbody>{inboxes.data.map((item) => <tr key={item.id}><td><strong>{item.name}</strong></td><td>{item.channel_type}</td><td><code>{item.chatwoot_inbox_id}</code></td><td><Badge tone="green">{item.status}</Badge></td><td><Toggle checked={item.ai_enabled} onChange={(enabled) => toggle.mutate({ id: item.id, enabled })} label={`切换 ${item.name} AI`} disabled={toggle.isPending} /></td></tr>)}</tbody></table></div>}</article></>;
+  return <><header className="settings-section-head"><div><h2>Chatwoot 连接</h2><p>Token 仅发送到本地 FastAPI，并以加密字段保存。</p></div><Badge tone={config.data?.status === 'connected' ? 'green' : 'amber'}><StatusDot tone={config.data?.status === 'connected' ? 'green' : 'amber'} />{config.data?.status ?? '未配置'}</Badge></header><article className="setting-card"><div className="form-stack compact-form"><label>Base URL<input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} /></label><label>Account ID<input type="number" value={accountId} onChange={(event) => setAccountId(Number(event.target.value))} /></label><label>API Token<input type="password" value={token} onChange={(event) => setToken(event.target.value)} placeholder={config.data?.configured ? `已配置 ····${config.data.token_last4}` : '输入服务账号 Token'} /></label></div>{error ? <div className="login-error">{(error as ApiError).message}</div> : null}<div className="setting-actions"><button className="primary-button" onClick={() => save.mutate()} disabled={save.isPending}><Save size={15} />保存</button><button className="secondary-button" onClick={() => test.mutate()} disabled={!config.data?.configured || test.isPending}><CheckCircle2 size={15} />只读测试</button><button className="secondary-button" onClick={() => sync.mutate()} disabled={!config.data?.configured || sync.isPending}><RefreshCw size={15} />同步资源</button></div></article></>;
 }
 
 function WebhookSettings({ notify }: { notify: (value: string) => void }) {
@@ -113,9 +116,9 @@ function WebhookSettings({ notify }: { notify: (value: string) => void }) {
 }
 
 function ReplyTiming({ notify }: { notify: (value: string) => void }) {
+  const inboxes = useQuery({ queryKey: ['inboxes'], queryFn: () => api<Inbox[]>('/settings/inboxes') });
   type Timing = { version: number; enabled: boolean; merge_wait_seconds: number; merge_max_seconds: number; backlog_seconds: number; inbox_binding_id: number | null };
   const [scope, setScope] = useState('');
-  const inboxes = useQuery({ queryKey: ['inboxes'], queryFn: () => api<Inbox[]>('/settings/inboxes') });
   const query = useQuery({ queryKey: ['reply-timing', scope], queryFn: () => api<Timing>(`/settings/reply-timing${scope ? `?inbox_binding_id=${scope}` : ''}`) });
   const reception = useQuery({ queryKey: ['reception-config'], queryFn: () => api<{runtime: {model: string; timeout_seconds: number; concurrency: number}}>('/automation/reception-config') });
   const [form, setForm] = useState<Timing | null>(null);
@@ -159,6 +162,9 @@ function UserSettings({ notify }: { notify: (value: string) => void }) {
 
 function NotificationSettings({ notify }: { notify: (value: string) => void }) {
   type Config = { enabled: boolean; channel: 'webhook' | 'chatwoot' | 'wecom' | 'email'; agent_id?: number; bot_id?: number; url?: string; event_types: string[]; secret_configured: boolean;
+    assign_on_handoff?: boolean; handoff_notify_agent_ids?: number[];
+    recipient_access_gaps?: {inbox_id:number; inbox_name:string; agent_ids:number[]}[];
+    recent_recipient_warnings?: {delivery_id:number; conversation_id:number; detail:string; at:string}[];
     recipients?: Record<string,string>; corp_id?: string; wecom_agent_id?: number; smtp_host?: string; smtp_port?: number; smtp_security?: 'ssl'|'starttls'; smtp_user?: string; sender_email?: string; connection_secret_configured?: boolean };
   const query = useQuery({ queryKey: ['notification-settings'], queryFn: () => api<Config>('/settings/notifications') });
   const agents = useQuery({ queryKey: ['resources'], queryFn: () => api<{ agents: { id: number; name: string }[] }>('/settings/resources') });
@@ -172,16 +178,21 @@ function NotificationSettings({ notify }: { notify: (value: string) => void }) {
   const [botId, setBotId] = useState('');
   const [url, setUrl] = useState('');
   const [secret, setSecret] = useState('');
+  const [handoffRecipients, setHandoffRecipients] = useState<number[]>([]);
+  const qc = useQueryClient();
+  const agentName = (id:number) => agents.data?.agents.find(a=>a.id===id)?.name ?? `账号 ${id}`;
+  useEffect(() => { if (query.data) setHandoffRecipients(query.data.handoff_notify_agent_ids ?? []); }, [query.data]);
   useEffect(() => { if (query.data) { const data = query.data; setEnabled(data.enabled); setChannel(data.channel ?? 'webhook'); setAgentId(String(data.agent_id ?? '')); setBotId(String(data.bot_id ?? '')); setUrl(data.url ?? ''); } }, [query.data]);
   const save = useMutation({
     mutationFn: () => {
       const mapping: Record<string,string> = {};
       for(const line of recipients.split('\n').filter(l=>l.trim())) {const parts=line.split('=');if(parts.length!==2 || !/^\d+$/.test(parts[0].trim()) || !parts[1].trim()) throw new Error('接收人格式应为：顾问ID=企业微信成员ID或邮箱'); mapping[parts[0].trim()]=parts[1].trim();}
-      return api('/settings/notifications', { method: 'PATCH', body: JSON.stringify({ enabled, channel, agent_id: Number(agentId) || null, bot_id: Number(botId) || null, url: url || null, secret: secret || null,
+      return api<Config>('/settings/notifications', { method: 'PATCH', body: JSON.stringify({ enabled, channel, agent_id: Number(agentId) || null, bot_id: Number(botId) || null, url: url || null, secret: secret || null,
+        assign_on_handoff: query.data?.assign_on_handoff ?? false, handoff_notify_agent_ids: handoffRecipients,
         recipients:mapping, corp_id:connection.corp_id ?? '', wecom_agent_id:connection.wecom_agent_id ?? null, smtp_host:connection.smtp_host ?? '',smtp_port:connection.smtp_port ?? 465,smtp_security:connection.smtp_security ?? 'ssl',smtp_user:connection.smtp_user ?? '',sender_email:connection.sender_email || null,connection_secret:connectionSecret || null,
         event_types: query.data?.event_types ?? ['handoff.created', 'handoff.overdue'] }) });
     },
-    onSuccess: () => { setSecret(''); setConnectionSecret(''); query.refetch(); notify('顾问通知已保存'); },
+    onSuccess: (data) => { setSecret(''); setConnectionSecret(''); qc.setQueryData(['notification-settings'], data); notify('顾问通知已保存'); },
     onError: (error: Error) => notify(error.message),
   });
   const invalid = enabled && (channel === 'chatwoot' ? !agentId || !Number.isInteger(Number(botId)) || Number(botId) <= 0 : channel === 'webhook' ? !url : !recipients.trim());
@@ -192,7 +203,15 @@ function NotificationSettings({ notify }: { notify: (value: string) => void }) {
       <p>通知成功表示接口已接受；手机和手表是否实际收到，仍需在对应设备上确认。</p>
       {channel === 'chatwoot' ? <>
         <div className="info-box"><Bell size={16} /><span>系统会在会话中发一条仅团队可见的备注并提及顾问。请在 Chatwoot 手机端开启提及通知；Apple Watch 接收情况取决于手机和手表的通知设置。</span></div>
-        <label>接收顾问<select value={agentId} onChange={(e) => setAgentId(e.target.value)}><option value="">请选择顾问</option>{agents.data?.agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label>
+        <label>无负责人时的默认接收顾问<select value={agentId} onChange={(e) => setAgentId(e.target.value)}><option value="">请选择顾问</option>{agents.data?.agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label>
+        <fieldset><legend>同时通知的派单人员</legend><p>转人工及未接单超时提醒会同时提及以下人员和接单顾问，同一人只提醒一次，不改变会话负责人。</p>
+          <div className="checkbox-grid">{agents.data?.agents.map(agent=><label key={agent.id}><input type="checkbox" checked={handoffRecipients.includes(agent.id)} onChange={e=>setHandoffRecipients(current=>e.target.checked?[...current,agent.id]:current.filter(id=>id!==agent.id))}/>{agent.name}</label>)}</div>
+          {handoffRecipients.filter(id=>!agents.data?.agents.some(a=>a.id===id)).map(id=><label key={id}><input type="checkbox" checked onChange={()=>setHandoffRecipients(current=>current.filter(x=>x!==id))}/>{agentName(id)}（成员已失效或名单未同步）</label>)}
+          {agents.isError ? <p role="alert">成员列表读取失败，请刷新后重试。</p> : null}
+          <p role="status">已保存的派单通知名单：{query.data?.handoff_notify_agent_ids?.length ? query.data.handoff_notify_agent_ids.map(agentName).join('、') : '未设置'}</p>
+        </fieldset>
+        {query.data?.recipient_access_gaps?.map(gap=><div className="info-box" key={gap.inbox_id}><AlertTriangle size={16}/><span>已保存名单的权限提示：{gap.inbox_name} 未包含 {gap.agent_ids.map(agentName).join('、')}。该收件箱只会通知有权限的人员；请在 Chatwoot 检查成员权限。名单依据最近同步结果，发送前会再次核对。</span></div>)}
+        {query.data?.recent_recipient_warnings?.map(item=><p role="alert" key={item.delivery_id}>会话 #{item.conversation_id} 的内部提醒已发送，但部分人员无权限，未被提及：{item.detail.split(':')[1]?.split(',').map(id=>agentName(Number(id))).join('、')}。</p>)}
         <label>通知机器人 ID<input type="number" min="1" step="1" value={botId} onChange={(e) => setBotId(e.target.value)} /></label>
         <div className="info-box"><ShieldCheck size={16} /><span>使用已配置的通知机器人，避免顾问账号提及自己而收不到提醒。暂停客户消息发送后，内部提醒仍可发送。</span></div>
       </> : channel === 'webhook' ? <><label>Webhook URL<input value={url} onChange={(e) => setUrl(e.target.value)} /></label><label>HMAC Secret<input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={query.data?.secret_configured ? '已配置，留空保持不变' : '至少 8 位'} /></label></> : <>

@@ -92,6 +92,7 @@ def process_notification_delivery(session_factory=None) -> bool:
     client = None
     submitted = False
     error = None
+    warning = None
     status = "delivered"
     try:
         if channel == "chatwoot":
@@ -108,12 +109,20 @@ def process_notification_delivery(session_factory=None) -> bool:
                 assignee = {}
             agent_id = int(payload['target_agent_id'] if payload['explicit_notification'] else
                            (assignee.get('id') or payload.get('target_agent_id') or config["agent_id"]))
-            if not any(int(agent.get("id", 0)) == agent_id for agent in agents):
+            accessible = {int(agent.get('id', 0)) for agent in agents}
+            extra_ids = config.get('handoff_notify_agent_ids', []) if payload['event'] in ('handoff.created', 'handoff.overdue') else []
+            recipient_ids = list(dict.fromkeys([agent_id, *extra_ids]))
+            missing = [i for i in recipient_ids if i not in accessible]
+            recipient_ids = [i for i in recipient_ids if i in accessible]
+            if not recipient_ids:
                 raise ValueError("notification_agent_not_in_inbox")
+            if missing:
+                warning = 'notification_recipients_skipped:' + ','.join(map(str, missing))
             # Keep an existing human owner; only assign an unowned new handoff.
-            if config.get("assign_on_handoff") and payload['event'] == 'handoff.created' and not assignee.get('id'):
+            if config.get("assign_on_handoff") and payload['event'] == 'handoff.created' and not assignee.get('id') and agent_id in accessible:
                 client.assign_conversation(payload["conversation_id"], agent_id)
-            content = f"[@顾问](mention://user/{agent_id}/advisor)\n{payload['body']}"
+            mentions = ' '.join(f'[@顾问](mention://user/{i}/advisor)' for i in recipient_ids)
+            content = f"{mentions}\n{payload['body']}"
             submitted = True
             result = payload_dict(client.create_private_notification(
                 payload["conversation_id"], content, int(config["bot_id"])))
@@ -156,7 +165,7 @@ def process_notification_delivery(session_factory=None) -> bool:
     with factory() as db:
         delivery = db.get(NotificationDelivery, delivery_id)
         delivery.status = "dead" if status == "retry" and delivery.attempts >= 5 else status
-        delivery.error_code = (error or "")[:160] or None
+        delivery.error_code = (error or warning or "")[:120] or None
         if status == "delivered":
             delivery.delivered_at = utcnow()
         elif status == "retry":

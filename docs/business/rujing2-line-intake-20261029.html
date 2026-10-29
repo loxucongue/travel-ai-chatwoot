@@ -1,0 +1,262 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="data:,"><title>厦门线路资料收集与调试清单</title><style>*{box-sizing:border-box}body{margin:0;background:#f3f5f7;color:#202b37;font:15px/1.75 "Microsoft YaHei",Arial,sans-serif}main{max-width:1120px;margin:36px auto;background:white;padding:48px 52px;border-radius:12px}h1{font-size:30px;line-height:1.35;margin:10px 0 16px;color:#111}h2{font-size:21px;margin:40px 0 12px;page-break-after:avoid;color:#173a50}h3{font-size:17px;margin:24px 0 10px}p{margin:10px 0}.meta{color:#637381}.summary{background:#edf5f8;padding:18px 22px;border-radius:8px}.note{background:#fff5df;padding:16px 20px;border-radius:8px}table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;table-layout:fixed}th,td{border:1px solid #dce3e8;padding:11px 12px;vertical-align:top;overflow-wrap:anywhere}th{background:#edf2f6;text-align:left;font-weight:600}td.fill{background:#fcfdf5;white-space:pre-wrap;min-width:150px;color:#65704c}td.fill:focus{outline:2px solid #4b7e9b;color:#17212b}tr{break-inside:avoid}thead{display:table-header-group}ul,ol{padding-left:24px}nav{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}nav a{color:#215e80;text-decoration:none;padding:4px 8px;background:#f2f6f8;border-radius:5px}button{font:inherit;background:#215e80;color:white;border:0;padding:9px 16px;border-radius:6px;cursor:pointer}.toolbar{position:static;background:#fffef2;border:1px solid #dce3e8;padding:12px;display:flex;gap:10px;align-items:center;z-index:1}.small{font-size:13px;color:#64717a}pre{white-space:pre-wrap;background:#f5f7f9;padding:18px;border-radius:6px;font:14px/1.8 Consolas,"Microsoft YaHei",monospace}@media(max-width:750px){main{margin:0;padding:22px 16px;border-radius:0}h1{font-size:25px}table{font-size:12px}th,td{padding:8px 6px}.toolbar{position:static;flex-wrap:wrap}}@media print{@page{size:A4;margin:14mm}body{background:white;font-size:10.5pt}main{max-width:none;margin:0;padding:0}h1{font-size:22pt}h2{font-size:15pt;margin-top:22px}.toolbar,nav{display:none}table{font-size:9pt}th,td{padding:7px}td.fill{color:#222}h2,h3,section>p{break-after:avoid}#s3{break-before:page}p{break-inside:avoid}td.fill:focus{outline:none}a{color:inherit}}</style><main>
+<p class="meta">Rujing2 · 业务资料交付清单 · 2026年10月29日</p><h1>厦门线路资料收集与调试清单</h1>
+<p>请业务负责人按一条具体线路整理事实、价目、图文和接待规则，审核后交技术配置与演练。当前收到的是宣传素材和FAQ初稿，可用于梳理需求；完成本清单中的必需项后，才能验证一条线路的完整咨询流程。</p>
+<div class="summary"><strong>先交这六项即可开始首轮演练</strong><ol><li>一条确定天数和版本的线路，以及完整逐日行程。</li><li>一组审核通过的价格及费用边界；暂不能报价的场景明确转顾问。</li><li>开场、产品介绍顺序、常见问题答案和人工交接规则。</li><li>对应介绍的原始素材及文件说明；纯文字演练可以暂不启用素材发送。</li><li>业务审核人、版本日期和有效期。</li><li>一批包含正确答案的测试场景，技术准备模型和演练环境。</li></ol><p>真实对客前再补齐渠道、付款退改、权限、域名HTTPS和上线验收。所有未经确认的规则保持停用。</p></div>
+<div class="toolbar"><button onclick="saveCopy()">保存已填写副本</button><button onclick="window.print()">打印或存为PDF</button><span class="small">可点击黄色单元格填写；关闭前请保存副本。没有自动保存，也不会上传填写内容。</span></div>
+<p class="small">填写约定：有资料填文件名及具体页码或表格位置；没有填“待确认”并指定负责人；确实不提供填“不支持”。未知与不适用要区分。不要填写账号密码、API密钥或真实客户隐私。</p>
+<nav><a href="#s1">01 先确定一条可验证的线路</a><a href="#s2">02 每日行程</a><a href="#s3">03 价格和预订规则</a><a href="#s4">04 酒店餐食车辆与服务</a><a href="#s5">05 常见问题与事实依据</a><a href="#s6">06 接待话术和触发流程</a><a href="#s7">07 素材文件和说明表</a><a href="#s8">08 团队接入和运营配置</a><a href="#s9">09 调试用例和业务验收</a><a href="#received">附件盘点</a><a href="#corrections">原稿待修正</a></nav>
+<section id="s1"><h2>01 先确定一条可验证的线路</h2><p>首轮建议由业务选定一个明确天数和服务标准的版本。3天、5天、6天若行程或价格不同，应分别列明，不能用同一个价格范围混合调试。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必需</td><td>产品身份</td><td>公司对外品牌、线路正式名称、简称和客户常用叫法；建议一个独立编号；本次调试的是哪个天数版本。</td><td class="fill" contenteditable="true" data-field="1" aria-label="产品身份填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>适用客群</td><td>主要出发地、客源地区、使用语言、成人与儿童定义；是否接待大陆同行者、台湾旅客、其他国籍旅客，未确认部分转顾问。</td><td class="fill" contenteditable="true" data-field="2" aria-label="适用客群填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>行程边界</td><td>总天数和晚数、覆盖城市、集合与解散地点、接送机场或车站、可接送时间、首尾日是否包含游览。</td><td class="fill" contenteditable="true" data-field="3" aria-label="行程边界填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>出发条件</td><td>可售日期或月份、固定团期还是每日出发、最少成团人数、最多人数、拼团或独立团、报名截止、节假日与停团日期。公布团期不等于保证有位。</td><td class="fill" contenteditable="true" data-field="4" aria-label="出发条件填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>版本负责人</td><td>资料提供人、业务审核人、更新日期、生效和失效日期；冲突时以哪份文件为准；变更后的通知方式。</td><td class="fill" contenteditable="true" data-field="5" aria-label="版本负责人填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>可选</td><td>其他产品边界</td><td>一日游、自由行协助、单独订票、包车、定制和其他城市是否开放；未提供完整资料的产品统一转顾问，不让AI推测。</td><td class="fill" contenteditable="true" data-field="6" aria-label="其他产品边界填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s2"><h2>02 每日行程</h2><p>请提供可复制文字或表格，同时附一张最终行程图。行程图不能替代文字事实。每一天都按以下字段填写。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必需</td><td>每天的安排</td><td>第几天、上午与下午及晚间安排、城市与景点、游览顺序、预计游览时长、出发与结束时间。</td><td class="fill" contenteditable="true" data-field="7" aria-label="每天的安排填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>交通和体力</td><td>当天交通方式、主要车程、步行和台阶情况、早起或长途安排；哪些内容可调整，哪些受预约或开放时间限制。</td><td class="fill" contenteditable="true" data-field="8" aria-label="交通和体力填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>住宿和餐食</td><td>当天住宿城市与酒店或同级范围，早餐午餐晚餐分别含不含；特色餐在第几天，标准及替换规则。</td><td class="fill" contenteditable="true" data-field="9" aria-label="住宿和餐食填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>门票与自费</td><td>包含的景区和票种、船票或接驳车是否包含；另付费用项目和金额，购物安排及是否有指定停留。</td><td class="fill" contenteditable="true" data-field="10" aria-label="门票与自费填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>异常与替代</td><td>天气、景点关闭、船班取消、预约失败、客人迟到或航班延误的替代方案；谁确认、费用如何处理。</td><td class="fill" contenteditable="true" data-field="11" aria-label="异常与替代填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>可选</td><td>特殊需要</td><td>老人、儿童、轮椅或其他行动需求对应的可行安排和限制；需提前确认的事项不得一律保证。</td><td class="fill" contenteditable="true" data-field="12" aria-label="特殊需要填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s3"><h2>03 价格和预订规则</h2><p>用于报价的每一个数字都必须能追溯到审核人和适用条件。先给一组完整、有效、可核算的报价，其他条件暂时转顾问也可以。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必需</td><td>标准报价表</td><td>每个天数版本、出发日期范围、人数、拼团或独立团、成人价、币种、按人还是按团、含税与否。5000至8500台币只能暂记为未经细分的参考范围。</td><td class="fill" contenteditable="true" data-field="13" aria-label="标准报价表填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>成人价格示例</td><td>至少提供一组正常报价的输入和正确结果，例如具体日期、2位成人、房型、每人价格和订单总价；数字由业务填写。</td><td class="fill" contenteditable="true" data-field="14" aria-label="成人价格示例填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>儿童规则</td><td>年龄计算时点、年龄和身高界限、占床与不占床、早餐和门票、婴儿规则；不只有“12岁以下优惠”。</td><td class="fill" contenteditable="true" data-field="15" aria-label="儿童规则填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>单房与拼房</td><td>单人报名能否拼房、单房差按晚还是全程、拼房失败如何收费、三人房和加床规则；未知金额转顾问。</td><td class="fill" contenteditable="true" data-field="16" aria-label="单房与拼房填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>费用包含与不含</td><td>酒店晚数、具体餐数、门票、用车、导游、司机、接送、保险；机票、船票、证件费、小费、自费活动分别说明。</td><td class="fill" contenteditable="true" data-field="17" aria-label="费用包含与不含填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>人数与独立团</td><td>每个人数档位的价格、独立成团门槛、车辆升级、是否允许混拼、人数变化后如何重新计算。</td><td class="fill" contenteditable="true" data-field="18" aria-label="人数与独立团填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>优惠与补贴</td><td>优惠金额、有效期、适用客群、可否叠加、审批人和公开依据；“现在有补贴”“加联系方式享优惠”必须有真实政策。</td><td class="fill" contenteditable="true" data-field="19" aria-label="优惠与补贴填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>日期与库存</td><td>节假日、旺季、周末加价，是否另询；报价有效期、库存核验方式和确认人，不能用“订到机票就能安排”替代库存确认。</td><td class="fill" contenteditable="true" data-field="20" aria-label="日期与库存填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>预订与付款</td><td>订金和尾款金额或比例、付款时间、支持币种、实际收款主体与渠道、是否有台湾账户、凭证和订单确认方式；敏感账户资料走受控渠道。</td><td class="fill" contenteditable="true" data-field="21" aria-label="预订与付款填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>退改与履约</td><td>取消、改期、人数减少、未成团、不可抗力和退款规则；合同签署主体、开票或收据方式、售后联系入口。</td><td class="fill" contenteditable="true" data-field="22" aria-label="退改与履约填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>代订服务</td><td>机票、酒店、车票和其他代订的服务范围、手续费、退款改签责任和确认步骤；不凭宣传稿承诺可代办所有事项。</td><td class="fill" contenteditable="true" data-field="23" aria-label="代订服务填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>报价权限</td><td>哪些条件AI可直接按表报价，哪些只能报参考价，哪些必须转顾问；总价计算、汇率换算、库存保证是否允许。当前系统人数与季节计算器使用CNY字段，台币报价须单独适配或先使用经审核固定文字，不直接混填。</td><td class="fill" contenteditable="true" data-field="24" aria-label="报价权限填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s4"><h2>04 酒店餐食车辆与服务</h2><p>素材用于说明已确认事实。房间照片、餐食视频和游客合影不能单独证明服务标准。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必需</td><td>酒店清单</td><td>实际酒店名称、位置、挂牌星级或宣传档次、房型、床型、早餐、入住晚数；“五星级”属于哪一种标准，是否可能同级替换。</td><td class="fill" contenteditable="true" data-field="25" aria-label="酒店清单填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>照片对应关系</td><td>每张房间照片对应哪家酒店哪种房型，是否实际入住标准，海景等是否保证；示意图必须标注。</td><td class="fill" contenteditable="true" data-field="26" aria-label="照片对应关系填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>餐食标准</td><td>餐数、人均或每桌标准、特色餐、海鲜是否必含、菜单能否替换；素材中的餐食对应哪天、是否另收费。</td><td class="fill" contenteditable="true" data-field="27" aria-label="餐食标准填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>饮食需求</td><td>素食、不吃牛肉、过敏和其他忌口如何提前申报，能保证哪些安排，不能保证哪些隔离或定制条件。</td><td class="fill" contenteditable="true" data-field="28" aria-label="饮食需求填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>用车与接送</td><td>车型、核载与行李容量、按人数安排方式、儿童座椅、机场接送时间；图片展示的车是否一定使用。</td><td class="fill" contenteditable="true" data-field="29" aria-label="用车与接送填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>导游与司机</td><td>服务语言、服务时段、司机兼导游与专职导游的区别、小费；性别偏好是尽量协调还是可保证，额外费用。</td><td class="fill" contenteditable="true" data-field="30" aria-label="导游与司机填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>特殊旅客协助</td><td>轮椅、行动辅助、无障碍房和其他协助的可提供范围、供应方、费用、提前时间及确认人；医疗安排交专业机构确认。</td><td class="fill" contenteditable="true" data-field="31" aria-label="特殊旅客协助填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>公司与售后</td><td>旅行社和实际接待方名称、审核通过的资质文件、紧急联系、投诉与售后流程；哪些资质可向客户发送。</td><td class="fill" contenteditable="true" data-field="32" aria-label="公司与售后填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s5"><h2>05 常见问题与事实依据</h2><p>请逐题提供“客户问法、直接答案、适用条件、不能承诺的部分、转顾问条件、依据文件、审核人、有效期”。未知可明确填写待确认，不用销售话术绕过问题。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必需</td><td>线路与出行</td><td>多少钱、几天合适、3至6天各有什么差别、什么时候去、节假日、集合与接送、是否有一日游、包车、自由行和其他城市。</td><td class="fill" contenteditable="true" data-field="33" aria-label="线路与出行填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>费用与服务</td><td>费用包含、机票、购物和自费、小孩价、单房差、人数规模、定制和独立团、五星级依据、餐食与素食、导游偏好。</td><td class="fill" contenteditable="true" data-field="34" aria-label="费用与服务填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>预订与支付</td><td>如何预订、如何支付、有无台湾账户、订金尾款、优惠、退款改期、合同和收据、如何核验公司。</td><td class="fill" contenteditable="true" data-field="35" aria-label="预订与支付填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>证件与身份</td><td>台胞证过期、仅有护照、不同国籍旅客、境内同行者、跨地区集合等分别处理；给出适用身份、官方来源和核验日期，无法确认就转专业人员。</td><td class="fill" contenteditable="true" data-field="36" aria-label="证件与身份填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>特殊需求</td><td>老人和体力要求、行动不便、轮椅、洗肾等医疗协助；仅描述已确认的服务边界，不回答诊疗建议、不承诺医疗接收。</td><td class="fill" contenteditable="true" data-field="37" aria-label="特殊需求填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>联系方式偏好</td><td>没有LINE或微信、只愿在Facebook咨询、已提供联系方式、已加好友、拒绝留资、不确定时间人数、暂时不出游等的回复。不得因拒绝留资停止回答正常问题。</td><td class="fill" contenteditable="true" data-field="38" aria-label="联系方式偏好填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>信任与异议</td><td>担心被骗、价格过低、是否有当地对接旅行社、看过其他报价、要求凭证、投诉；提供事实和核验入口，不使用未经证实的补贴或合作关系。</td><td class="fill" contenteditable="true" data-field="39" aria-label="信任与异议填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s6"><h2>06 接待话术和触发流程</h2><p>请给出实际要发送的原文、触发条件和停止条件。先做一条完整咨询流程，不要求业务写JSON。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必需</td><td>开场与需求收集</td><td>品牌称呼、欢迎语、语言风格；首次问什么、顺序、一次问几个；客户已经说过日期人数时不重复问。</td><td class="fill" contenteditable="true" data-field="40" aria-label="开场与需求收集填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>产品介绍顺序</td><td>图文模块顺序，例如总览、每日行程、住宿、餐食、服务、费用；每段批准原文、对应文件、先文字还是先图片、间隔秒数、是否首次自动发送。</td><td class="fill" contenteditable="true" data-field="41" aria-label="产品介绍顺序填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>被打断和改线</td><td>客户中途问价、问酒店、改变天数日期人数或拒绝路线时，哪些介绍应暂停；推荐其他产品与客户正式选择要分开。</td><td class="fill" contenteditable="true" data-field="42" aria-label="被打断和改线填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>多人接待</td><td>达到几人后采用什么介绍、何时交顾问、是否先回答当前问题；没有明确规则就保持此功能关闭。</td><td class="fill" contenteditable="true" data-field="43" aria-label="多人接待填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>联系方式邀请</td><td>何时邀请、允许LINE微信电话EmailWhatsApp中的哪些方式、正式联系ID或链接及二维码；客户已提供、拒绝或预约稍后时停止重复邀请。</td><td class="fill" contenteditable="true" data-field="44" aria-label="联系方式邀请填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>沉默跟进</td><td>是否启用、间隔、总天数、每天上限、安静时段和时区；每个场景配一句文案和素材，不默认每天发同一组图。没有新信息可不发。</td><td class="fill" contenteditable="true" data-field="45" aria-label="沉默跟进填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>人工接管</td><td>收到联系方式、明确要求真人、无法报价、投诉、特殊安排等触发条件；负责顾问、调度通知人、工作时间、未响应处理及回交AI的条件。</td><td class="fill" contenteditable="true" data-field="46" aria-label="人工接管填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>事实约束</td><td>未经订单或支付数据核验，不发“申请款未收到”“已经为您安排”“已预订”等。不存在的优惠、保证女导游、保证海景房等不得由文案推导。</td><td class="fill" contenteditable="true" data-field="47" aria-label="事实约束填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s7"><h2>07 素材文件和说明表</h2><p>请发送原文件，不要只贴聊天截图。每个素材单独一行登记，未确认可用的素材不自动对客发送。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必需</td><td>产品文件</td><td>最终每日行程文字、行程图、费用说明、有效价目表、预订退改说明；至少一个批准的文字介绍模块。纯文字演练可以先不发图片。</td><td class="fill" contenteditable="true" data-field="48" aria-label="产品文件填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>建议</td><td>景点与路线图</td><td>清晰行程地图或总览图、实际包含景点的原图；标明城市与景点名、对应哪一天、是否包含门票、图片用途。</td><td class="fill" contenteditable="true" data-field="49" aria-label="景点与路线图填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>酒店餐食和车辆</td><td>对应真实服务范围的房间、餐食和车辆原图或视频；不能把示意照片当作实际保证。</td><td class="fill" contenteditable="true" data-field="50" aria-label="酒店餐食和车辆填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>按需</td><td>游客反馈与资质</td><td>可公开的游客反馈、资质、品牌logo和正式联系二维码；确认人物、品牌和素材的对外使用权限。</td><td class="fill" contenteditable="true" data-field="51" aria-label="游客反馈与资质填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>文件登记字段</td><td>文件名、素材标题、图片或视频或PDF、对应线路与天数版本、主题和内容说明、批准配文、适用问法、首次介绍或被问才发或沉默跟进、发送顺序、重复发送规则。</td><td class="fill" contenteditable="true" data-field="52" aria-label="文件登记字段填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>审核登记字段</td><td>原始来源或作者、是否有水印、拍摄或制作日期、是否示意、客户对外使用许可、审核人、有效期、是否包含价格或其他会过期信息。</td><td class="fill" contenteditable="true" data-field="53" aria-label="审核登记字段填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>建议</td><td>交付规格</td><td>图片优先原图，建议长边至少1200像素；视频优先提供通用H.264与AAC的MP4，并附时长、字幕或口播文稿、封面。这里是交付建议，不是平台已验证的硬限制；实际上传大小和渠道可发性要联调。</td><td class="fill" contenteditable="true" data-field="54" aria-label="交付规格填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必需</td><td>对应关系</td><td>给出“话术模块—文件名—批准说明”的映射；同一文件若可用于多条线路应明确，不能仅凭文件名1.png推断。</td><td class="fill" contenteditable="true" data-field="55" aria-label="对应关系填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s8"><h2>08 团队接入和运营配置</h2><p>这部分由业务负责人和技术负责人共同补齐。密钥和真实客户资料不要填写到可广泛转发的清单中。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>演练前</td><td>模型与演练</td><td>使用哪个模型、授权的测试预算、演练人员、首条线路、预期语言；先用虚构或脱敏客户信息。</td><td class="fill" contenteditable="true" data-field="56" aria-label="模型与演练填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>渠道与账号</td><td>Chatwoot地址、Account ID、Facebook主页及Inbox ID、管理员权限；API Token通过私有配置渠道提供，不写在资料包中。</td><td class="fill" contenteditable="true" data-field="57" aria-label="渠道与账号填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>部署入口</td><td>公司域名和HTTPS、允许上线的账号与收件箱、实际消息处理服务、回调地址可达性；联调通过前保持发送总开关关闭。</td><td class="fill" contenteditable="true" data-field="58" aria-label="部署入口填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>顾问分工</td><td>顾问名单与Chatwoot Agent ID、收件箱权限、分配规则、工作时间、调度通知人、客服处理时限。</td><td class="fill" contenteditable="true" data-field="59" aria-label="顾问分工填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>业务资料维护</td><td>资料审核负责人、价格和库存更新频率、失效下架方法、客户投诉处理和紧急停止负责人。</td><td class="fill" contenteditable="true" data-field="60" aria-label="业务资料维护填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>上线前</td><td>验收和放量</td><td>测试账号及会话范围、业务签字人、先小范围测试的标准；API连接成功不等于Facebook消息和AI回复全部验证通过。</td><td class="fill" contenteditable="true" data-field="61" aria-label="验收和放量填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="s9"><h2>09 调试用例和业务验收</h2><p>每个用例提供客户输入、已知条件、正确事实、应该发送的素材、禁止出现的承诺、是否转顾问。以下应至少各覆盖一次。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
+<tr><td>必测</td><td>普通咨询</td><td>首次问路线；给出日期人数；不知道时间人数；已看过介绍又来问；中途问酒店、餐食或价格。</td><td class="fill" contenteditable="true" data-field="62" aria-label="普通咨询填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必测</td><td>报价边界</td><td>正常成人价、儿童、单人单房、人数变化、拼团改独立团、优惠叠加、过期价格、节假日和未知库存；台币不得变成人民币。</td><td class="fill" contenteditable="true" data-field="63" aria-label="报价边界填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必测</td><td>产品切换</td><td>3天与5天比较、拒绝当前路线、只问另一条价格但尚未选择、正式改线；不能发错线路图或混用价格。</td><td class="fill" contenteditable="true" data-field="64" aria-label="产品切换填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必测</td><td>联系与跟进</td><td>拒绝LINE微信、只在Facebook聊、已留资、联系截图、约定明天联系、不再联系、暂时收尾；不重复追问、不虚构催款。</td><td class="fill" contenteditable="true" data-field="65" aria-label="联系与跟进填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必测</td><td>材料与特殊问题</td><td>没有图库、素材已发送、视频发送失败、酒店示意图、证件不明、医疗协助、导游性别、补贴依据缺失；未知项按批准边界转顾问。</td><td class="fill" contenteditable="true" data-field="66" aria-label="材料与特殊问题填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>必测</td><td>人工与渠道</td><td>人工回复后AI停止、顾问已回答不再答一遍、AI回调不误判真人、渠道拒收停止后续、重复回调不重复发、失败消息不自动补发。</td><td class="fill" contenteditable="true" data-field="67" aria-label="人工与渠道填写">待填写
+负责人：
+资料位置：</td></tr>
+<tr><td>通过标准</td><td>业务确认</td><td>每日行程和价格与审核版本一致；没有旧公司品牌、线路和联系方式；每张素材属于当前产品；无多发漏答、错误币种或无依据承诺。</td><td class="fill" contenteditable="true" data-field="68" aria-label="业务确认填写">待填写
+负责人：
+资料位置：</td></tr>
+</tbody></table></section>
+<section id="received"><h2>10 已收到附件及缺口</h2><p>共10项：1份DOC、6张图片、2个视频和1张话术截图。原文件仅用于审阅，尚未导入产品目录、知识库或自动发送配置。</p><table><colgroup><col style="width:17%"><col style="width:28%"><col style="width:55%"></colgroup><thead><tr><th>文件</th><th>当前内容</th><th>待补充或确认</th></tr></thead><tbody>
+<tr><td>新建 DOC 文档.doc</td><td>FAQ与销售话术初稿</td><td>已读取正文；包含3至6天、价格范围、住宿餐食、联系邀请等。缺逐日行程、正式报价及规则依据，需逐题审核。</td></tr>
+<tr><td>1.png</td><td>土楼景观 302×200</td><td>需补景点准确名称、对应第几天、是否实际包含、高清原图及来源。</td></tr>
+<tr><td>2.png</td><td>鼓浪屿宣传图 155×200</td><td>分辨率低；需补高清图、适用行程及船票与门票边界。</td></tr>
+<tr><td>3.png</td><td>酒店房间 300×200</td><td>不能据图认定五星或保证海景；需补酒店名、房型、入住标准及原图。</td></tr>
+<tr><td>4.png</td><td>当地美食拼图 152×200</td><td>分辨率低；需补高清图、菜品说明和哪些属于团餐、哪些仅推荐自费。</td></tr>
+<tr><td>5.jpg</td><td>厦门街景 1280×2276</td><td>带抖音账号水印；需确认来源、使用许可、具体地点和适用场景，优先提供授权原片。</td></tr>
+<tr><td>6.jpg</td><td>厦门城市景观 1080×1620</td><td>带另一抖音账号水印；需确认来源及许可，不能仅因转发得到就视作可商用。</td></tr>
+<tr><td>0.mp4</td><td>餐食视频 25.24秒 1280×720 HEVC</td><td>抽帧可见桌餐海鲜；需确认是否本产品实际包含、对应日期餐标、原片与字幕文稿，联调前建议提供H.264版本。音轨未逐字核验。</td></tr>
+<tr><td>7.mp4</td><td>游客合影视频 11.80秒 1280×720 H.264</td><td>抽帧可见游客、品牌标记与字幕；需确认品牌归属、拍摄地点、游客展示许可和是否真实本团队反馈。音轨未逐字核验。</td></tr>
+<tr><td>聊天截图</td><td>4段跟进话术</td><td>涉及五星住宿海鲜、加联系方式享优惠、申请款、美食和信任视频；需逐句确认事实和触发条件，不能按固定顺序直接启用。</td></tr>
+</tbody></table></section><section id="corrections"><h2>11 原稿必须修正或核实的内容</h2><p>以下列为审核任务。尚未取得依据的项目，不应作为AI事实或自动营销承诺。</p><table><colgroup><col style="width:19%"><col style="width:81%"></colgroup><thead><tr><th>主题</th><th>处理要求</th></tr></thead><tbody>
+<tr><td>价格范围</td><td>5000至8500台币对应哪条线路、几天、人数、出发日期、房型和费用范围均未列清。拆成可执行价目表。</td></tr>
+<tr><td>五星与餐食</td><td>“全部五星”“每天海鲜大咖餐”“全程餐食”需酒店和菜单合同标准支持；美食图也可能包含自费小吃。</td></tr>
+<tr><td>儿童与单房差</td><td>只有优惠表述，没有儿童价、占床定义和单房差；应正面答复，不能仅引导找亲友同游。</td></tr>
+<tr><td>团型与服务保证</td><td>8至12人、都是台湾旅客、随时可出发、不卡时间、可指定女导游等都须确认适用边界。</td></tr>
+<tr><td>支付与申请款</td><td>支付方式问题被转成索要联系方式；截图无订单依据即催申请款。应提供真实付款流程；没有订单和账务证据时禁用催款。</td></tr>
+<tr><td>补贴与优惠</td><td>“现在有补贴”和加联系方式享优惠没有政策材料；未确认前不进入自动回复。</td></tr>
+<tr><td>联系偏好</td><td>客户说没有LINE微信仍索QR，称Facebook很多内容发不了；应尊重当前渠道咨询，具体渠道限制由技术核验，不能用未核实限制迫使留资。</td></tr>
+<tr><td>证件与医疗</td><td>落地办理、护照证件、外籍身份和洗肾安排涉及适用条件；原稿不能作为权威依据。要求业务提供正式来源并由相关专业人员确认，未确认转顾问。</td></tr>
+<tr><td>旺季与天气</td><td>四季都合适、假日无需避开、订到机票即能安排等过于绝对；应给真实团期、库存核验与天气替代规则。</td></tr>
+</tbody></table></section><section><h2>12 建议资料包结构</h2><pre>公司与线路名称_天数_版本日期/
+  00_资料目录与审核记录
+  01_公司品牌与正式联系方式
+  02_线路基础信息与每日行程
+  03_价格费用预订退改
+  04_常见问题与事实依据
+  05_开场介绍跟进和交接话术
+  06_原始素材/景点  酒店  餐食  车辆  游客反馈  资质
+  07_素材对应表
+  08_调试用例与正确答案
+  09_待确认事项</pre><p>文件名建议描述内容，例如“线路名_酒店名_房型_01.jpg”。交技术前，由业务确认每份文件的最终版本，避免聊天里多次发来的不同价目互相覆盖。</p><h3>交付确认</h3><table><tbody><tr><th>本次线路与版本</th><td class="fill" contenteditable="true">待填写</td></tr><tr><th>业务审核人及日期</th><td class="fill" contenteditable="true">待填写</td></tr><tr><th>仍未确认的事项与暂行处理</th><td class="fill" contenteditable="true">待填写；明确哪些问题转顾问、哪些功能暂不启用。</td></tr><tr><th>验收结论</th><td class="fill" contenteditable="true">待填写；先演练通过，再申请真实渠道小范围验证。</td></tr></tbody></table></section></main>
+<script>function saveCopy(){const copy=document.documentElement.cloneNode(true);const blob=new Blob(['<!doctype html>'+copy.outerHTML],{type:'text/html;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='厦门线路资料清单_已填写.html';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}</script></html>

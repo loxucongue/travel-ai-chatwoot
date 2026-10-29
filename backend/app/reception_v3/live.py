@@ -153,6 +153,9 @@ def cancel(db, conversation_id, reason):
 
 
 def permitted(db, conversation, *, purpose='reply'):
+    from app.delivery_status import channel_delivery_blocked
+    if channel_delivery_blocked(db, conversation.id):
+        return False
     from app.conversation_labels import sync_ready
     from app.reception_v3.human_followup import enabled, waiting
     row = session_for(db, conversation.id)
@@ -271,6 +274,9 @@ def apply_label_change(db, conversation, previous_labels):
 
 def restore_blocker(db, conversation, *, ignore_current_handoff=False):
     """Return the reason an explicit resume cannot release this conversation."""
+    from app.delivery_status import channel_delivery_blocked
+    if channel_delivery_blocked(db, conversation.id):
+        return '渠道已拒收自动消息，等待客户重新来讯后再核对恢复；不会重发失败消息'
     if not ignore_current_handoff and db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
                                             HandoffTask.status.in_(['pending', 'claimed']))):
         return '请先完成当前人工任务后再恢复 AI'
@@ -488,6 +494,11 @@ def deliver_one(db, row):
         return
     conversation = db.get(ConversationState, row.conversation_state_id)
     from app.conversation_labels import sync_ready
+    from app.outgoing_identity import pending as origin_pending
+    if origin_pending(db, conversation.id):
+        # Temporary uncertainty must not cancel the remaining introduction or
+        # allow another send to race a possible real advisor reply.
+        return
     if not sync_ready(db, conversation):
         # A confirmed owner change is required before delivery; keep the new
         # answer queued while the label write retries instead of cancelling it.
@@ -503,6 +514,9 @@ def deliver_one(db, row):
         db.commit()
         return
     part = drafts[0]
+    if service.skip_revoked_contact(db, row, part):
+        db.commit()
+        return
     if part.get('material_rule_id') or part.get('proactive'):
         from app.reception_v3.skills import compile_skills
         from app.reception_v3.material_rules import eligible_rules, conversation_labels, rule_digest
@@ -551,6 +565,8 @@ def deliver_one(db, row):
         generation = row.generation
         db.refresh(row)
         db.refresh(conversation)
+        if origin_pending(db, conversation.id):
+            return
         if (row.generation != generation or row.controls.get('simulation', {}).get('status') != 'running'
                 or not permitted(db,conversation,purpose='followup' if row.controls.get('human_followup',{}).get('enabled') else 'reply')):
             return
@@ -595,7 +611,12 @@ def deliver_one(db, row):
         # Preserve callback receipts, attachment metadata and server timestamps.
         message.attribution = 'ai'
         from app.delivery_status import apply_receipt
-        apply_receipt(db, out, message.status)
+        # A POST's default "sent" only acknowledges Chatwoot acceptance;
+        # preserve submitted until a channel receipt arrives. Explicit failures
+        # (including statusless external_error) must still stop this batch now.
+        response_status = result.get('status')
+        apply_receipt(db, out, response_status if response_status in ('failed', 'delivered', 'read')
+                      else message.status, result.get('content_attributes'))
         db.commit()
         if out.status == 'failed':
             return

@@ -761,7 +761,7 @@ def update_reception_config(
     editable = {
         "reply": {"opening_items", "opening_interval_seconds", "goal", "tone", "tone_guidance", "custom_guidance", "opening_character_limit"},
         "intake": {"enabled", "question", "options", "wait_seconds"},
-        "lead_capture": {"enabled", "channels"},
+            "lead_capture": {"enabled", "channels", "next_day_invitation_enabled", "consultation_turn_threshold"},
         "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action", "live_inbox_ids"},
         "handoff": {"large_group_enabled", "large_group_minimum"},
         "silence": {"material_selection", "enabled", "live_enabled", "advisor_reply_followup_enabled", "daily_at", "intervals_minutes", "initial_checkpoints_minutes", "recurring_interval_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
