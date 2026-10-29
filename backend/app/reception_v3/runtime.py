@@ -452,8 +452,9 @@ def run_agent(context: dict):
             logs.extend(review_logs)
             if review_hash:
                 hashes.append(review_hash)
+            from app.reception_v3.route_choice import reply_route
             quote_problem = quote_error(
-                {**decision, 'route_variant': decision['route_variant'] or context.get('route_variant','')},
+                {**decision, 'route_variant': reply_route(decision, context.get('profile'), context.get('route_variant',''))},
                 context['skills'], checked_quotes, availability_results,
                 require_interrupt=(context.get('event') != 'silence_due' or
                                    context.get('state', {}).get('delivery_kind') in ('introduction', 'intake')))

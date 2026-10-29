@@ -323,8 +323,10 @@ def scripts(bundle, route):
 def parts_for(db, row, bundle, decision, *, followup=False):
     from app.reception_v3.seasonal_quotes import seasonal_group
     from app.reception_v3.party_quotes import quote_error as party_quote_error
+    from app.reception_v3.route_choice import reply_route
     route = decision['route_variant'] or row.controls.get('route_variant', '')
-    if route and route not in bundle['routes']:
+    content_route = reply_route(decision, row.memory, route)
+    if (route and route not in bundle['routes']) or (content_route and content_route not in bundle['routes']):
         raise ValueError('v3_unknown_route')
     if party_quote_error(decision, bundle, row.memory or {}, route):
         raise ValueError('party_quote_not_validated')
@@ -354,7 +356,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         if (route != row.controls.get('route_variant', '') or decision['start_introduction']
                 or len(keys) > 1 or any(key not in allowed for key in keys)):
             raise ValueError('invalid_silence_followup_materials')
-    groups = bundle['routes'].get(route, {}).get('groups', {})
+    groups = bundle['routes'].get(content_route, {}).get('groups', {})
     effective_groups = {key: seasonal_group(group, row.memory or {}) for key, group in groups.items()}
     blocked_assets = {asset for key, group in groups.items() for asset in group.get('assets', [])
                       if asset not in effective_groups[key].get('assets', [])}
@@ -388,7 +390,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         media_parts = [{**m, 'content': ''} for m in media]
         text_parts = [{'content': text, 'content_type': 'text'}] if text else []
         parts.extend(media_parts + text_parts if mode == 'assets_then_text' else text_parts + media_parts)
-    available = scripts(bundle, route)
+    available = scripts(bundle, content_route)
     for key, group in effective_groups.items():
         if groups[key].get('seasonal_override'):
             available[key] = {'text': group['text'], 'assets': group['assets']}

@@ -112,7 +112,8 @@ def pricing_evidence(bundle):
 
 def quote_error(decision, bundle, previous, default_route=''):
     from app.reception_v3.seasonal_quotes import contains_trip_quote
-    route = decision.get('route_variant') or default_route
+    from app.reception_v3.route_choice import reply_route
+    route = reply_route(decision, previous, default_route)
     spec = bundle['routes'].get(route, {})
     if not spec.get('party_pricing') or decision['action'] == 'handoff':
         return None
