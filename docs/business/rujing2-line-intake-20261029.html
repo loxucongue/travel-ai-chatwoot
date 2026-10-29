@@ -1,5 +1,6 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="data:,"><title>厦门线路资料收集与调试清单</title><style>*{box-sizing:border-box}body{margin:0;background:#f3f5f7;color:#202b37;font:15px/1.75 "Microsoft YaHei",Arial,sans-serif}main{max-width:1120px;margin:36px auto;background:white;padding:48px 52px;border-radius:12px}h1{font-size:30px;line-height:1.35;margin:10px 0 16px;color:#111}h2{font-size:21px;margin:40px 0 12px;page-break-after:avoid;color:#173a50}h3{font-size:17px;margin:24px 0 10px}p{margin:10px 0}.meta{color:#637381}.summary{background:#edf5f8;padding:18px 22px;border-radius:8px}.note{background:#fff5df;padding:16px 20px;border-radius:8px}table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;table-layout:fixed}th,td{border:1px solid #dce3e8;padding:11px 12px;vertical-align:top;overflow-wrap:anywhere}th{background:#edf2f6;text-align:left;font-weight:600}td.fill{background:#fcfdf5;white-space:pre-wrap;min-width:150px;color:#65704c}td.fill:focus{outline:2px solid #4b7e9b;color:#17212b}tr{break-inside:avoid}thead{display:table-header-group}ul,ol{padding-left:24px}nav{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}nav a{color:#215e80;text-decoration:none;padding:4px 8px;background:#f2f6f8;border-radius:5px}button{font:inherit;background:#215e80;color:white;border:0;padding:9px 16px;border-radius:6px;cursor:pointer}.toolbar{position:static;background:#fffef2;border:1px solid #dce3e8;padding:12px;display:flex;gap:10px;align-items:center;z-index:1}.small{font-size:13px;color:#64717a}pre{white-space:pre-wrap;background:#f5f7f9;padding:18px;border-radius:6px;font:14px/1.8 Consolas,"Microsoft YaHei",monospace}@media(max-width:750px){main{margin:0;padding:22px 16px;border-radius:0}h1{font-size:25px}table{font-size:12px}th,td{padding:8px 6px}.toolbar{position:static;flex-wrap:wrap}}@media print{@page{size:A4;margin:14mm}body{background:white;font-size:10.5pt}main{max-width:none;margin:0;padding:0}h1{font-size:22pt}h2{font-size:15pt;margin-top:22px}.toolbar,nav{display:none}table{font-size:9pt}th,td{padding:7px}td.fill{color:#222}h2,h3,section>p{break-after:avoid}#s3{break-before:page}p{break-inside:avoid}td.fill:focus{outline:none}a{color:inherit}}</style><main>
 <p class="meta">Rujing2 · 业务资料交付清单 · 2026年10月29日</p><h1>厦门线路资料收集与调试清单</h1>
+<div class="note"><strong>已确认：全部报价使用新台币 TWD，客户金额明确写 NT$。</strong><p>请提供原始台币价目，不把旧项目人民币数字直接换符号。当前提供的NT$5,000–8,500范围还需拆分适用条件。业务流程见 <a href="rujing2-ai-workflow.html">素材审核、AI回复与人工接管逻辑图</a>（转发时可把两个HTML文件放在同一文件夹）。</p></div>
 <p>请业务负责人按一条具体线路整理事实、价目、图文和接待规则，审核后交技术配置与演练。当前收到的是宣传素材和FAQ初稿，可用于梳理需求；完成本清单中的必需项后，才能验证一条线路的完整咨询流程。</p>
 <div class="summary"><strong>先交这六项即可开始首轮演练</strong><ol><li>一条确定天数和版本的线路，以及完整逐日行程。</li><li>一组审核通过的价格及费用边界；暂不能报价的场景明确转顾问。</li><li>开场、产品介绍顺序、常见问题答案和人工交接规则。</li><li>对应介绍的原始素材及文件说明；纯文字演练可以暂不启用素材发送。</li><li>业务审核人、版本日期和有效期。</li><li>一批包含正确答案的测试场景，技术准备模型和演练环境。</li></ol><p>真实对客前再补齐渠道、付款退改、权限、域名HTTPS和上线验收。所有未经确认的规则保持停用。</p></div>
 <div class="toolbar"><button onclick="saveCopy()">保存已填写副本</button><button onclick="window.print()">打印或存为PDF</button><span class="small">可点击黄色单元格填写；关闭前请保存副本。没有自动保存，也不会上传填写内容。</span></div>
@@ -46,7 +47,7 @@
 资料位置：</td></tr>
 </tbody></table></section>
 <section id="s3"><h2>03 价格和预订规则</h2><p>用于报价的每一个数字都必须能追溯到审核人和适用条件。先给一组完整、有效、可核算的报价，其他条件暂时转顾问也可以。</p><table><colgroup><col style="width:9%"><col style="width:15%"><col style="width:48%"><col style="width:28%"></colgroup><thead><tr><th>阶段</th><th>项目</th><th>请提供的内容</th><th>填写或附件索引</th></tr></thead><tbody>
-<tr><td>必需</td><td>标准报价表</td><td>每个天数版本、出发日期范围、人数、拼团或独立团、成人价、币种、按人还是按团、含税与否。5000至8500台币只能暂记为未经细分的参考范围。</td><td class="fill" contenteditable="true" data-field="13" aria-label="标准报价表填写">待填写
+<tr><td>必需</td><td>标准报价表</td><td>币种已确认：新台币（TWD，展示NT$）。请逐一列明天数版本、出发日期范围、人数、拼团或独立团、成人价、按人还是按团、含税与否。NT$5,000至8,500只能暂记为未经细分的参考范围，不能代替正式价目。</td><td class="fill" contenteditable="true" data-field="13" aria-label="标准报价表填写">待填写
 负责人：
 资料位置：</td></tr>
 <tr><td>必需</td><td>成人价格示例</td><td>至少提供一组正常报价的输入和正确结果，例如具体日期、2位成人、房型、每人价格和订单总价；数字由业务填写。</td><td class="fill" contenteditable="true" data-field="14" aria-label="成人价格示例填写">待填写
@@ -79,7 +80,7 @@
 <tr><td>按需</td><td>代订服务</td><td>机票、酒店、车票和其他代订的服务范围、手续费、退款改签责任和确认步骤；不凭宣传稿承诺可代办所有事项。</td><td class="fill" contenteditable="true" data-field="23" aria-label="代订服务填写">待填写
 负责人：
 资料位置：</td></tr>
-<tr><td>必需</td><td>报价权限</td><td>哪些条件AI可直接按表报价，哪些只能报参考价，哪些必须转顾问；总价计算、汇率换算、库存保证是否允许。当前系统人数与季节计算器使用CNY字段，台币报价须单独适配或先使用经审核固定文字，不直接混填。</td><td class="fill" contenteditable="true" data-field="24" aria-label="报价权限填写">待填写
+<tr><td>必需</td><td>报价权限</td><td>哪些条件AI可直接按表报价，哪些只能报参考价，哪些必须转顾问；按人/按团、成人/儿童、房差和折扣规则应完整。系统按已审核台币金额计算，不自动换汇；未经核实的库存不能保证。币种适配已完成于维护分支，待部署并以真实价目验收。</td><td class="fill" contenteditable="true" data-field="24" aria-label="报价权限填写">待填写
 负责人：
 资料位置：</td></tr>
 </tbody></table></section>

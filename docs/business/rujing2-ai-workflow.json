@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {"title": "业务素材如何变成 AI 接待", "locale": "zh-CN", "quality_profile": "showcase"},
+  "lanes": [
+    {"id": "content", "label": "上线准备"},
+    {"id": "reception", "label": "客户咨询"},
+    {"id": "advisor", "label": "人工接待", "variant": "exception"}
+  ],
+  "mainPath": ["customer", "permission", "reply", "delivery"],
+  "nodes": [
+    {"id": "materials", "lane": "content", "col": 0, "type": "external", "label": "业务交资料", "sublabel": "线路 · 台币价格 · 图文视频", "width": 200},
+    {"id": "review", "lane": "content", "col": 1, "type": "security", "label": "审核并配置", "sublabel": "有效期 · 适用条件 · 使用权", "width": 200},
+    {"id": "knowledge", "lane": "content", "col": 2, "type": "database", "label": "测试通过后启用", "sublabel": "已确认知识与素材", "width": 200},
+    {"id": "customer", "lane": "reception", "col": 0, "type": "external", "label": "客户发来咨询", "sublabel": "Facebook → Chatwoot", "width": 200},
+    {"id": "permission", "lane": "reception", "col": 1, "type": "security", "label": "检查 AI 接待权限", "sublabel": "开关 · 会话标签 · 人工状态", "width": 200},
+    {"id": "reply", "lane": "reception", "col": 2, "type": "backend", "label": "AI 理解当前问题", "sublabel": "查已审资料 · 按需选素材", "width": 200},
+    {"id": "delivery", "lane": "reception", "col": 3, "type": "messagebus", "label": "校验后回复客户", "sublabel": "报价核对 · 去重 · 发回渠道", "width": 200},
+    {"id": "manual", "lane": "advisor", "col": 1, "type": "external", "label": "人工处理", "sublabel": "AI 不自动回复", "width": 200},
+    {"id": "handoff", "lane": "advisor", "col": 2, "type": "frontend", "label": "交接顾问并暂停 AI", "sublabel": "保留上下文 · 通知顾问", "width": 200}
+  ],
+  "edges": [
+    {"from": "materials", "to": "review"},
+    {"from": "review", "to": "knowledge"},
+    {"from": "knowledge", "to": "reply", "label": "仅用已确认资料"},
+    {"from": "customer", "to": "permission", "role": "main"},
+    {"from": "permission", "to": "reply", "label": "允许接待", "role": "main"},
+    {"from": "reply", "to": "delivery", "label": "能够回答", "role": "main"},
+    {"from": "permission", "to": "manual", "label": "未开启 / 已人工接管", "role": "branch", "variant": "security"},
+    {"from": "reply", "to": "handoff", "label": "需核实 / 要真人 / 已留资", "role": "branch", "variant": "security"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "素材按问题使用", "items": ["问住宿发已确认酒店资料，问行程发对应线路。", "价格由系统按已审规则计算；AI 不自行换汇或编价。"]},
+    {"dot": "amber", "title": "先测试，再开放", "items": ["此图说明配置完成后的流程，不代表已开放自动接待。", "人工接管后 AI 暂停；恢复接待需重新满足启用条件。"]}
+  ]
+}

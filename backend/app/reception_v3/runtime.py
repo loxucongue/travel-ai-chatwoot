@@ -473,6 +473,10 @@ def run_agent(context: dict):
             from app.reception_v3.party_quotes import quote_error as party_quote_error
             quote_problem = quote_problem or party_quote_error(
                 decision, context['skills'], context.get('profile', {}), context.get('route_variant', ''))
+            from app.reception_v3.money import currency_text_error
+            if context['skills'].get('currency') == 'TWD':
+                quote_problem = quote_problem or currency_text_error(
+                    '\n'.join(m.get('text', '') for m in decision['messages']), 'TWD')
             if (dated_product and checking_choice and target not in availability_results
                     and any(profile_with_update.get(k) for k in ('departure_window','departure_date_start'))):
                 quote_problem = '已知出發時間，推薦或開始替代線介紹前須用get_departure_quote核對該線日期；不能沿用另一線的可售或價格判斷。'

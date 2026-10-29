@@ -368,6 +368,9 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     seen_ids = {m.get('media_id') for m in delivered} - {None}
 
     def add(text, keys, mode='text_then_assets', deduplicate=False):
+        from app.reception_v3.money import currency_text_error
+        if bundle.get('currency') == 'TWD' and currency_text_error(text, 'TWD'):
+            raise ValueError('quote_currency_mismatch')
         media = []
         for key in keys:
             if key in blocked_assets:

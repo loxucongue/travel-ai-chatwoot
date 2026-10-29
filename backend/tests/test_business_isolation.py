@@ -36,6 +36,8 @@ from app.reception_v3.skills import compile_skills, SkillRegistry
 from app.reception_v3.prompt import SYSTEM_PROMPT
 from fastapi.testclient import TestClient
 assert not ROUTES and not UNCLASSIFIED_SOP_NODES
+from app.business_profile import PROFILE
+assert PROFILE['currency'] == 'TWD'
 assert 'rujing2' in settings.database_url or settings.database_url.endswith('app.db')
 assert not settings.outbound_enabled and not settings.deepseek_api_key
 assert not settings.reception_repeat_review_enabled
@@ -112,6 +114,10 @@ with TestClient(app) as client:
                            headers={'X-CSRF-Token':login.json()['csrf_token']})
     assert response.status_code == 200, response.text
 assert list(ROUTE_PACKAGES) == ['sample_product']
+with TestClient(app) as client:
+    client.post('/v1/auth/login', json={'email':'admin@example.com','password':'test-password'})
+    product = client.get('/v1/automation/route-products').json()['items'][0]
+    assert product['currency'] == 'TWD'
 with SessionLocal() as db:
     config = default_reception_configuration()
     config['routing']['enabled_route_variants'] = ['sample_product']
@@ -119,6 +125,7 @@ with SessionLocal() as db:
     db.commit()
     bundle = compile_skills(db)
     registry = SkillRegistry(bundle)
+    assert bundle['currency'] == bundle['routes']['sample_product']['currency'] == 'TWD'
     assert registry.route_skill('sample_product') == 'sample-product'
     skill = registry.load('sample-product')
     assert 'A reviewed fact' in skill['instructions'] and 'A reviewed introduction' in skill['instructions']

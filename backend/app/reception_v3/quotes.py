@@ -10,6 +10,7 @@ from sqlalchemy.dialects.sqlite import insert
 from app.automation_models import CustomerQuoteOffer
 from app.models import ConversationState
 from app.reception_v3.skills import effective_price_scripts
+from app.reception_v3.money import money_value
 
 
 def subject_key(db, row):
@@ -38,7 +39,7 @@ def personalize_quotes(db, row, bundle):
             from app.reception_v3.party_quotes import apply_price_scripts
             promise = get_offer(db, row, route)
             valid = promise and now.astimezone(ZoneInfo('Asia/Taipei')).date().isoformat() <= promise['valid_until']
-            ceiling = spec['party_pricing'].get('legacy_offer_price_cny') if valid else None
+            ceiling = money_value(spec['party_pricing'], spec['party_pricing'], 'legacy_offer_price') if valid else None
             apply_price_scripts(spec, legacy_ceiling=ceiling)
             continue
         if not spec.get('quote_policy'):

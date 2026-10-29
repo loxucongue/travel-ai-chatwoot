@@ -30,6 +30,7 @@ export type ProductVersion = {
 
 export type RouteProduct = {
   route_variant: string; name: string; selection_title: string;
+  currency?: 'CNY' | 'TWD';
   package_version: string; knowledge_version: string;
   default_entry_message: string; ai_guidance: string; match_keywords: string[]; required_slots: string[];
   initial_delivery_interval_seconds: number;

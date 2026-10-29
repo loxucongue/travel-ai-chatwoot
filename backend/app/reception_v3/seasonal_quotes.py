@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 import re
 import calendar
 from app.business_profile import PROFILE
+from app.reception_v3.money import CURRENCY_MARKERS, money_fields, money_value, policy_currency
 
 
 def seasonal_group(group, profile):
@@ -169,9 +170,10 @@ def _validate_departure_overrides(policy):
             raise ValueError('operating_period_order')
     seen = set()
     for item in policy.get('special_departures', []):
+        price = money_value(policy, item, 'price')
         day = date.fromisoformat(item['date'])
         if (day.isoformat() in seen or day.year not in policy['years']
-                or type(item.get('price_cny')) is not int or item['price_cny'] <= 0
+                or type(price) is not int or price <= 0
                 or not str(item.get('script_id', '')).startswith('price_')
                 or not item.get('source_ref') or item.get('group_type') != 'shared'):
             raise ValueError('special_departure_invalid')
@@ -275,6 +277,7 @@ def _unavailable_result(bundle, route, days, today, reason, code, party_size=Non
 def validate_pricing(policy):
     if not isinstance(policy, dict) or not policy.get('years') or not policy.get('bands'):
         raise ValueError('seasonal_pricing_invalid')
+    policy_currency(policy)
     if any(type(y) is not int or not 2000 <= y <= 2100 for y in policy['years']):
         raise ValueError('seasonal_pricing_year_invalid')
     if type(policy.get('minimum_notice_days')) is not int or not 1 <= policy['minimum_notice_days'] <= 365:
@@ -301,7 +304,8 @@ def validate_pricing(policy):
         if not isinstance(band.get('script_id'), str) or not band['script_id'].startswith('price_') or band['script_id'] in ids:
             raise ValueError('seasonal_pricing_script_invalid')
         ids.add(band['script_id'])
-        if any(type(band.get(k)) is not int or band[k] <= 0 for k in ('price_cny', 'single_supplement_cny')):
+        if any(type(money_value(policy, band, k)) is not int or money_value(policy, band, k) <= 0
+               for k in ('price', 'single_supplement')):
             raise ValueError('seasonal_pricing_amount_invalid')
         groups.append(band['ranges'])
     for ranges in groups:
@@ -348,11 +352,11 @@ def departure_quote(bundle, route, start, end, now, *, party_size=None, group_ty
             special = specials[0]
             return {'status': 'quoted', 'route_variant': route, 'script_id': special['script_id'],
                     'departure_start': begin.isoformat(), 'departure_end': finish.isoformat(),
-                    'departure_examples': [begin.isoformat()], 'price_cny': special['price_cny'],
+                    'departure_examples': [begin.isoformat()], **money_fields(policy, special, 'price'),
                     'special_departure': True, 'group_type': 'shared',
                     'reason': '已確認指定日期的特別拼團價，優先於常規星期、冬季及長假規則；不代表剩餘名額，不外推其他日期或房差。'}
         return {'status': 'special_options', 'route_variant': route,
-                'departures': [{'date': item['date'], 'price_cny': item['price_cny']} for item in specials],
+                'departures': [{'date': item['date'], **money_fields(policy, item, 'price')} for item in specials],
                 'reason': '此範圍含指定日期特價，先推薦適合的出發日；完整報價需核對該單日，不能把特價當整月或一般團期價。'}
     def overlaps(ranges):
         return any(_in_ranges(d, ranges) for d in days)
@@ -385,23 +389,26 @@ def departure_quote(bundle, route, start, end, now, *, party_size=None, group_ty
     band = matches[0]
     return {'status':'quoted', 'route_variant':route, 'script_id':band['script_id'],
             'departure_start':begin.isoformat(), 'departure_end':finish.isoformat(),
-            'departure_examples':[d.isoformat() for d in departures[:3]], 'price_cny':band['price_cny'],
-            'single_supplement_cny':band['single_supplement_cny']}
+            'departure_examples':[d.isoformat() for d in departures[:3]],
+            **money_fields(policy, band, 'price', 'single_supplement')}
 
 
 def contains_trip_quote(text):
     # Block whole-trip quotes in common monetary formats while still allowing
     # answers about small per-person charges (for example a 60-yuan gratuity).
     number = r'\d[\d,]*(?:\.\d+)?'
+    currency = '|'.join(CURRENCY_MARKERS.values())
     pattern = (rf'(?P<per_person>{number})\s*元?\s*/\s*人'
-               rf'|每人\s*(?:¥|￥|人民幣|人民币|RMB|CNY)?\s*(?P<each>{number})\s*元'
+               rf'|每人\s*(?:{currency})?\s*(?P<each>{number})\s*元'
                rf'|(?:團費|团费|優惠價|优惠价|精緻小團)[^。\n\d]{{0,60}}(?P<label>{number})'
-               rf'|(?:人民幣|人民币|RMB|CNY|¥|￥)\s*[¥￥]?\s*(?P<currency>{number})'
+               rf'|(?:{currency})\s*[¥￥]?\s*(?P<currency>{number})'
+               rf'|(?P<currency_suffix>{number})\s*(?:{currency})'
                rf'|(?P<yuan>{number})\s*元')
     for match in re.finditer(pattern, text, re.I):
         group = next(k for k, v in match.groupdict().items() if v is not None)
         amount = match.group(group)
-        if group != 'label' and float(amount.replace(',', '')) < 1000:
+        explicit_twd = re.search(CURRENCY_MARKERS['TWD'], match[0], re.I)
+        if group != 'label' and not explicit_twd and float(amount.replace(',', '')) < 1000:
             continue
         # A separately asked room/flight/tip amount is not a whole-trip quote.
         # Use the nearest fee subject in this clause, so mentioning a room

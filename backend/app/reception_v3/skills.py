@@ -59,6 +59,7 @@ def compile_skills(db, now=None):
             'name': route['name'], 'aliases': list(dict.fromkeys(filter(None, [
                 *route.get('selection_aliases', []), route.get('selection_title', ''),
                 route.get('default_entry_message', '')]))),
+            'currency': route.get('currency', PROFILE.get('currency', 'CNY')),
             'facts': deepcopy(route['knowledge_facts']),
             'guidance': route.get('ai_guidance', ''),
             'intake': deepcopy(route.get('intake')),
@@ -93,7 +94,7 @@ def compile_skills(db, now=None):
     if any(r.get('seasonal_pricing') for r in routes.values()):
         for route in routes.values():
             route['aliases'] = [a for a in route['aliases'] if a not in PROFILE.get('seasonal_excluded_aliases', [])]
-    bundle = {'routes': routes, 'common_scripts': list(common_scripts.values()),
+    bundle = {'routes': routes, 'currency': PROFILE.get('currency', 'CNY'), 'common_scripts': list(common_scripts.values()),
               'material_rules': deepcopy(config.get('material_rules', [])),
               'service_knowledge': {'version': service['knowledge_version'], 'facts': service['facts']},
               'reply': config['reply'], 'intake': config['intake'], 'silence': {k: v for k, v in config['silence'].items()

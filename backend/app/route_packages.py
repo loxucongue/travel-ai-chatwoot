@@ -43,6 +43,11 @@ def _validate(package: dict, source: Path) -> dict:
     if package.get("schema_version") != 1:
         raise RoutePackageError(f"route_package_schema_unsupported:{source.name}")
     route_id = _require(package, "route_variant", str, source)
+    from app.reception_v3.money import validate_package_currency
+    try:
+        validate_package_currency(package, PROFILE.get('currency', 'CNY'))
+    except (ValueError, KeyError, TypeError) as exc:
+        raise RoutePackageError(f'route_package_currency_invalid:{route_id}:{exc}') from exc
     _require(package, "package_version", str, source)
     _require(package, "knowledge_version", str, source)
     _require(package, "branch", str, source)
@@ -351,6 +356,7 @@ def reload_route_packages() -> None:
         key: {
         "branch": package["branch"],
         "name": package["name"],
+        "currency": package.get('currency', PROFILE.get('currency', 'CNY')),
         "selection_title": package["selection_title"],
         "selection_aliases": package.get("selection_aliases", []),
         "match_keywords": package.get("match_keywords", []),
@@ -486,6 +492,7 @@ def route_package_summary() -> list[dict]:
             "route_variant": key,
             "branch": package["branch"],
             "name": package["name"],
+            "currency": package.get('currency', PROFILE.get('currency', 'CNY')),
             "selection_title": package["selection_title"],
             "match_keywords": package.get("match_keywords", []),
             "package_version": package["package_version"],

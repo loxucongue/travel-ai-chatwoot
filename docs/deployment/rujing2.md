@@ -84,7 +84,18 @@
 本轮只更新维护分支，未发布到服务器；发送和新业务功能默认关闭。
 详见 [同步分析与验证记录](../development/rujing2-platform-sync-20261029.html)。
 新线路请业务填写 [资料收集与调试清单](../business/rujing2-line-intake-20261029.html)，本次提供的厦门初稿尚未导入运行时。
-人数和季节报价引擎仍使用 CNY 字段，台币价格不能直接填入，需审核固定文字报价或单独适配多币种后再验证。
+币种已确认并在维护分支适配为 TWD：新公司报价使用通用金额字段和明确币种，不能在 `*_cny` 字段填台币，也不会自动换汇。实际线路价目仍待业务审核，未发布到服务器。
+
+### 台币价格配置约定
+
+- `businesses/rujing2/profile.json` 固定 `currency=TWD`；线路可省略顶层币种并继承公司设置。含金额的 `party_pricing`、`seasonal_pricing`、带指定团期价的 `departure_availability` 必须声明 `currency=TWD`。
+- 人数价格使用 `base_price`、`legacy_offer_price`（可选），阶梯优惠使用 `discount_progression.amount_step`；折扣和独团加价表中的数值同样按台币使用。模板必须写 `NT${amount}` 或明确“新台幣”。
+- 季节档位使用 `price`、`single_supplement`；指定团期使用 `price`。金额为正整数，折扣与独团加价为非负整数；字段没有汇率转换功能。
+- 计算与日期工具返回 `currency` 和通用金额字段。原公司 CNY 历史字段继续兼容；TWD 策略混用 `*_cny`、币种与公司不一致、已审文字出现人民币金额时拒绝导入。
+- 新公司模型回复与实际组装的文字还会检查错误币种；NT$、TWD、NTD、新台幣等常用表达进入既有报价核验。此检查针对文本，不识别图片或视频中嵌入的价格，素材中的金额需业务人工审核。
+- 客户收款币种、账户和手续费由业务单独确认；本次修改不包含收款或支付接口。
+
+业务可使用 [完整可填写清单](../business/rujing2-line-intake-20261029.html) 和 [接待流程图](../business/rujing2-ai-workflow.html)。流程图描述配置完成并启用后的行为，不代表线上 AI 已开始接待。
 
 ## 验证记录
 

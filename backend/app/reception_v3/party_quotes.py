@@ -1,8 +1,11 @@
 """Compile approved head-count prices; the model selects, but cannot do arithmetic."""
+from app.reception_v3.money import money_fields, money_value, policy_currency, validate_template_currency
+
+
 def validate_party_pricing(policy):
-    if not isinstance(policy, dict) or policy.get('currency') != 'CNY':
+    if not isinstance(policy, dict) or policy.get('currency') not in ('CNY', 'TWD'):
         raise ValueError('party_pricing_invalid')
-    base = policy.get('base_price_cny')
+    base = money_value(policy, policy, 'base_price')
     if type(base) is not int or base <= 0 or not policy.get('source_ref'):
         raise ValueError('party_pricing_base_invalid')
     discounts = policy.get('discounts_per_person', {})
@@ -13,7 +16,9 @@ def validate_party_pricing(policy):
     if progression is not None:
         if (discounts or not isinstance(progression, dict)
                 or any(type(progression.get(k)) is not int or not 1 <= progression[k] <= 10000
-                       for k in ('starts_at', 'party_size_step', 'amount_step_cny'))
+                       for k in ('starts_at', 'party_size_step'))
+                or type(money_value(policy, progression, 'amount_step')) is not int
+                or not 1 <= money_value(policy, progression, 'amount_step') <= 10000
                 or type(policy.get('auto_quote_party_size_max')) is not int
                 or not 1 <= policy['auto_quote_party_size_max'] <= 100):
             raise ValueError('party_pricing_progression_invalid')
@@ -38,9 +43,10 @@ def validate_party_pricing(policy):
             raise ValueError('party_pricing_template_invalid')
         try:
             template.format(amount='1')
+            validate_template_currency(template, policy_currency(policy))
         except (KeyError, ValueError, IndexError) as exc:
             raise ValueError('party_pricing_template_invalid') from exc
-    legacy = policy.get('legacy_offer_price_cny')
+    legacy = money_value(policy, policy, 'legacy_offer_price')
     if legacy is not None and (type(legacy) is not int or legacy <= 0):
         raise ValueError('party_pricing_legacy_invalid')
 
@@ -53,7 +59,7 @@ def discount_per_person(policy, count):
     if progression is None:
         return policy['discounts_per_person'].get(str(count))
     steps = max(0, 1 + (count - progression['starts_at']) // progression['party_size_step'])
-    return steps * progression['amount_step_cny']
+    return steps * money_value(policy, progression, 'amount_step')
 
 
 def price_scripts(policy, *, legacy_ceiling=None):
@@ -67,7 +73,7 @@ def price_scripts(policy, *, legacy_ceiling=None):
             supplement = policy['private_supplements_per_person'].get(str(count))
             if group == 'private' and supplement is None:
                 continue
-            amount = policy['base_price_cny'] - discount + (supplement if group == 'private' else 0)
+            amount = money_value(policy, policy, 'base_price') - discount + (supplement if group == 'private' else 0)
             # Existing, unexpired shared quotes are honoured as a ceiling, not
             # used as a second discounted base. New quotes create no deadline.
             if group == 'shared' and legacy_ceiling is not None:
@@ -76,7 +82,7 @@ def price_scripts(policy, *, legacy_ceiling=None):
                            'answer_text':policy[group+'_template'].format(amount=f'{amount:,}'),
                            'asset_ids':[], 'status':'active', 'topics':['price'],
                            'party_size_min':int(count), 'party_size_max':int(count),
-                           'price_cny':amount, 'quote_group_type':group,
+                           **money_fields(policy, {'price': amount}, 'price'), 'quote_group_type':group,
                            'usage_note':'已按原價與明確人數計算。只引用符合本輪人數和團型的script_id，text留空；'
                                         '不再扣早鳥、不疊加舊活動、不展示截止日或計算分解。'})
     return result
@@ -101,7 +107,8 @@ def pricing_evidence(bundle):
         result[key] = {
             'source_ref': policy['source_ref'],
             'per_person_prices': [
-                {'party_size': s['party_size_min'], 'group_type': s['quote_group_type'], 'price_cny': s['price_cny']}
+                {'party_size': s['party_size_min'], 'group_type': s['quote_group_type'],
+                 **money_fields(policy, {'price': s['price']}, 'price')}
                 for s in price_scripts(policy)],
             'usage': '人数区间不等于价格不同。比较上表每人价，相同就说明同价，不以不存在的价差催问人数。'
                      '区间跨档才说明差别；正式最终报价仍按已确认人数和模板。'

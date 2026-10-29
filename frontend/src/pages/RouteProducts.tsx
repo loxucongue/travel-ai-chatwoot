@@ -183,7 +183,7 @@ function RouteDetail({ product, content, tab, setTab, enabled, dirty, publishing
     <nav className="route-detail-tabs panel">{tabs.map(([key, label]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>)}</nav>
     <section className="route-detail-panel panel">
       {tab === 'base' ? <BaseTab product={product} content={content} enabled={enabled} onToggleEnabled={onToggleEnabled} patch={onPatchContent} /> : null}
-      {tab === 'price' ? <PriceTab content={content} patch={onPatchContent} /> : null}
+      {tab === 'price' ? <PriceTab content={content} currency={product.currency} patch={onPatchContent} /> : null}
       {tab === 'content' ? <ContentTab product={product} content={content} patch={onPatchContent} /> : null}
       {tab === 'mainline' ? <MainlineTab content={content} patch={onPatchContent} /> : null}
       {tab === 'answers' ? <FixedAnswersTab product={product} content={content} patch={onPatchContent} /> : null}
@@ -233,11 +233,12 @@ function PriceValidity({ answer, update }: { answer: FixedAnswer; update: (updat
   </>;
 }
 
-function PriceTab({ content, patch }: { content: ContentDraft; patch: (updater: (value: ContentDraft) => void) => void }) {
+function PriceTab({ content, currency, patch }: { content: ContentDraft; currency?: 'CNY' | 'TWD'; patch: (updater: (value: ContentDraft) => void) => void }) {
   const indexes = content.knowledge_facts.map((fact, index) => ({ fact, index })).filter(({ fact }) => isPriceOrSchedule(fact));
   const price = content.fixed_answers.find(answer => answer.id === 'price');
   const updatePrice = (updater: (item: FixedAnswer) => void) => patch(draft => { const item = draft.fixed_answers.find(answer => answer.id === 'price'); if (item) updater(item); });
   return <div className="route-section-stack"><header className="detail-section-intro"><div><h2>价格与可售档期</h2></div></header>
+    <p>{currency === 'TWD' ? '本线路报价使用新台币（TWD）。金额请明确写 NT$，团费、儿童价、房差及优惠均按审核后的台币金额填写。' : '本线路报价使用人民币（CNY），请填写审核后的人民币金额。'}系统不自动换汇。</p>
     {price && <section className="route-section-stack">
       <div className="detail-section-intro"><h3>客户询价回复</h3><Badge tone={price.status === 'active' ? 'green' : 'amber'}>{price.status === 'active' ? '已启用' : '未启用'}</Badge></div>
       <label className="block-field">报价话术<textarea rows={9} maxLength={10000} value={price.answer_text} onChange={event => updatePrice(item => { item.answer_text = event.target.value; item.answer_origin = 'operator_approved'; item.source_ref = 'operator.config'; })} /></label>
