@@ -236,7 +236,10 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
             message.attribution = "customer"
         elif message.direction == "outgoing":
             linked = db.scalar(select(OutboundMessage).where(OutboundMessage.chatwoot_message_id == int(ctx["message_id"])))
-            message.attribution = linked.source_type if linked else "inferred_human"
+            from app.outgoing_identity import PENDING
+            # Receipt updates may overtake the deferred creation callback.
+            if linked or message.attribution != PENDING:
+                message.attribution = linked.source_type if linked else "inferred_human"
         else:
             message.attribution = "system"
         if message.content and message.direction in ("incoming", "outgoing") and not message.private:

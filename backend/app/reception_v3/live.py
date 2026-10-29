@@ -494,6 +494,11 @@ def deliver_one(db, row):
         return
     conversation = db.get(ConversationState, row.conversation_state_id)
     from app.conversation_labels import sync_ready
+    from app.outgoing_identity import pending as origin_pending
+    if origin_pending(db, conversation.id):
+        # Temporary uncertainty must not cancel the remaining introduction or
+        # allow another send to race a possible real advisor reply.
+        return
     if not sync_ready(db, conversation):
         # A confirmed owner change is required before delivery; keep the new
         # answer queued while the label write retries instead of cancelling it.
@@ -560,6 +565,8 @@ def deliver_one(db, row):
         generation = row.generation
         db.refresh(row)
         db.refresh(conversation)
+        if origin_pending(db, conversation.id):
+            return
         if (row.generation != generation or row.controls.get('simulation', {}).get('status') != 'running'
                 or not permitted(db,conversation,purpose='followup' if row.controls.get('human_followup',{}).get('enabled') else 'reply')):
             return

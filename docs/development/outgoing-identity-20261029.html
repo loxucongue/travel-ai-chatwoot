@@ -1,0 +1,23 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>2026-10-29 AI 图片误转人工修复</title>
+<style>body{font:16px/1.7 system-ui;max-width:1100px;margin:40px auto;color:#243047;padding:0 20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #dce2ea;padding:10px;text-align:left}th{background:#edf3fa}code{background:#edf3fa;padding:2px 5px}</style>
+<h1>AI 图片回调提前到达导致误转人工</h1>
+<p>对象：China2Go 西藏接待，服务器 47.84.62.157。修复基于 main 的独立工作目录，不修改 rujing2。本文记录程序确定性故障，不涉及模型话术调整或付费模型测试。</p>
+<h2>原因与证据</h2>
+<p>会话 #498 的消息 957606218 于 13:44:59 由 AI 发出。回调 33540 在 13:45:00.294 到达，系统 13:45:00.446 记录了错误的 handoff.advisor_replied；发送响应编号到 13:45:01.221 才写入。旧逻辑在查不到对应出站编号时推定人工，从而停止介绍、同步人工标签，继而生成交接通知。AI 使用顾问账号调用接口，因此截图显示顾问名字不能证明是顾问手动接管。</p>
+<h2>改动</h2><table><tr><th>文件</th><th>处理</th></tr>
+<tr><td>backend/app/outgoing_identity.py</td><td>发现同一会话有尚未取得消息编号的自动发送，先把回调记为待核对，复用持久化 webhook 重试。最多等待约30秒；仍未知则按发送待确认交顾问核对，不启动顾问回复计时、不重发。</td></tr>
+<tr><td>backend/app/live_reply.py</td><td>核对后按确切消息编号判断来源；属于 AI 则正常处理回执，属于真正顾问则继续原人工接管规则。核对不会消耗异常重试次数。</td></tr>
+<tr><td>backend/app/conversation_mirror.py</td><td>较早到达的已读、送达更新不会抹掉待核对标记。</td></tr>
+<tr><td>backend/app/reception_v3/live.py</td><td>来源未明确时暂停下一次发送，保留未完成介绍；发送前读取远端控制后再次检查。</td></tr></table>
+<p>不新增页面、业务开关、数据库结构或第三方依赖。正常顾问公开回复、明确人工标签、渠道拒收、既有30分钟跟进规则继续生效。来源判断不依赖姓名或相同文字。</p>
+<h2>验证</h2><table><tr><th>验证方式</th><th>结果</th></tr>
+<tr><td>基础全量回归</td><td>1,320项通过。基于63e1a16和本次修复；补充的2项测试随后通过专项验证。</td></tr>
+<tr><td>合入通知功能后的组合回归</td><td>在ad0e3f6基础上，100项通过，包含本次14项、人工交接、通知接收人、渠道回执及并发发送。</td></tr>
+<tr><td>服务器隔离环境</td><td>31项通过，使用线上通知版本与本次4文件补丁，虚拟数据库及模拟发送渠道，网络连接被阻断。</td></tr>
+<tr><td>#498真实回调隔离重放</td><td>旧分支逻辑：第一段后误判人工并停止；修复后：3段完整发送，错误顾问事件0次。仅将账户内会话及收件箱映射到测试实体、平移时间，无真实消息发送。</td></tr>
+<tr><td>关键边界</td><td>文字/图片/选项回调提前、回执乱序、重复回调、同账号同文本的真人插话、30秒未确认、重启后的事件恢复、明确人工标签、跨会话隔离、失败回执和发送前二次检查均覆盖。</td></tr></table>
+<p>首轮Linux预检缺少pytest的py兼容模块；补齐后发现测试夹具的收件箱与生产环境配置不同。预检改用独立测试配置，全部重跑通过。这些失败均发生在隔离目录，未修改正式环境。</p>
+<h2>提交与发布保护</h2><p>另一窗口的通知功能ad0e3f6先完成发布，本次工作目录随后快进合入该提交。仅发布上述4个后端文件；发布清单核对整个线上app目录及current-release，停止任务后再次核对，备份后安装。保持所有业务配置、通知接收人、客户状态不变；不回滚数据库。发布加锁并检查并行发布进程，远端main更新时不强推。</p>
+<p id="release-status">状态：验收完成，待执行本次发布。线上实际结果在部署后补记。</p>
+<p>证据目录：output/ai-echo-20261029/（本机忽略目录）。包括full-tests.xml、combined-tests.xml、incident-replay.json及服务器prepare/deploy记录。未调用模型，未向客户发送测试消息。#498已经由业务交回AI，本次不补发旧介绍，也不批量修改历史人工会话。</p>
+</html>
