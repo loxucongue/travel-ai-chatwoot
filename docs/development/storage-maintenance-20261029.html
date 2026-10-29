@@ -1,0 +1,16 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>存储维护完成记录 · 2026-10-29</title><style>body{font:15px/1.75 system-ui,"Microsoft YaHei",sans-serif;background:#f4f6f9;color:#223046}main{max-width:1000px;margin:24px auto;padding:28px;background:white}h1{font-size:26px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #dce2e9;padding:12px;text-align:left;vertical-align:top}th{background:#edf2f7}.ok{padding:16px;background:#eaf6ef}code{overflow-wrap:anywhere}@media(max-width:700px){main{padding:14px;margin:0}}</style><main>
+<h1>存储维护完成记录</h1><p>2026-10-29 09:47—09:57（北京时间）。用户确认磁盘清理及备份留存方案后执行。</p>
+<p class="ok">已清理 231 个历史目录，实际释放约 <b>12.30 GiB</b>。新增真实备份并完成隔离恢复演练后，可用空间约 <b>12.17 GiB</b>。业务服务持续运行，未主动发送测试消息或调用付费模型。</p>
+<table><tr><th>项目</th><th>完成内容</th></tr>
+<tr><td>一次性历史清理</td><td>核对 10 月以前的候选目录，验证路径、文件数、大小、修改时间、运行进程及链接引用。删除 231 个目录；跳过 16 个含符号链接的旧发布目录。保留生产库、素材、当前发布和近期回滚点。</td></tr>
+<tr><td>定时留存</td><td>每日北京时间 03:10（最多随机延迟 60 秒）运行。每日备份保留 14 天、历史发布备份及发布目录保留 30 天；各类别额外保留最近 3 个。当前发布及其备份始终受保护。含链接、正在使用的路径会保留；部署变化或清单变化时中止删除。</td></tr>
+<tr><td>安全备份</td><td>沿用每日 03:30 备份定时器（最多随机延迟 5 分钟）。写入前要求数据库大小加 2 GiB 可用空间；临时文件完成完整性校验后原子发布。失败清除临时文件，原有备份保留。备份与清理通过同一文件锁互斥。</td></tr>
+<tr><td>运行中的 SQLite</td><td>源数据库以只读连接打开，使用一致快照备份。系统服务仅额外允许 app.db-shm 读锁文件写入，主数据库及 WAL 仍受只读文件系统限制。首轮实际服务测试发现只读共享内存限制后自动回退，修订后重新运行成功。</td></tr>
+<tr><td>验证</td><td>Linux 23 项定向测试通过；Windows 20 项通过，3 项 Linux 专属场景由服务器测试覆盖。真实备份约 887.7 MiB，完整性验证通过；独立副本校验文件哈希、5 张业务表计数，并实际读写。未替换生产库，演练副本已删除。</td></tr>
+<tr><td>线上复核</td><td>API、正式 Worker、演练 Worker、Cloudflare Tunnel、Nginx 均 active；心跳正常、无本地回调积压。公网首页、health、health/ready 均返回 HTTP 200。业务发布清单、环境文件及关键业务配置哈希未变化。</td></tr>
+</table>
+<h2>部署位置与回滚</h2><p>源码 <code>scripts/server_storage.py</code> 安装到 <code>/usr/local/sbin/china2go-storage</code>；备份入口为 <code>/usr/local/sbin/china2go-backup</code>。定时留存使用 <code>china2go-storage-retention.service/timer</code>，备份补充配置位于 <code>china2go-backup.service.d/storage.conf</code>。生产安装回执及原文件保存在 <code>/opt/china2go-ai/output/storage-maintenance-20261029/</code>；回退这些运维配置不会恢复已获授权删除的历史目录。</p>
+<p>手工预览使用 <code>/opt/china2go-ai/venv/bin/python /usr/local/sbin/china2go-storage retention</code>，默认不删除。必须明确加 <code>--apply</code> 才会执行留存删除。不要删除当前运行库、素材、当日备份或手动修改发布清单绕过保护。</p>
+<h2>尚未实施</h2><ul><li>异地备份：尚未提供公司认可的存储目标与凭据。当前备份仍在同一服务器，不能防整机磁盘丢失。</li><li>独立可用性、磁盘及备份失败的外部告警：需确定告警接收方式并核实云端配置；当前错误记录在 systemd 日志中。</li><li>运行记录归档、并发更新冲突和模型跟进规则稳定性优化：本次未修改相关业务逻辑。</li><li>16 个含符号链接的旧发布目录保持不动，后续单独核验。</li></ul>
+<p>本次没有新增产品页面；这是服务器维护任务。业务应用仍使用原发布版本，维护代码单独提交。</p>
+<p>执行证据：<a href="../../output/no-reply-20261029/cleanup-executed.json">清理回执</a> · <a href="../../output/no-reply-20261029/storage-deployment.json">运维安装回执</a> · <a href="../../output/no-reply-20261029/storage-final-verification.json">恢复演练与线上验证</a> · <a href="../../output/no-reply-20261029/storage-tests-linux.xml">Linux 测试结果</a></p></main></html>

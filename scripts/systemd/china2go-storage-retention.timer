@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily China2Go storage retention before database backup
+
+[Timer]
+OnCalendar=*-*-* 03:10:00 Asia/Shanghai
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

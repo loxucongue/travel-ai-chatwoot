@@ -1,0 +1,14 @@
+[Unit]
+Description=China2Go bounded backup and release retention
+Before=china2go-backup.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/china2go-ai/venv/bin/python /usr/local/sbin/china2go-storage retention --apply --daily-days 14 --release-days 30 --keep 3
+TimeoutStartSec=300
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/china2go-ai/backups /opt/china2go-ai/releases

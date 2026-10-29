@@ -1,0 +1,2 @@
+/scripts/systemd/* text eol=lf
+/scripts/server_storage.py text eol=lf

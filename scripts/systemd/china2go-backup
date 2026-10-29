@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /opt/china2go-ai/venv/bin/python /usr/local/sbin/china2go-storage backup --reserve-gib 2
