@@ -1,5 +1,7 @@
 import json
+import re
 from datetime import timedelta
+from urllib.parse import unquote
 
 import httpx
 import pytest
@@ -13,6 +15,7 @@ from app.runtime_settings import dt, iso
 from test_runtime_reliability import notification_setup, mock_chatwoot
 
 BASE = 'https://chatwoot.invalid/api/v1/accounts/180474'
+NAMES = {7: '王ˊ俐珽', 9: 'van', 10: '刘小满', 11: 'LINGER'}
 
 
 def configure(factory, ids=(7, 10, 11)):
@@ -27,7 +30,7 @@ def remote(router, assignee=9, members=(7, 9, 10, 11)):
     note = mock_chatwoot(router)
     router.get(f'{BASE}/conversations/26').respond(200, json={'id': 26, 'inbox_id': 128859,
         'meta': {'assignee': {'id': assignee} if assignee else None}})
-    router.get(f'{BASE}/inbox_members/128859').respond(200, json={'payload': [{'id': i} for i in members]})
+    router.get(f'{BASE}/inbox_members/128859').respond(200, json={'payload': [{'id': i, 'name': NAMES[i]} for i in members]})
     return note
 
 
@@ -47,9 +50,34 @@ def test_handoff_one_note_union_and_owner_unchanged(session_factory, monkeypatch
         assert note.call_count == 1
         body = json.loads(note.calls[0].request.content)
         assert body['private'] is True and body['sender_type'] == 'AgentBot'
-        assert body['content'].split('\n')[0] == ' '.join(f'[@顾问](mention://user/{i}/advisor)' for i in expected)
+        # Match the actual Chatwoot mention parser; display names must not change IDs.
+        mentions = re.findall(r'\[@([^\]]+)\]\(mention://user/(\d+)/([^\)]+)\)', body['content'].split('\n')[0])
+        assert [(label, int(i), unquote(name)) for label, i, name in mentions] == [(NAMES[i], i, NAMES[i]) for i in expected]
         if assignment:
             assert json.loads(assignment.calls[0].request.content)['assignee_id'] == 7
+
+
+def test_member_name_is_current_and_markdown_safe(session_factory, monkeypatch):
+    notification_setup(session_factory, monkeypatch)
+    configure(session_factory, [])
+    with respx.mock() as router:
+        note = remote(router)
+        router.get(f'{BASE}/inbox_members/128859').respond(200, json={'payload': [
+            {'id': 9, 'name': '  新名稱 [A] / Lin\n顧問🙂  '}]})
+        assert dispatch.process_notification_delivery(session_factory)
+        content = json.loads(note.calls[0].request.content)['content']
+        assert content.startswith('[@新名稱 \\[A\\] / Lin 顧問🙂](mention://user/9/')
+        targets = re.findall(r'\(mention://user/(\d+)/(.+?)\)', content)
+        assert [(i, unquote(name)) for i, name in targets] == [('9', '新名稱 [A] / Lin 顧問🙂')]
+
+
+def test_missing_name_keeps_the_valid_mention_identifiable(session_factory, monkeypatch):
+    notification_setup(session_factory, monkeypatch)
+    with respx.mock() as router:
+        note = mock_chatwoot(router)
+        assert dispatch.process_notification_delivery(session_factory)
+        content = json.loads(note.calls[0].request.content)['content']
+        assert content.startswith('[@顾问 7](mention://user/7/')
 
 
 def test_missing_member_does_not_block_valid_recipients_and_warning_visible(session_factory, monkeypatch, authenticated):

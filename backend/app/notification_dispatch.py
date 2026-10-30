@@ -2,7 +2,9 @@
 import hashlib
 import hmac
 import json
+import re
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 
 import httpx
 from sqlalchemy import select, update
@@ -15,6 +17,13 @@ from app.models import (ChatwootConnection, ConversationState, HandoffTask,
                         Notification, NotificationDelivery, AdvisorAssignment, utcnow)
 from app.operations import create_notification, setting_value
 from app.security import decrypt_secret
+
+
+def agent_mention(agent_id, agent):
+    name = ' '.join(str(agent.get('name') or '').split()) or f'顾问 {agent_id}'
+    # Keep names literal in the Markdown label and inside one URI segment.
+    label = re.sub(r'([\\`*_{}\[\]<>()!])', r'\\\1', name)
+    return f'[@{label}](mention://user/{agent_id}/{quote(name, safe="")})'
 
 
 def process_notification_delivery(session_factory=None) -> bool:
@@ -109,7 +118,7 @@ def process_notification_delivery(session_factory=None) -> bool:
                 assignee = {}
             agent_id = int(payload['target_agent_id'] if payload['explicit_notification'] else
                            (assignee.get('id') or payload.get('target_agent_id') or config["agent_id"]))
-            accessible = {int(agent.get('id', 0)) for agent in agents}
+            accessible = {int(agent.get('id', 0)): agent for agent in agents}
             extra_ids = config.get('handoff_notify_agent_ids', []) if payload['event'] in ('handoff.created', 'handoff.overdue') else []
             recipient_ids = list(dict.fromkeys([agent_id, *extra_ids]))
             missing = [i for i in recipient_ids if i not in accessible]
@@ -121,7 +130,7 @@ def process_notification_delivery(session_factory=None) -> bool:
             # Keep an existing human owner; only assign an unowned new handoff.
             if config.get("assign_on_handoff") and payload['event'] == 'handoff.created' and not assignee.get('id') and agent_id in accessible:
                 client.assign_conversation(payload["conversation_id"], agent_id)
-            mentions = ' '.join(f'[@顾问](mention://user/{i}/advisor)' for i in recipient_ids)
+            mentions = ' '.join(agent_mention(i, accessible[i]) for i in recipient_ids)
             content = f"{mentions}\n{payload['body']}"
             submitted = True
             result = payload_dict(client.create_private_notification(
