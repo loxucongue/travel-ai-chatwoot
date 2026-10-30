@@ -120,6 +120,26 @@
 
 本次同时修复两项平台行为：顾问称呼替换按公司开关控制；模型输出空回复却填有交接原因时触发既有协议修复，避免会话静默停在等待状态。
 
+### 将厦门演练资料导入现有服务器
+
+代码发布会携带资料包，但不会自动修改现有数据库。发布后单独执行：
+
+```powershell
+.venv/Scripts/python.exe scripts/deploy_rujing2.py deploy --server-note <私有服务器说明文件>
+.venv/Scripts/python.exe scripts/deploy_rujing2.py install-xiamen --server-note <私有服务器说明文件>
+```
+
+`install-xiamen` 先检查当前公司、发送开关、资料哈希及配置冲突，再暂停 API 和演练 worker，调用 `scripts/install_rujing2_xiamen.py --apply`，最后恢复服务并检查健康状态。预检失败不会停止服务；导入失败也会恢复服务。
+
+- 在现有数据库旁的 `backups/` 创建一致备份；保留管理员、密码、原渠道和会话。
+- 导入 35 FAQ 对应的线路规则、8 个素材记录和专用沙盒收件箱。素材复制到持久共享目录，使用哈希命名，后续清理旧版本不会丢失素材。
+- 保持全局停发和空实发收件箱，素材全部 `live_approved=false`；不配置 Facebook 或开启实发 worker。
+- 同一资料重复安装不会新增重复记录；发现既有线路、同名素材或人工修改过的接待字段时拒绝覆盖。后续业务调整通过后台维护，不通过重装恢复默认值。
+- 可在服务器 `current/backend` 目录运行 `runuser -u rujing2 -- /opt/rujing2-ai/venv/bin/python ../scripts/install_rujing2_xiamen.py`，省略 `--apply` 只做预检。
+- 模型凭据仍使用服务器自己的 `shared/backend.env`；导入程序不会复制本地或原公司的模型密钥。
+
+2026-10-30 只读检查：公网健康检查、管理员登录正常；服务器线路和收件箱为空，总开关关闭。原微信临时目录中的服务器说明文件已失效，因此本次代码发布和服务器导入尚未执行。已有本地演练已重新启动，重启后真实模型回复及酒店图片发送验证通过（模拟客户 #56）。导入相关 5 项测试通过，前端 8 项测试及生产构建通过，发布包已校验包含 8 个素材和导入脚本、不包含旧公司目录和私有配置。
+
 ## 验证记录
 
 - 新空库完整 Alembic 迁移、登录/CSRF、空产品与知识页面、配置保存。

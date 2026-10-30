@@ -20,7 +20,8 @@ OUTPUT = ROOT / 'output/deploy/rujing2'
 HOST = '47.82.3.154'
 REMOTE = '/opt/rujing2-ai'
 DIRECTORIES = ('backend/app', 'backend/alembic', 'frontend/dist', 'businesses/rujing2', 'deploy/rujing2')
-FILES = ('backend/pyproject.toml', 'backend/alembic.ini', 'scripts/bootstrap_rujing2.py')
+FILES = ('backend/pyproject.toml', 'backend/alembic.ini', 'scripts/bootstrap_rujing2.py',
+         'scripts/install_rujing2_xiamen.py')
 
 
 def package():
@@ -163,9 +164,22 @@ def check(client):
     run(client, 'systemctl is-active rujing2-api rujing2-playground nginx')
 
 
+def install_xiamen(client):
+    command = (f'cd {REMOTE}/current/backend && runuser -u rujing2 -- '
+               f'{REMOTE}/venv/bin/python ../scripts/install_rujing2_xiamen.py')
+    # Preflight before any interruption; installer also rechecks inside apply.
+    run(client, command)
+    try:
+        run(client, 'systemctl stop rujing2-api rujing2-playground')
+        run(client, command + ' --apply')
+    finally:
+        run(client, 'systemctl start rujing2-api rujing2-playground')
+    check(client)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('phase', choices=['package', 'deploy', 'check'])
+    parser.add_argument('phase', choices=['package', 'deploy', 'check', 'install-xiamen'])
     parser.add_argument('--server-note')
     args = parser.parse_args()
     if args.phase == 'package':
@@ -178,6 +192,8 @@ def main():
     try:
         if args.phase == 'check':
             check(client)
+        elif args.phase == 'install-xiamen':
+            install_xiamen(client)
         else:
             deploy(client, *package())
     finally:
