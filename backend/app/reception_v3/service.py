@@ -58,7 +58,7 @@ def followup_response(messages):
 
 
 def followup_materials(materials, messages, route, profile=None):
-    """Offer new route photos, including deduplication across catalog aliases."""
+    """Offer new route images/videos, deduplicating across catalog aliases."""
     if (rejects_current_route(route, profile or {})
             or (profile or {}).get('discussion_route') not in (None, '', route)):
         return []
@@ -80,7 +80,7 @@ def followup_materials(materials, messages, route, profile=None):
     # Prefer catalog entries with a useful caption over bare import aliases.
     for material in sorted(materials, key=lambda m: bool(m.get('what_it_shows')), reverse=True):
         identity = material.get('media_hash') or material.get('media_id') or material['key']
-        if (route not in material.get('routes', []) or material.get('content_type') != 'image'
+        if (route not in material.get('routes', []) or material.get('content_type') not in ('image', 'video')
                 or material['key'] in sent_keys or material.get('media_hash') in sent_hashes
                 or material.get('media_id') in sent_ids or identity in offered):
             continue

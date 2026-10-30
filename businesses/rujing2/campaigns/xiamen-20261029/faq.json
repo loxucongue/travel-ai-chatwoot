@@ -207,10 +207,11 @@
       "question": "單房差補多少錢？",
       "original_answer": "您可以多邀約個家人朋友一起出遊呀~我們這邊也可以幫您協調哦",
       "name": "單房差",
-      "answer": "單房差的確切金額目前還需要依日期及房型核對，這題請顧問確認。",
-      "handling": "handoff",
-      "note": "原文沒有單房差金額；不以找朋友同行迴避，也不計算。",
-      "source_ref": "user-doc-20261029:faq-19"
+      "answer": "單房差需要依日期及房型確認。方便提供您的LINE或微信ID嗎？也可以傳QR Code，讓規劃師私訊幫您核對。",
+      "handling": "lead_capture",
+      "note": "原文沒有單房差金額；不以找朋友同行迴避，也不計算。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-19",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "facebook_only",
@@ -240,10 +241,11 @@
       "question": "怎麼支付費用？有台灣賬號嗎？",
       "original_answer": "行程合適的話可以提前預定哦~可以享受優惠價 您這邊是用賴還是微信比較多，可以給我個您的QR嗎  方便添加您安排規劃師詳細給您介紹一下",
       "name": "付款／台灣帳戶",
-      "answer": "付款方式、收款帳戶及訂金規則需要顧問提供正式資訊後確認。",
-      "handling": "handoff",
-      "note": "原文沒有付款答案；不虛構台灣帳號、不使用催申請款話術。",
-      "source_ref": "user-doc-20261029:faq-22"
+      "answer": "付款方式、台灣收款帳戶及訂金規則需要由規劃師提供正式資訊。方便留下您的LINE或微信ID，或傳QR Code，讓規劃師私訊說明嗎？",
+      "handling": "lead_capture",
+      "note": "原文沒有付款答案；不虛構台灣帳號、不使用催申請款話術。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-22",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "other_cities",
@@ -273,10 +275,11 @@
       "question": "有沒有台灣對接的旅行社",
       "original_answer": "我們是大陸旅行社哦~ 很多台灣旅行社都是找我們對接的 您可以放心 稍後我們規劃師會把我們公司的營業執照跟資質傳給您",
       "name": "旅行社與資質",
-      "answer": "我們是大陸旅行社，可以請規劃師提供公司的營業執照與資質供您核對。",
+      "answer": "我們是大陸旅行社，具體公司資料與資質可以請規劃師提供供您核對。方便提供您的LINE或微信ID，也可以傳QR Code，讓規劃師私訊給您嗎？",
       "handling": "rewrite",
-      "note": "尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。",
-      "source_ref": "user-doc-20261029:faq-25"
+      "note": "尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-25",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "expired_permit",
@@ -284,10 +287,11 @@
       "question": "台胞證過期了",
       "original_answer": "你看來得及出行辦理一下不，或者到時候直接落地簽也是可以的 現在都非常方便哦",
       "name": "台胞證過期",
-      "answer": "證件是否能用、是否需要先換證，需要依您的身份和出發安排核對，請顧問協助確認官方要求。",
-      "handling": "handoff",
-      "note": "不沿用直接落地簽即可的未核實結論。",
-      "source_ref": "user-doc-20261029:faq-26"
+      "answer": "台胞證過期需要依您的證件與出發安排確認，不能直接保證可以出行。方便留下LINE或微信ID，讓規劃師私訊協助核對嗎？",
+      "handling": "lead_capture",
+      "note": "不沿用直接落地簽即可的未核實結論。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-26",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "passport",
@@ -295,10 +299,11 @@
       "question": "只有護照可以嗎？",
       "original_answer": "過來大陸需要身份證，護照 台胞證 缺一不可哦~",
       "name": "只有護照",
-      "answer": "入境證件要求會因身份而不同，只有護照是否足夠，需要先確認您的身份與有效證件。",
-      "handling": "handoff",
-      "note": "不沿用身份證、護照、台胞證缺一不可的概括說法。",
-      "source_ref": "user-doc-20261029:faq-27"
+      "answer": "只有護照是否足夠，需要依您的身份與有效證件核對。方便提供LINE或微信ID，讓規劃師私訊協助確認嗎？",
+      "handling": "lead_capture",
+      "note": "不沿用身份證、護照、台胞證缺一不可的概括說法。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-27",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "female_guide",
@@ -317,10 +322,11 @@
       "question": "26洗腎可以安排嗎？",
       "original_answer": " 那您可以提前幾天過來呀~散散心 在安排醫院哦~",
       "name": "洗腎安排",
-      "answer": "洗腎接收和時間需要醫療機構確認，我們不能先保證安排；這項需求會請顧問協助核對。",
-      "handling": "handoff",
-      "note": "不給醫療建議，不承諾提前到廈門即可安排醫院。",
-      "source_ref": "user-doc-20261029:faq-29"
+      "answer": "洗腎接收與時間需醫療機構確認，不能先保證安排。方便提供LINE或微信ID，讓規劃師私訊了解需求並協助核對嗎？",
+      "handling": "lead_capture",
+      "note": "不給醫療建議，不承諾提前到廈門即可安排醫院。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-29",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "meetup",
@@ -339,10 +345,11 @@
       "question": "27那麼便宜你們是騙子嗎？",
       "original_answer": "來廈門本來就不貴哦~而且現在有補貼 非常適合您跟家人朋友一起過來玩",
       "name": "信任與價格疑慮",
-      "answer": "可以先核對行程包含項目和公司資質，再決定是否預訂。參考費用會依天數與安排不同，具體明細可以請規劃師確認。",
+      "answer": "您可以先核對公司資料與行程內容，再決定是否預訂。方便提供LINE或微信ID，讓規劃師私訊資料給您了解嗎？",
       "handling": "rewrite",
-      "note": "未提供補貼依據，不以補貼或合影證明付款安全。",
-      "source_ref": "user-doc-20261029:faq-31"
+      "note": "未提供補貼依據，不以補貼或合影證明付款安全。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-31",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "undecided",
@@ -363,7 +370,7 @@
       "name": "有興趣暫無計畫",
       "answer": "沒關係，您可以先參考，有合適的假期再來聊就好。",
       "handling": "use",
-      "note": "本輪簡短收尾，不自行安排沉默追訪。",
+      "note": "本輪簡短收尾；未拒聯、未約定更晚聯絡且有新素材時可按每天一次、最多7天配置追訪，不反覆催日期或留資。",
       "source_ref": "user-doc-20261029:faq-33"
     },
     {
@@ -372,10 +379,11 @@
       "question": "29外籍人員可以去嗎",
       "original_answer": "需要有本國的簽證才可以哦",
       "name": "外籍旅客",
-      "answer": "不同國籍及證件的入境要求不同，需要確認國籍、現有證件與出發時間後，再核對是否適用。",
-      "handling": "handoff",
-      "note": "不沿用需有本國簽證的錯誤概括。",
-      "source_ref": "user-doc-20261029:faq-34"
+      "answer": "外籍旅客需依國籍與現有證件確認入境要求。方便提供LINE或微信ID，讓規劃師私訊協助了解嗎？",
+      "handling": "lead_capture",
+      "note": "不沿用需有本國簽證的錯誤概括。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
+      "source_ref": "user-doc-20261029:faq-34",
+      "policy_source_ref": "user-operations-20261030:private-contact-conversion"
     },
     {
       "id": "holidays",

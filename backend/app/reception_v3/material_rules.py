@@ -35,6 +35,22 @@ def rule_digest(rule):
     return hashlib.sha256(json.dumps(rule, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
+def followup_contract_error(decision, context):
+    """Repair invalid configured-media references before creating a delivery plan."""
+    if (context.get('event') != 'silence_due' or
+            context.get('skills', {}).get('silence', {}).get('material_selection') != 'configured_rules'):
+        return None
+    messages = decision.get('messages', [])
+    selected = [m['material_rule_id'] for m in messages if m.get('material_rule_id')]
+    eligible = {r['id'] for r in context.get('material_rules', [])}
+    if (any(m.get('asset_keys') for m in messages) or len(selected) > 1
+            or any(key not in eligible for key in selected)):
+        return ('本輪是配置素材的沉默追訪：asset_keys必須為[]，最多選一個本輪material_rules內的'
+                'material_rule_id，由系統取未發送圖片或影片。不得引用舊規則或直接asset_keys；'
+                '保持原本答覆意圖，不新增承諾；沒有合適的新內容就action=wait、messages=[]。')
+    return None
+
+
 def eligible_rules(bundle, materials, route, labels, event, messages):
     purpose = 'followup' if event == 'silence_due' else 'reply'
     if event not in ('silence_due', 'customer_message'):
@@ -45,7 +61,7 @@ def eligible_rules(bundle, materials, route, labels, event, messages):
     hashes = {m.get('media_hash') for m in sent} - {None, ''}
     media_ids = {m.get('media_id') for m in sent} - {None}
     candidates = {m['key']: m for m in materials if route in m.get('routes', [])
-                  and m.get('content_type') == 'image' and m['key'] not in used
+                  and m.get('content_type') in ('image', 'video') and m['key'] not in used
                   and m.get('media_hash') not in hashes and m.get('media_id') not in media_ids}
     result = []
     for rule in bundle.get('material_rules', []):
@@ -54,8 +70,8 @@ def eligible_rules(bundle, materials, route, labels, event, messages):
                 or rule['any_labels'] and not set(rule['any_labels']).intersection(labels)):
             continue
         keys = list(dict.fromkeys(key for key in rule['asset_keys'] if key in candidates))
-        # No usable picture: text remains available, without substituting a
-        # different route's image or repeating a previously delivered image.
+        # No usable media: text remains available, without substituting another
+        # route's media or repeating an already delivered image/video.
         result.append({**rule, 'asset_keys': keys})
     return result
 

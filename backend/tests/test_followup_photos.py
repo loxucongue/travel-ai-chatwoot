@@ -62,31 +62,32 @@ def test_six_hour_photo_and_caption_are_delivered_once_in_order(session_factory,
 
 
 @pytest.mark.parametrize('takeover_after', [None, 0, 1])
-def test_followup_photo_uses_live_attachment_outbox_then_caption(session_factory, monkeypatch, tmp_path, takeover_after):
+@pytest.mark.parametrize('media_type,extension,mime', [('image','jpg','image/jpeg'), ('video','mp4','video/mp4')])
+def test_followup_photo_uses_live_attachment_outbox_then_caption(session_factory, monkeypatch, tmp_path, takeover_after, media_type, extension, mime):
     from app.reception_v3 import live
     from app.models import StoredMedia, OutboundMessage, MessageEvent, utcnow
     from live_fixture import setup
     from test_live_audit_fixes import session
     setup(session_factory, monkeypatch)
-    path = tmp_path / 'potala.jpg'; path.write_bytes(b'photo-test')
+    path = tmp_path / ('material.' + extension); path.write_bytes(b'media-test')
     sent = []
     class Client:
         def close(self): pass
         def get_conversation(self, cid): return {'id':cid, 'can_reply':True}
         def get_conversation_labels(self, cid):
             return ['ai', '人工接管'] if takeover_after is not None and len(sent) >= takeover_after else ['ai']
-        def create_attachment_message(self, cid, text, filename, mime):
-            assert cid == 26 and filename == str(path) and mime == 'image/jpeg'
-            sent.append(('image', text)); return {'id':701}
+        def create_attachment_message(self, cid, text, filename, content_mime):
+            assert cid == 26 and filename == str(path) and content_mime == mime
+            sent.append((media_type, text)); return {'id':701}
         def create_text_message(self, cid, text):
             sent.append(('text', text)); return {'id':702}
     monkeypatch.setattr(live, 'client_for', lambda *a: Client())
     with session_factory() as db:
-        db.add(StoredMedia(id=99, tenant_id=1, created_by=1, original_name='potala.jpg',
-                          media_type='image', mime_type='image/jpeg', file_size=10, storage_path=str(path)))
+        db.add(StoredMedia(id=99, tenant_id=1, created_by=1, original_name=path.name,
+                          media_type=media_type, mime_type=mime, file_size=10, storage_path=str(path)))
         row = session(db)
         value = dict(opening_started=True, silence_step=1)
-        service.append_plan(row, value, [dict(content='', content_type='image', media_id=99,
+        service.append_plan(row, value, [dict(content='', content_type=media_type, media_id=99,
             media_hash='hash', asset_key='potala', proactive=True),
             dict(content='這張是布達拉宮～', content_type='text', proactive=True)], interval=0, kind='reply')
         service.save(row, value); db.commit()
@@ -95,15 +96,15 @@ def test_followup_photo_uses_live_attachment_outbox_then_caption(session_factory
         live.deliver_one(db, row)
         live.deliver_one(db, row)
         if takeover_after is not None:
-            assert sent == [('image','')][:takeover_after]
+            assert sent == [(media_type,'')][:takeover_after]
             assert len(list(db.scalars(select(OutboundMessage)))) == takeover_after
             assert row.controls['simulation']['status'] == 'stopped'
             assert not any(m.get('status') == 'draft' for m in row.messages)
             assert service.state(row).get('next_check_at') is None
             return
-        assert sent == [('image',''), ('text','這張是布達拉宮～')]
+        assert sent == [(media_type,''), ('text','這張是布達拉宮～')]
         out = list(db.scalars(select(OutboundMessage).order_by(OutboundMessage.id)))
         assert [(m.content_type, m.media_id, m.chatwoot_message_id, m.status) for m in out] == [
-            ('image',99,701,'submitted'), ('text',None,702,'submitted')]
+            (media_type,99,701,'submitted'), ('text',None,702,'submitted')]
         assert db.scalar(select(MessageEvent).where(MessageEvent.chatwoot_message_id==701)).attribution == 'ai'
         assert service.state(row).get('next_check_at') is None

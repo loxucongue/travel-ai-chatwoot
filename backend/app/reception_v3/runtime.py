@@ -514,6 +514,16 @@ def run_agent(context: dict):
                                  'reasoning_content':message.get('reasoning_content','')})
                 messages.append({'role':'user','content':quote_problem})
                 continue
+            from app.reception_v3.material_rules import followup_contract_error
+            material_problem = followup_contract_error(decision, context)
+            if material_problem:
+                log.update(status='followup_material_rejected', validation_error=material_problem,
+                           rejected_decision=decision)
+                if any(item is not log and item.get('status') == 'followup_material_rejected' for item in logs):
+                    raise ValueError('followup_material_not_validated')
+                messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
+                messages.append({'role':'user', 'content':material_problem})
+                continue
             party_problem = reply_contract_error(decision, context)
             if party_problem:
                 log.update(status='large_party_reply_rejected', validation_error=party_problem, rejected_decision=decision)

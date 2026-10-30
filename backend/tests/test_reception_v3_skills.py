@@ -42,6 +42,35 @@ def tool(name, arguments, id='t1'):
     return {'id': id, 'type': 'function', 'function': {'name': name, 'arguments': json.dumps(arguments)}}
 
 
+@pytest.mark.parametrize('invalid', [
+    [{'asset_keys':['meal-video']}],
+    [{'material_rule_id':'deleted-rule'}],
+    [{'material_rule_id':'meal'}, {'material_rule_id':'meal'}],
+])
+def test_configured_followup_repairs_media_references_before_delivery(monkeypatch, invalid):
+    requests = model(monkeypatch, [final(messages=invalid),
+        final(messages=[{'text':'餐食參考', 'material_rule_id':'meal'}])])
+    c = context('peach_9d_2027')
+    c.update(event='silence_due', material_rules=[{'id':'meal', 'asset_keys':['meal-video']}])
+    c['skills']['silence']['material_selection'] = 'configured_rules'
+    decision, logs, _ = runtime.run_agent(c)
+    assert len(requests) == 2
+    assert decision['messages'][0]['material_rule_id'] == 'meal'
+    assert decision['messages'][0]['asset_keys'] == []
+    assert any(log['status'] == 'followup_material_rejected' for log in logs)
+
+
+def test_configured_followup_repair_is_bounded(monkeypatch):
+    bad = final(messages=[{'asset_keys':['meal-video']}])
+    requests = model(monkeypatch, [bad, bad])
+    c = context('peach_9d_2027')
+    c.update(event='silence_due', material_rules=[])
+    c['skills']['silence']['material_selection'] = 'configured_rules'
+    with pytest.raises(Exception, match='followup_material_not_validated'):
+        runtime.run_agent(c)
+    assert len(requests) == 2
+
+
 def test_selected_route_preloads_only_its_complete_config(monkeypatch):
     requests = model(monkeypatch, [final(messages=[{'text': '回答原稿'}])])
     decision, logs, _ = runtime.run_agent(context('peach_9d_2027'))

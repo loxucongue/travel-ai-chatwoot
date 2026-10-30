@@ -180,7 +180,8 @@ def test_configured_followup_prevents_catalog_fallback(session_factory, monkeypa
 
 
 @pytest.mark.parametrize('change',['disable','delete','edit','labels','old_catalog'])
-def test_queued_material_changes_cancel_before_network_submission(session_factory, monkeypatch, change):
+@pytest.mark.parametrize('media_type', ['image', 'video'])
+def test_queued_material_changes_cancel_before_network_submission(session_factory, monkeypatch, change, media_type):
     from test_live_audit_fixes import session
     from app.reception_v3 import skills
     from app.reception_v3.material_rules import rule_digest
@@ -190,7 +191,7 @@ def test_queued_material_changes_cancel_before_network_submission(session_factor
     with session_factory() as db:
         row=session(db);row.controls={**row.controls,'route_variant':'nine'}
         value=service.state(row)
-        part={'content':'approved','content_type':'image','proactive':True,
+        part={'content':'approved','content_type':media_type,'proactive':True,
               'material_rule_id':rule['id'],'material_rule_digest':rule_digest(rule)}
         service.append_plan(row,value,[part],interval=0,kind='silence');service.save(row,value)
         if change=='disable':rule['enabled']=False

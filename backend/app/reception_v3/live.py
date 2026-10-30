@@ -527,9 +527,9 @@ def deliver_one(db, row):
         current = next((r for r in current_bundle.get('material_rules', []) if r['id'] == part.get('material_rule_id')), None)
         revoked = bool(part.get('material_rule_id')) and (not current or current['id'] not in allowed_ids
                 or rule_digest(current) != part.get('material_rule_digest'))
-        unmanaged_image = (part.get('proactive') and part.get('content_type') == 'image'
+        unmanaged_media = (part.get('proactive') and part.get('content_type') in ('image', 'video')
             and not part.get('material_rule_id') and current_bundle['silence'].get('material_selection') == 'configured_rules')
-        if revoked or unmanaged_image:
+        if revoked or unmanaged_media:
             row.messages = [{**m, 'status':'cancelled'} if m.get('plan_id') == part.get('plan_id')
                             and m.get('status') == 'draft' else m for m in row.messages]
             value.update(delivery_kind=None, delivery_due_at=None, last_reason='material_rule_changed')

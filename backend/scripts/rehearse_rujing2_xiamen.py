@@ -96,7 +96,10 @@ def prepare(output):
                     'route_variants': [ROUTE], 'content_family': item['key'], 'live_approved': False}))
         config = default_reception_configuration()
         for section, values in read('reception-config.json').items():
-            config[section].update(values)
+            if isinstance(values, dict):
+                config[section].update(values)
+            else:
+                config[section] = deepcopy(values)
         put_reception_configuration(db, ReceptionConfiguration.model_validate(config))
         save_setting(db, 'global_message_sending', {'enabled': False})
         db.commit()
@@ -147,6 +150,23 @@ def run(output, ids):
         {'id': 'fb_continuity', 'title': '拒絕加好友後仍可問價', 'messages': ['我沒有LINE也沒有微信，只在FB聊可以嗎？', '那廈門一個人多少錢？有含機票嗎？'], 'expected': 'reply'},
         {'id': 'date_price', 'title': '提供月份不虛構精確價', 'messages': ['廈門5天一個人多少錢？', '我們兩個人，明年3月。'], 'expected': 'reply'},
         {'id': 'introduction', 'title': '概覽不編造逐日安排', 'messages': ['我想選廈門行程，先給我看你們現有的介紹。'], 'expected': 'reply'},
+        {'id': 'conversion_price', 'title': '答價後自然邀請私訊', 'messages': ['廈門一個人多少錢？'], 'expected': 'reply', 'invitation': True},
+        {'id': 'conversion_agency', 'title': '資質需求引導私訊', 'messages': ['你們是哪家公司？有營業執照嗎？'], 'expected': 'reply', 'invitation': True},
+        {'id': 'line_contact', 'title': 'LINE ID立即交接', 'messages': ['廈門一個人多少錢？', '我的LINE ID是 test_travel_2026'], 'expected': 'handoff', 'handoff_type': 'contact'},
+        {'id': 'wechat_contact', 'title': '微信ID立即交接', 'messages': ['我的微信號是 wx_test_2026，想了解廈門'], 'expected': 'handoff', 'handoff_type': 'contact'},
+        {'id': 'consent_only', 'title': '同意加好友不等於已留資', 'messages': ['想了解廈門，方便加LINE嗎？', '好，可以加'], 'expected': 'reply'},
+        {'id': 'qr_contact', 'title': '明確聯絡QR圖片交人工核驗', 'messages': ['想了解廈門，方便加LINE嗎？',
+            {'text':'這是我的LINE QR Code，請加我。', 'attachments':[{'id':90001,'file_type':'image','file_name':'contact.png'}]}],
+            'expected':'handoff','handoff_type':'contact_image'},
+        {'id': 'ordinary_photo', 'title': '普通照片不作留資成功', 'messages': ['想了解廈門酒店',
+            {'text':'這種房間可以嗎？', 'attachments':[{'id':90002,'file_type':'image','file_name':'room.png'}]}], 'expected':'reply'},
+        {'id': 'requested_human', 'title': '主動要求真人不強制先留資', 'messages':['我要直接找真人客服'], 'expected':'handoff','handoff_type':'requested'},
+        {'id': 'contact_no_repeat', 'title': '連續答疑不每輪催ID', 'messages':['廈門一個人多少錢？','機票有包含嗎？','那你們一般幾人一團？'], 'expected':'reply','max_invitations':1},
+        {'id': 'sales_handoff_journey', 'title': '客人補需求仍以專人私訊為主',
+            'messages':['想了解雲南行程，請提供營業執照、合同退費規定和公司收款資料。','抱歉，是廈門！','預計4/2–4/7','不要全都是風景','有9歲、12歲的孩童隨行'],
+            'expected':'reply','max_invitations':2},
+        {'id': 'seven_day_followup', 'title': '每日一次最多7天且圖文影片去重', 'messages':['我先看看廈門的美食和風景，有資料可以分享'], 'expected':'reply','followup_days':7},
+        {'id': 'conversion_optout', 'title': '拒絕聯絡停止追訪', 'messages':['想了解廈門','不要再聯絡我，也不要發宣傳'], 'expected':'reply','opt_out':True},
     ]
     cases.extend(case for case in extra if not ids or case['id'] in selected)
     for case in cases:
@@ -163,7 +183,16 @@ def run(output, ids):
             try:
                 runs = settle(db, row)
                 for index, message in enumerate(case['messages'][1:], 1):
-                    service.add_message(db, row, message, f'case-{case["id"]}-{index}')
+                    content = message if isinstance(message, str) else message['text']
+                    attachments = None if isinstance(message, str) else message.get('attachments')
+                    service.add_message(db, row, content, f'case-{case["id"]}-{index}',
+                                        content_type='image' if attachments else 'text', attachments=attachments)
+                    db.commit()
+                    runs = settle(db, row)
+                for _ in range(case.get('followup_days', 0)):
+                    if not service.state(row).get('next_check_at'):
+                        break
+                    service.advance_next(row)
                     db.commit()
                     runs = settle(db, row)
             except Exception as exc:
@@ -179,6 +208,31 @@ def run(output, ids):
                 issues.append(error)
             if actual != case['expected']:
                 issues.append(f'expected_{case["expected"]}_got_{actual}')
+            if case.get('handoff_type') and state.get('handoff_type') != case['handoff_type']:
+                issues.append('wrong_handoff_type')
+            invitations = [m for m in reply if m.get('contact_invitation')]
+            if case.get('invitation') and not invitations:
+                issues.append('contact_invitation_missing')
+            if len(invitations) > case.get('max_invitations', 100):
+                issues.append('repeated_contact_invitation')
+            if case.get('opt_out') and (not state.get('opt_out') or state.get('next_check_at')):
+                issues.append('optout_not_stopped')
+            if case.get('followup_days'):
+                from zoneinfo import ZoneInfo
+                touches = [m for m in reply if m.get('proactive')]
+                by_date = {}
+                for m in touches:
+                    day = service.date(m['created_at']).astimezone(ZoneInfo('Asia/Taipei')).date().isoformat()
+                    by_date.setdefault(day, set()).add(m['run_id'])
+                if any(len(ids) > 1 for ids in by_date.values()) or len(by_date) > 7:
+                    issues.append('daily_or_seven_day_limit_exceeded')
+                if not touches:
+                    issues.append('no_followup_delivered')
+                keys = [m['asset_key'] for m in reply if m.get('asset_key')]
+                if len(keys) != len(set(keys)):
+                    issues.append('repeated_material')
+                if state.get('next_check_at'):
+                    issues.append('followup_not_stopped_after_seven_days')
             if case.get('asset') and not any(m.get('asset_key') == case['asset'] for m in reply):
                 issues.append('expected_asset_missing')
             text = '\n'.join(m.get('content', '') for m in reply)
@@ -218,7 +272,10 @@ def refresh(output):
             login_path.write_text(json.dumps(login, indent=2), encoding='utf8')
         config = get_reception_configuration(db)
         for section, values in read('reception-config.json').items():
-            config[section].update(values)
+            if isinstance(values, dict):
+                config[section].update(values)
+            else:
+                config[section] = deepcopy(values)
         put_reception_configuration(db, ReceptionConfiguration.model_validate(config))
         db.commit()
     print('rehearsal_company_configuration_refreshed', flush=True)

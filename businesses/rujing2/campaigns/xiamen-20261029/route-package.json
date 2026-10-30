@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "route_variant": "xiamen_3_6d",
-  "package_version": "20261029-xiamen-rehearsal-v1",
+  "package_version": "20261030-xiamen-private-contact-v2",
   "knowledge_version": "rujing2-v1",
   "currency": "TWD",
   "branch": "xiamen",
@@ -123,7 +123,7 @@
     },
     {
       "id": "xiamen.single_room",
-      "text": "接待動作：客人問到「單房差」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：原文沒有單房差金額；不以找朋友同行迴避，也不計算。",
+      "text": "單房差需要依日期及房型確認。方便提供您的LINE或微信ID嗎？也可以傳QR Code，讓規劃師私訊幫您核對。 使用邊界：原文沒有單房差金額；不以找朋友同行迴避，也不計算。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-19"
     },
     {
@@ -138,7 +138,7 @@
     },
     {
       "id": "xiamen.payment",
-      "text": "接待動作：客人問到「付款／台灣帳戶」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：原文沒有付款答案；不虛構台灣帳號、不使用催申請款話術。",
+      "text": "付款方式、台灣收款帳戶及訂金規則需要由規劃師提供正式資訊。方便留下您的LINE或微信ID，或傳QR Code，讓規劃師私訊說明嗎？ 使用邊界：原文沒有付款答案；不虛構台灣帳號、不使用催申請款話術。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-22"
     },
     {
@@ -153,17 +153,17 @@
     },
     {
       "id": "xiamen.agency",
-      "text": "我們是大陸旅行社，可以請規劃師提供公司的營業執照與資質供您核對。 使用邊界：尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。",
+      "text": "我們是大陸旅行社，具體公司資料與資質可以請規劃師提供供您核對。方便提供您的LINE或微信ID，也可以傳QR Code，讓規劃師私訊給您嗎？ 使用邊界：尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-25"
     },
     {
       "id": "xiamen.expired_permit",
-      "text": "接待動作：客人問到「台胞證過期」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不沿用直接落地簽即可的未核實結論。",
+      "text": "台胞證過期需要依您的證件與出發安排確認，不能直接保證可以出行。方便留下LINE或微信ID，讓規劃師私訊協助核對嗎？ 使用邊界：不沿用直接落地簽即可的未核實結論。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-26"
     },
     {
       "id": "xiamen.passport",
-      "text": "接待動作：客人問到「只有護照」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不沿用身份證、護照、台胞證缺一不可的概括說法。",
+      "text": "只有護照是否足夠，需要依您的身份與有效證件核對。方便提供LINE或微信ID，讓規劃師私訊協助確認嗎？ 使用邊界：不沿用身份證、護照、台胞證缺一不可的概括說法。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-27"
     },
     {
@@ -173,7 +173,7 @@
     },
     {
       "id": "xiamen.dialysis",
-      "text": "接待動作：客人問到「洗腎安排」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不給醫療建議，不承諾提前到廈門即可安排醫院。",
+      "text": "洗腎接收與時間需醫療機構確認，不能先保證安排。方便提供LINE或微信ID，讓規劃師私訊了解需求並協助核對嗎？ 使用邊界：不給醫療建議，不承諾提前到廈門即可安排醫院。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-29"
     },
     {
@@ -183,7 +183,7 @@
     },
     {
       "id": "xiamen.trust",
-      "text": "可以先核對行程包含項目和公司資質，再決定是否預訂。參考費用會依天數與安排不同，具體明細可以請規劃師確認。 使用邊界：未提供補貼依據，不以補貼或合影證明付款安全。",
+      "text": "您可以先核對公司資料與行程內容，再決定是否預訂。方便提供LINE或微信ID，讓規劃師私訊資料給您了解嗎？ 使用邊界：未提供補貼依據，不以補貼或合影證明付款安全。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-31"
     },
     {
@@ -193,12 +193,12 @@
     },
     {
       "id": "xiamen.later",
-      "text": "沒關係，您可以先參考，有合適的假期再來聊就好。 使用邊界：本輪簡短收尾，不自行安排沉默追訪。",
+      "text": "沒關係，您可以先參考，有合適的假期再來聊就好。 使用邊界：本輪簡短收尾；未拒聯、未約定更晚聯絡且有新素材時可按每天一次、最多7天配置追訪，不反覆催日期或留資。",
       "source_ref": "user-doc-20261029:faq-33"
     },
     {
       "id": "xiamen.foreign_traveler",
-      "text": "接待動作：客人問到「外籍旅客」必須action=handoff、handoff_type=knowledge、messages=[]，寫明此問題及已知條件；不能只回覆文字說請顧問核實。原因：不沿用需有本國簽證的錯誤概括。",
+      "text": "外籍旅客需依國籍與現有證件確認入境要求。方便提供LINE或微信ID，讓規劃師私訊協助了解嗎？ 使用邊界：不沿用需有本國簽證的錯誤概括。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。",
       "source_ref": "user-doc-20261029:faq-34"
     },
     {
@@ -265,7 +265,7 @@
     },
     "city": {
       "purpose": "廈門城市風景",
-      "approved_text": "這是廈門城市風景參考，並非已確認的每日遊覽順序。",
+      "approved_text": "給您看看廈門的城市風景，旅遊時也能感受閩南的氣氛。",
       "asset_keys": [
         "xiamen_city_stairs",
         "xiamen_city_view"
@@ -278,7 +278,7 @@
     },
     "travelers": {
       "purpose": "旅遊氛圍參考",
-      "approved_text": "這段影片可用於了解旅遊氛圍，不能作為特定團期、公司資質或已付款的證明。",
+      "approved_text": "給您看看旅遊活動的影片，先感受一下出遊氣氛。",
       "asset_keys": [
         "xiamen_travelers_video"
       ],
@@ -744,7 +744,7 @@
     {
       "id": "agency",
       "name": "旅行社與資質",
-      "answer_text": "我們是大陸旅行社，可以請規劃師提供公司的營業執照與資質供您核對。",
+      "answer_text": "我們是大陸旅行社，具體公司資料與資質可以請規劃師提供供您核對。方便提供您的LINE或微信ID，也可以傳QR Code，讓規劃師私訊給您嗎？",
       "status": "active",
       "source_ref": "user-doc-20261029:faq-25",
       "answer_origin": "operator_approved",
@@ -759,7 +759,7 @@
       "positive_examples": [
         "有沒有台灣對接的旅行社"
       ],
-      "usage_note": "尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。"
+      "usage_note": "尚無公司名稱及合作證明，不宣稱特定台灣旅行社合作。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
     },
     {
       "id": "female_guide",
@@ -804,7 +804,7 @@
     {
       "id": "trust",
       "name": "信任與價格疑慮",
-      "answer_text": "可以先核對行程包含項目和公司資質，再決定是否預訂。參考費用會依天數與安排不同，具體明細可以請規劃師確認。",
+      "answer_text": "您可以先核對公司資料與行程內容，再決定是否預訂。方便提供LINE或微信ID，讓規劃師私訊資料給您了解嗎？",
       "status": "active",
       "source_ref": "user-doc-20261029:faq-31",
       "answer_origin": "operator_approved",
@@ -819,7 +819,7 @@
       "positive_examples": [
         "27那麼便宜你們是騙子嗎？"
       ],
-      "usage_note": "未提供補貼依據，不以補貼或合影證明付款安全。"
+      "usage_note": "未提供補貼依據，不以補貼或合影證明付款安全。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
     },
     {
       "id": "undecided",
@@ -859,7 +859,7 @@
       "positive_examples": [
         "很感興趣，但是目前還沒計劃什麼時候去"
       ],
-      "usage_note": "本輪簡短收尾，不自行安排沉默追訪。"
+      "usage_note": "本輪簡短收尾；未拒聯、未約定更晚聯絡且有新素材時可按每天一次、最多7天配置追訪，不反覆催日期或留資。"
     },
     {
       "id": "holidays",
@@ -880,7 +880,127 @@
         "30.需要避開節假日嗎？"
       ],
       "usage_note": "未有日期價目及庫存，不承諾訂到機票即可安排。"
+    },
+    {
+      "id": "single_room",
+      "name": "單房差",
+      "answer_text": "單房差需要依日期及房型確認。方便提供您的LINE或微信ID嗎？也可以傳QR Code，讓規劃師私訊幫您核對。",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-19",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.single_room"
+      ],
+      "topics": [
+        "single_room"
+      ],
+      "positive_examples": [
+        "單房差補多少錢？"
+      ],
+      "usage_note": "原文沒有單房差金額；不以找朋友同行迴避，也不計算。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
+    },
+    {
+      "id": "payment",
+      "name": "付款／台灣帳戶",
+      "answer_text": "付款方式、台灣收款帳戶及訂金規則需要由規劃師提供正式資訊。方便留下您的LINE或微信ID，或傳QR Code，讓規劃師私訊說明嗎？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-22",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.payment"
+      ],
+      "topics": [
+        "payment"
+      ],
+      "positive_examples": [
+        "怎麼支付費用？有台灣賬號嗎？"
+      ],
+      "usage_note": "原文沒有付款答案；不虛構台灣帳號、不使用催申請款話術。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
+    },
+    {
+      "id": "expired_permit",
+      "name": "台胞證過期",
+      "answer_text": "台胞證過期需要依您的證件與出發安排確認，不能直接保證可以出行。方便留下LINE或微信ID，讓規劃師私訊協助核對嗎？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-26",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.expired_permit"
+      ],
+      "topics": [
+        "expired_permit"
+      ],
+      "positive_examples": [
+        "台胞證過期了"
+      ],
+      "usage_note": "不沿用直接落地簽即可的未核實結論。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
+    },
+    {
+      "id": "passport",
+      "name": "只有護照",
+      "answer_text": "只有護照是否足夠，需要依您的身份與有效證件核對。方便提供LINE或微信ID，讓規劃師私訊協助確認嗎？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-27",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.passport"
+      ],
+      "topics": [
+        "passport"
+      ],
+      "positive_examples": [
+        "只有護照可以嗎？"
+      ],
+      "usage_note": "不沿用身份證、護照、台胞證缺一不可的概括說法。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
+    },
+    {
+      "id": "dialysis",
+      "name": "洗腎安排",
+      "answer_text": "洗腎接收與時間需醫療機構確認，不能先保證安排。方便提供LINE或微信ID，讓規劃師私訊了解需求並協助核對嗎？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-29",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.dialysis"
+      ],
+      "topics": [
+        "dialysis"
+      ],
+      "positive_examples": [
+        "26洗腎可以安排嗎？"
+      ],
+      "usage_note": "不給醫療建議，不承諾提前到廈門即可安排醫院。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
+    },
+    {
+      "id": "foreign_traveler",
+      "name": "外籍旅客",
+      "answer_text": "外籍旅客需依國籍與現有證件確認入境要求。方便提供LINE或微信ID，讓規劃師私訊協助了解嗎？",
+      "status": "active",
+      "source_ref": "user-doc-20261029:faq-34",
+      "answer_origin": "operator_approved",
+      "content_group_key": "faq",
+      "asset_ids": [],
+      "fact_ids": [
+        "xiamen.foreign_traveler"
+      ],
+      "topics": [
+        "foreign_traveler"
+      ],
+      "positive_examples": [
+        "29外籍人員可以去嗎"
+      ],
+      "usage_note": "不沿用需有本國簽證的錯誤概括。 2026-10-30業務確認轉私訊為主：先如實說明確認需要，再邀請留資；已有邀請或客人拒絕時省略邀請句，照常承接。收到ID／QR再交接，明確要求真人除外。"
     }
   ],
-  "ai_guidance": "這是依用戶已提供FAQ及素材建立的廈門公司演練資料。先直接回答客人的實際問題，一次最多追加一個必要問題；不要把FAQ未知的付款、單房差等擴大成整個業務都未配置。一般8–12人是團規模，不是8人轉人工門檻。3–6天只是產品範圍，5天是推薦，沒有完整逐日行程時不可編造。團費NT$5,000–8,500是參考範圍，能直接用來回答一般詢價；不承諾某日某人數最終價，也不啟用人數或季節價格計算。問酒店、餐食、風景時可按主題發現有參考素材，先說明再選1個最相關素材；不要只說有圖但不附asset_keys。若客人明確想看影片可選相應video。團友影片僅在明確想看旅遊氛圍時使用，不能用來證明資質或消除詐騙疑慮。原始圖清晰度與水印不阻擋內部演練。付款、單房差確切金額、入境證件、醫療接收轉人工；不要每問一句都轉人工。"
+  "ai_guidance": "本系列以轉私訊為主：FAQ答疑與素材展示服務於取得LINE／微信ID或QR Code。詳細方案由私聊顧問承接，未核實答案先邀請留資，收到ID／QR再交接；尊重FB聯絡偏好。"
 }

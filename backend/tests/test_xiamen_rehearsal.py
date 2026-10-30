@@ -32,12 +32,19 @@ def test_prepare_real_company_materials_in_isolated_playground(tmp_path):
     assert config['routing']['enabled_route_variants'] == ['xiamen_3_6d']
     assert config['routing']['live_inbox_ids'] == []
     assert not config['handoff']['large_group_enabled']
-    assert not config['silence']['enabled']
+    assert config['silence']['enabled']
+    assert not config['silence']['live_enabled']
+    assert config['silence']['daily_at'] == '10:00'
+    assert config['silence']['max_proactive_messages_per_day'] == 1
+    assert not config['intake']['enabled']
+    assert not config['lead_capture']['require_party_size']
+    assert not config['lead_capture']['require_departure_window']
+    assert len(config['material_rules']) == 8
     assert '廈門' in config['reply']['opening_items'][0]['content']
     bundle = json.loads((output / 'compiled-skills.json').read_text(encoding='utf8'))
     assert bundle['currency'] == 'TWD'
     assert len(bundle['routes']) == 1
-    assert len(bundle['routes']['xiamen_3_6d']['scripts']) == 29
+    assert len(bundle['routes']['xiamen_3_6d']['scripts']) == 35
     assert not bundle['routes']['xiamen_3_6d'].get('party_pricing')
     assert not bundle['routes']['xiamen_3_6d'].get('seasonal_pricing')
     source = json.loads((PACK / 'faq.json').read_text(encoding='utf8'))
@@ -60,3 +67,40 @@ def test_empty_reply_cannot_silently_drop_an_intended_handoff():
     # Explicit wait and an introduction-only plan remain valid.
     assert Decision(action='wait').action == 'wait'
     assert Decision(action='reply', start_introduction=True).start_introduction
+
+
+def test_campaign_video_followup_resolves_real_media_and_deduplicates(tmp_path):
+    from test_business_isolation import run_isolated
+    from test_xiamen_install import BOOTSTRAP
+    run_isolated(tmp_path, BOOTSTRAP + '''
+result = installer.install(apply=True)
+from app.automation_models import AutomationSession
+from app.reception_v3 import service
+from app.reception_v3.skills import compile_skills
+from app.reception_v3.runtime import Decision
+with SessionLocal() as db:
+    bundle = compile_skills(db)
+    row = AutomationSession(owner_id=9, inbox_binding_id=result['inbox_id'],
+        environment='playground', mode='journey', engine_version='v3',
+        controls={'route_variant':'xiamen_3_6d'}, memory={}, messages=[])
+    db.add(row); db.flush()
+    decision = Decision(messages=[{'material_rule_id':'xiamen-followup-meal_video'}]).model_dump()
+    _, parts = service.parts_for(db, row, bundle, decision, followup=True)
+    assert [p['content_type'] for p in parts] == ['text','video']
+    assert parts[1]['asset_key'] == 'xiamen_meal_video'
+    assert parts[1]['media_id'] and parts[1]['media_hash']
+    row.messages = [{**p, 'direction':'outgoing','status':'delivered'} for p in parts]
+    db.commit(); db.expire_all()
+    _, repeated = service.parts_for(db, row, bundle, decision, followup=True)
+    assert [p['content_type'] for p in repeated] == ['text']
+    # A renamed catalog entry must not bypass hash deduplication.
+    row.messages = [{'direction':'outgoing','status':'read','media_hash':parts[1]['media_hash']}]
+    _, renamed = service.parts_for(db, row, bundle, decision, followup=True)
+    assert [p['content_type'] for p in renamed] == ['text']
+    raw = Decision(messages=[{'asset_keys':['xiamen_travelers_video']}]).model_dump()
+    try:
+        service.parts_for(db, row, bundle, raw, followup=True)
+        raise AssertionError('must require a configured rule for videos')
+    except ValueError as exc:
+        assert str(exc) == 'followup_requires_material_rule'
+''')

@@ -99,6 +99,11 @@ def install(apply=False):
         defaults = default_reception_configuration()
         candidate = deepcopy(config)
         for section, values in patch.items():
+            if not isinstance(values, dict):
+                if config[section] not in (defaults[section], values):
+                    raise ValueError(f'operator_config_conflict:{section}')
+                candidate[section] = deepcopy(values)
+                continue
             for key, value in values.items():
                 current = config[section].get(key)
                 if current != defaults[section].get(key) and current != value:
