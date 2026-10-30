@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {api, API_BASE} from '../api';
+import {createClientId} from '../client-id';
 import MaterialPicker from './MaterialPicker';
 import {MaterialRule} from './reception-config';
 
@@ -30,6 +31,6 @@ export default function MaterialRulesEditor({rules, routes, routeNames = {}, inb
       <details><summary>预览配置</summary><p>{rule.approved_text}</p><p>{rule.asset_keys.length ? `候选图片 ${rule.asset_keys.length} 张，每次最多一张，实际使用前仍检查线路、标签和去重。` : '仅文字'}</p></details>
       <button type="button" className="secondary-button" onClick={()=>onChange(rules.filter((_,i)=>i!==index))}>删除规则</button>
     </fieldset>)}
-    <button type="button" className="secondary-button" disabled={rules.length>=100} onClick={()=>onChange([...rules,{id:crypto.randomUUID(),name:'新素材规则',enabled:false,purpose:'reply',route_variants:routes.slice(0,1),any_labels:[],scenario:'',approved_text:'',asset_keys:[]}])}>新增素材规则</button>
+    <button type="button" className="secondary-button" disabled={rules.length>=100} onClick={()=>onChange([...rules,{id:createClientId(),name:'新素材规则',enabled:false,purpose:'reply',route_variants:routes.slice(0,1),any_labels:[],scenario:'',approved_text:'',asset_keys:[]}])}>新增素材规则</button>
   </section>;
 }

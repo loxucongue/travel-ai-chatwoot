@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, RefreshCw, Save, Trash2 } from 'lucide-react';
 import { api } from '../api';
+import { createClientId } from '../client-id';
 import { Modal, PageHeader, Toggle } from '../components';
 import './advisor-assignment.css';
 
@@ -30,7 +31,7 @@ export default function AdvisorAssignment() {
   if (!config || !query.data) return <div className="page-content">{error?.message || '正在读取顾问分配…'}</div>;
   const data = query.data;
   const patch = (value:Partial<Config>)=>{setDraft({...config,...value});setNotice('');};
-  const add = ()=>setEditing({id:crypto.randomUUID(),name:'',enabled:true,event:'handoff.created',priority:0,inbox_ids:[],routes:[],minimum_people:null,minimum_days:null,action:'handoff',strategy:'fixed',agent_ids:[]});
+  const add = ()=>setEditing({id:createClientId(),name:'',enabled:true,event:'handoff.created',priority:0,inbox_ids:[],routes:[],minimum_people:null,minimum_days:null,action:'handoff',strategy:'fixed',agent_ids:[]});
   const updateRule = ()=>{if(!editing)return;patch({rules:config.rules.some(r=>r.id===editing.id)?config.rules.map(r=>r.id===editing.id?editing:r):[...config.rules,editing]});setEditing(null);};
   return <div className="page-content assignment-page">
     <PageHeader title="顾问分配" description="" actions={<><label className="assignment-toggle"><Toggle checked={config.enabled} onChange={enabled=>patch({enabled})} label="启用自动分配"/>自动分配</label><button className="primary-button" disabled={!draft||save.isPending} onClick={()=>save.mutate()}><Save size={16}/>保存{draft?'更改':''}</button></>}/>

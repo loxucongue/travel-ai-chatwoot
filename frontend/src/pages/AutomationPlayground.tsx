@@ -21,6 +21,7 @@ import {
 import { useSearchParams } from 'react-router-dom';
 import { api, API_BASE, ApiError, DEMO_MODE } from '../api';
 import { Badge, EmptyState } from '../components';
+import { createClientId } from '../client-id';
 import { sopReason } from './sop-reasons';
 
 import { DeliveryDetails, DeliveryStatus, RuntimeDetails } from '../DeliveryDetails';
@@ -401,7 +402,7 @@ function ReceptionPlayground() {
     if (!sessionId || !content.trim() || session.data?.simulation.status !== 'running') return;
     mutateSession.mutate({
       path: `/playground/sessions/${sessionId}/messages`,
-      body: { content: content.trim(), content_type: 'text', client_key: crypto.randomUUID() },
+      body: { content: content.trim(), content_type: 'text', client_key: createClientId() },
     });
     setDraft('');
   };

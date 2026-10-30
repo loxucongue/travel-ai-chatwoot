@@ -5,6 +5,7 @@ import {
   Plus, Save, SlidersHorizontal, Trash2, Users, X,
 } from 'lucide-react';
 import { api, ApiError } from '../api';
+import { createClientId } from '../client-id';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { Badge, EmptyState } from '../components';
@@ -181,7 +182,7 @@ export default function AiReceptionStrategy() {
           </section>
         </div>}
         {tab === 'materials' && <><label>沉默图片来源<select value={draft.silence.material_selection ?? 'route_catalog'} onChange={e=>patch(config=>{config.silence.material_selection=e.target.value as 'route_catalog' | 'configured_rules';})}><option value="route_catalog">线路素材库及场景规则</option><option value="configured_rules">仅配置的跟进规则</option></select></label><p>仅使用跟进规则时，停用或删除规则后不再发送其图片；没有匹配规则时按客户上下文文字跟进。</p><MaterialRulesEditor rules={draft.material_rules ?? []} routes={draft.routing.enabled_route_variants} routeNames={Object.fromEntries((products.data?.items ?? []).map(p=>[p.route_variant,p.name]))} inboxes={inboxes.data ?? []} onChange={rules=>patch(config=>{config.material_rules=rules;})}/></>}
-        {tab === 'scripts' && <div className="strategy-section-stack"><div className="strategy-card-title"><h3>通用话术</h3><button className="secondary-button compact" disabled={draft.common_scripts.length >= 100} onClick={() => patch(config => {config.common_scripts.push({id: crypto.randomUUID(), name:'', scenario:'', text:'', enabled:true});})}><Plus size={14} />新增话术</button></div>
+        {tab === 'scripts' && <div className="strategy-section-stack"><div className="strategy-card-title"><h3>通用话术</h3><button className="secondary-button compact" disabled={draft.common_scripts.length >= 100} onClick={() => patch(config => {config.common_scripts.push({id: createClientId(), name:'', scenario:'', text:'', enabled:true});})}><Plus size={14} />新增话术</button></div>
           {draft.common_scripts.length === 0 && <EmptyState title="暂无通用话术" description="" />}
           {draft.common_scripts.map((item,index) => <article className="strategy-card" key={item.id}>
             <div className="strategy-card-title"><strong>话术 {index+1}</strong><Switch checked={item.enabled} onChange={enabled => patch(config => {config.common_scripts[index].enabled=enabled;})} /><button className="icon-button" aria-label={`删除话术 ${index+1}`} onClick={() => patch(config => {config.common_scripts.splice(index,1);})}><Trash2 size={16} /></button></div>

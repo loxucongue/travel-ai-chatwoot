@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, LoaderCircle, Plus, Trash2, Upload } from 'lucide-react';
 import { API_BASE } from '../api';
+import { createClientId } from '../client-id';
 import type { OpeningItem, ReceptionConfig } from './reception-config';
 import './opening-items-editor.css';
 
@@ -50,7 +51,7 @@ export default function OpeningItemsEditor({ config, patch, uploading, errors, d
   }
   return <section className="opening-message-editor opening-items-editor">
     <div className="strategy-card-title"><h3>品牌问候与开场资料</h3><button type="button" className="secondary-button compact" disabled={disabled || items.length >= 10} onClick={() => {
-      const key = `opening-${crypto.randomUUID()}`;
+      const key = `opening-${createClientId()}`;
       patch(value => { if (value.reply.opening_items.length < 10) value.reply.opening_items.push({ key, content_type: 'text', content: '' }); });
     }}><Plus size={14} />新增消息</button></div>
     {items.map((item, index) => {

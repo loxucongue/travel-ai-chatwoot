@@ -6,6 +6,7 @@ import {
   MapPinned, Plus, RefreshCw, Save, Search, ShieldCheck, Tags, Trash2, Upload, X,
 } from 'lucide-react';
 import { api, API_BASE, ApiError } from '../api';
+import { createClientId } from '../client-id';
 import { Badge, EmptyState } from '../components';
 import {
   clone, ConfigResponse, ContentDraft as BaseContentDraft, ContentGroup, groupLabels, normalizeConfig,
@@ -259,7 +260,7 @@ function ContentTab({ product, content, patch }: { product: RouteProduct; conten
   function addGroup(event: React.FormEvent) {
     event.preventDefault();
     if (!purpose.trim() || !text.trim() || content.content_groups.length >= 100) return;
-    const key = `operator_${crypto.randomUUID().replaceAll('-', '')}`;
+    const key = `operator_${createClientId().replaceAll('-', '')}`;
     patch(value => {
       value.content_groups.push({ key, purpose: purpose.trim(), approved_text: text.trim(),
         asset_keys: [], evidence_refs: [], sequence: null, initial_delivery: false, delivery_mode: 'text_only' });
