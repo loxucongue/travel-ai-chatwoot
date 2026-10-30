@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>China2Go 运营看板 · 2026-10-30</title><style>body{font:16px/1.75 system-ui,sans-serif;color:#223647;background:#f4f7fa;margin:0}main{max-width:1060px;margin:40px auto;padding:36px;background:white;border-radius:18px}h1{line-height:1.3}h2{margin-top:32px;color:#164f7e}table{width:100%;border-collapse:collapse;font-size:14px}td,th{border-bottom:1px solid #dde5ec;text-align:left;vertical-align:top;padding:12px}th{background:#f0f5f8}.notice{padding:16px;background:#fff5de;border-left:4px solid #d2983e}a{color:#176389}code{background:#edf2f6;padding:2px 5px}</style><main>
 <h1>China2Go 首页 BI 运营看板</h1><p>2026-10-30 · 覆盖客户进入、AI 接待、开口、留资、转人工和沉默跟进。</p>
-<p id="release-status"><strong>首版于 2026-10-30 22:16（UTC+8）上线，版本 1e0fc9a。统计刷新公平性补丁正在完成最终发布核验。</strong></p>
+<p id="release-status"><strong>已上线并核验：2026-10-30 22:23（UTC+8），最终代码 eb8041d；首版 22:16 发布后补强了统计刷新公平性。</strong></p>
 <p>入口：<a href="https://ai.luoxuecong.asia/#/overview">线上首页 → AI 运营看板</a>。本次仅发布 China2Go 主分支到 <code>47.84.62.157</code>，不涉及 rujing2。</p>
 <h2>交付内容</h2><table><tr><th>板块</th><th>可以看到什么</th><th>口径</th></tr>
 <tr><td>时间与渠道</td><td>今天、昨天、近 7／30 天、自定义日期、渠道筛选</td><td>UTC+8，最多 366 天；只返回当前账号可见渠道。</td></tr>
@@ -19,10 +19,11 @@
 <tr><td>前端</td><td>10 项测试及生产构建通过；日期跨 UTC+8 午夜、年界和无效日期均有覆盖。</td></tr>
 <tr><td>浏览器</td><td>日期／渠道／新客视角切换、刷新保持筛选、分页、客户会话链接、空数据、错误显示及恢复、手机布局、键盘关闭及焦点恢复已实测。最终标签明细补测结果见本地验收证据。</td></tr>
 <tr><td>生产库隔离副本</td><td>511 条会话、510 个关联后的客户，约 2.1 万条业务事件。没有向客户发送消息，没有调用模型。实际数据核对了广告点击排除、报价归属与跟进轮次。</td></tr>
-<tr><td>Linux 隔离预检</td><td>最终 68 项通过，标签快照明细浏览器补测通过。后台增量刷新约 3.8 秒、聚合接口约 0.7 秒；测试期间阻断外网。</td></tr>
+<tr><td>Linux 隔离预检</td><td>最终 70 项通过，标签快照明细浏览器补测通过。预检重算约 17.8 秒、不变数据检查约 12.6 秒、聚合接口约 0.76 秒；线上接口复核约 0.85 秒。测试期间阻断外网。</td></tr>
 <tr><td>并行开发保护</td><td>只打包明确列出的 BI 文件与前端构建；发布前校验全部线上接待代码、迁移、前端和版本文件，配合发布锁及维护锁。业务配置、接待状态、消息、交接任务必须保持不变。</td></tr></table>
 <h2>实现与运行</h2><p>沿用当前 FastAPI、SQLite、React 和图表组件。新增 3 张统计表与可回退迁移 <code>a037_bi_reporting</code>，后台维护线程每分钟增量刷新。页面只读，不通过看板修改接待权限或触发消息。迁移与首次历史整理在停写期间执行，备份保留；回退只撤销本次统计表及代码。</p>
 <p>首版上线观察发现，活跃会话的计时修订号持续变化，会导致前面 50 条占用刷新名额。补丁只比较统计实际依赖的数据，并优先刷新较久未更新的会话。隔离测试覆盖“只有时钟变化不重算”和“前面会话持续变化也不阻塞后面的会话”。</p>
 <p>首版上线核验：3 项服务正常，4 个现行 Worker 心跳正常，公网健康检查及页面资源通过，真实统计接口返回 200，当前私讯明细人数与汇总一致。安装期间客户状态与业务配置保持一致，检查期间未见新增错误。2 份本次临时数据库副本已删除，发布备份保留。</p>
+<p>最终补丁核验：统计待刷新数已清空，消息入口无积压；512 条会话纳入统计。22:23 复核时，今日新增 19 位、AI 接待 36 位、开口 12 位、取得联系方式 1 位、跟进后回复 3 位；当前确认加私讯 20 位，均缺少历史添加时间。以上为当时快照，不是固定示例数。第三份临时数据库副本也已清除，当前服务器可用约 3.66 GiB，发布回滚备份保留。</p>
 <p>测试证据位于本机 <code>output/bi-20261030/</code>，界面截图位于 <code>output/playwright/bi-*.png</code>。没有付费模型调用，没有向真实客户或顾问发送测试消息。</p>
 </main></html>
