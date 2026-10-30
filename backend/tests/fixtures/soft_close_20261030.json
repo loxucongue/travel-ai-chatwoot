@@ -1,0 +1,415 @@
+[
+  {
+    "id": "consider_once_then_pause",
+    "title": "考虑时轻邀一次并说明资料用途，再考虑和次日不追索，主动回来正常回答",
+    "entry": "西藏精華8天",
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-10-28T06:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "q1",
+          "direction": "incoming",
+          "content": "這個行程每天大概怎麼走？",
+          "created_at": "2026-10-28T05:55:00+00:00"
+        },
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "content": "精華8天從拉薩出發，包含羊卓雍措、日喀則和珠峰，最後回到拉薩。",
+          "status": "sent",
+          "created_at": "2026-10-28T05:56:00+00:00"
+        },
+        {
+          "id": "q2",
+          "direction": "incoming",
+          "content": "好的，我們再考慮看看，謝謝",
+          "created_at": "2026-10-28T06:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "invite_now",
+        "checks": [
+          "send",
+          "contact_invitation",
+          "not_handoff",
+          "no_price",
+          "text_only"
+        ],
+        "contains_any": [
+          [
+            "LINE",
+            "微信"
+          ],
+          [
+            "行程",
+            "資料",
+            "明細"
+          ]
+        ],
+        "excludes": [
+          "名額不多",
+          "名額有限",
+          "房間不多",
+          "保留房間",
+          "加了才能",
+          "已經傳給您"
+        ]
+      },
+      {
+        "id": "consider_again",
+        "text": "嗯，我再看看，謝謝",
+        "checks": [
+          "no_contact_invitation",
+          "no_contact",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "no_silence_reask",
+        "next_check": true,
+        "checks": [
+          "no_contact_invitation",
+          "no_contact",
+          "not_handoff"
+        ]
+      },
+      {
+        "id": "ask_again",
+        "text": "先在這裡問好了，不加好友。機票有包含嗎？",
+        "checks": [
+          "send",
+          "no_contact_invitation",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "機票"
+          ]
+        ],
+        "profile_equals": {
+          "contact_capture_declined": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "browse_first",
+    "title": "我先看看，謝謝",
+    "entry": "西藏精華8天",
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-10-28T06:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "q1",
+          "direction": "incoming",
+          "content": "這個行程每天大概怎麼走？",
+          "created_at": "2026-10-28T05:55:00+00:00"
+        },
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "content": "精華8天從拉薩出發，包含羊卓雍措、日喀則和珠峰，最後回到拉薩。",
+          "status": "sent",
+          "created_at": "2026-10-28T05:56:00+00:00"
+        },
+        {
+          "id": "q2",
+          "direction": "incoming",
+          "content": "我先看看，謝謝",
+          "created_at": "2026-10-28T06:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "invite_now",
+        "checks": [
+          "send",
+          "contact_invitation",
+          "not_handoff",
+          "no_price",
+          "text_only"
+        ],
+        "contains_any": [
+          [
+            "LINE",
+            "微信"
+          ],
+          [
+            "行程",
+            "資料",
+            "明細"
+          ]
+        ],
+        "excludes": [
+          "名額不多",
+          "名額有限",
+          "房間不多",
+          "保留房間",
+          "加了才能",
+          "已經傳給您"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "family_first",
+    "title": "我再跟家人商量一下",
+    "entry": "西藏精華8天",
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-10-28T06:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "q1",
+          "direction": "incoming",
+          "content": "這個行程每天大概怎麼走？",
+          "created_at": "2026-10-28T05:55:00+00:00"
+        },
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "content": "精華8天從拉薩出發，包含羊卓雍措、日喀則和珠峰，最後回到拉薩。",
+          "status": "sent",
+          "created_at": "2026-10-28T05:56:00+00:00"
+        },
+        {
+          "id": "q2",
+          "direction": "incoming",
+          "content": "我再跟家人商量一下",
+          "created_at": "2026-10-28T06:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "invite_now",
+        "checks": [
+          "send",
+          "contact_invitation",
+          "not_handoff",
+          "no_price",
+          "text_only"
+        ],
+        "contains_any": [
+          [
+            "LINE",
+            "微信"
+          ],
+          [
+            "行程",
+            "資料",
+            "明細"
+          ]
+        ],
+        "excludes": [
+          "名額不多",
+          "名額有限",
+          "房間不多",
+          "保留房間",
+          "加了才能",
+          "已經傳給您"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "advisor_already_invited",
+    "title": "好的，我再考慮看看",
+    "entry": "西藏精華8天",
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-10-28T06:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "q1",
+          "direction": "incoming",
+          "content": "這個行程每天大概怎麼走？",
+          "created_at": "2026-10-28T05:55:00+00:00"
+        },
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "content": "精華8天從拉薩出發，包含羊卓雍措、日喀則和珠峰，最後回到拉薩。",
+          "status": "sent",
+          "created_at": "2026-10-28T05:56:00+00:00"
+        },
+        {
+          "id": "advisor_invite",
+          "direction": "outgoing",
+          "attribution": "human",
+          "content": "可以留一下LINE嗎？詳細行程資料可以傳給您。",
+          "status": "sent",
+          "created_at": "2026-10-28T05:59:00+00:00"
+        },
+        {
+          "id": "q2",
+          "direction": "incoming",
+          "content": "好的，我再考慮看看",
+          "created_at": "2026-10-28T06:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "respect_history",
+        "checks": [
+          "send",
+          "no_contact",
+          "no_contact_invitation",
+          "not_handoff"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "decline_then_consider",
+    "title": "先不加好友，我再考慮看看",
+    "entry": "西藏精華8天",
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-10-28T06:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "q1",
+          "direction": "incoming",
+          "content": "這個行程每天大概怎麼走？",
+          "created_at": "2026-10-28T05:55:00+00:00"
+        },
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "content": "精華8天從拉薩出發，包含羊卓雍措、日喀則和珠峰，最後回到拉薩。",
+          "status": "sent",
+          "created_at": "2026-10-28T05:56:00+00:00"
+        },
+        {
+          "id": "q2",
+          "direction": "incoming",
+          "content": "先不加好友，我再考慮看看",
+          "created_at": "2026-10-28T06:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "respect_history",
+        "checks": [
+          "send",
+          "no_contact",
+          "no_contact_invitation",
+          "not_handoff"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "added_then_consider",
+    "title": "已經加顧問LINE了，我們再考慮一下",
+    "entry": "西藏精華8天",
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-10-28T06:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "q1",
+          "direction": "incoming",
+          "content": "這個行程每天大概怎麼走？",
+          "created_at": "2026-10-28T05:55:00+00:00"
+        },
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "content": "精華8天從拉薩出發，包含羊卓雍措、日喀則和珠峰，最後回到拉薩。",
+          "status": "sent",
+          "created_at": "2026-10-28T05:56:00+00:00"
+        },
+        {
+          "id": "q2",
+          "direction": "incoming",
+          "content": "已經加顧問LINE了，我們再考慮一下",
+          "created_at": "2026-10-28T06:00:00+00:00"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "respect_added",
+        "checks": [
+          "handoff",
+          "no_send"
+        ]
+      }
+    ]
+  }
+]

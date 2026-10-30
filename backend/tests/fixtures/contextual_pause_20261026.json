@@ -51,12 +51,9 @@
           "no_reask_month"
         ],
         "excludes": [
-          "？",
-          "?",
           "自選日期",
           "自己一團",
-          "每週",
-          "LINE"
+          "每週"
         ]
       },
       {
@@ -166,15 +163,13 @@
         "id": "close",
         "checks": [
           "not_handoff",
-          "no_price"
+          "no_price",
+          "contact_invitation"
         ],
         "excludes": [
-          "？",
-          "?",
           "5月",
           "8天",
-          "不上珠峰",
-          "LINE"
+          "不上珠峰"
         ]
       },
       {
