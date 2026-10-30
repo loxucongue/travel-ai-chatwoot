@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select, update, func, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 from app.auth import current_user, require_csrf, require_super_admin_csrf
 from app.asset_narratives import normalized_asset_narrative
 from app.db import get_db
@@ -1190,16 +1191,24 @@ class MessageInput(BaseModel):
 
 @router.post("/playground/sessions/{session_id}/messages",status_code=202)
 def message(session_id:int,payload:MessageInput,user:User=Depends(manager_write),db:Session=Depends(get_db)):
-    row=own_session(db,user,session_id)
-    if row.engine_version != 'v3' or row.environment != 'playground':
-        fail('historical_session_read_only', 409)
-    if row.environment == "shadow":fail("shadow_session_read_only",403)
-    if row.mode == "journey" and simulation_state(row).get("status") != "running":
-        fail("journey_not_running")
     if not payload.content.strip() and payload.content_type=="text":fail("text_required",422)
-    service.add_message(db,row,payload.content,payload.client_key,payload.content_type)
-    db.commit()
-    return session_json(db,row)
+    for attempt in range(3):
+        try:
+            row=own_session(db,user,session_id)
+            if row.engine_version != 'v3' or row.environment != 'playground':
+                fail('historical_session_read_only', 409)
+            if row.mode == "journey" and simulation_state(row).get("status") != "running":
+                fail("journey_not_running")
+            # Worker ticks use the same revision counter. Reload after a conflict
+            # and append with the original client key so retries stay idempotent.
+            service.add_message(db,row,payload.content,payload.client_key,payload.content_type)
+            db.commit()
+            return session_json(db,row)
+        except StaleDataError:
+            db.rollback()
+            if attempt == 2:
+                raise HTTPException(409, detail={'code': 'session_update_conflict',
+                    'message': '会话状态正在更新，请重试发送。'})
 
 
 @router.get("/media/{media_id}/preview")

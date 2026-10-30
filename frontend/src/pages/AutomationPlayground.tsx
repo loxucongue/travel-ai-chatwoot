@@ -403,8 +403,9 @@ function ReceptionPlayground() {
     mutateSession.mutate({
       path: `/playground/sessions/${sessionId}/messages`,
       body: { content: content.trim(), content_type: 'text', client_key: createClientId() },
+    }, {
+      onSuccess: () => setDraft(current => current.trim() === content.trim() ? '' : current),
     });
-    setDraft('');
   };
 
   const advanceNextTouch = () => {
