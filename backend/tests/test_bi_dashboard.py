@@ -314,3 +314,33 @@ def test_added_label_observation_with_legacy_side_effects_disabled(session_facto
         assert len(observations)==1 and observations[0].occurred_at=='2026-10-30T01:01:00+00:00'
         assert db.get(ConversationState,1).labels==['ai','加私訊']
         assert not db.scalar(select(LabelEvent.id))
+
+
+def test_scheduler_clock_alone_does_not_refresh_projection(session_factory):
+    with session_factory() as db:
+        setup(db)
+        s=AutomationSession(id=1,owner_id=1,conversation_state_id=1,environment='live',revision=1,
+            controls={'simulation':{'last_wall_at':'2026-10-30T01:00:00+00:00'},'v3':{'next_check_at':'2026-10-31T01:00:00+00:00'}})
+        db.add(s);refresh(db,100)
+        s.revision+=1
+        s.controls={**s.controls,'simulation':{'last_wall_at':'2026-10-30T01:01:00+00:00'}}
+        db.commit()
+        assert refresh(db)['changed']==0
+        s.controls={**s.controls,'v3':{'next_check_at':'2026-11-01T01:00:00+00:00'}}
+        db.commit()
+        assert refresh(db)['changed']==1
+
+
+def test_busy_early_conversation_cannot_starve_later_projection(session_factory):
+    with session_factory() as db:
+        setup(db)
+        refresh(db,100)
+        for i in range(1,5):
+            db.get(BiConversation,i).refreshed_at=f'2026-10-30T00:00:0{i}+00:00'
+            db.get(ConversationState,i).version+=1
+        db.commit()
+        assert refresh(db,limit=1)['changed']==1
+        db.get(ConversationState,1).version+=1
+        db.commit()
+        assert refresh(db,limit=1)['changed']==1
+        assert db.get(BiConversation,2).refreshed_at>'2026-10-30T00:00:02+00:00'

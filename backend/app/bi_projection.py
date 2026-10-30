@@ -83,9 +83,20 @@ def project(db, conversation, session, messages, labels, additions, tasks, outbo
     if not row:
         row = BiConversation(conversation_state_id=cid)
         db.add(row)
+    controls = session.controls if session else {}
+    state = controls.get('v3', {})
+    snapshot = {'route': state.get('route_variant') or controls.get('route_variant', ''), 'next_followup_at': stamp(state.get('next_check_at')),
+                'followup_stop_reason': state.get('followup_skip_reason') or state.get('last_reason', ''),
+                'human_followup': bool(controls.get('human_followup', {}).get('enabled')),
+                'contact_status': (session.memory or {}).get('contact_status') if session else None}
+    # The scheduler increments revision while advancing its clock, even with no
+    # business changes. Hash only fields the projection actually consumes.
+    part_keys = ('id','direction','private','contact_invitation','v3_kind','proactive','plan_id',
+                 'run_id','human_followup','chatwoot_message_id','client_key')
+    parts = [[p.get(k) for k in part_keys] for p in (session.messages or [])] if session else []
     signature = hashlib.sha256(json.dumps([
-        3, conversation.updated_at, conversation.version, row.source_created_at,
-        session.revision if session else None,
+        4, conversation.updated_at, conversation.version, row.source_created_at,
+        snapshot, parts,
         [(m.id, m.status, m.attribution) for m in messages], [(l.id, l.action) for l in labels],
         [(a.label, a.source_message_id, a.status) for a in additions],
         [(t.id, t.version, t.status) for t in tasks], [(o.id, o.status) for o in outbounds],
@@ -210,12 +221,7 @@ def project(db, conversation, session, messages, labels, additions, tasks, outbo
                     proof.append(match)
             if len(proof) >= 3:
                 emit(f'deep:{run.id}', 'deep', max(m.created_at for m in proof), 'consultation_evidence', message_ids=[m.chatwoot_message_id for m in proof])
-    controls = session.controls if session else {}
-    state = controls.get('v3', {})
-    row.snapshot = {'route': state.get('route_variant') or controls.get('route_variant', ''), 'next_followup_at': stamp(state.get('next_check_at')),
-                    'followup_stop_reason': state.get('followup_skip_reason') or state.get('last_reason', ''),
-                    'human_followup': bool(controls.get('human_followup', {}).get('enabled')),
-                    'contact_status': (session.memory or {}).get('contact_status') if session else None}
+    row.snapshot = snapshot
     row.signature, row.refreshed_at = signature, utcnow()
     return True
 
@@ -267,7 +273,10 @@ def refresh(db, limit=50):
     mappings = setting_value(db, 'label_mappings', {'lead_labels':['已留资'], 'conversion_labels':['已成交']})
     changed = 0
     remaining = 0
-    for c in db.scalars(select(ConversationState).order_by(ConversationState.id)):
+    # Older projections go first so busy early conversations cannot starve
+    # later ones when a batch reaches its write limit.
+    for c in db.scalars(select(ConversationState).outerjoin(BiConversation, BiConversation.conversation_state_id == ConversationState.id)
+                       .order_by(BiConversation.refreshed_at.asc().nulls_first(), ConversationState.id)):
         if changed >= limit:
             remaining += 1
             continue
