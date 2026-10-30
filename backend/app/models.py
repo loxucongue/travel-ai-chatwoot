@@ -687,3 +687,4 @@ class ModelCallLog(Base):
 from app import automation_models as _automation_models  # noqa: E402,F401
 from app import live_reply_models as _live_reply_models  # noqa: E402,F401
 from app import lead_capture_models as _lead_capture_models  # noqa: E402,F401
+from app import bi_models as _bi_models  # noqa: E402,F401

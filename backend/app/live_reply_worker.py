@@ -35,6 +35,13 @@ def maintenance_tick(receipts_checked, deadlines):
     if now >= deadlines.get("receipts", 0):
         tasks.append(("receipts", lambda: reconcile_live_delivery(receipts_checked)))
         deadlines["receipts"] = now + 30
+    if now >= deadlines.get('bi', 0):
+        def reporting():
+            from app.bi_projection import refresh
+            with SessionLocal() as db:
+                refresh(db)
+        tasks.append(('bi', reporting))
+        deadlines['bi'] = now + 60
     for name, task in tasks:
         try:
             task()

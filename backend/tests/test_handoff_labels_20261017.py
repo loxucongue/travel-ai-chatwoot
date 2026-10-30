@@ -160,7 +160,7 @@ def test_notification_is_two_chinese_lines_with_mention_and_no_debug_footer(sess
         assert sent.call_count == 1
         payload = json.loads(sent.calls[0].request.content)
         assert payload['private'] is True and payload['sender_type'] == 'AgentBot'
-        assert payload['content'] == '[@顾问](mention://user/7/advisor)\n场景：定制需求\n原因：4位客人希望全程含午晚餐，需要确认安排和费用。'
+        assert payload['content'] == '[@顾问 7](mention://user/7/%E9%A1%BE%E9%97%AE%207)\n场景：定制需求\n原因：4位客人希望全程含午晚餐，需要确认安排和费用。'
         assert 'ai-notification:' not in payload['content']
 
 

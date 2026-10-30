@@ -12,6 +12,7 @@ from app.api import router
 from app.ops_api import router as ops_router
 from app.automation_api import router as automation_router
 from app.advisor_api import router as advisor_router
+from app.bi_api import router as bi_router
 from app.config import settings
 
 logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -53,3 +54,4 @@ app.include_router(router)
 app.include_router(ops_router)
 app.include_router(automation_router)
 app.include_router(advisor_router)
+app.include_router(bi_router)

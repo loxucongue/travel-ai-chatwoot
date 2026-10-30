@@ -136,6 +136,9 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
     elif contact and not row.contact_id:
         row.contact_id = contact.id
 
+    from app.bi_projection import note_birth
+    note_birth(db, row, ctx['conversation'].get('created_at'))
+
     conversation = ctx["conversation"] if update_controls else {}
     revision = control_revision(conversation)
     # Creation and embedded message snapshots cannot undo an existing control
@@ -150,6 +153,9 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
     labels = conversation.get("labels")
     if isinstance(labels, list):
         row.labels = [str(x) for x in labels]
+        if not conversation_created and ctx['event'] == 'conversation_updated':
+            from app.bi_projection import note_added_labels
+            note_added_labels(db, row, previous_labels, row.labels, event)
         if ctx["event"] in ("conversation_created", "conversation_updated", "conversation_status_changed", "message_created"):
             observe_ai_label(row, row.labels, "chatwoot")
     if "can_reply" in conversation:
