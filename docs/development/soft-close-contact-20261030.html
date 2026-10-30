@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>考虑收尾时自然邀请私讯</title>
 <style>body{font:16px/1.7 system-ui;max-width:1000px;margin:40px auto;padding:0 20px;color:#273449}table{border-collapse:collapse;width:100%}td,th{border:1px solid #d5dce7;padding:10px;text-align:left}th{background:#edf3f8}blockquote{border-left:4px solid #5f83ae;padding:10px 16px;background:#f4f7fb}</style>
 <h1>客户说“再考虑、先看看”时的首次私讯邀请</h1>
-<p>状态：最终候选的免费回归、服务器隔离预检及真实模型业务验收通过，待提交部署。候选位于China2Go主分支的独立工作目录，不修改rujing2或其他窗口工作区。发布前线上仍为c3ea3c8。</p>
+<p>状态：2026年10月30日20:37（UTC+8）已部署，代码提交be9457257729231fb9bf5bebae16be53d9ad5013，主分支main；服务器47.84.62.157。最终免费回归、服务器隔离预检及真实模型业务验收通过。使用China2Go主分支的独立工作目录，未修改rujing2或其他窗口工作区，未向真实客户或顾问发送测试消息。</p>
 <h2>业务目标与发现</h2>
 <p>客户愿意开口、表达考虑时，先尊重考虑意愿，再轻轻邀请一次私讯，解释能提供的具体帮助。此前10月28日规则已支持首次邀请，但旧“先看看只短答”的规则、旧示例以及发送前最后的“收尾只短答”指令互相冲突；因此本次统一优先级，没有新增计时器、页面或模型调用节点。</p>
 <blockquote>最终模型实测回复：好呀，您慢慢看～我可以把這條8日行程的詳細資料傳給您，方便您慢慢比較。方便留一下您的 LINE 嗎？</blockquote>
@@ -20,5 +20,8 @@
 <p>首轮有两条邀请只说继续答疑/协助安排，没有说清具体资料用途，未计为通过。补强用途表达及示例后，第二轮6组9步通过；最终15次模型请求，两个版本合计29次请求，所有失败和原始输出保留。逐条复核了邀请标记、单条文字、至多一个问句、不强迫留资、拒绝后的答疑和已加好友静默交接。</p>
 <p>效果边界：这次验收针对邀请时机、具体用途、重复索取和原渠道答疑，不代表每种自由措辞都完全稳定。一个“我们再考虑”的样本建议“和家人一起比较”，客户未明确同行关系；该措辞仍有优化余地，系统没有据此写入家属/同行信息。上线后的自然对话效果仍需观察，不承诺转化率。</p>
 <p>用户确认追加1元后，原账本output/remaining-development-20261025/cost.json累计上限由79元改为80元，授权ID soft-close-20261030-extra-1。本轮实际费用0.81823088元，账本累计计费/保守预留78.81791552元，余额1.18208448元；没有退还历史未知请求预留，也没有缩减生产上下文绕过预算。本轮没有向真实客户或顾问发送测试消息。</p>
-<p>本地证据：output/soft-close-20261030/tests.xml、prepare.json、snapshot.json、stage.json、acceptance.json；初次模型记录real-20261030T123312Z，最终记录real-20261030T123424Z。最终服务器隔离目录soft-close-20261030T123546Z，77项测试通过。发布会比较远端main、线上版本和完整应用哈希，并使用部署锁，只安装runtime.py与通用业务SKILL.md。</p>
+<p>本地证据：output/soft-close-20261030/tests.xml、prepare.json、snapshot.json、stage.json、acceptance.json、deploy.json、verified.json；初次模型记录real-20261030T123312Z，最终记录real-20261030T123424Z。最终服务器隔离目录soft-close-20261030T123546Z，77项测试通过。发布比较远端main、线上版本和完整应用哈希，并使用部署锁，只安装runtime.py与通用业务SKILL.md。</p>
+<h2>上线核验</h2>
+<p>20:38核验：线上引擎reception-v3-e560dc621369b6c6；两个发布文件哈希与测试版本一致，其他应用代码不变。三个服务active、四个Worker心跳正常、数据库quick_check为ok、公网readiness为200；没有待处理回调积压、待确认发送身份、新增失败运行或AI消息误记人工回复。</p>
+<p>业务设置与渠道开关和备份逐项比较一致，通知名单仍为王ˊ俐珽（264715）、刘小满（279779）、LINGER（275467），另按原规则通知接单顾问。安装期间客户控制状态保持一致，未重发旧消息或重置邀请历史。改动随后续正常接待生效；本次没有上线后自然触发样本，短时健康核验不代表长期效果观察已经完成。</p>
 </html>
