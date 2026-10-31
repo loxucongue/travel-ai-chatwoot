@@ -1,0 +1,22 @@
+[
+ {"id":"original_535","text":"桃花9日","intent":"select","route":"peach_9d_2027"},
+ {"id":"short_days","text":"九日","intent":"select","route":"peach_9d_2027"},
+ {"id":"ordinal","text":"第二條","intent":"select","route":"peach_9d_2027"},
+ {"id":"referent","text":"不上珠峰那個","intent":"select","route":"peach_9d_2027"},
+ {"id":"price_only","text":"桃花9日多少錢？","intent":"inquire","route":""},
+ {"id":"selected_and_price","text":"就桃花9日，我們兩位，多少錢？","intent":"select","route":"peach_9d_2027","has_question":true},
+ {"id":"decline","text":"不要桃花9日","intent":"decline","route":""},
+ {"id":"compare","text":"9日跟11日差在哪？","intent":"compare","route":""},
+ {"id":"ack","text":"了解，謝謝","intent":"acknowledge","route":""},
+ {"id":"ambiguous_yes","text":"好啊","intent":"ambiguous","route":""},
+ {"id":"single_offer_yes","offer":"您要先看看不上珠峰的桃花9日嗎？","text":"可以","intent":"select","route":"peach_9d_2027"},
+ {"id":"different_order","offer":"有不上珠峰的桃花9日，以及桃花＋珠峰11日，您先看哪條？","text":"第二條","intent":"select","route":"peach_11d_2027"},
+ {"id":"no_context_ordinal","offer":"請問您預計幾月出發？","text":"第二條","intent":"ambiguous","route":""},
+ {"id":"hotel_question","text":"9日酒店有氧氣嗎？","intent":"inquire","route":""},
+ {"id":"not_acceptance","text":"11天可以嗎？","intent":"inquire","route":""},
+ {"id":"reconsider","text":"11天也沒問題，但還沒決定改","intent":"other","route":""},
+ {"id":"misclick","text":"藍冰這條，抱歉桃花那個是誤點","intent":"select","route":"tibet_winter_8d"},
+ {"id":"concern_only","text":"我還是想去珠峰，只是怕高反","intent":"other","route":""},
+ {"id":"group_update","text":"我們兩位","intent":"other","route":""},
+ {"id":"ad_title","text":"3~4月｜西藏桃花節＋珠峰 11日","intent":"select","route":"peach_11d_2027"}
+]

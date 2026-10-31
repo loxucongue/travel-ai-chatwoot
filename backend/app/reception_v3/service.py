@@ -20,7 +20,8 @@ from app.reception_v3.service_voice import service_voice
 from app.reception_v3.message_chunks import split_parts
 from app.reception_v3.seasonal_quotes import mentions_departure_time
 from app.reception_v3.followup_window import FOLLOWUP_WINDOW, deadline
-from app.reception_v3.route_choice import choice_error, needs_route_review, rejects_current_route
+from app.reception_v3.route_choice import choice_error, rejects_current_route
+from app.reception_v3.route_understanding import from_run as route_understanding_from_run, DecisionContractError, contract_failure
 from app.web_knowledge import active_web_facts
 
 
@@ -253,10 +254,6 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
         # The customer may answer after the 30-second intake timer fired. Stop
         # delivery immediately, before a model/network round trip can leak old media.
         value['departure_review_pending'] = True
-    if value.get('delivery_kind') == 'introduction' and needs_route_review(content):
-        # Pause only; the Agent must distinguish concern, comparison and a real
-        # selection before allowing the next image to leave the queue.
-        value['route_review_pending'] = True
     # Even a bare "7" may change the party size. Pause until the pending
     # classification completes, rather than guessing from units/keywords.
     if value.get('delivery_kind') in ('large_party', 'introduction'):
@@ -440,11 +437,15 @@ def parts_for(db, row, bundle, decision, *, followup=False):
 
 def update_profile(db, row, run, decision):
     previous_memory = row.memory
-    profile = {k:v for k,v in decision['profile'].items() if k != '_route_offer'}
+    profile = {k:v for k,v in decision['profile'].items() if k not in ('_route_offer', '_route_dialogue')}
     if (decision.get('route_choice','unchanged')!='recommend' and profile.get('discussion_route')
             and profile['discussion_route']!=(row.memory or {}).get('discussion_route')):
         profile.pop('discussion_route')
     memory = {**(row.memory or {}), **profile}
+    understanding = route_understanding_from_run(run)
+    if understanding:
+        memory['_route_dialogue'] = {**understanding, 'updated_at': row.virtual_now,
+                                    'run_id': run.id, 'generation': row.generation}
     latest = next((m for m in reversed(row.messages) if m.get('direction') == 'incoming'), {})
     choice = decision.get('route_choice', 'unchanged')
     offer = (row.memory or {}).get('_route_offer') or {}
@@ -495,7 +496,7 @@ def apply_decision(db, row, run, bundle, decision):
         'route_variant': row.controls.get('route_variant', ''), 'messages': row.messages}
     lead_problem = lead_priority_error(decision, lead_context)
     if lead_problem:
-        raise ValueError('lead_priority_not_validated:' + lead_problem)
+        raise DecisionContractError('lead_priority_not_validated:' + lead_problem)
     if lead_priority_outcome(decision, lead_context) == 'wait':
         # Move the first eligible touch to tomorrow instead of exhausting a
         # finite same-day schedule while repeatedly waiting. Keep later gaps.
@@ -514,10 +515,11 @@ def apply_decision(db, row, run, bundle, decision):
         return
     problem = choice_error(decision, {'skills':bundle, 'route_variant':row.controls.get('route_variant',''),
         'profile':row.memory or {}, 'state':value, 'event':run.input_snapshot.get('event', 'customer_message'),
+        'route_understanding': route_understanding_from_run(run),
         'messages':row.messages,
         'available_materials':candidate_materials(db, tenant_for_session(db, row))})
     if problem:
-        raise ValueError('route_choice_not_validated:' + problem)
+        raise DecisionContractError('route_choice_not_validated:' + problem)
     value.pop('departure_review_pending', None)
     value.pop('route_review_pending', None)
     if value.get('human_followup') and decision['action'] != 'handoff':
@@ -1055,16 +1057,35 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 value = state(row)
                 value['last_error'] = error[:200]
                 value['attempts'] = value.get('attempts', 0) + 1
-                if value['attempts'] < 3:
+                # Exhausted output-contract repairs are not transport failures.
+                # Do not run the same rejected plan through three full model turns.
+                maximum_attempts = 1 if contract_failure(exc) else 3
+                run.trace = {**run.trace, 'failure_kind': 'decision_contract' if maximum_attempts == 1 else 'runtime'}
+                if (maximum_attempts == 1 and event in ('silence_due', 'introduction_completed')
+                        and not context.get('buffered_questions')):
+                    # Optional outreach may wait, while a real unanswered customer
+                    # turn must remain visible to an advisor if output cannot be repaired.
+                    value.update(pending_event=None, retry_at=None, next_check_at=None)
+                    schedule_followup(value, bundle, row.virtual_now)
+                    value['followup_skip_reason'] = 'decision_contract_failed'
+                    row.due_at = None
+                elif value['attempts'] < maximum_attempts:
                     value['retry_at'] = later(utcnow(), 2 ** value['attempts'])
                     row.due_at = value['retry_at']
                 else:
                     value['failed_event'] = event
                     row.due_at = None
+                    duplicate_incident = False
+                    if contract_failure(exc):
+                        from app.reception_v3.route_understanding import incident_key
+                        key = incident_key(context, error, release_id())
+                        duplicate_incident = value.get('last_contract_incident', {}).get('key') == key
+                        value['last_contract_incident'] = {'key': key, 'at': utcnow(), 'run_id': run_id}
+                        run.trace = {**run.trace, 'duplicate_contract_incident': duplicate_incident}
                     save(row, value)
                     if environment == 'live':
                         from app.reception_v3.live import handoff
-                        handoff(db, row, 'model_failed', error[:200])
+                        handoff(db, row, 'model_failed', error[:200], dispatch=not duplicate_incident)
                         value = state(row)
                     else:
                         # Match live terminal behavior without notifying a real

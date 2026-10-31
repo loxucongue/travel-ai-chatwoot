@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>China2Go 接待语义判断改造 · 2026-10-31</title>
+<style>body{font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif;color:#182b39;background:#f5f7fa;max-width:1120px;margin:40px auto;padding:0 24px}h1{font-size:30px}h2{font-size:21px;margin-top:32px}section{background:white;padding:24px;border-radius:10px;margin:18px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dce3e9;padding:10px;vertical-align:top;text-align:left}th{background:#edf4f8}code{background:#eef1f4;padding:2px 5px}a{color:#125a9e}.pending{border-left:5px solid #d39524}.ok{color:#187149}.flow{padding:16px;background:#eaf3f8;font-weight:600}</style>
+<h1>接待语义判断改造：第一批实现与验收</h1>
+<p>China2Go · main · 目标服务器 47.84.62.157 · 2026-10-31。基于其他窗口已发布的 <code>15a1bec</code>，保留其季节说明、分段发送及私讯邀请原子发送改动；没有修改 rujing2。</p>
+<section class="pending"><strong>状态：本地实现、语义模型实测、执行回归及 Linux 隔离预检完成；尚未部署。</strong>
+<p>完整生产上下文的“理解 → 接待生成 → 图文交付”真实模型多轮验收尚未执行。原累计授权 80 元，现余 0.36312720 元；当前完整上下文的首次接待请求需预留约 1.15 元。追加最多 5 元的确认仍待回复，未超预算，也未向客户发送测试消息。</p></section>
+<section><h2>原故障与现场处置</h2>
+<p>会话 #535（Iling Lee）回答“桃花9日”，接待模型已经正确选择九日，但旧代码要求客户出现特定选择动词，且将历史单一推荐记忆当作选择依据。运行 3961—3966 中连续 12 份正确选择被拒绝，外层又重复整轮处理，最终两次转人工。</p>
+<p>只读核对时 van 已在 11:17 回复，客户 11:24 致谢，因此遵守“已有人工接待就保留人工”的要求，没有修改标签或补发旧消息。截图显示的账号名本身不能证明是人工手动操作，必须结合系统调用与消息记录判断。</p></section>
+<section><h2>职责调整</h2><div class="flow">公开对话与当前客户消息 → 小模型理解意图 → 接待模型组织答复 → 程序核对事实、权限与发送状态</div>
+<table><tr><th>板块</th><th>已实现</th><th>边界</th></tr>
+<tr><td>选线语义</td><td>使用现有 Flash 模型的短输入、非思考调用，理解短回复、序号、指代、误点纠正、询问与比较；移除 explicit_selection、pending_offer_acknowledgement、needs_route_review 的词语判断。</td><td>没有换成另一套关键词名单；图片仍沿用视觉路径。第一批未迁移日期提取、私讯意图等全部历史模块。</td></tr>
+<tr><td>真实歧义</td><td>想操作但对象不明时只问一个确认问题；暂未决定、与家人讨论不强迫选线。</td><td>模型仍可能误判，保留测试样本、原文依据与运行日志，不能保证零错误。</td></tr>
+<tr><td>会话记忆</td><td>记录本轮意图、来源消息 ID、原文、多条实际已发选项、运行编号。旧 discussion_route 仅作历史提示。</td><td>保留旧字段兼容现有资料与跟进；不是一次性迁移所有旧会话。未发、失败、私有消息不作为已发选项。</td></tr>
+<tr><td>执行校验</td><td>接待生成和执行复用同一份语义结果，不再各写一套自然语言判断；证据必须来自本轮客户原话，产品 ID 必须存在。</td><td>价格、团期、人数、可售性、人工权限、发送去重仍由程序确定；选线不等于报名。</td></tr>
+<tr><td>失败处理</td><td>已耗尽修正机会的业务输出校验失败不再重跑三轮；无待答问题的可选跟进可跳过；同一消息、版本、配置和原因的再次失败不重复通知。</td><td>客户问题确实无法完成时仍交顾问；网络错误保留有界重试。首次业务交接、渠道失败通知不受去重改动影响。</td></tr>
+<tr><td>并发与接管</td><td>保留现有 generation、人工权限复核、旧图文暂停取消机制。</td><td>新客户消息或人工介入会使旧模型结果失效；不强制唤醒已由顾问接待的会话。</td></tr></table></section>
+<section><h2>测试结果与限制</h2>
+<table><tr><th>验证</th><th>结果</th><th>解释</th></tr>
+<tr><td>真实语义模型最终批次</td><td class="ok">32 / 32 通过</td><td>包含原始 #535 上下文和 12 个扩展样本。首轮暴露询价误选、偏好误选；扩展批次暴露未决定被逼选，均保留失败记录并修正后重跑。</td></tr>
+<tr><td>新增程序测试</td><td class="ok">32 项通过</td><td>语义结果传递、证据来源、陈旧输入、双选项、受限重试、可选跟进失败、手动交回后同故障通知去重。</td></tr>
+<tr><td>后端全量首轮</td><td>1386 通过、2 失败，共 1388</td><td>旧词语断言和 Windows 来源文件换行校验失败均已修正。后者用精确文件路径的 .gitattributes 固定 LF，未更改业务事实。</td></tr>
+<tr><td>最终相关回归</td><td class="ok">224 项通过</td><td>包含上述失败项复测以及最后新增的 5 项保护用例；与全量、Linux 测试有重叠，不相加。</td></tr>
+<tr><td>Linux 隔离预检</td><td class="ok">157 项通过</td><td>首次预检缺少历史测试线路资料，补齐候选目录后通过；网络阻断、无生产凭据、无客户消息发送，生产代码及发布标识保持一致。</td></tr>
+<tr><td>原失败输出回放</td><td class="ok">12 / 12 通过</td><td>6 次失败运行中的既有模型输出通过新校验。这是历史结果回放，不是新的完整接待模型调用。</td></tr>
+<tr><td>完整接待真实多轮</td><td>待完成</td><td>尚需在最终代码上验证选线后介绍、只询价后选择、纠正误点、人工中途接管；无法用小模型分类结果替代。</td></tr></table>
+<p>本轮共执行 96 次受账本控制的小模型调用，新增费用 0.31637128 元；最终批次单次耗时约 1.4—3.7 秒。首轮或中途失败没有被删除或算作首次通过。</p></section>
+<section><h2>启用与协作安排</h2>
+<ol><li>完成完整生产上下文的真实多轮验收。追加预算仅用于测试，不改变生产消费策略。</li>
+<li>发布前重新比对 origin/main、线上 current-release 与涉及文件哈希。任一变化即重新核对差异，不覆盖其他窗口工作。</li>
+<li>使用现有部署互斥锁和备份流程，限定本次文件；启用 <code>RECEPTION_ROUTE_UNDERSTANDING_ENABLED=true</code>。模型可通过 <code>RECEPTION_ROUTE_UNDERSTANDING_MODEL</code> 指定，留空沿用现有 Flash 模型。</li>
+<li>当前开关默认关闭，尚未在线上添加或开启。注意关闭新节点并不会恢复已删除的关键词门槛；紧急回滚需回滚本次代码文件，不能把关闭开关等同旧版本恢复。</li>
+<li>上线后观察实际选择、澄清率、错误切线、校验失败、技术转人工、同一故障重复提醒、延迟与费用；核对送达后才能判断实际交付。模型分类准确不等于客户转化提升。</li></ol>
+<p>后续再逐项迁移私讯邀请、委婉拒绝、复杂日期表达等语义任务；统一证据协议和故障类型，沿用已有事实工具与权限控制，避免一次性拆掉整个接待系统。</p></section>
+<section><h2>本机证据位置</h2><ul>
+<li><a href="../../output/route-understanding-20261031/semantics-20261031T035119Z.json">最终 32 场景原始结果</a></li>
+<li><a href="../../output/route-understanding-20261031/original-output-replay.json">原失败输出回放</a></li>
+<li><a href="../../output/route-understanding-20261031/full-tests.xml">全量首轮 XML</a>、<a href="../../output/route-understanding-20261031/final-targeted.xml">最终相关回归 XML</a></li>
+<li><a href="../../output/route-understanding-20261031/linux-preflight-final.json">Linux 预检结果</a></li>
+</ul><p>输出目录不纳入 Git，原始客户上下文仅留本地调查目录；测试场景及本报告随代码提交。</p></section>
+</html>

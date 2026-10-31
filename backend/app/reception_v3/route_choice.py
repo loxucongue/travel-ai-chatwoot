@@ -67,55 +67,6 @@ def entry_comparison(messages, routes):
     return {'routes': sorted(selected), 'preferred_route': rule['preferred_route'], 'summary': rule['summary']}
 
 
-def pending_offer_acknowledgement(context):
-    if context.get('event') != 'customer_message' or not context.get('profile', {}).get('discussion_route'):
-        return False
-    latest = next((m for m in reversed(context.get('messages', [])) if m.get('direction') == 'incoming'), {})
-    if latest.get('attachments') or latest.get('content_type', 'text') != 'text':
-        return False
-    return bool(re.fullmatch(r'(?:[嗯恩喔哦]+|了解|收到|謝謝|谢谢|讚|赞|👍|[，,。.!！\s～~])+', latest.get('content', '').strip()))
-
-
-def explicit_selection(text, target, context):
-    """A preference update is not permission to send another full itinerary."""
-    if re.search(r'還沒(?:決定|選定)|还没(?:决定|选定)|都可以評估|都可以评估|先(?:考慮|考虑|想想)|不(?:要|想)(?:換|换|改|看行程|介紹|介绍)', text):
-        return False
-    offered = context.get('profile', {}).get('discussion_route')
-    action = bool(re.search(r'改成|改為|改为|改選|改选|就選|就选|選擇|选择|還是選|还是选|那就|我要|想看|就看|我(?:們|们)?看|給我看|给我看|請介紹|请介绍|改變主意|改变主意', text))
-    days = ROUTE_DAYS.get(target)
-    chinese = {8:'八',9:'九',10:'十',11:'十一'}
-    day_name = bool(days and re.search(rf'(?:{days}|{chinese.get(days,days)})\s*(?:天|日)', text))
-    spec = context['skills']['routes'].get(target,{})
-    named = any(alias and alias in text for alias in [spec.get('name',''), *spec.get('aliases',[])])
-    if action and (day_name or named):
-        return True
-    # A conditional offer can become accepted when the customer explicitly
-    # accepts its length after discussing workable dates. It need not have
-    # been recorded as an available offer while their old date was closed.
-    if target in PEACH_ROUTES and day_name and re.search(
-            rf'(?:{days}|{chinese[days]})\s*(?:天|日)\s*(?:也|都)?\s*(?:沒問題|没问题|可以)(?![嗎吗？?])',text):
-        offer = context.get('profile', {}).get('_route_offer') or {}
-        if offer.get('route') == target:
-            # Durable offer state survives intervening date questions and
-            # split outgoing paragraphs; rejected offers must not revive.
-            return offered == target and offer.get('status') == 'offered'
-        previous=[m.get('content','') for m in context.get('messages',[]) if m.get('direction')=='outgoing'
-                  and m.get('status') not in ('draft','queued','cancelled','failed')][-2:]
-        if any('桃花' in t and re.search(rf'(?:{days}|{chinese[days]})\s*(?:天|日)',t) for t in previous):
-            return True
-    if target in context.get('state',{}).get('completed_introductions',[]) and re.search(r'(?:改回|換回|换回|還是|还是).{0,8}(?:原本|原來|原来|原線|原线)',text):
-        return True
-    if offered != target:
-        return False
-    return bool(re.fullmatch(r'(?:好(?:的)?|可以|行|沒問題|没问题)[，,。.!！\s～~]*',text.strip()) or
-        re.search(r'(?:改|選|选).{0,5}(?:這|这|那|行程|線|线)|(?:給|给).{0,4}(?:完整)?行程|(?:請|请).{0,3}(?:介紹|介绍)|就(?:這|这|那)(?:條|条|個|个)',text))
-
-
-def needs_route_review(text):
-    """Pause delivery for classification; this never selects a product."""
-    return bool(re.search(r'珠[峰峯]|桃花|高[反山]|海拔|長輩|长辈|换|換|改成|改去|其他行程|別的行程|别的行程|不上|不去|(?:只|最多).{0,8}(?:天|日)', text))
-
-
 def rejects_current_route(route, profile):
     return ((profile.get('everest_preference') == 'avoid' and route in EVEREST_ROUTES)
             or (profile.get('peach_preference') == 'avoid' and route in PEACH_ROUTES))
@@ -128,6 +79,16 @@ def rejected_asset(key, materials, profile):
 
 def choice_error(decision, context):
     routes = context['skills']['routes']
+    understanding = context.get('route_understanding')
+    old = context.get('route_variant', '')
+    selected = decision['route_variant'] or old
+    changing = bool(selected and selected != old)
+    if (understanding and understanding['intent'] == 'select' and decision['action'] != 'handoff'
+            and selected != understanding['selected_route'] and decision['start_introduction']):
+        return '本輪已選擇route_understanding.selected_route，不能開始其他線路介紹；若日期等客觀條件不符，先答明限制，不播放舊線介紹。'
+    if understanding and decision['action'] != 'handoff' and changing:
+        if (understanding['intent'] != 'select' or understanding['selected_route'] != selected):
+            return '本輪語義是詢問、比較或尚未選定，不能變更已選線路；依route_understanding承接問題，討論其他線可用recommend，不開始整套介紹。'
     # A delivered reference map is evidence of a preview, not a product choice.
     # Validate this transition independently of product IDs or script wording.
     if (not context.get('route_variant') and decision['route_variant']
@@ -136,10 +97,8 @@ def choice_error(decision, context):
         maps = itinerary_previews(context['skills'], context.get('available_materials', []),
                                   context.get('messages', []))
         if any(a['already_delivered'] for r in maps.values() for a in r['assets']):
-            latest = next((m for m in reversed(context.get('messages', [])) if m.get('direction') == 'incoming'), {})
-            selected_card = advertisement_route(latest.get('content', ''), routes) == decision['route_variant']
             if (context.get('event') != 'customer_message'
-                    or not (selected_card or explicit_selection(latest.get('content', ''), decision['route_variant'], context))):
+                    or decision.get('route_choice') != 'selected'):
                 return '上方只是參考行程圖；詢問詳情或價錢不等於正式選線。保留空route_variant，不開始整套介紹；需討論此線時用recommend及discussion_route。'
     if (not (PEACH_ROUTES & routes.keys() or LINZHI in routes) or decision['action'] == 'handoff'
             or context.get('state', {}).get('human_followup')):
@@ -183,9 +142,6 @@ def choice_error(decision, context):
     if old and selected != old:
         if choice != 'selected':
             return '客人明確接受或要求改線才route_choice=selected；月份回答、單問高反或詢問替代方案用recommend，不直接換線。'
-        latest = next((m for m in reversed(context.get('messages', [])) if m.get('direction') == 'incoming'), {})
-        if latest and not explicit_selection(latest.get('content',''),selected,context):
-            return '本輪只有偏好/日期/天數補充或詢問，沒有明確選擇這條替代線。用recommend，route_variant保留原線，start_introduction=false；先提議再等待確認。'
     if old and selected != old and context.get('state', {}).get('delivery_kind') in ('intake', 'introduction') and not decision['interrupt']:
         return '切線時interrupt=true，先取消原線尚未發送的圖文。'
     if rejects_current_route(selected, profile):

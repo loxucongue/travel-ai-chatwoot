@@ -86,14 +86,17 @@ def test_preview_details_request_cannot_silently_select_route(monkeypatch):
     assert any(l.get('status') == 'route_choice_rejected' for l in logs)
 
 
-def test_preview_explicit_choice_allowed_but_not_an_undecided_request():
+def test_preview_semantic_choice_allowed_but_not_an_undecided_request():
     from app.reception_v3.route_choice import choice_error
     c = preview_context()
     c['messages'] += [{'direction':'outgoing','status':'delivered','asset_key':'map-11'},
                       {'direction':'incoming','content':'先給我看11日，還沒選定'}]
     decision = runtime.Decision(route_variant='peach_11d_2027',route_choice='selected').model_dump()
+    # Meaning is supplied by the dedicated model, not re-read by a verb regex.
+    c['route_understanding'] = {'intent':'inquire','selected_route':''}
     assert choice_error(decision,c)
     c['messages'][-1]['content'] = '就選11日，請介紹'
+    c['route_understanding'] = {'intent':'select','selected_route':'peach_11d_2027'}
     assert choice_error(decision,c) is None
     c['messages'][-1]['content'] = '桃花11日'
     assert choice_error(decision,c) is None

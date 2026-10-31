@@ -14,7 +14,8 @@ from app.reception_v3.prompt import SYSTEM_PROMPT
 from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task, validation_error as lead_priority_error
 from app.reception_v3.large_party import reply_contract_error
 from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
-from app.reception_v3.route_choice import PEACH_ROUTES, choice_error, pending_offer_acknowledgement
+from app.reception_v3.route_choice import PEACH_ROUTES, choice_error
+from app.reception_v3.route_understanding import interpret, DecisionContractError
 
 
 class Message(BaseModel):
@@ -101,9 +102,16 @@ reply最多一条200字以内文字。wait时messages=[]。不要输出其他字
 def run_agent(context: dict):
     if context.get('state', {}).get('human_followup'):
         return run_human_followup(context)
-    if pending_offer_acknowledgement(context):
-        return (Decision(action='wait',reason='客戶表示了解，未確認換線，保留推薦等待明確選擇。').model_dump(),
-                [{'node':'pending_offer_acknowledgement','status':'unchanged'}], _request_hash({'event':'pending_offer_acknowledgement'}))
+    deadline = time.monotonic() + 60
+    understanding_logs, understanding_hash = [], None
+    if settings.reception_route_understanding_enabled and context.get('event') == 'customer_message':
+        understanding, understanding_logs, understanding_hash = interpret(context, min(deadline, time.monotonic() + 16))
+        if understanding:
+            context = {**context, 'route_understanding': understanding}
+            if understanding['intent'] == 'ambiguous':
+                return (Decision(messages=[{'text': understanding['clarification']}], interrupt=True,
+                                 reason='本輪選線存在歧義，先確認一次，不當作技術故障。').model_dump(),
+                        understanding_logs, understanding_hash)
     registry = SkillRegistry(context['skills'], context.get('available_materials', []))
     loaded = {}
     def load(name):
@@ -124,6 +132,12 @@ def run_agent(context: dict):
               + '\n\n' + SYSTEM_PROMPT)
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
+    if context.get('route_understanding'):
+        current['route_understanding_instruction'] = (
+            'route_understanding是本輪專用語義節點結合真實對話的結果。依其理解處理選線，'
+            '不要按客戶是否說了固定動詞重新判斷。select時使用selected_route，並先回答同輪問題；'
+            'inquire/compare/decline/acknowledge/other不能擅自切線，必要時用discussion_route討論。'
+            '選線不等於報名，日期與報價仍須工具核對。歷史單一推薦不能覆蓋本輪選擇。')
     from app.reception_v3.party_quotes import pricing_evidence
     current['pricing_evidence'] = pricing_evidence(context['skills'])
     # Delivery metadata and earlier model reasons are not customer dialogue.
@@ -187,7 +201,7 @@ def run_agent(context: dict):
     if context.get('profile', {}).get('discussion_route'):
         current['pending_route_offer'] = {
             'route': context['profile']['discussion_route'],
-            'instruction': '尚未同意換線。補人數或問酒店/車子只答本輪問題，不在末尾再問是否看完整行程；明確接受才切線。'}
+            'instruction': '這是上一輪推薦記錄，不是全部已展示選項，也不是本輪意願。依本輪語義承接；補人數或問酒店不要重複追問是否換線。'}
     month_check = None
     latest = next((m for m in reversed(context.get('messages', [])) if m.get('direction') == 'incoming'), {})
     window = month_answer_window(latest.get('content', ''), context['now'],
@@ -287,9 +301,8 @@ def run_agent(context: dict):
         messages[-1] = {'role':'user', 'content':json.dumps(current, ensure_ascii=False)}
     quote_repaired = False
     choice_repaired = False
-    logs = [{'node': 'customer_reactions', 'recognized': reactions, 'status': 'verified'}] if reactions else []
-    hashes = []
-    deadline = time.monotonic() + 60
+    logs = understanding_logs + ([{'node': 'customer_reactions', 'recognized': reactions, 'status': 'verified'}] if reactions else [])
+    hashes = [understanding_hash] if understanding_hash else []
     repaired = False
     # A retry with the same limit repeats an avoidable truncation. Keep normal
     # calls small; give the existing bounded retry more room after this error.
@@ -422,7 +435,7 @@ def run_agent(context: dict):
                 log.update(status='route_choice_rejected', validation_error=choice_problem,
                            rejected_decision=decision)
                 if choice_repaired:
-                    raise ValueError('route_choice_not_validated')
+                    raise DecisionContractError('route_choice_not_validated')
                 choice_repaired = True
                 messages.append({'role':'user', 'content':choice_problem})
                 continue
@@ -499,7 +512,7 @@ def run_agent(context: dict):
                 log.update(status='quote_rejected', error_code='seasonal_quote_not_validated',
                            validation_error=quote_problem, rejected_decision=decision)
                 if quote_repaired:
-                    raise ValueError('seasonal_quote_not_validated')
+                    raise DecisionContractError('seasonal_quote_not_validated')
                 quote_repaired = True
                 messages.append({'role':'assistant', 'content':json.dumps(decision,ensure_ascii=False),
                                  'reasoning_content':message.get('reasoning_content','')})
@@ -509,7 +522,7 @@ def run_agent(context: dict):
             if party_problem:
                 log.update(status='large_party_reply_rejected', validation_error=party_problem, rejected_decision=decision)
                 if any(item is not log and item.get('status') == 'large_party_reply_rejected' for item in logs):
-                    raise ValueError('large_party_reply_not_validated')
+                    raise DecisionContractError('large_party_reply_not_validated')
                 messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
                 messages.append({'role':'user', 'content':party_problem})
                 continue
@@ -517,7 +530,7 @@ def run_agent(context: dict):
             if lead_problem:
                 log.update(status='lead_priority_rejected', validation_error=lead_problem, rejected_decision=decision)
                 if any(item is not log and item.get('status') == 'lead_priority_rejected' for item in logs):
-                    raise ValueError('lead_priority_not_validated')
+                    raise DecisionContractError('lead_priority_not_validated')
                 messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
                 messages.append({'role':'user', 'content':lead_problem})
                 continue

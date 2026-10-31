@@ -7,7 +7,7 @@ import pytest
 from app.model_transport import EvaluationCallError
 from app.automation_models import AutomationRun
 from app.reception_v3 import runtime, service
-from app.reception_v3.route_choice import choice_error, rejected_asset, explicit_selection
+from app.reception_v3.route_choice import choice_error, rejected_asset
 from app.reception_v3.seasonal_quotes import explicit_date_window, reply_calendar_error
 from test_linzhi_route_20261020 import ctx, setup_row, LINZHI, TEN
 from test_reception_v3_skills import model, final, tool
@@ -64,19 +64,6 @@ def test_weekday_pronoun_after_season_range_uses_customer_date(weekday,invalid):
     assert bool(reply_calendar_error(d,ctx(),checks)) is invalid
 
 
-@pytest.mark.parametrize('text,status,expected',[
-    ('好，改3/26，想去珠峰，11天可以','offered',True),
-    ('11天可以嗎？','offered',False),
-    ('我們兩位想去珠峰','offered',False),
-    ('11天可以','rejected',False),
-])
-def test_length_acceptance_uses_durable_offer_not_last_two_paragraphs(text,status,expected):
-    from app.reception_v3.route_choice import explicit_selection
-    c=ctx()
-    c['profile']={'discussion_route':ELEVEN,'_route_offer':{'route':ELEVEN,'status':status}}
-    c['messages']=[{'direction':'outgoing','status':'delivered','content':t} for t in
-                   ['桃花＋珠峰11日','最早3月20日出發','您方便調整日期嗎？']]
-    assert explicit_selection(text,ELEVEN,c) is expected
 
 
 def test_full_customer_date_is_checked_before_intro_even_if_model_skips_tool(monkeypatch):
@@ -156,35 +143,13 @@ def test_noncustomer_repeating_existing_preferences_is_not_a_mutation(event):
 def test_pending_offer_acknowledgement_cannot_repeat_invitation_or_start_intro(monkeypatch,text):
     c=ctx();c['profile']={'discussion_route':ELEVEN}
     c['messages']=[{'direction':'incoming','content':text}]
-    requests=model(monkeypatch,[])
+    requests=model(monkeypatch,[final(action='wait')])
     d,_,_=runtime.run_agent(c)
-    assert not requests and d['action']=='wait' and not d['messages'] and not d['start_introduction']
+    assert requests and d['action']=='wait' and not d['messages'] and not d['start_introduction']
 
 
-@pytest.mark.parametrize('text,target,expected',[
-    ('我們2位，不上珠峰，也有時間看桃花',NINE,False),
-    ('好，那改成桃花加珠峰11日，給我看行程',ELEVEN,True),
-    ('好，酒店如何？',ELEVEN,False),('嗯嗯，了解',ELEVEN,False),
-    ('好，就改這條，請介紹',ELEVEN,True),
-    ('想了一下還是不上珠峰，有林芝8天可選嗎？',LINZHI,False),
-    ('好，改林芝8日，給我看行程',LINZHI,True),
-])
-def test_selection_requires_acceptance_of_offered_product_or_named_choice(text,target,expected):
-    c=ctx();c['profile']={'discussion_route':ELEVEN}
-    assert explicit_selection(text,target,c) is expected
 
 
-@pytest.mark.parametrize('text,previous,expected',[
-    ('那2027年3月26日可以，我們想去珠峰，11天也沒問題','桃花＋珠峰11日從3月20日開始，日期可以調整嗎？',True),
-    ('11天可以嗎？','桃花＋珠峰11日從3月20日開始',False),
-    ('11天也沒問題，但還沒決定改','桃花＋珠峰11日從3月20日開始',False),
-    ('11天也沒問題','精華8天每週四出發',False),
-    ('嗯嗯，了解','桃花＋珠峰11日從3月20日開始',False),
-])
-def test_customer_can_accept_conditional_offer_in_context(text,previous,expected):
-    c=ctx();c['messages']=[{'direction':'outgoing','content':previous,'status':'simulated_delivered'},
-                          {'direction':'incoming','content':text}]
-    assert explicit_selection(text,ELEVEN,c) is expected
 
 
 @pytest.mark.parametrize('days,route',[(8,NINE),(8,ELEVEN),(10,ELEVEN)])
@@ -242,12 +207,6 @@ def test_pending_offer_cannot_resume_old_product_photos():
     assert service.followup_materials(media,[],TEN,{})==media
 
 
-def test_acknowledgement_with_attachment_must_still_be_understood():
-    from app.reception_v3.route_choice import pending_offer_acknowledgement
-    c=ctx();c['profile']={'discussion_route':ELEVEN}
-    c['messages']=[{'direction':'incoming','content':'嗯嗯','content_type':'image',
-                    'attachments':[{'id':42,'file_type':'image'}]}]
-    assert not pending_offer_acknowledgement(c)
 
 
 @pytest.mark.parametrize('month',['三月','四月'])

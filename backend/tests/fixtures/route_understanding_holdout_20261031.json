@@ -1,0 +1,14 @@
+[
+  {"id":"query_not_accept","text":"先別幫我換，我只想知道九天費用","intent":"inquire","route":"","has_question":true},
+  {"id":"not_that_one","text":"不是11天，是9天","intent":"select","route":"peach_9d_2027"},
+  {"id":"limited_time","text":"我們只能請到9天假","intent":"other","route":""},
+  {"id":"assess_not_order","text":"9天會不會太趕？","intent":"inquire","route":"","has_question":true},
+  {"id":"take_second","text":"看下面那條好了","intent":"select","route":"peach_9d_2027"},
+  {"id":"not_same_ad","text":"剛剛按錯，我要的是冬天藍冰那團","intent":"select","route":"tibet_winter_8d"},
+  {"id":"family_review","text":"我先跟家人討論一下","intent":"other","route":""},
+  {"id":"wrong_quote","text":"朋友說他選桃花9日，我還沒決定","intent":"other","route":""},
+  {"id":"explicit_plus_query","text":"那我們就看9日，四個人可以自己出發嗎？","intent":"select","route":"peach_9d_2027","has_question":true},
+  {"id":"order_swapped","offer":"不上珠峰的桃花9日，或桃花加珠峰11日，想先看哪個？","text":"第二個","intent":"select","route":"peach_11d_2027"},
+  {"id":"careful_decline","text":"九日我不想看，十一日我也先不考慮","intent":"decline","route":""},
+  {"id":"ambiguous_pointer","offer":"桃花9日與桃花11日都可以看看。","text":"那個給我看看","intent":"ambiguous","route":""}
+]

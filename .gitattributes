@@ -1,2 +1,4 @@
 /scripts/systemd/* text eol=lf
 /scripts/server_storage.py text eol=lf
+# This source's SHA256 is recorded in the service-knowledge manifest.
+/data/knowledge/china2go/service-knowledge/sources/20261031/everest-availability.txt text eol=lf

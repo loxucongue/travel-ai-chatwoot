@@ -117,11 +117,11 @@ def record_human_reply(db, conversation, message):
     automatic_return(db, conversation, row, message)
 
 
-def handoff(db, row, reason, summary):
+def handoff(db, row, reason, summary, *, dispatch=True):
     service.control(row, 'stop')
     row.controls = {**row.controls, 'human': True, 'human_followup': {'enabled': False}}
     conversation = db.get(ConversationState, row.conversation_state_id)
-    ensure_handoff(db, conversation, reason, summary)
+    ensure_handoff(db, conversation, reason, summary, dispatch=dispatch)
     value = service.state(row)
     value.update(handoff=True, handoff_created=True, handoff_type=reason,
                  handoff_reason=summary, pending_event=None, next_check_at=None)
