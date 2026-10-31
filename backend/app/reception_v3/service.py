@@ -17,6 +17,7 @@ from app.reception_v3.runtime import run_agent
 from app.reception_v3.skills import compile_skills
 from app.reception_v3.quotes import personalize_quotes, reserve_quoted_offers
 from app.reception_v3.service_voice import service_voice
+from app.reception_v3.message_chunks import split_parts
 from app.reception_v3.seasonal_quotes import mentions_departure_time
 from app.reception_v3.followup_window import FOLLOWUP_WINDOW, deadline
 from app.reception_v3.route_choice import choice_error, needs_route_review, rejects_current_route
@@ -294,6 +295,7 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
 def append_plan(row, value, parts, kind, interval, run_id=None):
     if not parts:
         return
+    parts = split_parts(parts)
     plan_id = uuid4().hex
     messages = list(row.messages)
     for index, part in enumerate(parts):

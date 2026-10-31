@@ -1,7 +1,13 @@
 {
   "schema_version": 1,
-  "knowledge_version": "2026-10-27.rongbuk-availability",
+  "knowledge_version": "2026-10-31.everest-availability",
   "sources": [
+    {
+      "id": "business.feedback.20261031",
+      "description": "麗麗确认含珠峰住宿行程的名额说明及消息按句拆分",
+      "snapshot_path": "sources/20261031/everest-availability.txt",
+      "snapshot_sha256": "f850fbffe05d1b96c90ce4bd4bb8364e491a6b615a354e014e3b0e2822a5382a"
+    },
     {
       "id": "business.feedback.20261027",
       "description": "用户转述麗麗2026-10-27 19:00确认的绒布房源答疑",
@@ -31,6 +37,11 @@
     }
   ],
   "facts": [
+    {
+      "id": "service.everest_availability_wording",
+      "text": "2026-10-31业务确认：所有西藏含珠峰过夜线路，已知出发日期完全落在3/20–10/19（含首尾）时，名额说明使用：『因為我們拼團一團就六人；而且珠峰大本營是升級「有獨立廁所跟氧氣的絨布旅館」，房間數超少的！所以名額要幫您確認看看。』包括精华8天、全览10天、桃花含珠峰11天。独团不说客户一团固定六人，只保留适用住宿和需核实房源的说明；7人以上沿用既有交接流程。不含珠峰过夜的线路不适用。每年10/20–次年3/19（含首尾）不用这段升级及稀缺房源话术；未知日期、仅知三月或十月、跨边界日期先中性说明名额需核实，不自行选日期。此范围不是旅馆停业日期；12–2月仍按已确认冬季规则。不能保证入住或称已锁房，不编造剩余房数、催付款；已解释的不每轮重复。",
+      "source_ref": "business.feedback.20261031#麗麗00:29"
+    },
     {
       "id": "service.rongbuk_reservation_scope",
       "text": "2026-10-27业务确认：对于包含珠峰且当季安排绒布旅馆的线路，我们已提前拿部分房；小团预留数量有限，晚确认可能订不到。天气、征用等也可能影响安排，行程和合同会说明相关约定。这是团队已有部分房源的说明，不代表已替当前客户锁房、客户指定日期有余房或保证入住。未明确月份先确认月份；12–2月仍按现有冬季规则说明绒布关闭、住山下珠峰小镇，不能用预留房源覆盖关闭规则。不含珠峰的线路不承诺绒布住宿。不编造剩余房数、确认期限、替代酒店、退款或赔付条款。",
@@ -79,6 +90,17 @@
     }
   ],
   "fixed_answers": [
+    {
+      "id": "everest_shared_availability",
+      "name": "当季珠峰拼团名额说明",
+      "status": "active",
+      "topics": ["accommodation", "availability"],
+      "answer_text": "因為我們拼團一團就六人，而且珠峰大本營是升級「有獨立廁所跟氧氣的絨布旅館」，房間數超少的！所以名額要幫您確認看看。",
+      "fact_ids": ["service.everest_availability_wording"],
+      "source_ref": "business.feedback.20261031#麗麗00:29",
+      "positive_examples": ["已知出发日期完全位于3/20–10/19，含珠峰过夜拼团首次说明名额或住宿；精华8天、全览10天和桃花11天均适用"],
+      "negative_examples": ["10/20–次年3/19（含首尾）", "日期未知或仅知三月、十月、跨边界", "独团或7人以上", "不含珠峰过夜", "前文已经解释过", "只问其他事项无需说明名额"]
+    },
     {
       "id": "rongbuk_reservation_reassurance",
       "name": "绒布旅馆房源与入住顾虑",
