@@ -80,3 +80,37 @@ def test_review_failure_retains_answer_and_is_auditable(monkeypatch):
     result,logs,_=repetition.review(d,{'messages':[
         {'direction':'outgoing','content':'之前說過','status':'sent'}]},time.monotonic()+20)
     assert result==d and logs[0]['status']=='failed'
+
+
+@pytest.mark.parametrize('advisor_followup', [False, True])
+def test_511_mixed_date_and_price_cannot_be_lost_to_style_review(monkeypatch, advisor_followup):
+    # Production run 3971: reviewer removed the first price because the same
+    # sentence repeated dates. Only inclusions/exclusions reached the customer.
+    price = '2027桃花＋珠峰11日的出發區間是3/20–4/10，團費標準是人民幣12,780元/人（兩人一房）。\n'
+    included = '包含：高原保障險、入藏文件、住宿。\n不含：機票、午晚餐、小費。\n'
+    question = '方便問一下這次大概幾位一起出發呢？'
+    decision = Decision(messages=[{'text':price+included+question}]).model_dump()
+    clauses = repetition.clauses_for(decision)
+    price_id = next(c['id'] for c in clauses if '12,780' in c['text'])
+    question_id = next(c['id'] for c in clauses if '幾位' in c['text'])
+    monkeypatch.setattr(settings, 'reception_repeat_review_enabled', True)
+    monkeypatch.setattr(repetition, '_post_with_deadline', lambda *args: httpx.Response(
+        200, request=httpx.Request('POST', 'https://test.invalid'), json={
+            'choices':[{'message':{'content':json.dumps({'remove_clause_ids':[price_id,question_id],
+                                                       'reason':'日期與人數問題已說過'})}}]}))
+    context = {'event':'silence_due' if advisor_followup else 'customer_message',
+               'state':{'human_followup':advisor_followup}, 'messages':[
+                   {'direction':'outgoing','content':'出發區間是3月20日到4月10日。請問幾位？','status':'sent'},
+                   {'direction':'incoming','content':'11日價位'}]}
+    result,logs,_ = repetition.review(decision,context,time.monotonic()+20)
+    text = '\n'.join(m['text'] for m in result['messages'])
+    assert ('12,780' in text) is not advisor_followup
+    assert '幾位' not in text
+    assert bool(logs[0]['protected_quote_clauses']) is not advisor_followup
+    assert [c['id'] for c in logs[0]['removed_clauses']] == ([price_id,question_id] if advisor_followup else [question_id])
+    assert '12,780' in decision['messages'][0]['text']
+    if not advisor_followup:
+        # Preserving a quote is not permission to send an unvalidated amount.
+        from app.reception_v3.seasonal_quotes import quote_error
+        result['route_variant']='tibet_essence_8d'
+        assert quote_error(result,{'routes':{'tibet_essence_8d':{'seasonal_pricing':True,'scripts':[]}}},set())

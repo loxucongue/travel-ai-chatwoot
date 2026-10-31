@@ -7,6 +7,7 @@ import time
 from app.config import settings
 from app.model_gateway import _json_object, _request_hash
 from app.model_transport import _post_with_deadline, _call_log
+from app.reception_v3.seasonal_quotes import contains_trip_quote
 
 
 def clauses_for(decision):
@@ -71,6 +72,7 @@ def review(decision, context, deadline):
         '先判断客户新增意思：补充月份不需要重复已解释的包团条件，补充排假原因不需要再劝调整假期。'
         '客户明确重新询问、没有理解、条件改变需要重新核对时，必须保留回答该问题所需的信息；不要因为出现旧词就删除。'
         '新增事实、回答客户当前问题、首次推荐的年份、必要限制和必要的短确认保留。已经提问未获回复的问题不换词再问。'
+        '同一句同时包含重复信息和新增答案时，必须整句保留：例如历史已说出发日期，本句又说日期和首次报价，不能因为日期重复而把价格一起删除。'
         '只删除有明确历史依据的重复分句，不能删去否定或条件造成承诺改变；没有把握返回空数组。'
         '客户本轮首次补充原因时，承接该原因的简短确认不是重复安慰，必须保留。'
         '但确认后的旧邀约不受这个保护：历史已说“时间有弹性再联系”，候选又说“以后有其他假期再告诉我”，'
@@ -96,6 +98,16 @@ def review(decision, context, deadline):
         plan=_json_object(body['choices'][0]['message']['content'])
         ids=plan['remove_clause_ids']
         result=trim(decision,clauses,ids)
+        # A style review must not erase a direct quote (including a mixed
+        # date/price sentence), or hide it from the subsequent price validators.
+        # Human follow-ups retain their stricter no-repricing contract.
+        protected = []
+        if context.get('event') == 'customer_message' and not advisor_followup:
+            protected = [c for c in clauses if c['id'] in ids and contains_trip_quote(c['text'])]
+            if protected:
+                protected_ids = {c['id'] for c in protected}
+                ids = [i for i in ids if i not in protected_ids]
+                result = trim(decision, clauses, ids)
         # Deduplication may suppress a proactive check, but must not turn a
         # direct response to a customer into silence.
         if result['action'] == 'wait' and context.get('event') == 'customer_message' and not advisor_followup:
@@ -103,6 +115,7 @@ def review(decision, context, deadline):
             ids=[]
         log={**_call_log(1,started,body,'completed',None),'node':'repetition_review',
              'removed_clauses':[c for c in clauses if c['id'] in ids],
+             'protected_quote_clauses':protected,
              'reason':str(plan.get('reason',''))[:300]}
         return result,[log],digest
     except Exception as exc:
