@@ -15,7 +15,7 @@ from app.reception_v3.lead_priority import LeadReview, task as lead_priority_tas
 from app.reception_v3.large_party import reply_contract_error
 from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
 from app.reception_v3.route_choice import PEACH_ROUTES, choice_error
-from app.reception_v3.route_understanding import interpret, DecisionContractError
+from app.reception_v3.route_understanding import interpret, generation_instruction, DecisionContractError
 
 
 class Message(BaseModel):
@@ -325,8 +325,12 @@ def run_agent(context: dict):
                         '首次邀请要说清能提供哪项已有资料及用途，例如详细行程供比较，不能仅说以后有问题再问或协助安排。'
                         '这次考虑收尾若历史已邀请、已留资、拒绝留资、预约稍后联系或停联，只短答、不再索取；'
                         '沉默没有实质新增内容用wait；客户明确重问则正常回答。'
-                        '保留JSON协议、真实事实、必要报价模板和首次推荐的完整年份。',
+                        '保留JSON协议、真实事实、必要报价模板和首次推荐的完整年份。'
+                        '不能从不上珠峰推算全程最高海拔或保证安全；没有资料依据的高度结论不补充。',
                 },ensure_ascii=False)}]
+            routing_instruction = generation_instruction(context)
+            if routing_instruction:
+                request_messages = request_messages + [{'role': 'system', 'content': routing_instruction}]
             payload = {'model': settings.deepseek_vision_model if images else settings.deepseek_model, 'messages': request_messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
                        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,
@@ -437,7 +441,9 @@ def run_agent(context: dict):
                 if choice_repaired:
                     raise DecisionContractError('route_choice_not_validated')
                 choice_repaired = True
-                messages.append({'role':'user', 'content':choice_problem})
+                messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False),
+                                 'reasoning_content':message.get('reasoning_content','')})
+                messages.append({'role':'user', 'content':choice_problem + ' 上述候選未發送，請修正決策字段和相應客戶文字。'})
                 continue
             offered = decision.get('route_choice') == 'recommend'
             proposed = decision['profile'].get('discussion_route') if offered else decision['route_variant']

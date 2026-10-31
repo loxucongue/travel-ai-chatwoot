@@ -16,7 +16,7 @@
  {"id":"not_acceptance","text":"11天可以嗎？","intent":"inquire","route":""},
  {"id":"reconsider","text":"11天也沒問題，但還沒決定改","intent":"other","route":""},
  {"id":"misclick","text":"藍冰這條，抱歉桃花那個是誤點","intent":"select","route":"tibet_winter_8d"},
- {"id":"concern_only","text":"我還是想去珠峰，只是怕高反","intent":"other","route":""},
+ {"id":"concern_only","text":"我還是想去珠峰，只是怕高反","intent":"other","allowed_intents":["other","inquire"],"route":""},
  {"id":"group_update","text":"我們兩位","intent":"other","route":""},
  {"id":"ad_title","text":"3~4月｜西藏桃花節＋珠峰 11日","intent":"select","route":"peach_11d_2027"}
 ]

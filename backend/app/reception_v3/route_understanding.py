@@ -117,9 +117,11 @@ PROMPT = '''你只理解客戶本輪選線語義，不報價、不推薦、不�
 依公開對話、當前合併消息及目錄，輸出指定JSON。客戶最新糾正優先；legacy_recommendation_hint只是一條舊記錄，不能當作全部選項或客戶選擇。
 intent為select/inquire/compare/decline/acknowledge/other/ambiguous。只有select填selected_route。
 select是客戶已決定以某個具體產品作為後續接待主線，不是僅僅對它有興趣，也不是訂位或保證可售。不要求固定動詞；回答上一輪選項的產品簡稱、序號、指代都應結合上下文理解。
+排除一個產品不等於接受剩餘產品：客戶只有拒絕、沒有表達替代選擇時用decline，selected_route留空，discussed_routes只填被拒絕的產品；不能用二選一的排除法替他選線。若客戶同時明確指定另一條，才按那個正向選擇處理。
 先區分查詢信息與改變選擇：即使上一輪問了選哪條，客戶只追問某產品費用、住宿、可否安排，也仍是inquire，提到產品名只是指出問題對象，selected_route留空。只有同時表達選定該產品的意願才select並has_question=true。比較兩產品差異、優缺點用compare，而不是一般inquire。
 景點偏好不是具體產品選擇：表示仍想去某景點、擔心高度、希望輕鬆，只更新需求理解，用other/inquire；不能因為近期某選項符合這個偏好，就替客戶接受那個產品。既有主線也可能符合偏好。補人數/月份同樣不是接受替代線。
 明確糾正誤點、改回原線，要理解實際選擇；不是因為引用了舊產品名稱就選舊產品。只有一個待確認選項時「好/可以」可接受；多個選項時不能猜。
+判斷簡短應答要讀上一輪的問法：我方正在讓客戶從多條線中選一條，客戶只表示同意、沒有指出哪條，這是ambiguous，應確認對象；不能用other繞過澄清，也不能因最後一段介紹了某條線就當作已選它。客戶明說尚未決定則尊重其暫緩，仍用other。
 acknowledge是單純收到/謝謝/點讚，不能據此確認報名或聯絡方式。
 ambiguous僅在本輪確實需要消除選線歧義時使用，clarification只寫一個自然繁體確認問題，不帶產品事實或價格。普通酒店疑問、客戶還在比較、單純猶豫不需要強迫選線，使用inquire/compare/other。
 未決定不等於指代不清：客戶表明尚未決定、要商量、只轉述他人的選擇時，已經能理解其意願，使用other，不要用ambiguous逼他選擇。ambiguous只用於客戶確實要進行具體選線/介紹動作，但對象無法從上下文解析的情況。無詢問也未請求建議的保留意見用other，純致謝/收到才acknowledge。
@@ -128,27 +130,55 @@ offered_options按對話中的順序記錄近期我方實際提供的可選行�
 只返回JSON，沒有額外字段。'''
 
 
+def schema_for(data):
+    schema = Understanding.model_json_schema()
+    routes = [r['id'] for r in data['routes']]
+    schema['properties']['selected_route']['enum'] = ['', *routes]
+    schema['properties']['discussed_routes']['items']['enum'] = routes
+    schema['$defs']['OfferedOption']['properties']['route']['enum'] = routes
+    return schema
+
+
+def generation_instruction(context):
+    """Keep the interpretation authoritative even after large product tool results."""
+    understanding = context.get('route_understanding')
+    if not understanding:
+        return None
+    selected = context.get('route_variant', '')
+    return ('本輪選線由專用語義節點負責，你負責答疑與組織內容。以下是執行約束，'
+            '優先於產品Skill中泛指「客戶選擇此線」的流程說明；讀取產品資料或核價不表示客戶已選線。\n'
+            + json.dumps({'interpretation': understanding, 'selected_route_before_turn': selected}, ensure_ascii=False)
+            + '\nintent非select時，route_variant必須保留selected_route_before_turn（可為空），'
+            '不能開始另一條線的完整介紹；回答另一條線的費用/詳情用route_choice=recommend、start_introduction=false，'
+            'profile.discussion_route填所討論產品，從該線取報價，不能為了取模板改route_variant。'
+            'intent=select時依selected_route承接；若客觀日期或天數不符，可先說明限制，不能偷換產品。'
+            '先回答本輪問題，不把詢價重寫為「您已選定」或「接著開始完整介紹」。'
+            '客戶補充已選線的月份、人數時，按原接待進度開始或繼續該線介紹，不需要重新選一次線。'
+            '只用已載入的產品事實，不從「不上珠峰」推導全程最高高度、沒有高反或保證安全；'
+            '介紹完成後不再自行推算、補充新的海拔結論。')
+
+
 def interpret(context, deadline):
     data = task(context)
     current = [m for m in data['history'] if m['id'] in data['current_message_ids']]
     # Image-only messages stay in the vision reception path; never guess their text.
     if not current or any(m['attachment'] for m in current) or not any(m['text'].strip() for m in current):
         return None, [], None
-    messages = [{'role': 'system', 'content': PROMPT + '\n' + json.dumps(Understanding.model_json_schema(), ensure_ascii=False)},
+    messages = [{'role': 'system', 'content': PROMPT + '\n' + json.dumps(schema_for(data), ensure_ascii=False)},
                 {'role': 'user', 'content': json.dumps(data, ensure_ascii=False)}]
     logs, hashes = [], []
     for attempt in range(2):
         payload = {'model': settings.reception_route_understanding_model or settings.deepseek_model,
                    'messages': messages, 'response_format': {'type': 'json_object'},
-                   'thinking': {'type': 'disabled'}, 'max_tokens': 1400,
+                   'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': 2400,
                    'stream': True, 'stream_options': {'include_usage': True}}
         digest = _request_hash(payload); hashes.append(digest)
-        started = time.monotonic(); body = {}
+        started = time.monotonic(); body = {}; raw = None
         try:
             remaining = deadline - started
             if remaining <= 0:
                 raise TimeoutError('route_understanding_timeout')
-            response = _post_with_deadline(payload, min(remaining, 10))
+            response = _post_with_deadline(payload, min(remaining, 12))
             response.raise_for_status(); body = response.json()
             raw = _json_object(body['choices'][0]['message']['content'])
             result = validate(raw, data)
@@ -158,11 +188,15 @@ def interpret(context, deadline):
             return result, logs, combine_digests(*hashes)
         except (ValueError, KeyError, TypeError) as exc:
             logs.append({**_call_log(attempt + 1, started, body, 'invalid_contract', str(exc)),
-                         'node': 'route_understanding'})
+                         'node': 'route_understanding', 'rejected_interpretation': raw})
             if attempt:
                 error = DecisionContractError('route_understanding_not_validated')
                 raise EvaluationCallError(str(error), logs, combine_digests(*hashes)) from error
-            messages.append({'role': 'user', 'content': '結構或證據未通過，請按原資料修正一次：' + str(exc)})
+            if raw is not None:
+                messages.append({'role': 'assistant', 'content': json.dumps(raw, ensure_ascii=False),
+                                 'reasoning_content': body['choices'][0]['message'].get('reasoning_content', '')})
+            messages.append({'role': 'user', 'content': '上述結果尚未採用。結構或證據未通過，請按原資料修正一次：'
+                             + str(exc) + '。所有線路字段只填schema enum中的目錄ID，不填名稱、簡稱或其他值。'})
         except Exception as exc:
             logs.append({**_call_log(attempt + 1, started, body, 'failed', str(exc)), 'node': 'route_understanding'})
             raise EvaluationCallError(str(exc), logs, combine_digests(*hashes)) from exc

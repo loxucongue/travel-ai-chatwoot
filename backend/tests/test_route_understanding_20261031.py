@@ -59,7 +59,7 @@ def test_semantic_selection_replaces_action_word_allowlist(monkeypatch, text):
                                     start_introduction=True)] * 2)
     d, logs, _ = runtime.run_agent(c)
     assert d['route_variant'] == NINE and d['start_introduction']
-    assert len(small) == 1 and small[0]['thinking']['type'] == 'disabled'
+    assert len(small) == 1 and small[0]['reasoning_effort'] == 'low'
     assert any(log.get('node') == 'route_understanding' for log in logs)
     assert any('route_understanding_instruction' in m.get('content', '') for m in main[0]['messages'])
     assert c['profile']['discussion_route'] == ELEVEN  # Input snapshot is immutable.
@@ -85,6 +85,28 @@ def test_inquiry_then_explicit_selection_are_separate_turns(monkeypatch):
     d, logs, _ = runtime.run_agent(c)
     assert d['route_variant'] == ELEVEN and not d['start_introduction']
     assert len(requests) == 1 and any(l.get('status') == 'route_choice_rejected' for l in logs)
+
+
+def test_choice_repair_contains_rejected_candidate_and_authority_after_product_tools(monkeypatch):
+    c = ctx('桃花9日多少錢？')
+    semantic_model(monkeypatch, [result(c, 'inquire')])
+    bad = final(route_variant=NINE, route_choice='selected', interrupt=True)
+    good = final(route_variant=ELEVEN, route_choice='recommend', profile={'discussion_route': NINE},
+                 messages=[{'text': '這裡先提供九日的費用資料。'}])
+    requests = model(monkeypatch, [bad, good, good])
+    decision, _, _ = runtime.run_agent(c)
+    assert decision['route_choice'] == 'recommend' and decision['route_variant'] == ELEVEN
+    assert any(m['role'] == 'assistant' and '"route_choice": "selected"' in (m.get('content') or '')
+               for m in requests[1]['messages'])
+    for request in requests:
+        assert request['messages'][-1]['role'] == 'system'
+        assert '"intent": "inquire"' in request['messages'][-1]['content']
+
+
+def test_semantic_nonselection_allows_existing_route_introduction_after_intake():
+    c = ctx('我們兩位，四月初'); c['route_understanding'] = result(c, 'other', ELEVEN)
+    decision = runtime.Decision(route_variant=ELEVEN, start_introduction=True).model_dump()
+    assert choice_error(decision, c) is None
 
 
 def test_real_ambiguity_is_one_question_without_full_generation_or_handoff(monkeypatch):
@@ -138,6 +160,16 @@ def test_schema_repair_is_bounded_and_classified_as_nonretryable(monkeypatch):
     c = ctx(); requests = semantic_model(monkeypatch, [{}, {}])
     with pytest.raises(EvaluationCallError) as error: semantic.interpret(c, time.monotonic() + 20)
     assert len(requests) == 2 and semantic.contract_failure(error.value)
+
+
+def test_semantic_schema_uses_live_catalog_and_repairs_actual_invalid_value(monkeypatch):
+    c = ctx(); bad = result(c); bad['discussed_routes'] = ['invented-product']
+    requests = semantic_model(monkeypatch, [bad, result(c)])
+    value, logs, _ = semantic.interpret(c, time.monotonic() + 20)
+    assert value['selected_route'] == NINE and logs[0]['rejected_interpretation'] == bad
+    assert any(m['role'] == 'assistant' and 'invented-product' in m['content'] for m in requests[1]['messages'])
+    schema = semantic.schema_for(semantic.task(c))
+    assert set(schema['properties']['selected_route']['enum']) == {'', *c['skills']['routes']}
 
 
 def test_network_failure_keeps_retry_classification(monkeypatch):
