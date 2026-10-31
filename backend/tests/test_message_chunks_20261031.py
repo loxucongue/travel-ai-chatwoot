@@ -53,16 +53,45 @@ def test_link_query_and_decimal_are_intact_without_blocking_later_sentences():
 
 
 def test_parts_preserve_media_metadata_and_only_last_chunk_has_final_delay():
-    parts = [{'content': LONG, 'contact_invitation': True, 'contact_channels': ['line'],
+    parts = [{'content': LONG,
               'interval_seconds_after': 60, 'material_rule_id': 'r1'},
              {'content_type': 'image', 'asset_key': 'map'}]
     before = deepcopy(parts)
     result = split_parts(parts)
     assert parts == before
     assert result[-1] == parts[-1]
-    assert all(p['contact_invitation'] and p['material_rule_id'] == 'r1' for p in result[:-1])
+    assert all(p['material_rule_id'] == 'r1' for p in result[:-1])
     assert 'interval_seconds_after' not in result[0]
     assert result[-2]['interval_seconds_after'] == 60
+
+
+@pytest.mark.parametrize('deliver', [False, True])
+def test_contact_invitation_remains_atomic_for_delivered_history(deliver):
+    from types import SimpleNamespace
+    from app.reception_v3.lead_priority import task
+    preface = ('進藏行程需要準備的資料比較多，我們可以提供詳細行程和費用包含的說明，方便您和家人一起比較。'
+               '您目前還在考慮，可以先看每天的安排，等確定想了解的部分再問我們；不需要現在就決定報名。'
+               '之後對交通、住宿或文件有問題，也可以繼續在這裡詢問，我們會依照您的需求提供已有資料。')
+    invitation = preface + '方便留一下您的 LINE ID 或 QR Code 嗎？'
+    row = SimpleNamespace(messages=[], virtual_now='2026-10-31T01:00:00+00:00', controls={})
+    state = {}
+    service.append_plan(row, state, [{'content': invitation, 'contact_invitation': True,
+                                     'contact_channels': ['line'], 'proactive': True}], 'reply', 2, 17)
+    service.save(row, state)
+    if deliver:
+        service.complete_delivery(row, row.messages[0]['id'], 'simulated_delivered')
+    # A customer reply stops all remaining proactive drafts.
+    row.messages = [{**m, 'status': 'cancelled'} if m['status'] == 'draft' else m for m in row.messages]
+    history = [{'id': 'q1', 'content': '想看行程', 'direction': 'incoming',
+                'created_at': '2026-10-30T01:00:00+00:00'}, *row.messages]
+    context = {'event': 'silence_due', 'now': '2026-11-01T01:00:00+00:00', 'messages': history,
+               'skills': {'lead_capture': {'enabled': True, 'next_day_invitation_enabled': True,
+                                          'require_supported_route': False}}}
+    sent = [m for m in row.messages if m['status'] == 'simulated_delivered']
+    assert (task(context) is None) == deliver
+    assert any('LINE ID' in m['content'] for m in sent) == deliver
+    assert len(row.messages) == 1
+    assert row.messages[0]['contact_channels'] == ['line']
 
 
 def test_split_reply_delivers_in_order_then_handoff_cancels_remaining(session_factory, monkeypatch):

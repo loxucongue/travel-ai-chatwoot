@@ -48,7 +48,11 @@ def text_chunks(text):
 def split_parts(parts):
     result = []
     for part in parts:
-        if part.get('content_type', 'text') != 'text' or not part.get('content'):
+        # Invitation eligibility is recorded per delivered message. Keep its
+        # preface and actual request atomic, so an interruption cannot mark an
+        # invitation as sent before the customer has received the question.
+        if (part.get('content_type', 'text') != 'text' or not part.get('content')
+                or part.get('contact_invitation')):
             result.append(part)
             continue
         chunks = text_chunks(part['content'])
