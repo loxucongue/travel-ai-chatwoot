@@ -4,8 +4,9 @@
 <style>body{font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif;color:#182b39;background:#f5f7fa;max-width:1120px;margin:40px auto;padding:0 24px}h1{font-size:30px}h2{font-size:21px;margin-top:32px}section{background:white;padding:24px;border-radius:10px;margin:18px 0}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dce3e9;padding:10px;vertical-align:top;text-align:left}th{background:#edf4f8}code{background:#eef1f4;padding:2px 5px}a{color:#125a9e}.pending{border-left:5px solid #d39524}.ok{color:#187149}.flow{padding:16px;background:#eaf3f8;font-weight:600}</style>
 <h1>接待语义判断改造：第一批实现与验收</h1>
 <p>China2Go · main · 目标服务器 47.84.62.157 · 2026-10-31。基于其他窗口已发布的 <code>15a1bec</code>，保留其季节说明、分段发送及私讯邀请原子发送改动；没有修改 rujing2。</p>
-<section class="pending"><strong>状态：最终代码验收通过，待本次发布。</strong>
-<p>追加 5 元已确认，累计授权 85 元。本次确认后测试计费或预留 4.01648384 元，账本余 1.34664336 元；没有向真实客户发送测试消息。现场 #535 已有 van 接待，保留人工状态。</p></section>
+<section class="pending"><strong>状态：已于 2026-10-31 12:21（UTC+8）发布，12:22 线上核验通过。</strong>
+<p>线上代码版本 <code>98e5469</code>，部署至 China2Go 的 47.84.62.157，语义节点已启用；未涉及 rujing2。追加 5 元已确认，累计授权 85 元。本次确认后测试计费或预留 4.01648384 元，账本余 1.34664336 元；没有向真实客户发送测试消息。</p>
+<p>#535 已有 van 接待，当前是原有顾问交回后的仅跟进模式（AI_FOLLOWUP）；本次没有恢复完整自动答疑，也没有补发旧问题。其他窗口已发布的季节说明、消息分段、私讯邀请原子发送改动均保留。</p></section>
 <section><h2>原故障与现场处置</h2>
 <p>会话 #535（Iling Lee）回答“桃花9日”，接待模型已经正确选择九日，但旧代码要求客户出现特定选择动词，且将历史单一推荐记忆当作选择依据。运行 3961—3966 中连续 12 份正确选择被拒绝，外层又重复整轮处理，最终两次转人工。</p>
 <p>只读核对时 van 已在 11:17 回复，客户 11:24 致谢，因此遵守“已有人工接待就保留人工”的要求，没有修改标签或补发旧消息。截图显示的账号名本身不能证明是人工手动操作，必须结合系统调用与消息记录判断。</p></section>
@@ -35,9 +36,13 @@
 <ol><li>完整生产上下文的真实多轮验收已完成。追加预算仅用于测试，不改变生产消费策略。</li>
 <li>发布前重新比对 origin/main、线上 current-release 与涉及文件哈希。任一变化即重新核对差异，不覆盖其他窗口工作。</li>
 <li>使用现有部署互斥锁和备份流程，限定本次文件；启用 <code>RECEPTION_ROUTE_UNDERSTANDING_ENABLED=true</code>。模型可通过 <code>RECEPTION_ROUTE_UNDERSTANDING_MODEL</code> 指定，留空沿用现有 Flash 模型。</li>
-<li>代码默认关闭，发布时开启线上节点。注意关闭新节点并不会恢复已删除的关键词门槛；紧急回滚需回滚本次代码文件，不能把关闭开关等同旧版本恢复。</li>
+<li>代码默认关闭，本次线上已开启节点，使用现有 deepseek-v4-flash。注意关闭新节点并不会恢复已删除的关键词门槛；紧急回滚需回滚本次代码文件，不能把关闭开关等同旧版本恢复。</li>
 <li>上线后观察实际选择、澄清率、错误切线、校验失败、技术转人工、同一故障重复提醒、延迟与费用；核对送达后才能判断实际交付。模型分类准确不等于客户转化提升。</li></ol>
 <p>后续再逐项迁移私讯邀请、委婉拒绝、复杂日期表达等语义任务；统一证据协议和故障类型，沿用已有事实工具与权限控制，避免一次性拆掉整个接待系统。</p></section>
+<section><h2>上线核验与运行边界</h2>
+<p>六个发布文件的哈希与验收版本一致；其他代码、知识资料、业务设置、各渠道开关均保持原样。三个服务与四个 Worker 正常，数据库 quick_check 通过，公网 ready 为 200，核验时没有事件积压或新增失败运行。暂无上线后的自然选线样本，不把启用开关当成实客效果验收。</p>
+<p>发布使用共享部署锁、存储维护锁、线上版本和文件指纹校验，未覆盖其他窗口修改。只备份本次代码和环境配置；客户数据库没有迁移、修改或回滚。服务器仍只有约 1.55 GiB 可用空间，本次没有额外生成 1.03 GiB 的数据库副本，容量需继续按运维事项处理。</p>
+<p><a href="../../output/route-understanding-20261031/deployment.json">发布记录</a> · <a href="../../output/route-understanding-20261031/verified.json">上线核验</a> · <a href="../../output/route-understanding-20261031/materials-verified.json">21 组素材映射核验</a></p></section>
 <section><h2>本机证据位置</h2><ul>
 <li><a href="../../output/route-understanding-20261031/semantics-20261031T041252Z.json">最终 32 场景原始结果</a></li>
 <li><a href="../../output/route-understanding-20261031/original-output-replay.json">原失败输出回放</a></li>
