@@ -58,6 +58,8 @@ class LeadSettings(BaseModel):
     enabled: bool = True
     next_day_invitation_enabled: bool = False
     consultation_turn_threshold: int = Field(default=3, ge=1, le=20)
+    after_contact: Literal['handoff', 'assist_until_advisor'] = 'handoff'
+    customer_initiated_channels: list[Literal['LINE', '微信', '电话', 'Email', 'WhatsApp']] = Field(default_factory=lambda: ['Email'])
     channels: list[Literal["LINE", "微信", "电话", "Email", "WhatsApp"]] = Field(
         default_factory=lambda: list(SUPPORTED_CONTACT_CHANNELS), min_length=1, max_length=5
     )
@@ -68,6 +70,7 @@ class LeadSettings(BaseModel):
 
 class RoutingSettings(BaseModel):
     live_inbox_ids: list[int] | None = Field(default=None, max_length=100)
+    manual_inbox_ids: list[int] = Field(default_factory=list, max_length=100)
     enabled_route_variants: list[str] = Field(default_factory=lambda: list(ROUTE_PACKAGES), min_length=1)
     allow_route_switch: bool = True
     preserve_profile_on_switch: bool = True
@@ -75,6 +78,9 @@ class RoutingSettings(BaseModel):
 
     @model_validator(mode="after")
     def supported_routes_only(self):
+        if any(type(value) is not int or value <= 0 for value in self.manual_inbox_ids):
+            raise ValueError('invalid_manual_inbox_ids')
+        self.manual_inbox_ids = list(dict.fromkeys(self.manual_inbox_ids))
         if self.live_inbox_ids is not None:
             if any(type(value) is not int or value <= 0 for value in self.live_inbox_ids):
                 raise ValueError('invalid_live_inbox_ids')

@@ -148,6 +148,7 @@ acknowledge是單純收到/謝謝/點讚，不能據此確認報名或聯絡方�
 ambiguous僅在本輪確實需要消除選線歧義時使用，clarification只寫一個自然繁體確認問題，不帶產品事實或價格。普通酒店疑問、客戶還在比較、單純猶豫不需要強迫選線，使用inquire/compare/other。
 未決定不等於指代不清：客戶表明尚未決定、要商量、只轉述他人的選擇時，已經能理解其意願，使用other，不要用ambiguous逼他選擇。ambiguous只用於客戶確實要進行具體選線/介紹動作，但對象無法從上下文解析的情況。無詢問也未請求建議的保留意見用other，純致謝/收到才acknowledge。
 discussed_routes記本輪涉及的線路。evidence引用本輪customer消息ID及逐字原文，不能引用advisor作為客戶意願。
+evidence.quote是原始文字證據，保留簡繁體、標點和原語言，不能轉換、翻譯或潤色。例如客戶「行程包含用餐吗？」就照抄「行程包含用餐吗？」；不能改成「行程包含用餐嗎？」。只有clarification是對客答覆，使用自然繁體；證據不是答覆。
 offered_options按對話中的順序記錄近期我方實際提供的可選行程，每項{route,message_id,quote}；可保留多條，quote必須逐字出自已發我方消息，不得從目錄猜已發選項。
 travel_time只解讀時間問題前提，不心算天數或虛構日期。task：沒問時間用none；日期不知是否含往返用clarify_scope；明確完整往返的拼團時間可行性用check_shared_window；包團的實際起訖地/航班未核實用check_actual_connections；只查可出發日用check_departures；只問早班機/過夜等原因用explain_connections。
 date_scope是客戶日期含義，whole_trip包含家鄉出發到回家；departure_window只是可出發範圍；destination_stay只算目的地；不知道用unspecified。一段裸日期不自動等於完整假期。尚未確認包團航班時，不能把拼團前後各一天的規則套給包團，也不能說包團免交通時間。普通日期歧義在travel_time標clarify_scope，由主模型問，不把選線intent設ambiguous。

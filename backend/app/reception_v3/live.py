@@ -48,7 +48,7 @@ def human_owned(db, conversation):
         ConversationState.contact_id == conversation.contact_id)).all()
     for item in linked:
         if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == item.id,
-                                                HandoffTask.status.in_(['pending', 'claimed']))):
+                                                HandoffTask.blocks_ai())):
             return True
         row = session_for(db, item.id)
         if item.id != conversation.id and row and row.controls.get('human_followup', {}).get('enabled'):
@@ -131,11 +131,11 @@ def handoff(db, row, reason, summary, *, dispatch=True):
 def handoff_from_decision(db, row):
     value = service.state(row)
     reason = value.get('handoff_type', 'other')
-    if row.memory.get('contact_value'):
+    if reason == 'other' and row.memory.get('contact_value'):
         reason = 'contact'
-    elif row.memory.get('contact_status') == 'attachment_pending_verification':
+    elif reason == 'other' and row.memory.get('contact_status') == 'attachment_pending_verification':
         reason = 'contact_image'
-    elif row.memory.get('contact_status') == 'self_reported_added':
+    elif reason == 'other' and row.memory.get('contact_status') == 'self_reported_added':
         reason = 'contact_reported'
     handoff(db, row, reason, value.get('handoff_reason', ''))
 
@@ -163,7 +163,7 @@ def permitted(db, conversation, *, purpose='reply'):
         return False
     if enabled(row) and row.controls['human_followup'].get('mode') == 'automatic':
         from app.reception_v3.human_followup import automatic_enabled
-        if not automatic_enabled(db) or row.controls.get('auto_followup_paused'):
+        if not automatic_enabled(db, conversation) or row.controls.get('auto_followup_paused'):
             return False
     if not sync_ready(db, conversation) or (enabled(session_for(db, conversation.id)) and purpose != 'followup'):
         return False
@@ -180,7 +180,7 @@ def permitted(db, conversation, *, purpose='reply'):
         and not set((conversation.labels or []) + (conversation.contact.labels if conversation.contact else [])).intersection(blocking_labels(db))
         and not human_owned(db, conversation)
         and not db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
-                                                      HandoffTask.status.in_(['pending','claimed']))))
+                                                      HandoffTask.blocks_ai())))
 
 
 def apply_label_change(db, conversation, previous_labels):
@@ -341,6 +341,9 @@ def return_by_ai_label(db, conversation):
     service.control(row, 'stop')  # Cancel in-flight generation and obsolete drafts.
     row.controls = {**row.controls, 'human':False, 'auto_followup_paused':False, 'human_followup':{'enabled':False}}
     history = sync_history(db, row)
+    row.controls = {**row.controls, 'last_advisor_event_id': max(
+        [row.controls.get('last_advisor_event_id', 0)] + [m.chatwoot_message_id for m in history
+         if m.direction == 'outgoing' and m.attribution in ('human', 'inferred_human')])}
     value = service.state(row)
     for key in ('failed_event','last_error','retry_at','attempts','v3_lease','model_not_before','merge_started_at',
                 'handoff_reason','handoff_type','human_followup','departure_review_pending','route_review_pending'):
@@ -348,6 +351,11 @@ def return_by_ai_label(db, conversation):
     row.controls.pop('v3_lease', None)
     value.update(handoff=False,handoff_created=False,buffered_questions=[],pending_event=None,
                  last_reason='operator_ai_label_return',intake_answered=False)
+    value['operator_resume_at'] = now
+    value['operator_resume_history_ids'] = [f'cw-{m.chatwoot_message_id}' for m in history]
+    from app.reception_v3.lead_assist import remember_contact
+    remember_contact(value, row.memory)
+    value['lead_assist'] = False
     if value.get('intake_status') in ('sending','waiting'):
         value['intake_status'] = 'done'
     latest = next((m for m in reversed(history) if m.status!='failed'), None)
@@ -382,6 +390,9 @@ def return_by_ai_label(db, conversation):
 def enable_new_customer(db, conversation, message):
     """Opt new arrivals into the configured inbox, never re-enable old customers."""
     cutoff = setting_value(db, 'live_reply', {}).get('auto_new_customers_since')
+    from app.reception_rollout import manual_activation_required
+    if manual_activation_required(db, conversation.inbox.chatwoot_inbox_id):
+        return
     if (not cutoff or not settings.outbound_enabled or not global_message_sending_enabled(db)
             or not reception_inbox_allowed(db, conversation.inbox.chatwoot_inbox_id)
             or not reception_conversation_allowed(db, conversation.chatwoot_conversation_id)

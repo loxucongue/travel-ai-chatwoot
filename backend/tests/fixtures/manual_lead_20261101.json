@@ -1,0 +1,413 @@
+[
+  {
+    "id": "email_then_meals",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T09:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 2,
+        "departure_window": "2027年4月",
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "We are interested in the 11-day Tibet peach blossom and Everest tour."
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "Here is the itinerary. We can also share the detailed file for your reference."
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "email_and_question",
+        "text": "My email is traveler@example.com. Does the itinerary include meals?",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "contains_any": [
+          [
+            "breakfast",
+            "Breakfast"
+          ]
+        ],
+        "state_present": [
+          "lead_assist"
+        ],
+        "profile_equals": {
+          "contact_value": "traveler@example.com"
+        }
+      },
+      {
+        "id": "followup_question",
+        "text": "And we do not eat spicy food. Is that okay?",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "excludes": [
+          "LINE",
+          "QR Code"
+        ]
+      },
+      {
+        "id": "availability",
+        "text": "Hello, are you there?",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "excludes": [
+          "LINE",
+          "QR Code"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "operator_resume_old_email",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T09:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 2,
+        "departure_window": "2027年4月",
+        "group_type": "shared",
+        "contact_channel": "Email",
+        "contact_value": "traveler@example.com"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ],
+        "operator_resume_at": "2026-11-01T09:00:00+00:00",
+        "operator_resume_history_ids": [
+          "old-c",
+          "old-a"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "My email is traveler@example.com. Could I have the English itinerary?"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "attribution": "human",
+          "status": "sent",
+          "content": "We have received your email. Are you travelling alone?"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "outstanding_question",
+        "text": "And 2 of us. Does the itinerary include meals?",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "contains_any": [
+          [
+            "breakfast",
+            "Breakfast"
+          ]
+        ],
+        "profile_equals": {
+          "party_size": 2
+        }
+      },
+      {
+        "id": "continued_question",
+        "text": "行程包含用餐吗？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "contains": [
+          "早餐"
+        ],
+        "excludes": [
+          "Email",
+          "郵箱",
+          "信箱",
+          "LINE"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "manual_line_new_lead",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T09:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 2,
+        "departure_window": "2027年4月",
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ],
+        "operator_resume_at": "2026-11-01T09:00:00+00:00",
+        "operator_resume_history_ids": [
+          "line-c",
+          "line-a",
+          "line-c2"
+        ]
+      },
+      "messages": [
+        {
+          "id": "line-c",
+          "direction": "incoming",
+          "content": "想看西藏桃花加珠峰11天"
+        },
+        {
+          "id": "line-a",
+          "direction": "outgoing",
+          "attribution": "human",
+          "status": "sent",
+          "content": "您之前有跟我們聊過嗎？幾位同行，想幾月去呢？"
+        },
+        {
+          "id": "line-c2",
+          "direction": "incoming",
+          "content": "第一次問，兩位朋友，2027年4月。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "new_question",
+        "text": "是全程都有氧氣嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "excludes": [
+          "Email",
+          "信箱",
+          "之前有",
+          "幾位",
+          "幾月"
+        ]
+      },
+      {
+        "id": "airfare_question",
+        "text": "機票也有包含嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "contains_any": [
+          [
+            "不包含",
+            "不含"
+          ]
+        ],
+        "excludes": [
+          "Email",
+          "信箱"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "email_only_on_request",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T09:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 2,
+        "departure_window": "2027年4月",
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我們兩位想四月看桃花，行程看過了"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "方便留一下LINE嗎？可以把詳細行程提供給您參考。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "line_declined",
+        "text": "我不用LINE，就在這裡問好了。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "excludes": [
+          "Email",
+          "email",
+          "郵箱",
+          "信箱",
+          "微信",
+          "WhatsApp",
+          "電話"
+        ]
+      },
+      {
+        "id": "email_requested",
+        "text": "不過能寄一份英文行程到我的email嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "contains_any": [
+          [
+            "Email",
+            "email",
+            "信箱",
+            "郵箱"
+          ]
+        ]
+      },
+      {
+        "id": "email_given",
+        "text": "我信箱是 traveler@example.com，早餐有包含嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party",
+          "no_extra_opening",
+          "no_contact_invitation"
+        ],
+        "contains": [
+          "早餐"
+        ],
+        "state_present": [
+          "lead_assist"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "explicit_human_after_contact",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T09:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 2,
+        "departure_window": "2027年4月",
+        "group_type": "shared",
+        "contact_channel": "Email",
+        "contact_value": "traveler@example.com"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ],
+        "lead_assist": true
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "We are interested in the 11-day Tibet peach blossom and Everest tour."
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "Here is the itinerary. We can also share the detailed file for your reference."
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "explicit_human",
+        "text": "請停止自動回覆，我想找真人處理訂單問題。",
+        "checks": [
+          "handoff",
+          "no_send"
+        ]
+      }
+    ]
+  }
+]

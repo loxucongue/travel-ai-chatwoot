@@ -10,7 +10,7 @@ from app.config import settings
 from app.model_transport import _post_with_deadline, _call_log, EvaluationCallError
 from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
-from app.reception_v3.prompt import SYSTEM_PROMPT, TRAVEL_WINDOW_INSTRUCTION
+from app.reception_v3.prompt import SYSTEM_PROMPT, TRAVEL_WINDOW_INSTRUCTION, CONTACT_CONTINUITY_INSTRUCTION
 from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task, validation_error as lead_priority_error
 from app.reception_v3.large_party import reply_contract_error
 from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
@@ -41,11 +41,19 @@ class Decision(BaseModel):
     opt_out: bool | None = None
     next_check_minutes: float | None = Field(default=None, gt=0, le=10080)
     stop_followup: bool = False
+    notify_contact: bool = False
     handoff_reason: str = ''
     handoff_type: Literal['other', 'contact', 'contact_image', 'contact_reported', 'requested',
                           'party_size', 'trip_days', 'custom', 'knowledge'] = 'other'
     reason: str = ''
     lead_review: LeadReview | None = None
+
+    @field_validator('profile')
+    @classmethod
+    def profile_is_customer_data(cls, value):
+        if 'notify_contact' in value:
+            raise ValueError('notify_contact必须放在JSON顶层，不属于profile客户资料')
+        return value
 
     @field_validator('handoff_type', mode='before')
     @classmethod
@@ -130,7 +138,7 @@ def run_agent(context: dict):
               + '\n线路目录（仅用于识别，不是完整产品资料）：\n' + json.dumps(catalog, ensure_ascii=False)
               + '\n已加载线路 Skill：\n' + json.dumps(preloaded, ensure_ascii=False)
               + '\n通用接待 Skill：\n' + common['instructions']
-              + '\n\n' + SYSTEM_PROMPT)
+              + '\n\n' + SYSTEM_PROMPT + '\n\n' + CONTACT_CONTINUITY_INSTRUCTION)
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
     if context.get('route_understanding'):
@@ -345,7 +353,7 @@ def run_agent(context: dict):
                 request_messages = request_messages + [{'role': 'system', 'content': routing_instruction}]
             # Keep the reasoning contract after large route/tool payloads. It
             # applies through model understanding, not customer-text matching.
-            request_messages = request_messages + [{'role': 'system', 'content': TRAVEL_WINDOW_INSTRUCTION}]
+            request_messages = request_messages + [{'role': 'system', 'content': TRAVEL_WINDOW_INSTRUCTION + CONTACT_CONTINUITY_INSTRUCTION}]
             payload = {'model': settings.deepseek_vision_model if images else settings.deepseek_model, 'messages': request_messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
                        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,

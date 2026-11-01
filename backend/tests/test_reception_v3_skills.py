@@ -129,7 +129,7 @@ def test_dialogue_and_customer_preferences_remain_in_current_context(monkeypatch
     ]
     requests = model(monkeypatch, [final(messages=[{'text': '住宿回答'}])])
     runtime.run_agent(c)
-    messages = [m for m in requests[0]['messages'] if m.get('content') != runtime.TRAVEL_WINDOW_INSTRUCTION]
+    messages = [m for m in requests[0]['messages'] if m.get('content') != runtime.TRAVEL_WINDOW_INSTRUCTION + runtime.CONTACT_CONTINUITY_INSTRUCTION]
     assert [m['role'] for m in messages[1:-1]] == ['user', 'assistant', 'user']
     assert [m['content'] for m in messages[1:-1]] == [m['content'] for m in c['messages']]
     current = json.loads(messages[-1]['content'])

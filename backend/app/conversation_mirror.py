@@ -101,7 +101,7 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
                     linked.ai_mode, linked.ai_sync_status, linked.ai_label_present,
                 )
                 if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == linked.id,
-                                                         HandoffTask.status.in_(["pending", "claimed"]))):
+                                                         HandoffTask.blocks_ai())):
                     state, reason = "HUMAN_HANDOFF", "handoff:active_task"
                 from app.reception_v3.live import session_for, runtime_state, human_owned
                 state, reason = runtime_state(session_for(db, linked.id), state, reason)
@@ -178,7 +178,7 @@ def upsert_mirrors(db, event: WebhookEvent, *, side_effects: bool = True, update
         row.ai_mode, row.ai_sync_status, row.ai_label_present,
     )
     if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == row.id,
-                                             HandoffTask.status.in_(["pending", "claimed"]))):
+                                             HandoffTask.blocks_ai())):
         state, reason = "HUMAN_HANDOFF", "handoff:active_task"
     from app.reception_v3.live import session_for, runtime_state, human_owned
     state, reason = runtime_state(session_for(db, row.id), state, reason)

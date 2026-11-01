@@ -145,6 +145,9 @@ def active_followup_time(moment, silence):
 
 
 def schedule_followup(value, bundle, now, *, reset=False):
+    if value.get('lead_assist'):
+        value.update(next_check_at=None, next_check_minutes=None)
+        return
     silence = bundle['silence']
     if silence.get('daily_at'):
         schedule_daily_followup(value, silence, now, reset=reset)
@@ -596,6 +599,9 @@ def apply_decision(db, row, run, bundle, decision):
             from app.reception_v3.live import handoff_from_decision
             handoff_from_decision(db, row)
         return
+    if decision.get('notify_contact'):
+        from app.reception_v3.lead_assist import notify
+        notify(db, row, value, decision, bundle)
     selected_route = decision['route_variant'] or row.controls.get('route_variant', '')
     if (selected_route and decision['action'] != 'handoff' and decision['opt_out'] is not True
             and not decision['interrupt'] and row.memory.get('reception_status') != 'abusive'
@@ -642,7 +648,7 @@ def apply_decision(db, row, run, bundle, decision):
     value['silence_step'] = step
     intervals = followup_intervals(value, bundle['silence'])
     configured_delay = 1440 if bundle['silence'].get('daily_at') else (intervals[step] if step < len(intervals) else None)
-    stopped = (value.get('opt_out') or value.get('handoff') or not bundle['silence']['enabled']
+    stopped = (value.get('opt_out') or value.get('handoff') or value.get('lead_assist') or not bundle['silence']['enabled']
                or row.memory.get('reception_status') == 'abusive')
     appointment = decision['next_check_minutes'] if run.input_snapshot.get('event') == 'customer_message' else None
     value['appointment_pending'] = bool(appointment)
@@ -786,7 +792,7 @@ def advance(row, wall_now=None, *, deliver=True):
         row.due_at = utcnow()
     elif value.get('next_check_at') and date(value['next_check_at']) <= date(row.virtual_now):
         value['next_check_at'] = None
-        if not value.get('opt_out') and not value.get('handoff'):
+        if not value.get('opt_out') and not value.get('handoff') and not value.get('lead_assist'):
             value['pending_event'] = 'silence_due'
             row.due_at = utcnow()
     save(row, value)
@@ -862,6 +868,12 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
         if active:
             active.status, active.error_code = 'cancelled', 'lease_expired'
         bundle = personalize_quotes(db, row, compile_skills(db))
+        if event == 'silence_due' and value.get('lead_assist'):
+            value.update(pending_event=None, next_check_at=None, next_check_minutes=None)
+            save(row, value)
+            row.due_at = None
+            db.commit()
+            continue
         if event == 'silence_due':
             silence = bundle['silence']
             if not silence.get('daily_at') and not value.get('appointment_pending') and value.get('followup_anchor'):
@@ -927,6 +939,13 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                    'messages': [m for m in row.messages if m.get('direction') == 'incoming' or m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')],
                    'buffered_questions': [m for m in row.messages if m.get('id') in value.get('buffered_questions', [])],
                    'available_materials': candidate_materials(db, tenant_for_session(db, row))}
+        if environment == 'live':
+            conversation = db.get(ConversationState, row.conversation_state_id)
+            from app.reception_rollout import manual_activation_required
+            context['channel_context'] = {
+                'type': conversation.inbox.channel_type,
+                'manual_activation': manual_activation_required(db, conversation.inbox.chatwoot_inbox_id),
+            }
         if event == 'silence_due':
             context['followup_materials'] = followup_materials(
                 context['available_materials'], row.messages, context['route_variant'], row.memory)

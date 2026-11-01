@@ -1,0 +1,32 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LINE 手动接待与留资后答疑 · 2026-11-01</title>
+<style>body{font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif;background:#f4f6f9;color:#223046}main{max-width:1000px;margin:24px auto;padding:28px;background:white}h1{font-size:28px}table{border-collapse:collapse;width:100%}th,td{padding:10px;border:1px solid #dce2e9;text-align:left;vertical-align:top}th{background:#edf2f7}code{overflow-wrap:anywhere}@media(max-width:700px){main{padding:14px;margin:0}}</style><main>
+<h1>LINE 手动接待与留资后答疑</h1>
+<p>实现与验收日期：2026-11-01。对应业务反馈：人工确认 LINE 新客后交给 AI；客户留邮箱后仍需答疑；手动重新开启 AI 不应反复因为同一个邮箱转人工。</p>
+<h2>业务如何操作</h2>
+<ol><li>系统设置 → 渠道 AI：LINE 官方账号允许 AI，开启方式选择“人工添加 ai 后接待”。新来讯不自动启用 AI，顾问可以先了解客户。</li>
+<li>确认交给 AI 时，移除会话“人工接管”标签并添加“ai”。已有顾问和客户的公开聊天会作为上下文，接续最后未回答的问题；已经回答的内容不重新发送。</li>
+<li>公共接待 → 留资与交接：开启“留资后继续承接问题”。收到联系方式创建顾问提醒，但保留 AI 答疑权限；停止主动洗单。同一联系方式不会反复通知。</li>
+<li>顾问回复、主动认领、添加人工接管标签或移除 ai，停止 AI。人工开启模式不通过原有三十分钟自动交回机制重新开启。</li>
+<li>Email 列在渠道列表最后，并勾选“Email 仅在客户主动提出时使用”。客户未提及邮件就不主动推荐；主动请求邮件或提供邮箱时正常承接。</li></ol>
+<h2>消息如何流转</h2>
+<p>Chatwoot 消息/标签事件 → 核对渠道范围及人工控制 → 导入当前会话历史并保留发送者角色 → 模型根据新问题、已知资料和留资配置选择答复/提醒/交接 → 提醒进入原有顾问队列，答复进入原有发送队列 → 每次实际发送仍核对人工接手、全局发送和渠道窗口。</p>
+<p>答什么、何时提及联系方式由模型结合上下文判断，没有增加基于客户文案的正则分类。程序负责执行权限、任务状态、去重和发送回执，不能由模型越过人工关闭。</p>
+<p>新增转人工任务字段 <code>ai_assist_allowed</code> 区分“待顾问跟进、AI可答疑”与“必须停止AI的交接”。数据库迁移 a038 是追加字段，既有任务默认 false，维持原人工状态。主动认领会在请求 Chatwoot 分配前暂停 AI，分配回执不确定时也保持暂停。</p>
+<h2>边界</h2>
+<ul><li>只使用当前已同步会话记录。不会根据同名客户自动合并 Facebook 与 LINE 的历史，也不声称已读取未关联的跨平台聊天。</li>
+<li>客户明确要求真人、投诉、特殊定制及需要人工核实的情况，仍可停止 AI 转人工。不能把“继续简单承接”理解为允许 AI 编造价格、英文文件、酒店库存或顾问在线状态。</li>
+<li>原有人工任务不会因本次升级自动解除；需顾问明确交回。上线不批量恢复历史会话、不补发历史消息。</li>
+<li>新配置影响后续决策；已有人工或发送结果未知的会话仍受原保护限制。已有顾问任务的手机推送和已读情况不能仅凭接口提交成功判断。</li>
+<li>其他渠道原有自动接待模式及负责人分配规则保持原配置。LINE手动模式不改变Chatwoot成员权限。</li></ul>
+<h2>验证证据</h2>
+<table><tr><th>验证</th><th>结果与范围</th></tr>
+<tr><td>服务器 Linux 隔离回归</td><td>197项通过，网络禁用。覆盖人工开启、已有历史、重复事件、留资通知、后续问题、人工抢占、未知分配回执、超时提醒、迁移和配置保存。</td></tr>
+<tr><td>真实模型多轮测试</td><td>最终5组11步通过：英文留邮箱后问餐食/忌口/在线；旧邮箱手动恢复；人工历史后继续答疑；先拒绝渠道后主动改Email；留资后明确要求真人。测试全程仅运行隔离对话，没有向客户发消息。</td></tr>
+<tr><td>模型迭代</td><td>修正执行字段误放profile、英文对话变中文、旧拒绝覆盖新Email意图、证据简繁转换、过长餐食回复及缺乏依据的早餐形式。不是用程序删句。累计117次模型调用，账本约3.1783元，包含修复前失败的测试。</td></tr>
+<tr><td>前端</td><td>10项测试及TypeScript/Vite构建通过。浏览器验证渠道模式保存/刷新、留资开关保存/刷新；发现后端配置白名单漏项并修复，新增API完整配置保留测试。</td></tr>
+<tr><td>线上只读检查</td><td>LINE收件箱150781连接正常，三位派单人员均为成员；当前全局发送允许，接待范围采用ai标签。发布配置将LINE加入允许范围并设为人工开启，其余已有渠道不变。</td></tr></table>
+<p>证据目录：<code>output/manual-lead-20261101/</code>。最终真实模型样本：<code>real-20261101T122951Z/summary.json</code>；Linux测试：<code>prepare.json</code>；浏览器截图：<code>output/playwright/manual-line-saved.png</code>、<code>output/playwright/lead-assist-saved.png</code>。样本通过不代表任意未来模型回复均已验证；实际LINE客户端收发未用真实客户做测试。</p>
+<h2>发布策略</h2>
+<p>已准备部署前代码哈希核对、业务任务排空、SQLite备份完整性检查、gzip解压哈希核验及失败回滚。只修改指定渠道范围和三项留资配置；保留原有开关及业务编辑。部署结果记录于 <code>output/manual-lead-20261101/deploy.json</code>，线上版本记录于 <code>/opt/china2go-ai/current-release.json</code>，以实际回执为准。</p>
+</main></html>

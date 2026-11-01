@@ -1,6 +1,7 @@
 """One settings operation for the existing inbox and reception-scope gates."""
 import hashlib
 import json
+from typing import Literal
 
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
@@ -17,6 +18,7 @@ class ChannelChange(BaseModel):
     model_config = ConfigDict(extra='forbid')
     id: int = Field(gt=0, strict=True)
     enabled: StrictBool
+    activation_mode: Literal['automatic', 'manual'] | None = None
 
 
 class ChannelSettingsChange(BaseModel):
@@ -27,12 +29,14 @@ class ChannelSettingsChange(BaseModel):
 
 def channel_settings(db):
     scope = reception_inbox_ids(db)
+    manual = get_reception_configuration(db)['routing']['manual_inbox_ids']
     items = []
     for row in db.scalars(select(InboxBinding).order_by(InboxBinding.id)):
         items.append({'id': row.id, 'chatwoot_inbox_id': row.chatwoot_inbox_id,
                       'name': row.name, 'channel_type': row.channel_type, 'status': row.status,
                       'ai_enabled': row.ai_enabled, 'in_reception_scope': row.chatwoot_inbox_id in scope,
-                      'enabled': row.ai_enabled and row.chatwoot_inbox_id in scope})
+                      'enabled': row.ai_enabled and row.chatwoot_inbox_id in scope,
+                      'activation_mode': 'manual' if row.chatwoot_inbox_id in manual else 'automatic'})
     revision = hashlib.sha256(json.dumps({'items': items, 'scope': scope}, sort_keys=True).encode()).hexdigest()
     return {'items': items, 'revision': revision, 'global_sending_enabled': global_message_sending_enabled(db)}
 
@@ -60,6 +64,14 @@ def save_channel_settings(db, user, payload):
             scope.append(row.chatwoot_inbox_id)
     config = get_reception_configuration(db)
     config['routing']['live_inbox_ids'] = scope
+    manual = config['routing']['manual_inbox_ids']
+    for change in payload.changes:
+        if change.activation_mode is not None:
+            inbox_id = rows[change.id].chatwoot_inbox_id
+            manual = [i for i in manual if i != inbox_id]
+            if change.activation_mode == 'manual':
+                manual.append(inbox_id)
+    config['routing']['manual_inbox_ids'] = manual
     put_reception_configuration(db, ReceptionConfiguration.model_validate(config))
     db.flush()
     after = channel_settings(db)

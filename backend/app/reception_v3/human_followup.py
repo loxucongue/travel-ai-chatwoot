@@ -34,8 +34,11 @@ def scope_enabled(db, conversation):
         and reception_conversation_allowed(db, conversation.chatwoot_conversation_id))
 
 
-def automatic_enabled(db):
+def automatic_enabled(db, conversation=None):
     from app.reception_config import get_reception_configuration
+    from app.reception_rollout import manual_activation_required
+    if conversation and manual_activation_required(db, conversation.inbox.chatwoot_inbox_id):
+        return False
     config = get_reception_configuration(db)['silence']
     return config['enabled'] and config['live_enabled'] and config['advisor_reply_followup_enabled']
 
@@ -44,7 +47,7 @@ def automatic_return(db, conversation, row, message):
     """Only a new, public human reply may grant future follow-up permission."""
     from app.models import User
     from app.operations import audit
-    if not automatic_enabled(db) or row.controls.get('auto_followup_paused'):
+    if not automatic_enabled(db, conversation) or row.controls.get('auto_followup_paused'):
         return
     age = dt(utcnow()) - dt(message.created_at)
     if (message.private or message.direction != 'outgoing' or message.status == 'failed'
@@ -189,7 +192,7 @@ def activate_due(db, conversation, row):
     labels = set(conversation.labels or [])
     contact_labels = set(conversation.contact.labels if conversation.contact else [])
     blocked = (row.controls.get('auto_followup_paused') or not scope_enabled(db, conversation)
-        or permission.get('mode') == 'automatic' and not automatic_enabled(db)
+        or permission.get('mode') == 'automatic' and not automatic_enabled(db, conversation)
         or not conversation.can_reply or service.state(row).get('opt_out')
         or labels.intersection(blocking_labels(db) - {'人工接管'})
         or contact_labels.intersection(blocking_labels(db))

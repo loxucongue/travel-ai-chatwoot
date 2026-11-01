@@ -33,6 +33,11 @@ def reception_inbox_allowed(db, inbox_id):
     return type(inbox_id) is int and inbox_id in reception_inbox_ids(db)
 
 
+def manual_activation_required(db, inbox_id):
+    from app.reception_config import get_reception_configuration
+    return inbox_id in get_reception_configuration(db)['routing']['manual_inbox_ids']
+
+
 def default_engine_assignment() -> dict[str, str]:
     from app.reception_v3 import release_id
     return {"ai_engine_version": "v3", "ai_engine_release_id": release_id()}

@@ -202,7 +202,8 @@ def process_handoff_overdue(session_factory=None) -> bool:
             if db.scalar(select(Notification.id).where(Notification.event_type == "handoff.overdue", Notification.body == body)):
                 continue
             from app.advisor_assignment import emit
-            routed = emit(db, conversation, ['handoff.overdue'], f'overdue:{task.id}', {'summary':body})
+            routed = emit(db, conversation, ['handoff.overdue'], f'overdue:{task.id}',
+                          {'summary':body, 'ai_assist_allowed':task.ai_assist_allowed})
             if not (routed and routed.rule_id):
                 create_notification(db, "handoff.overdue", "人工接管任务已超时", body, conversation.chatwoot_conversation_id)
             created += 1

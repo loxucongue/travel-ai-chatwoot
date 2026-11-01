@@ -148,7 +148,7 @@ def emit(db, conversation, events, event_key, payload=None):
     elif config.fallback_agent_id and eligible_agents(db, conversation, config, [config.fallback_agent_id]):
         record.agent_id = config.fallback_agent_id
     record.status = 'pending' if record.agent_id else 'unassigned'
-    if rule.action == 'handoff':
+    if rule.action == 'handoff' and not payload.get('ai_assist_allowed'):
         from app.operations import ensure_handoff
         from app.reception_v3.live import cancel, session_for
         reason = 'trip_days' if rule.minimum_days else 'party_size' if rule.minimum_people else rule.event

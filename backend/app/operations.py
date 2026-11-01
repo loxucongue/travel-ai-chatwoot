@@ -69,29 +69,32 @@ def ensure_handoff(
     reason_code: str,
     reason_detail: str = "",
     priority: str = "P2",
-    *, dispatch: bool = True,
+    *, dispatch: bool = True, allow_ai_assist: bool = False,
 ) -> HandoffTask:
     from app.handoff_text import handoff_summary
     summary = handoff_summary(reason_code, reason_detail)
     reason_detail = summary['reason']
     from app.conversation_labels import queue_labels
-    queue_labels(db, conversation, 'human')
+    if not allow_ai_assist:
+        queue_labels(db, conversation, 'human')
     from app.reception_v3.live import session_for
     from app.reception_v3 import service
     session = session_for(db, conversation.id)
-    if session and session.controls.get('human_followup', {}).get('enabled'):
+    if not allow_ai_assist and session and session.controls.get('human_followup', {}).get('enabled'):
         service.control(session, 'stop')
         session.controls = {**session.controls, 'human': True, 'human_followup': {'enabled': False}}
         value = service.state(session)
         value['human_followup'] = False
         service.save(session, value)
     existing = db.scalar(select(HandoffTask).where(HandoffTask.conversation_state_id == conversation.id, HandoffTask.status.in_(["pending", "claimed"])))
-    if conversation.effective_ai_state != "HUMAN_HANDOFF":
+    if not allow_ai_assist and conversation.effective_ai_state != "HUMAN_HANDOFF":
         conversation.effective_ai_state = "HUMAN_HANDOFF"
         conversation.effective_state_reason = f"handoff:{reason_code}"
         conversation.version += 1
         conversation.updated_at = utcnow()
     if existing:
+        if not allow_ai_assist:
+            existing.ai_assist_allowed = False
         if reason_detail and reason_detail != existing.reason_detail:
             existing.reason_detail = reason_detail
             existing.updated_at = utcnow()
@@ -99,7 +102,7 @@ def ensure_handoff(
         return existing
     sla = setting_value(db, "handoff_policy", {"sla_minutes": 30})
     due = (datetime.now(timezone.utc) + timedelta(minutes=int(sla.get("sla_minutes", 30)))).isoformat()
-    task = HandoffTask(conversation_state_id=conversation.id, reason_code=reason_code, reason_detail=reason_detail, priority=priority, sla_due_at=due)
+    task = HandoffTask(conversation_state_id=conversation.id, reason_code=reason_code, reason_detail=reason_detail, priority=priority, sla_due_at=due, ai_assist_allowed=allow_ai_assist)
     db.add(task)
     db.flush()
     routed = None
@@ -110,7 +113,7 @@ def ensure_handoff(
         routed = emit(db, conversation, [handoff_event(reason_code), 'handoff.created'], f'handoff:{task.id}',
                       {**(session.memory if session else {}),
                        'route_variant': (session.controls if session else {}).get('route_variant',''),
-                       'summary': summary['text']})
+                       'summary': summary['text'], 'ai_assist_allowed': allow_ai_assist})
     if dispatch and not (routed and routed.rule_id):
         create_notification(db, "handoff.created", "需要顾问接待", summary['text'], conversation.chatwoot_conversation_id)
     return task

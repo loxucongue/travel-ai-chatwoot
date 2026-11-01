@@ -91,7 +91,7 @@ def mirror_event(db, event):
                 if context.get('new_message'):
                     observe_reply(db, state, message)
                 accept(db,state,message)
-        elif incoming and policy.get('armed_at') and message.created_at>=policy['armed_at'] and not fresh(message.created_at) and permitted(db,state):
+        elif incoming and context.get('new_message') and policy.get('armed_at') and message.created_at>=policy['armed_at'] and not fresh(message.created_at) and permitted(db,state):
             ensure_handoff(db,state,'reply_queue_overdue','客户消息等待超时，请人工接待。')
     if state and current and not permitted(db,state,purpose='followup'):
         from app.reception_v3.live import session_for

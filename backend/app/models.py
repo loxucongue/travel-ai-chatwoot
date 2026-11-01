@@ -323,6 +323,7 @@ class HandoffTask(Base):
     reason_detail: Mapped[str] = mapped_column(Text, default="")
     priority: Mapped[str] = mapped_column(String(10), default="P2")
     status: Mapped[str] = mapped_column(String(30), default="pending")
+    ai_assist_allowed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     assignee_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     assignment_target_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     assignment_target_agent_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -334,6 +335,14 @@ class HandoffTask(Base):
     version: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[str] = mapped_column(String(40), default=utcnow)
     updated_at: Mapped[str] = mapped_column(String(40), default=utcnow)
+
+    @classmethod
+    def blocks_ai(cls):
+        """A lead notice may coexist with replies until an advisor claims it."""
+        from sqlalchemy import and_, or_
+        return and_(cls.status.in_(['pending', 'claimed']), or_(
+            cls.ai_assist_allowed.is_(False), cls.status == 'claimed',
+            cls.assignment_target_user_id.is_not(None)))
 
 
 class Notification(Base):

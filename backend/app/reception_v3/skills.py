@@ -152,7 +152,7 @@ class SkillRegistry:
                 'silence': ('material_selection', 'enabled', 'daily_at', 'intervals_minutes', 'initial_checkpoints_minutes', 'recurring_interval_minutes', 'active_start', 'active_end'),
                 'handoff': ('large_group_enabled', 'large_group_minimum'),
                 'routing': ('enabled_route_variants', 'allow_route_switch', 'preserve_profile_on_switch', 'outside_catalog_action'),
-                'lead_capture': ('enabled', 'channels', 'require_supported_route',
+                'lead_capture': ('enabled', 'channels', 'after_contact', 'customer_initiated_channels', 'require_supported_route',
                                  'require_party_size', 'require_departure_window',
                                  'next_day_invitation_enabled', 'consultation_turn_threshold'),
             }

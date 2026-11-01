@@ -384,6 +384,10 @@ def handoff_json(db: Session, task: HandoffTask) -> dict:
     followup = enabled(session)
     from app.handoff_text import handoff_summary
     summary = handoff_summary(task.reason_code, task.reason_detail)
+    summary['reason'] += ('（等待顾问接手期间，AI 可继续回答客户问题。）'
+                          if task.ai_assist_allowed and task.status == 'pending' and task.assignment_target_user_id is None
+                          and session and not session.controls.get('human')
+                          and session.controls.get('simulation', {}).get('status') == 'running' else '')
     return {"id": task.id, "conversation_id": conversation.chatwoot_conversation_id, "customer_name": contact.name if contact else "未知客户", "inbox": conversation.inbox.name, "inbox_id": conversation.inbox.chatwoot_inbox_id, "reason_code": task.reason_code, "reason_label":summary['scene'], "reason_detail": summary['reason'], "priority": task.priority, "status": task.status, "assignee": assignee.display_name if assignee else None, "assignee_user_id": task.assignee_user_id, "assignment_pending": task.assignment_target_user_id is not None, "assignment_target_agent_id": task.assignment_target_agent_id, "sla_due_at": task.sla_due_at, "created_at": task.created_at, "claimed_at": task.claimed_at, "completed_at": task.completed_at, "version": task.version, "labels": conversation.labels, 'followup_enabled':followup, 'followup_waiting':waiting(session), 'label_sync_status':conversation.ai_sync_status}
 
 
@@ -464,6 +468,11 @@ def claim_for(db: Session, task: HandoffTask, conversation: ConversationState, t
             raise HTTPException(409, detail={"code": "handoff_conflict", "message": "任务已更新或分配结果待核对，请刷新"})
         # Persist the reservation before HTTP; do not hold SQLite's write lock
         # across the network. Pending/claimed still blocks automatic replies.
+        from app.reception_v3.live import cancel
+        from app.conversation_labels import queue_labels
+        cancel(db, conversation.id, 'advisor_claim')
+        queue_labels(db, conversation, 'human')
+        conversation.effective_ai_state, conversation.effective_state_reason = 'HUMAN_HANDOFF', 'human:advisor_claim'
         db.commit()
         try:
             client.assign_conversation(remote_id, agent_id)
