@@ -480,11 +480,6 @@ def run_agent(context: dict):
             if (availability_results.get(actual_route,{}).get('status')=='unavailable'
                     and decision['action'] in ('reply','wait') and not decision['start_introduction']):
                 decision['interrupt']=True
-            from app.reception_v3.repetition import review as review_repetition
-            decision, review_logs, review_hash = review_repetition(decision, context, deadline)
-            logs.extend(review_logs)
-            if review_hash:
-                hashes.append(review_hash)
             from app.reception_v3.route_choice import reply_route
             quote_problem = quote_error(
                 {**decision, 'route_variant': reply_route(decision, context.get('profile'), context.get('route_variant',''))},
@@ -556,6 +551,13 @@ def run_agent(context: dict):
             selected_route = decision['route_variant'] or context.get('route_variant', '')
             if selected_route in departure_checks:
                 decision['profile']['_departure_check'] = departure_checks[selected_route]
+            # Validate the complete model answer first. Only optional timer
+            # touches can be suppressed as a whole; active answers bypass this.
+            from app.reception_v3.repetition import review as review_repetition
+            decision, review_logs, review_hash = review_repetition(decision, context, deadline)
+            logs.extend(review_logs)
+            if review_hash:
+                hashes.append(review_hash)
             return decision, logs, combine_digests(*hashes)
         raise ValueError('v3_tool_round_limit')
     except Exception as exc:

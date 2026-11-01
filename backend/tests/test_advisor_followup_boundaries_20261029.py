@@ -61,7 +61,7 @@ def test_replay_493_followup_roles_and_reprice_suppression(monkeypatch):
     assert [m['speaker'] for m in task['history']] == ['customer', 'advisor', 'advisor']
     assert task['customer_has_new_message'] is False
     assert 'UNSENT' not in str(requests + reviews) and 'PRIVATE' not in str(requests + reviews)
-    assert any(log.get('removed_clauses') for log in logs)
+    assert any(log.get('followup_suppressed') for log in logs)
 
 
 @pytest.mark.parametrize('failure', ['timeout', 'invalid_ids', 'malformed'])

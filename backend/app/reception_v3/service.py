@@ -588,7 +588,8 @@ def apply_decision(db, row, run, bundle, decision):
             and not decision['interrupt'] and row.memory.get('reception_status') != 'abusive'
             and decision.get('route_choice') != 'recommend'
             and not rejects_current_route(selected_route, row.memory)
-            and (decision['start_introduction'] or (not decision['messages'] and decision['action'] == 'wait'))):
+            and (decision['start_introduction'] or (not decision['messages'] and decision['action'] == 'wait'
+                 and run.input_snapshot.get('event') != 'silence_due'))):
         if begin_intake(row, value, bundle, decision['route_variant'] or row.controls.get('route_variant', '')):
             save(row, value)
             row.due_at = None
