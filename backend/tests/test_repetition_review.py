@@ -127,3 +127,36 @@ def test_suppressed_timer_does_not_restart_intake_or_emit_any_message(session_fa
         service.apply_decision(db, row, run, bundle(), repetition.wait_for_next_touch(draft()))
         assert row.messages == before
         assert service.state(row)['next_check_at']
+
+
+@pytest.mark.parametrize('failure', [False, True])
+def test_review_wait_defers_required_contact_invitation_without_failure(session_factory, monkeypatch, failure):
+    from app.automation_models import AutomationRun
+    from app.reception_v3 import service
+    from test_reception_v3 import create
+    from test_lead_priority import configured, history, invitation
+    monkeypatch.setattr(settings, 'reception_repeat_review_enabled', True)
+    def post(*a):
+        if failure:
+            raise TimeoutError('review_timeout')
+        return response([0])
+    monkeypatch.setattr(repetition, '_post_with_deadline', post)
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        row.controls = {**row.controls, 'route_variant':'nine'}
+        row.virtual_now = '2026-10-26T01:00:00+00:00'
+        row.messages = history()
+        row.memory = {'party_size':1}
+        value = service.state(row)
+        value.update(followup_anchor='2026-10-25T00:36:00+08:00',
+                     followup_last_customer_at=row.messages[0]['created_at'])
+        service.save(row, value)
+        d, logs, _ = repetition.review(invitation(), {'event':'silence_due','messages':row.messages}, time.monotonic()+20)
+        run = AutomationRun(session_id=row.id, generation=row.generation, module='silence_touch',
+                            idempotency_key='contact-suppressed', input_snapshot={'event':'silence_due'}, trace={'logs':logs})
+        db.add(run); db.flush()
+        before = deepcopy(row.messages)
+        service.apply_decision(db, row, run, configured(), d)
+        assert row.messages == before and row.memory == {'party_size':1}
+        assert service.state(row)['last_reason']=='followup_review_wait'
+        assert service.state(row)['next_check_at'].startswith('2026-10-27')

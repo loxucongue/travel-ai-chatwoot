@@ -489,6 +489,19 @@ def update_profile(db, row, run, decision):
 
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
+    if (run.input_snapshot.get('event') == 'silence_due' and not value.get('human_followup')
+            and decision['action'] == 'wait' and not decision['messages']
+            and any(log.get('node') == 'repetition_review' and log.get('followup_suppressed')
+                    for log in (run.trace or {}).get('logs', []))):
+        # A reviewed optional touch is skipped, not a fresh business decision.
+        # Do not revalidate a required invitation, launch large-party intake or
+        # apply profile changes after choosing not to communicate this turn.
+        value.update(pending_event=None, next_check_at=None, silence_step=value.get('silence_step', 0)+1,
+                     last_reason='followup_review_wait', followup_settings=deepcopy(bundle['silence']))
+        schedule_followup(value, bundle, row.virtual_now)
+        save(row, value)
+        row.due_at = None
+        return
     from app.reception_v3.lead_priority import validation_error as lead_priority_error, outcome as lead_priority_outcome
     lead_context = {
         'event': run.input_snapshot.get('event'), 'now': row.virtual_now,
