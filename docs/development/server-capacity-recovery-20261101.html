@@ -1,0 +1,41 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>服务器容量与备份恢复 · 2026-11-01</title>
+<style>body{font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif;background:#f4f6f9;color:#223046}main{max-width:1000px;margin:24px auto;padding:28px;background:white}h1{font-size:28px}table{border-collapse:collapse;width:100%}th,td{padding:10px;border:1px solid #dce2e9;text-align:left;vertical-align:top}th{background:#edf2f7}.ok{padding:16px;background:#eaf6ef}code{overflow-wrap:anywhere}@media(max-width:700px){main{padding:14px;margin:0}}</style><main>
+<h1>服务器容量与备份恢复</h1><p>备份与恢复演练完成：2026-11-01 13:53:53 北京时间；最终线上复查：2026-11-01 20:00:20 北京时间。主机：47.84.62.157。</p>
+<p class="ok">已对 <b>51份</b> 历史数据库快照逐份压缩并完成解压哈希核验，压缩释放 <b>18.65 GiB</b>。每日数据库备份已恢复成功，隔离恢复演练通过。</p>
+<table><tr><th>项目</th><th>处理前</th><th>处理后</th></tr><tr><td>根分区使用率（df显示）</td><td>97%</td><td>60%</td></tr><tr><td>可用空间</td><td>1.59 GiB</td><td>19.09 GiB</td></tr><tr><td>每日数据库备份</td><td>11月1日03:30因空间不足失败</td><td>已补跑成功；完整性检查通过</td></tr><tr><td>接待相关服务</td><td>5个服务运行</td><td>5个服务继续运行，未重启业务服务</td></tr></table>
+<h2>问题来源</h2>
+<p>历史备份目录约33GiB，是主要占用；发布目录约2.3GiB，运行数据库约1.1GiB。此前每日备份和多次发布留下整份未压缩数据库，虽然已有14天/30天过期清理，但保留期内的副本仍不断积累。本次通过压缩历史备份解决容量问题，保留业务数据。</p>
+<p>处理前可用内存约2.56GiB，交换空间未使用；最近3天内核日志未发现OOM记录。数据库页统计显示，automation_runs约862MiB，webhook_events约203MiB，是数据库后续增长的主要来源。</p>
+<h2>本次处理与保护</h2>
+<ul><li>只处理backups下已完成、超过24小时、符合命名规则的历史SQLite快照。当前发布及回滚目录、各类最近3份备份保留；含WAL/SHM/journal伴随文件的9份快照跳过。</li>
+<li>先写临时gzip文件，再完整解压计算SHA-256及字节数；与原文件一致且原文件/发布状态未变化，才发布压缩文件并移除原始副本。校验失败或空间不足时保留原文件。</li>
+<li>保留文件权限、所有者及原修改时间，压缩不延长保留期限。维护操作与备份/部署共用文件锁；有进程引用的文件跳过。</li>
+<li>本次批处理以低优先级、空闲I/O调度运行，开始限制半个CPU核心，健康检查通过后提高到一个核心。夜间定时维护保持半个核心上限。</li>
+<li>按原有保留策略执行过期清理，然后压缩历史快照。保留期限仍为日备份14天、发布备份30天，每类至少3份；没有缩短期限或降低每日备份的2GiB磁盘预留。</li>
+<li>每日03:10维护、03:30备份定时器保持启用（有原有随机延迟）。本次维护未修改生产业务数据、客户记录、素材、环境配置和AI接待规则。</li></ul>
+<h2>验证结果</h2>
+<ul><li>Windows测试34项通过，3项平台测试跳过；Linux服务器37项全部通过。</li>
+<li>真实systemd维护任务和备份任务均Result=success、退出码0。新备份：<code>/opt/china2go-ai/backups/app-20261101-054855-976778Z.db</code>，大小1.10 GiB，SQLite integrity_check通过。</li>
+<li>从一份压缩备份解压到隔离目录，原字节哈希一致、SQLite完整性通过、5张业务表可读，并成功写入仅存在于副本中的验证表。演练副本已移除，没有替换生产数据库。</li>
+<li>生产库quick_check通过；最终复查5个服务运行，重启计数均为0，内部health及ready返回200。公网首页和两个健康接口复查均返回200。可用内存约2.42GiB，交换空间未使用。</li>
+<li>13:53恢复演练完成时，维护后业务异常堆栈计数为0。20:00复查累计发现43条堆栈，对应下方两类后续事件，不能把首次核验的0作为全天无异常结论。</li>
+<li>维护结束时环境文件、业务设置及应用发布清单哈希未变化。20:00复查仅接待配置的lead_capture.channels不同；审计记录显示用户1于16:58通过reception_config.updated修改，本次维护没有回退该修改。应用发布、环境文件及已安装运维脚本仍一致。</li>
+<li>本次未主动发送客户消息，也未调用付费模型。只读核对13:53后的发送记录：59条delivered、196条read、1条submission_unknown；收到1752条webhook且均为live_observed。这说明业务仍在处理消息，不代表每个接待结果都已人工验收。</li></ul>
+<h2>最终复查新发现的业务异常</h2>
+<table><tr><th>事件</th><th>证据与当前状态</th><th>后续处理</th></tr>
+<tr><td>14:55后台数据库连接池超时</td><td>API同一秒记录40次SQLAlchemy QueuePool超时；池大小5、额外连接10、等待30秒。异常出现在登录用户查询current_user。之后至20:00未再记录同类异常，当前健康检查正常。</td><td>根因尚未复现，不能确认是连接泄漏、长事务还是并发拥塞。下一步在隔离环境复现后台并发访问并定位连接持有时间；本次没有盲目扩大连接池或声称已修复。</td></tr>
+<tr><td>15:59会话#551图片提交超时，渠道已送达但本地未对账</td><td>Chatwoot附件接口ReadTimeout；outbound 5716仍为submission_unknown，无返回消息ID。20:04只读查询找到渠道消息964383094，状态delivered；下载附件3,595,230字节，与该条出站记录的原素材SHA-256完全一致，确认已送达。转人工提醒15:59:20被渠道接受；16:29:17超时提醒也有本地delivered记录（此状态只表示提醒提交成功，不证明手机推送或已读）。当前负责人为麗麗264715，会话HUMAN_HANDOFF，转人工任务131仍pending。</td><td>无需重发这张图片。下一步修复超时后的附件回执核对与发送状态关联，避免实际送达后仍转人工。本次仅核对证据，没有手工修改发送状态、关闭转人工任务或恢复AI；不能把本次核对当成机制已经修复。</td></tr>
+</table>
+<p>两类事件发生在13:53恢复演练结束之后；目前没有证据表明由本次压缩导致，也不能仅凭发生时间排除全部关联。</p>
+<h2>压缩备份怎么恢复</h2>
+<p>文件为标准gzip格式，原内容是完整SQLite文件。将.db.gz解压到单独目录，在SQLite执行<code>PRAGMA integrity_check;</code>，并按维护进度记录中的<code>sha256_uncompressed</code>核对原始字节哈希。不要直接覆盖正在运行的数据库，也不要把带WAL的快照单独拆开压缩。</p>
+<h2>仍需安排的事项</h2>
+<ul><li>异地备份：目前备份仍在同一台服务器，未配置公司认可的外部存储目标及凭据。</li>
+<li>容量与备份失败外部告警：当前可从systemd日志确认结果，外部告警接收方式与云端监控仍未配置。</li>
+<li>执行记录归档：automation_runs及webhook_events持续增长，建议先确认业务保留期限，再做归档。本次没有删除这些数据。</li></ul>
+<h2>部署与回滚记录</h2>
+<p>维护代码提交：<code>b2119fec967118aef3376c08f87ab86f816e0207</code>。安装入口：<code>/usr/local/sbin/china2go-storage</code>；服务：<code>china2go-storage-retention.service</code>。原脚本及服务备份：<code>/opt/china2go-ai/output/storage-capacity-20261101/rollback-053730</code>。</p>
+<p>回退运维脚本不会自动把gzip转换回原始.db；已压缩快照需按上述方式解压。此维护未替换应用版本。</p>
+<p>本地证据目录：<code>output/server-capacity-20261101/</code>；服务器完整逐份记录：<code>/opt/china2go-ai/output/storage-capacity-20261101/</code>。</p>
+</main></html>
