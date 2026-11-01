@@ -1,5 +1,7 @@
 """Filesystem/SQLite regressions; no model, network or production access."""
 import importlib.util
+import gzip
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -270,3 +272,177 @@ def test_corrupt_source_never_publishes_a_backup(root):
         storage.backup(root, reserve_bytes=0)
     assert not list((root / 'backups').glob('app-*.db'))
     assert not list((root / 'backups').glob('*.partial'))
+
+
+def snapshot(root, name='release-20260101', filename='app-before.db', age_days=5):
+    directory = root / 'backups' / name
+    directory.mkdir(exist_ok=True)
+    path = directory / filename
+    with sqlite3.connect(path) as db:
+        db.execute('create table records(content text)')
+        db.execute('insert into records values (?)', ('retained business history ' * 10000,))
+    db.close()
+    timestamp = time.time() - age_days * 86400
+    os.utime(path, (timestamp, timestamp))
+    os.utime(directory, (timestamp, timestamp))
+    return path
+
+
+def compression(root):
+    return storage.compression_plan(root, keep=1)
+
+
+def compress(root, value=None, **kwargs):
+    return storage.apply_compression(root, value or compression(root), lambda *_: set(), **kwargs)
+
+
+def test_compressed_snapshot_restores_exact_bytes_sqlite_data_and_age(root):
+    source = snapshot(root, age_days=60)
+    original = source.read_bytes()
+    file_time, directory_time = source.stat().st_mtime_ns, source.parent.stat().st_mtime_ns
+    before = plan(root)['candidates'][0]['modified']
+    result = compress(root)
+    archive = Path(str(source) + '.gz')
+    assert not source.exists() and gzip.decompress(archive.read_bytes()) == original
+    assert result['saved_bytes'] > 100000
+    assert result['archived'][0]['sha256_uncompressed'] == hashlib.sha256(original).hexdigest()
+    assert archive.stat().st_mtime_ns == file_time
+    assert source.parent.stat().st_mtime_ns == directory_time
+    assert plan(root)['candidates'][0]['modified'] == before
+    restored = root / 'restored.db'
+    restored.write_bytes(gzip.decompress(archive.read_bytes()))
+    with sqlite3.connect(restored) as db:
+        assert db.execute('pragma integrity_check').fetchone()[0] == 'ok'
+        assert db.execute('select content from records').fetchone()[0] == 'retained business history ' * 10000
+    db.close()
+
+
+def test_compression_preserves_recent_three_daily_current_release_and_live_database(root):
+    source = database(root)
+    for i in range(1, 6):
+        p = root / 'backups' / f'app-2026010{i}-033000.db'
+        p.write_bytes(source.read_bytes())
+        timestamp = time.time() - (10 - i) * 86400
+        os.utime(p, (timestamp, timestamp))
+    current = snapshot(root, name='release-20261029')
+    unknown = snapshot(root, name='customer-uploads')
+    recent = snapshot(root, name='release-20260102', age_days=0)
+    value = storage.compression_plan(root)
+    assert {Path(x['path']).name for x in value['candidates']} == {'app-20260101-033000.db','app-20260102-033000.db'}
+    assert source.exists() and current.exists() and unknown.exists() and recent.exists()
+
+
+@pytest.mark.parametrize('extension', ['-wal', '-shm', '-journal'])
+def test_compression_never_separates_sqlite_sidecar(root, extension):
+    source = snapshot(root)
+    sidecar = Path(str(source) + extension)
+    sidecar.write_bytes(b'')
+    timestamp = source.stat().st_mtime
+    os.utime(sidecar, (timestamp, timestamp))
+    os.utime(source.parent, (timestamp, timestamp))
+    value = compression(root)
+    assert not value['candidates']
+    assert value['skipped'][0]['reason'] == 'sqlite_sidecar_present'
+
+
+def test_bad_compression_verification_keeps_original(root, monkeypatch):
+    source = snapshot(root)
+    original = source.read_bytes()
+    monkeypatch.setattr(storage, 'archive_digest', lambda _: ('bad hash', 0))
+    with pytest.raises(RuntimeError, match='roundtrip_mismatch'):
+        compress(root)
+    assert source.read_bytes() == original
+    assert not Path(str(source)+'.gz').exists()
+    assert not list(source.parent.glob('*.partial'))
+
+
+def test_compression_low_space_keeps_original(root, monkeypatch):
+    source = snapshot(root)
+    monkeypatch.setattr(storage.shutil, 'disk_usage', lambda _: SimpleNamespace(free=1))
+    with pytest.raises(RuntimeError, match='compression_disk_reserve'):
+        compress(root)
+    assert source.exists() and not list(source.parent.glob('*.partial'))
+
+
+def test_archive_publish_failure_keeps_original(root, monkeypatch):
+    source = snapshot(root)
+    def fail(*_):
+        raise OSError('archive publish failed')
+    monkeypatch.setattr(storage.os, 'replace', fail)
+    with pytest.raises(OSError, match='archive publish failed'):
+        compress(root)
+    assert source.exists() and not Path(str(source)+'.gz').exists()
+
+
+def test_deployment_change_during_archive_keeps_original(root, monkeypatch):
+    source = snapshot(root)
+    original = storage.archive_digest
+    def changed(path):
+        result = original(path)
+        with (root/'current-release.json').open('a') as stream:
+            stream.write(' ')
+        return result
+    monkeypatch.setattr(storage, 'archive_digest', changed)
+    with pytest.raises(RuntimeError, match='source_or_deployment_changed'):
+        compress(root)
+    assert source.exists() and not Path(str(source)+'.gz').exists()
+
+
+def test_changed_or_injected_compression_plan_is_rejected(root, tmp_path_factory):
+    source = snapshot(root)
+    value = compression(root)
+    outside = tmp_path_factory.mktemp('protected')/'valuable.db'
+    outside.write_bytes(source.read_bytes())
+    value['candidates'].append(storage.inventory(outside))
+    with pytest.raises(RuntimeError, match='compression_plan_changed'):
+        compress(root, value)
+    assert outside.exists() and source.exists()
+
+
+def test_referenced_snapshot_is_not_compressed(root):
+    source = snapshot(root)
+    result = storage.apply_compression(root, compression(root), lambda *_: {str(source)})
+    assert source.exists() and not result['archived']
+    assert result['skipped'][0]['reason'] == 'referenced'
+
+
+def test_existing_archive_is_not_overwritten(root):
+    source = snapshot(root)
+    archive = Path(str(source)+'.gz')
+    archive.write_bytes(b'previous archive')
+    timestamp = source.stat().st_mtime
+    os.utime(archive, (timestamp, timestamp))
+    os.utime(source.parent, (timestamp, timestamp))
+    value = compression(root)
+    assert not value['candidates']
+    assert value['skipped'][0]['reason'] == 'archive_already_exists'
+    assert archive.read_bytes() == b'previous archive' and source.exists()
+
+
+def test_retention_recognizes_old_compressed_daily_backups(root):
+    source = database(root)
+    for i, extension in enumerate(['.db.gz', '.db', '.db.gz', '.db', '.db'], start=1):
+        path = root/'backups'/f'app-2026010{i}-033000{extension}'
+        path.write_bytes(gzip.compress(source.read_bytes()) if extension.endswith('.gz') else source.read_bytes())
+        timestamp = time.time() - (70-i) * 86400
+        os.utime(path, (timestamp, timestamp))
+    value = storage.retention_plan(root)
+    assert {Path(x['path']).name for x in value['candidates']} == {'app-20260101-033000.db.gz','app-20260102-033000.db'}
+    result = apply(root, value)
+    assert len(result['deleted']) == 2
+    assert len(list((root/'backups').glob('app-*'))) == 3
+
+
+def test_failed_original_unlink_leaves_two_recoverable_copies(root, monkeypatch):
+    source = snapshot(root)
+    original = source.read_bytes()
+    unlink = Path.unlink
+    def fail(path, *args, **kwargs):
+        if path == source:
+            raise OSError('original unlink failed')
+        return unlink(path, *args, **kwargs)
+    monkeypatch.setattr(Path, 'unlink', fail)
+    with pytest.raises(OSError, match='original unlink failed'):
+        compress(root)
+    assert source.read_bytes() == original
+    assert gzip.decompress(Path(str(source)+'.gz').read_bytes()) == original

@@ -5,8 +5,11 @@ Before=china2go-backup.service
 [Service]
 Type=oneshot
 ExecStart=/opt/china2go-ai/venv/bin/python /usr/local/sbin/china2go-storage retention --apply --daily-days 14 --release-days 30 --keep 3
-TimeoutStartSec=300
+ExecStart=/opt/china2go-ai/venv/bin/python /usr/local/sbin/china2go-storage compress --apply --min-age-days 1 --keep 3
+TimeoutStartSec=1800
 Nice=10
+IOSchedulingClass=idle
+CPUQuota=50%
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict

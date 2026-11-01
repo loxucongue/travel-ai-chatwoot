@@ -5,6 +5,7 @@ Retention is a dry run unless --apply is supplied. Production systemd units
 serialize both operations with the same lock. No customer/API calls are made.
 """
 import argparse
+import gzip
 from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 import hashlib
@@ -19,7 +20,7 @@ import tempfile
 import time
 
 GIB = 1024 ** 3
-DAILY = re.compile(r"app-\d{8}-\d{6}(?:-\d{6}Z)?\.db\Z")
+DAILY = re.compile(r"app-\d{8}-\d{6}(?:-\d{6}Z)?\.db(?:\.gz)?\Z")
 RELEASE = re.compile(r"[A-Za-z0-9_-]*20\d{6}[A-Za-z0-9_-]*\Z")
 
 
@@ -168,6 +169,146 @@ def apply_retention(root, plan, reference_check=referenced_candidates):
             'deleted_bytes': sum(x['bytes'] for x in deleted)}
 
 
+def compression_plan(root, now=None, min_age_days=1, keep=3):
+    """Archive only standalone historical SQLite snapshots, never live files."""
+    root = layout(root)
+    if min_age_days < 1:
+        raise ValueError('compression_age_must_be_at_least_one_day')
+    protected = set(retention_plan(root, keep=keep)['protected'])
+    now = time.time() if now is None else now
+    candidates, skipped = [], []
+    for entry in (root / 'backups').iterdir():
+        if entry.is_symlink() or str(entry) in protected:
+            continue
+        if entry.is_file() and DAILY.fullmatch(entry.name):
+            files = [entry]
+        elif entry.is_dir() and RELEASE.fullmatch(entry.name):
+            try:
+                inventory(entry)  # Reject trees containing links/special files.
+            except ValueError as exc:
+                skipped.append({'path': str(entry), 'reason': str(exc)})
+                continue
+            files = list(entry.rglob('*.db'))
+        else:
+            continue
+        for path in files:
+            if path.suffix != '.db' or not path.is_file():
+                continue
+            info = inventory(path)
+            if info['modified'] > now - min_age_days * 86400:
+                continue
+            if any(Path(str(path) + ext).exists() for ext in ('-wal', '-shm', '-journal')):
+                skipped.append({'path': str(path), 'reason': 'sqlite_sidecar_present'})
+                continue
+            if Path(str(path) + '.gz').exists():
+                skipped.append({'path': str(path), 'reason': 'archive_already_exists'})
+                continue
+            with path.open('rb') as stream:
+                if stream.read(16) != b'SQLite format 3\x00':
+                    skipped.append({'path': str(path), 'reason': 'not_sqlite_snapshot'})
+                    continue
+            candidates.append(info)
+    return {'candidates': sorted(candidates, key=lambda x: x['bytes'], reverse=True),
+            'protected': sorted(protected), 'skipped': skipped,
+            'policy': {'min_age_days': min_age_days, 'keep': keep}}
+
+
+def archive_digest(path):
+    digest, count = hashlib.sha256(), 0
+    with gzip.open(path, 'rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+            count += len(block)
+    return digest.hexdigest(), count
+
+
+def compress_snapshot(root, item, manifest, reserve_bytes=512 * 1024**2):
+    """Publish a byte-verified gzip before unlinking the original snapshot."""
+    path = Path(item['path'])
+    if not path.resolve().is_relative_to(root / 'backups') or path.resolve() != path:
+        raise ValueError('compression_path_outside_backups')
+    if inventory(path)['fingerprint'] != item['fingerprint']:
+        raise RuntimeError('compression_candidate_changed:' + str(path))
+    info, parent_info = path.stat(), path.parent.stat()
+    target = Path(str(path) + '.gz')
+    if target.exists() or target.is_symlink():
+        raise RuntimeError('compression_target_exists:' + str(target))
+    fd, name = tempfile.mkstemp(prefix='.archive-', suffix='.partial', dir=path.parent)
+    temporary = Path(name)
+    published = False
+    try:
+        digest, count = hashlib.sha256(), 0
+        with os.fdopen(fd, 'wb') as output:
+            with gzip.GzipFile(filename='', mode='wb', fileobj=output, compresslevel=1, mtime=0) as archive:
+                with path.open('rb') as original:
+                    for block in iter(lambda: original.read(1024 * 1024), b''):
+                        if shutil.disk_usage(root).free < reserve_bytes:
+                            raise RuntimeError('compression_disk_reserve_exhausted')
+                        archive.write(block)
+                        digest.update(block)
+                        count += len(block)
+            output.flush()
+            os.fsync(output.fileno())
+        expected = (digest.hexdigest(), count)
+        if archive_digest(temporary) != expected:
+            raise RuntimeError('compression_roundtrip_mismatch')
+        if temporary.stat().st_size >= info.st_size:
+            return {'path': str(path), 'skipped': 'compression_would_not_save_space'}
+        if ((root / 'current-release.json').read_bytes() != manifest
+                or inventory(path)['fingerprint'] != item['fingerprint']
+                or any(Path(str(path) + ext).exists() for ext in ('-wal', '-shm', '-journal'))):
+            raise RuntimeError('compression_source_or_deployment_changed')
+        shutil.copystat(path, temporary)
+        if os.name == 'posix':
+            os.chown(temporary, info.st_uid, info.st_gid)
+        os.replace(temporary, target)
+        published = True
+        # Make the verified archive durable before removing the raw backup.
+        if os.name == 'posix':
+            directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                os.fsync(directory)
+                path.unlink()
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        else:
+            path.unlink()
+        return {'path': str(path), 'archive': str(target), 'original_bytes': count,
+                'archive_bytes': target.stat().st_size, 'sha256_uncompressed': expected[0],
+                'saved_bytes': count - target.stat().st_size, 'roundtrip_verified': True}
+    finally:
+        temporary.unlink(missing_ok=True)
+        # Compression must not make an old release young for retention purposes.
+        os.utime(path.parent, ns=(parent_info.st_atime_ns, parent_info.st_mtime_ns))
+        # If publication succeeds but unlink fails, both copies remain recoverable.
+        if not published:
+            assert path.exists(), 'original_snapshot_missing'
+
+
+def apply_compression(root, plan, reference_check=referenced_candidates, progress=None):
+    root = layout(root)
+    manifest = (root / 'current-release.json').read_bytes()
+    fresh = {x['path']: x for x in compression_plan(root, **plan['policy'])['candidates']}
+    for item in plan['candidates']:
+        if item['path'] not in fresh or fresh[item['path']]['fingerprint'] != item['fingerprint']:
+            raise RuntimeError('compression_plan_changed:' + item['path'])
+    referenced = reference_check(root, plan['candidates'])
+    archived, skipped = [], []
+    for item in plan['candidates']:
+        if (root / 'current-release.json').read_bytes() != manifest:
+            raise RuntimeError('deployment_changed_during_compression')
+        if item['path'] in referenced:
+            skipped.append({'path': item['path'], 'reason': 'referenced'})
+            continue
+        result = compress_snapshot(root, item, manifest)
+        (skipped if result.get('skipped') else archived).append(result)
+        if progress:
+            progress(result)
+    return {'archived': archived, 'skipped': skipped,
+            'saved_bytes': sum(x['saved_bytes'] for x in archived)}
+
+
 def backup(root, reserve_bytes=2 * GIB):
     root = layout(root)
     source = root / 'backend/data/app.db'
@@ -232,18 +373,24 @@ def maintenance_lock(root, timeout=120):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation', choices=('backup', 'retention'))
+    parser.add_argument('operation', choices=('backup', 'retention', 'compress'))
     parser.add_argument('--root', type=Path, default=Path('/opt/china2go-ai'))
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--daily-days', type=int, default=14)
     parser.add_argument('--release-days', type=int, default=30)
     parser.add_argument('--keep', type=int, default=3)
     parser.add_argument('--reserve-gib', type=float, default=2)
+    parser.add_argument('--min-age-days', type=int, default=1)
     args = parser.parse_args()
     root = layout(args.root)
     with maintenance_lock(root):
         if args.operation == 'backup':
             result = backup(root, int(args.reserve_gib * GIB))
+        elif args.operation == 'compress':
+            result = compression_plan(root, min_age_days=args.min_age_days, keep=args.keep)
+            if args.apply:
+                result = apply_compression(root, result,
+                    progress=lambda item: print(json.dumps({'compression_progress': item}), flush=True))
         else:
             result = retention_plan(root, daily_days=args.daily_days,
                                     release_days=args.release_days, keep=args.keep)
