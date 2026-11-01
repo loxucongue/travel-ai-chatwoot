@@ -1,5 +1,7 @@
 from copy import deepcopy
 from datetime import timedelta
+from unittest.mock import Mock
+import pytest
 from sqlalchemy import select
 import respx
 
@@ -12,6 +14,38 @@ from app.runtime_settings import dt, iso
 from live_fixture import setup
 from test_reception_v3 import bundle, answer, create
 from test_runtime_reliability import notification_setup
+
+
+@pytest.mark.parametrize('accepted', [False, True])
+def test_ended_submission_retains_receipt_without_stale_submitting_or_retry(session_factory, monkeypatch, accepted):
+    from app.models import OutboundMessage
+    setup(session_factory, monkeypatch)
+    client = Mock()
+    client.get_conversation.return_value = {'id': 26, 'can_reply': True}
+    client.get_conversation_labels.return_value = ['ai']
+    if accepted:
+        client.create_text_message.return_value = {'id': 123}
+        monkeypatch.setattr(service, 'complete_delivery', Mock(side_effect=RuntimeError('bookkeeping failed')))
+    else:
+        client.create_text_message.side_effect = TimeoutError('receipt unknown')
+    monkeypatch.setattr(live, 'client_for', lambda _: client)
+    with session_factory() as db:
+        row = session(db)
+        row.messages = [{'id': 'pending', 'direction': 'outgoing', 'content': '含早餐。', 'status': 'draft'}]
+        value = service.state(row); value['delivery_due_at'] = row.virtual_now
+        service.save(row, value); db.commit()
+        with pytest.raises((TimeoutError, RuntimeError)):
+            live.deliver_one(db, row)
+        receipt = db.scalar(select(OutboundMessage))
+        expected = 'submitted' if accepted else 'submission_unknown'
+        assert receipt.status == expected
+        assert row.messages[0]['status'] == expected
+        assert receipt.chatwoot_message_id == (123 if accepted else None)
+        assert row.controls['simulation']['status'] == 'stopped'
+        assert db.scalar(select(HandoffTask)).status == 'pending'
+        assert not live.permitted(db, db.get(ConversationState, 1))
+        live.deliver_one(db, row)
+        assert client.create_text_message.call_count == 1
 
 
 def session(db, status='running'):

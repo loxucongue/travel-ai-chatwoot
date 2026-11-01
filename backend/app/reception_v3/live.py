@@ -653,6 +653,14 @@ def deliver_one(db, row):
             # not an uncertain customer send and must not create a handoff.
             raise
         db.refresh(row)
+        if submission_started:
+            # The HTTP attempt has ended. Retain the durable receipt (or its
+            # uncertainty), rather than leaving a stopped plan "submitting".
+            recorded = db.scalar(select(OutboundMessage).where(OutboundMessage.idempotency_key == key))
+            if recorded:
+                row.messages = [{**m, 'status': recorded.status,
+                    **({'chatwoot_message_id': recorded.chatwoot_message_id} if recorded.chatwoot_message_id else {})}
+                    if m.get('id') == part['id'] and m.get('status') == 'submitting' else m for m in row.messages]
         handoff(db, row, 'delivery_failed', '消息提交未完成，请核对渠道记录；系统不会自动重发。')
         service.control(row, 'stop')
         db.commit()
