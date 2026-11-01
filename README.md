@@ -4,6 +4,8 @@ V3 is the only active reception engine. Live Chatwoot and playground sessions sh
 
 See [configuration mapping and release evidence](docs/development/v3-consolidation-20260928.md).
 
+For the current end-to-end behavior, effective configuration, output transformations and remaining gaps, see [接待全流程审计（2026-11-01）](docs/development/reception-full-flow-audit-20261101.md). This audit supersedes older descriptions where behavior differs; it distinguishes deployed fixes from proposed work.
+
 ## Local development
 
 Python 3.11+, Node.js 22.12+. Install `backend[dev]` and frontend dependencies. From backend, run `alembic upgrade head`.
