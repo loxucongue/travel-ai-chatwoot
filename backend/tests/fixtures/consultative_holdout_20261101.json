@@ -1,0 +1,710 @@
+[
+  {
+    "id": "gentle_invitation_then_space",
+    "title": "gentle_invitation_then_space",
+    "entry": "2027 林芝桃花 9 日（不上珠峰）",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_9d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹收到了，謝謝。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "行程我大致了解，我再考慮看看好了。",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_9d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "first_consideration",
+        "checks": [
+          "send",
+          "not_handoff",
+          "contact_invitation"
+        ],
+        "manual_checks": [
+          "说明已有详细行程的用途，轻邀一次，不以限时优惠施压"
+        ]
+      },
+      {
+        "id": "declines_contact",
+        "text": "先不要加好友，我在這裡看就好。",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "manual_checks": [
+          "尊重当前聊天渠道，不要求原因或换成邮箱索取"
+        ]
+      },
+      {
+        "id": "silence",
+        "checks": [
+          "not_handoff",
+          "no_contact_invitation"
+        ],
+        "next_check": true,
+        "manual_checks": [
+          "可以等待；有新的相关价值也可按原频率发，不重复索取联系方式，不把拒绝加好友当作拒联。"
+        ]
+      },
+      {
+        "id": "returns_with_question",
+        "text": "我回來問一下，午晚餐包含嗎？",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "manual_checks": [
+          "直接回答餐食，不重启介绍或重邀私讯"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ambiguous_object_not_customer_preference",
+    "title": "ambiguous_object_not_customer_preference",
+    "entry": "2027 林芝桃花＋珠峰 11 日",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_11d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "如果只是看珠峰，不一定要住那裡嗎？我沒有說不去，是想了解安排。",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_11d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "hypothetical",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "manual_checks": [
+          "说明当前产品安排，不擅自承诺取消住宿或记为拒绝珠峰",
+          "查看偏好证据：询问假设不应写成want或avoid；未记录或undecided均可。"
+        ]
+      },
+      {
+        "id": "family_report",
+        "text": "我先生說九日可能比較好，但我還沒決定。先比較一下兩條。",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "peach_11d_2027",
+        "manual_checks": [
+          "能比较，不能把家属建议当成已选九日，不逼客户选线",
+          "查看偏好证据：询问假设不应写成want或avoid；未记录或undecided均可。"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "clear_switch_keeps_context",
+    "title": "clear_switch_keeps_context",
+    "entry": "2027 林芝桃花＋珠峰 11 日",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_11d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "我決定改成桃花9日，不去珠峰，日期和兩位都跟原來一樣。",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_11d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "switch",
+        "checks": [
+          "not_handoff",
+          "no_reask_party",
+          "no_reask_month"
+        ],
+        "expected_route": "peach_9d_2027",
+        "profile_equals": {
+          "party_size": 2
+        },
+        "manual_checks": [
+          "切换九日，保留日期人数，停止旧珠峰素材",
+          "是否保存独立偏好字段仅作诊断，后续应以改变月份后是否仍尊重不上珠峰来验收；此延伸场景本轮未执行。"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "shared_party_pricing",
+    "title": "shared_party_pricing",
+    "entry": "2027 林芝桃花＋珠峰 11 日",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_11d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "兩個人跟三個人參加拼團，每個人的價錢一樣嗎？",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_11d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "same_tier",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_contact_invitation"
+        ],
+        "manual_checks": [
+          "2人与3人同档同价，不要求先确定人数才回答同价问题"
+        ]
+      },
+      {
+        "id": "five_quote",
+        "text": "我們確定5位拼團，原來三月底，請給每人的費用。",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_contact_invitation"
+        ],
+        "profile_equals": {
+          "party_size": 5
+        },
+        "manual_checks": [
+          "应用5人已达到档位，含不含完整，不写每团优惠或早鸟"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unknown_detail_and_answerable_question",
+    "title": "unknown_detail_and_answerable_question",
+    "entry": "2027 林芝桃花 9 日（不上珠峰）",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_9d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "車子行李箱內部長寬高是多少？另外我知道早餐有含，午餐也包嗎？",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_9d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "unknown_measurement",
+        "checks": [],
+        "manual_checks": [
+          "不编造尺寸，午餐资料已知应尽量答清；因尺寸交接不是因普通空间问题误转"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "explicit_human_request",
+    "title": "explicit_human_request",
+    "entry": "西藏精華8天・拉薩＋珠峰",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "tibet_essence_8d",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "請真人顧問跟我聯絡，我不想再跟機器人聊了。",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年5月",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "tibet_essence_8d",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "human_requested",
+        "checks": [
+          "handoff",
+          "no_send"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "specific_inventory_not_general_information",
+    "title": "specific_inventory_not_general_information",
+    "entry": "冬遊西藏｜冰川藍冰8天",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "tibet_winter_8d",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "你先幫我們鎖定1月7日那兩間房，我們再慢慢決定。",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年1月",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "tibet_winter_8d",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "no_booking_authority",
+        "checks": [
+          "handoff",
+          "no_send"
+        ],
+        "manual_checks": [
+          "无锁房工具，不宣称成功保留房间"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "short_choice_after_options",
+    "title": "short_choice_after_options",
+    "entry": "2027 林芝桃花＋珠峰 11 日",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_11d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "桃花9日不上珠峰，桃花11日包含珠峰。您想看哪一條呢？",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "桃花9日",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_11d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "short_choice",
+        "checks": [
+          "not_handoff",
+          "no_reask_party",
+          "no_reask_month"
+        ],
+        "expected_route": "peach_9d_2027",
+        "manual_checks": [
+          "结合上一轮选项接住简称，不依赖固定选线动词"
+        ]
+      }
+    ]
+  }
+]

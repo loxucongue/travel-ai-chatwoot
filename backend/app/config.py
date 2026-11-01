@@ -2,6 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal
 from pydantic import Field
 
 
@@ -37,6 +38,8 @@ class Settings(BaseSettings):
     reception_route_understanding_enabled: bool = False
     reception_route_understanding_model: str = ""
     reception_advisor_experience_enabled: bool = False
+    reception_consultative_pilot_enabled: bool = False
+    reception_consultative_reasoning_effort: Literal['low', 'high'] = 'low'
     customer_sticker_recognition_enabled: bool = False
     customer_image_allowed_hosts: str = "app.chatwoot.com"
     customer_image_storage_hosts: str = "prod-chatwoot-assets.s3.amazonaws.com"

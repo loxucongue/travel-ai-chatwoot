@@ -1,0 +1,85 @@
+[
+  {
+    "id": "new_customer_to_return",
+    "title": "新客进线到沉默后回问",
+    "entry": "2027 林芝桃花 9 日（不上珠峰）",
+    "now": "2026-11-01T03:30:00+00:00",
+    "steps": [
+      {
+        "id": "party",
+        "text": "我們兩位，三月底想去桃花9日。",
+        "seconds": 3,
+        "checks": [
+          "not_handoff",
+          "one_itinerary_map"
+        ],
+        "expected_route": "peach_9d_2027",
+        "itinerary_route": "peach_9d_2027"
+      },
+      {
+        "id": "meals",
+        "text": "午晚餐要自己另外付嗎？",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ]
+      },
+      {
+        "id": "hotel",
+        "text": "那這個9日是不是沒有絨布旅館？",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ]
+      },
+      {
+        "id": "consider",
+        "text": "好的，我回去再考慮一下。",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "manual_checks": [
+          "审查实际历史：若已经邀请，不重复；未邀请且未拒绝，应提供真实帮助并轻邀一次。另审查首次邀请是否过早。"
+        ]
+      },
+      {
+        "id": "decline",
+        "text": "先不用加，謝謝，我想好會回來問。",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ]
+      },
+      {
+        "id": "next_day",
+        "checks": [
+          "no_send"
+        ],
+        "next_check": true
+      },
+      {
+        "id": "return",
+        "text": "我來問每個人的費用，兩位拼團三月底。",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_contact_invitation",
+          "exact_quote"
+        ],
+        "quote_script_id": "price_shared_2"
+      }
+    ]
+  }
+]

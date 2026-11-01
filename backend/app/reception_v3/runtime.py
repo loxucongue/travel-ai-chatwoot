@@ -103,8 +103,10 @@ def run_agent(context: dict):
     if context.get('state', {}).get('human_followup'):
         return run_human_followup(context)
     deadline = time.monotonic() + 60
+    from app.reception_v3 import consultative
+    consultative_pilot = consultative.enabled()
     understanding_logs, understanding_hash = [], None
-    if settings.reception_route_understanding_enabled and context.get('event') == 'customer_message':
+    if not consultative_pilot and settings.reception_route_understanding_enabled and context.get('event') == 'customer_message':
         understanding, understanding_logs, understanding_hash = interpret(context, min(deadline, time.monotonic() + 16))
         if understanding:
             context = {**context, 'route_understanding': understanding}
@@ -115,7 +117,7 @@ def run_agent(context: dict):
     registry = SkillRegistry(context['skills'], context.get('available_materials', []))
     loaded = {}
     def load(name):
-        result = registry.load(name)
+        result = consultative.product_document(registry, name) if consultative_pilot else registry.load(name)
         loaded[name] = result['digest']
         return result
     common = load('tibet-reception')
@@ -130,6 +132,8 @@ def run_agent(context: dict):
               + '\n已加载线路 Skill：\n' + json.dumps(preloaded, ensure_ascii=False)
               + '\n通用接待 Skill：\n' + common['instructions']
               + '\n\n' + SYSTEM_PROMPT)
+    if consultative_pilot:
+        prompt = consultative.prompt(registry.index(), common, preloaded)
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
     if context.get('route_understanding'):
@@ -248,6 +252,8 @@ def run_agent(context: dict):
             messages.append({'role': 'user' if item.get('direction') == 'incoming' else 'assistant',
                              'content': [{'type':'text','text':content}, *images[item['id']]] if item.get('id') in images else content})
     current['conversation_focus'] = conversation_focus
+    if consultative_pilot:
+        consultative.attach_task(current, context)
     messages.append({'role': 'user', 'content': json.dumps(current, ensure_ascii=False)})
     tools = [
         {'type': 'function', 'function': {'name': 'load_skill',
@@ -260,6 +266,11 @@ def run_agent(context: dict):
     ]
     seasonal_routes = [key for key, spec in context['skills']['routes'].items()
                        if spec.get('seasonal_pricing') or spec.get('departure_availability')]
+    if consultative_pilot:
+        tools.append({'type': 'function', 'function': {'name': 'read_price_templates',
+            'description': '读取指定线路已配置的价格表和人数档位；需要回答费用时使用，不表示客户已经选线。',
+            'parameters': {'type': 'object', 'properties': {'route': {'type': 'string',
+                'enum': list(context['skills']['routes'])}}, 'required': ['route'], 'additionalProperties': False}}})
     if seasonal_routes:
         tools.append({'type':'function','function':{'name':'get_departure_quote',
             'description':'核對出發團期、季節價、長假及30天入藏函期限，同時傳客人最新人數和拼團/獨團選擇。日期來自客人原話；月份傳整月，不能自行挑一天。private_departure代表4位起可獨團自選日期，不需改定班日、不是訂位確認或拼團價授權。unavailable先推薦返回的同期可用線路或邀請開放通知；advisor才須人工確認。常規線只有quoted可報價；桃花線not_seasonal依其現行模板。',
@@ -307,13 +318,16 @@ def run_agent(context: dict):
     # A retry with the same limit repeats an avoidable truncation. Keep normal
     # calls small; give the existing bounded retry more room after this error.
     output_limit = 8000 if context.get('state', {}).get('last_error') == 'deepseek_output_token_limit' else 4000
+    reasoning_effort = settings.reception_consultative_reasoning_effort if consultative_pilot else 'low'
+    if reasoning_effort == 'high':
+        output_limit = max(output_limit, 8000)
     try:
         for turn in range(6):
             # Tool results and newly loaded route Skills follow the original
             # task. Keep the current conversation visible after those facts;
             # otherwise each load can restart the product explanation.
             request_messages = messages
-            if conversation_focus['recent_team_statements']:
+            if conversation_focus['recent_team_statements'] and not consultative_pilot:
                 request_messages = messages + [{'role':'user', 'content':json.dumps({
                     'kind':'delivery_review', 'event':context.get('event'),
                     'conversation_focus':conversation_focus,
@@ -328,12 +342,12 @@ def run_agent(context: dict):
                         '保留JSON协议、真实事实、必要报价模板和首次推荐的完整年份。'
                         '不能从不上珠峰推算全程最高海拔或保证安全；没有资料依据的高度结论不补充。',
                 },ensure_ascii=False)}]
-            routing_instruction = generation_instruction(context)
+            routing_instruction = None if consultative_pilot else generation_instruction(context)
             if routing_instruction:
                 request_messages = request_messages + [{'role': 'system', 'content': routing_instruction}]
             payload = {'model': settings.deepseek_vision_model if images else settings.deepseek_model, 'messages': request_messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
-                       'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,
+                       'thinking': {'type': 'enabled'}, 'reasoning_effort': reasoning_effort, 'max_tokens': output_limit,
                        'stream': True, 'stream_options': {'include_usage': True}}
             hashes.append(_request_hash(payload))
             text_only = [{**m,'content':[p for p in m['content'] if p.get('type')!='image_url']}
@@ -365,7 +379,9 @@ def run_agent(context: dict):
                        'provided_by_skill': dict(registry.provided_experiences),
                        'status': 'provided_not_verified_used' if registry.provided_experiences else 'disabled_or_unavailable'},
                    'vision_image_count': sum(len(parts) for parts in images.values()),
-                   'system_characters': len(prompt), 'reasoning_effort': 'low', 'tool_calls': []}
+                   'system_characters': len(prompt), 'reasoning_effort': reasoning_effort, 'tool_calls': []}
+            if consultative_pilot:
+                log['decision_owner'] = consultative.VERSION
             logs.append(log)
             if message.get('tool_calls'):
                 messages.append({'role': 'assistant', 'content': message.get('content'),
@@ -382,6 +398,8 @@ def run_agent(context: dict):
                             result = load(args['name'])
                         elif function['name'] == 'get_service_facts':
                             result = knowledge
+                        elif function['name'] == 'read_price_templates' and consultative_pilot:
+                            result = consultative.price_templates(context['skills'], args['route'])
                         elif function['name'] == 'get_departure_quote':
                             profile = context.get('profile', {})
                             party_size = args.get('party_size', profile.get('party_size') or profile.get('party_size_min'))
@@ -415,7 +433,13 @@ def run_agent(context: dict):
                 log['loaded_skills'] = dict(loaded)
                 continue
             try:
-                decision = Decision.model_validate(_json_object(message.get('content') or '')).model_dump()
+                raw_decision = _json_object(message.get('content') or '')
+                if consultative_pilot:
+                    raw_decision, interpreted, interpretation_log = consultative.unpack(raw_decision, context)
+                    if interpreted:
+                        context = {**context, 'route_understanding': interpreted}
+                        logs.append(interpretation_log)
+                decision = Decision.model_validate(raw_decision).model_dump()
             except (ValueError, TypeError) as exc:
                 if repaired:
                     raise
@@ -426,7 +450,8 @@ def run_agent(context: dict):
                                  {'role': 'user', 'content': '上一输出未通过接待决策协议，尚未发送。请返回一个完整JSON对象，'
                                   '不能只输出给客户的文字、空内容或分析过程。客户答复放在messages中；'
                                   '保留事实与业务判断，按以下schema修正字段和类型：\n'
-                                  + json.dumps(Decision.model_json_schema(), ensure_ascii=False)
+                                  + json.dumps(consultative.repair_schema(Decision.model_json_schema())
+                                               if consultative_pilot else Decision.model_json_schema(), ensure_ascii=False)
                                   + f'\n校验错误：{exc}'}])
                 continue
             # The model may identify a route without requesting its body (for

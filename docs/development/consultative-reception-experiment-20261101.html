@@ -1,0 +1,220 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>China2Go｜模型自主接待对照实验 · 2026-11-01</title>
+<style>body{font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif;background:#f5f7fa;color:#1d2939;margin:0}main{max-width:1120px;margin:auto;padding:36px}h1{font-size:28px}h2{font-size:21px;margin-top:32px}.box{background:white;padding:20px 26px;border-radius:10px;margin:18px 0}.bad{border-left:5px solid #c63b3b}table{border-collapse:collapse;width:100%;font-size:14px}td,th{padding:10px;border-bottom:1px solid #dde3eb;text-align:left;vertical-align:top}th{background:#eaf0f7}code,pre{font-family:Consolas,monospace}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}small{color:#526170}a{color:#245faa}details{margin:10px 0}blockquote{border-left:3px solid #bdcce0;padding-left:15px;margin:12px 0}</style>
+<main><h1>模型自主接待：架构方向与真实测试</h1><p>China2Go · 2026年11月1日 · 独立测试、未上线</p>
+<section class="box bad"><strong>结论：可以减少互相冲突的规则，但不能用“顾问身份＋更多思考”直接替换现有接待。</strong>
+<p>本轮实现4个隔离试验版本，测试覆盖15个不同场景，记录225次实际模型调用。
+相关回归244项通过；真实效果没有全部达标，试验开关默认关闭，并限制只能在禁止外发的evaluation环境使用。</p>
+<p>费用¥4.5610，低于本轮自行设定的新增¥10上限；全部调用与原账本对账，无未结预留。没有向客户发送消息，没有部署或推送主分支，rujing2代码未修改。</p></section>
+<section class="box"><h2>本轮实际改了什么</h2><table><tr><th>部分</th><th>实现</th><th>边界</th></tr>
+<tr><td>主模型统一负责接待</td><td>试验分支绕过额外的选线语义调用，由同一个模型选择动作并生成答复。</td><td>仅客户接待主流程；既有顾问跟进、定时跟进保护保留。没有增加关键词表或新政策分类器。</td></tr>
+<tr><td>一份顾问工作说明</td><td>顾问目标、可信事实、沟通分寸集中维护，不同时注入整套通用SOP、线路SOP和发送前提醒。</td><td>不是要求输出推理过程；只记录简短依据。业务条件与执行字段依然需要清楚。</td></tr>
+<tr><td>产品与话术分开</td><td>读取当前线路事实，比较时由模型调用资料工具；价目模板独立读取。</td><td>事实继续来自现行资料，不把顾问聊天中的单次承诺推广到所有线路。</td></tr>
+<tr><td>记忆可追溯</td><td>新资料写入附客户原话来源，实际选线沿用执行层审计。</td><td>有来源不代表语义正确；本试验还暴露了来源字段增加协议负担的问题。</td></tr>
+<tr><td>思考投入对照</td><td>同模型分别测试low和high，high增加输出余量；价格、权限、队列继续用现有执行校验。</td><td>high没有消除编造服务或错误动作。接口能力见<a href="https://api-docs.deepseek.com/guides/thinking_mode/">官方说明</a>。</td></tr></table></section>
+<section class="box"><h2>结果要分开看</h2><p>同一批6组、15步对照：常规路径41次模型调用；精简协议low为31次，high为26次。
+系统指令及预载资料的平均字符量约78,914 → 21,911，但这不是总输入token数。high平均非空答复约113字，常规约76字，反而更长。
+本组费用约¥0.612 → ¥0.757；缓存和随机输出不同，不能据此承诺长期省钱或更快。</p>
+<p>该15步三组程序断言都通过，人工复核仍发现未经确认的用餐服务、过多日期提醒和不必要转荐。说明格式、报价和流程检查通过，不等于自然沟通质量通过。</p>
+<table><tr><th>最终版具体表现</th><th>判断</th></tr>
+<tr><td>已报价/人数档位：2人与3人同价，5人报¥12,580；完整新客流程最后9日报¥10,780。</td><td>这些样本正确，不能代表所有价格边界已回归。</td></tr>
+<tr><td>只比较9日与11日：独立读取资料后未再附整份报价；“桃花9日”简称能结合上一轮选项接住。</td><td>方向有价值。转荐、选线和资料阅读仍需更清楚的协议分工。</td></tr>
+<tr><td>考虑后轻邀、拒绝后保持当前渠道、次日等待、客户回来答餐食。</td><td>最终补充场景4步通过；邀请理由仍提及名额更新，缺少明确能力依据。不能只凭contact_invitation标记认可文案。</td></tr>
+<tr><td>“先锁1月7日两间房”没有交顾问，反而报价并解释房差；常规路径在同场景正确静默交接。</td><td><strong>发布阻断项。</strong>试验不能替换当前生产。</td></tr>
+<tr><td>反复出现“导游带大家用餐/推荐餐厅”等当前快照未确认的安排。</td><td>常规路径和试验版都有，不能把它只归因于本次改动。需要业务确认事实、提高来源约束的可用性。</td></tr>
+<tr><td>常规路径把“我没有说不去，只是了解安排”记成want；试验版没有这样记，但一次明确改9日未写独立avoid字段。</td><td>前者是未经明确表达的偏好推断；后者仅为字段诊断，当前切线正确，后续影响尚未补测。不要将两者混成“错选线路”。</td></tr>
+<tr><td>完整流程试验版介绍后已邀请一次，收尾没有再次邀请；常规路径在收尾首次邀请。</td><td>原“收尾必须邀请”断言对前者误报，已复核；试验版首次邀请偏早、后续重复团期，仍不如常规路径的节奏。</td></tr></table></section>
+<section class="box"><h2>从整体设计看，下一步要改接口，不是继续补例句</h2>
+<table><tr><th>层次</th><th>建议的职责</th><th>避免的维护问题</th></tr>
+<tr><td>主模型</td><td>统一理解真实对话、选择资料工具、判断答疑/建议/邀请/澄清，并形成答复。</td><td>不在外层叠意图分类、补救分类、关键词规则，多个节点分别下结论。</td></tr>
+<tr><td>资料工具</td><td>产品事实、现行价目、素材、顾问方法分别读取，保留线路、日期、来源和版本。</td><td>不同8日线路混用；历史顾问承诺变成全公司政策；读价格被误当推荐。</td></tr>
+<tr><td>执行协议</td><td>明确区分讨论对象、客户已选路线和模型推荐；把通知顾问、发送答复等动作与实际能力绑定。</td><td>当前跨线价格需借用recommend字段，handoff又要求messages为空，容易在“答已知、交未知”场景产生冲突。</td></tr>
+<tr><td>程序</td><td>执行价格计算、来源ID、人工权限、队列幂等、真实发送及库存工具权限校验。</td><td>不靠客户字词判断模糊语义，也不因模型写“我帮您保留”就假定发生了预订。</td></tr>
+<tr><td>评估</td><td>检查整段对话是否解答、真实、恰当推进、尊重偏好；允许不同合理措辞和行动。</td><td>不机械规定每轮必须问一个问题、必须不发、必须填写某个偏好字段。</td></tr></table>
+<p>本轮保留隔离试验和回归样例，暂不切换生产。未来应逐项验证工具和接口变化，保留当前表现较好的业务约束；并以完整对话复测决定是否替换，不能同时删掉大量约束后只看短问答。</p></section>
+<section class="box"><h2>顾问Excel如何融入</h2><p>237条待审核资料仍未自动作为事实启用。应拆成两类：</p>
+<ul><li><strong>产品事实：</strong>绑定适用线路、季节、对象、来源、有效期，由业务审核后进入现有知识配置。具体酒店、房价、退款、额外服务不能仅凭一条顾问聊天确认。</li>
+<li><strong>接待方法：</strong>提炼顾问解决什么疑虑、为什么给这项解释、何时留出空间；保留正反例和适用边界，作为模型可参考的方法，而不是“出现词X就执行动作Y”。</li></ul>
+<p>持续循环：真实交接案例 → 形成待审经验/事实 → 业务审核 → 与常规方案做连续对话对照 → 小范围启用 → 查看误答、误交接、客户回话与顾问纠正 → 更新或回滚版本。
+自动采集、业务审核配置页及自动上线流程本轮尚未实现；没有将模型微调或转化率提升列为已完成。</p></section>
+<section class="box"><h2>全部试验记录</h2><small>“失败检查”保留原始断言，包括上文说明的过严测试；不能直接当成回答准确率。各阶段版本不同，不能把通过项拼成同一版本全部通过。</small>
+<table><tr><th>运行目录（UTC时间）</th><th>场景/记录步</th><th>模型调用</th><th>失败运行</th><th>失败检查步</th><th>费用¥</th></tr><tr><td>baseline-20261101T040549Z</td><td>6/15</td><td>41</td><td>0</td><td>0</td><td>0.612</td></tr><tr><td>candidate-20261101T040052Z</td><td>2/4</td><td>15</td><td>5</td><td>1</td><td>0.408</td></tr><tr><td>candidate-20261101T040310Z</td><td>6/15</td><td>31</td><td>1</td><td>0</td><td>0.795</td></tr><tr><td>full-baseline-20261101T041559Z</td><td>1/8</td><td>15</td><td>0</td><td>0</td><td>0.394</td></tr><tr><td>full-high-20261101T041411Z</td><td>1/8</td><td>20</td><td>1</td><td>1</td><td>0.258</td></tr><tr><td>high-20261101T040826Z</td><td>6/15</td><td>26</td><td>0</td><td>0</td><td>0.757</td></tr><tr><td>holdout-baseline-20261101T042027Z</td><td>4/8</td><td>22</td><td>0</td><td>3</td><td>0.529</td></tr><tr><td>holdout-high-20261101T041106Z</td><td>8/12</td><td>27</td><td>0</td><td>3</td><td>0.408</td></tr><tr><td>holdout-high-20261101T041727Z</td><td>8/13</td><td>28</td><td>0</td><td>2</td><td>0.400</td></tr></table>
+<details><summary>baseline-20261101T040549Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;baseline-20261101T040549Z&quot;,
+  &quot;case_count&quot;: 6,
+  &quot;step_count&quot;: 15,
+  &quot;failed_checks&quot;: [],
+  &quot;failed_runs&quot;: 0,
+  &quot;model_calls&quot;: 41,
+  &quot;cost_cny&quot;: 0.61198496,
+  &quot;system_characters_mean&quot;: 78914,
+  &quot;reply_characters_mean&quot;: 76,
+  &quot;model_duration_ms_sum&quot;: 124173
+}</pre></details><details><summary>candidate-20261101T040052Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;candidate-20261101T040052Z&quot;,
+  &quot;case_count&quot;: 2,
+  &quot;step_count&quot;: 4,
+  &quot;failed_checks&quot;: [
+    {
+      &quot;case&quot;: &quot;peach11_comparison_and_quote&quot;,
+      &quot;step&quot;: &quot;execution_error&quot;,
+      &quot;errors&quot;: [
+        &quot;clarification_only_for_ambiguity&quot;
+      ]
+    }
+  ],
+  &quot;failed_runs&quot;: 5,
+  &quot;model_calls&quot;: 15,
+  &quot;cost_cny&quot;: 0.40782568,
+  &quot;system_characters_mean&quot;: 23327,
+  &quot;reply_characters_mean&quot;: 110,
+  &quot;model_duration_ms_sum&quot;: 49828
+}</pre></details><details><summary>candidate-20261101T040310Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;candidate-20261101T040310Z&quot;,
+  &quot;case_count&quot;: 6,
+  &quot;step_count&quot;: 15,
+  &quot;failed_checks&quot;: [],
+  &quot;failed_runs&quot;: 1,
+  &quot;model_calls&quot;: 31,
+  &quot;cost_cny&quot;: 0.79476552,
+  &quot;system_characters_mean&quot;: 21937,
+  &quot;reply_characters_mean&quot;: 119,
+  &quot;model_duration_ms_sum&quot;: 95435
+}</pre></details><details><summary>full-baseline-20261101T041559Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;full-baseline-20261101T041559Z&quot;,
+  &quot;case_count&quot;: 1,
+  &quot;step_count&quot;: 8,
+  &quot;failed_checks&quot;: [],
+  &quot;failed_runs&quot;: 0,
+  &quot;model_calls&quot;: 15,
+  &quot;cost_cny&quot;: 0.39449432,
+  &quot;system_characters_mean&quot;: 84131,
+  &quot;reply_characters_mean&quot;: 142,
+  &quot;model_duration_ms_sum&quot;: 50140
+}</pre></details><details><summary>full-high-20261101T041411Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;full-high-20261101T041411Z&quot;,
+  &quot;case_count&quot;: 1,
+  &quot;step_count&quot;: 8,
+  &quot;failed_checks&quot;: [
+    {
+      &quot;case&quot;: &quot;new_customer_to_return&quot;,
+      &quot;step&quot;: &quot;consider&quot;,
+      &quot;errors&quot;: [
+        &quot;contact_invitation&quot;
+      ]
+    }
+  ],
+  &quot;failed_runs&quot;: 1,
+  &quot;model_calls&quot;: 20,
+  &quot;cost_cny&quot;: 0.25803456,
+  &quot;system_characters_mean&quot;: 25624,
+  &quot;reply_characters_mean&quot;: 162,
+  &quot;model_duration_ms_sum&quot;: 76828
+}</pre></details><details><summary>high-20261101T040826Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;high-20261101T040826Z&quot;,
+  &quot;case_count&quot;: 6,
+  &quot;step_count&quot;: 15,
+  &quot;failed_checks&quot;: [],
+  &quot;failed_runs&quot;: 0,
+  &quot;model_calls&quot;: 26,
+  &quot;cost_cny&quot;: 0.75683456,
+  &quot;system_characters_mean&quot;: 21911,
+  &quot;reply_characters_mean&quot;: 113,
+  &quot;model_duration_ms_sum&quot;: 89651
+}</pre></details><details><summary>holdout-baseline-20261101T042027Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;holdout-baseline-20261101T042027Z&quot;,
+  &quot;case_count&quot;: 4,
+  &quot;step_count&quot;: 8,
+  &quot;failed_checks&quot;: [
+    {
+      &quot;case&quot;: &quot;ambiguous_object_not_customer_preference&quot;,
+      &quot;step&quot;: &quot;hypothetical&quot;,
+      &quot;errors&quot;: [
+        &quot;unexpected_profile:everest_preference&quot;
+      ]
+    },
+    {
+      &quot;case&quot;: &quot;ambiguous_object_not_customer_preference&quot;,
+      &quot;step&quot;: &quot;family_report&quot;,
+      &quot;errors&quot;: [
+        &quot;unexpected_profile:everest_preference&quot;
+      ]
+    },
+    {
+      &quot;case&quot;: &quot;gentle_invitation_then_space&quot;,
+      &quot;step&quot;: &quot;silence&quot;,
+      &quot;errors&quot;: [
+        &quot;no_send&quot;
+      ]
+    }
+  ],
+  &quot;failed_runs&quot;: 0,
+  &quot;model_calls&quot;: 22,
+  &quot;cost_cny&quot;: 0.52872096,
+  &quot;system_characters_mean&quot;: 84110,
+  &quot;reply_characters_mean&quot;: 194,
+  &quot;model_duration_ms_sum&quot;: 100268
+}</pre></details><details><summary>holdout-high-20261101T041106Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;holdout-high-20261101T041106Z&quot;,
+  &quot;case_count&quot;: 8,
+  &quot;step_count&quot;: 12,
+  &quot;failed_checks&quot;: [
+    {
+      &quot;case&quot;: &quot;gentle_invitation_then_space&quot;,
+      &quot;step&quot;: &quot;first_consideration&quot;,
+      &quot;errors&quot;: [
+        &quot;contact_invitation&quot;
+      ]
+    },
+    {
+      &quot;case&quot;: &quot;gentle_invitation_then_space&quot;,
+      &quot;step&quot;: &quot;execution_error&quot;,
+      &quot;errors&quot;: [
+        &quot;expected_followup_missing&quot;
+      ]
+    },
+    {
+      &quot;case&quot;: &quot;specific_inventory_not_general_information&quot;,
+      &quot;step&quot;: &quot;no_booking_authority&quot;,
+      &quot;errors&quot;: [
+        &quot;handoff&quot;,
+        &quot;no_send&quot;
+      ]
+    }
+  ],
+  &quot;failed_runs&quot;: 0,
+  &quot;model_calls&quot;: 27,
+  &quot;cost_cny&quot;: 0.40818984,
+  &quot;system_characters_mean&quot;: 29313,
+  &quot;reply_characters_mean&quot;: 254,
+  &quot;model_duration_ms_sum&quot;: 118439
+}</pre></details><details><summary>holdout-high-20261101T041727Z：指标与未通过项</summary><pre>{
+  &quot;directory&quot;: &quot;holdout-high-20261101T041727Z&quot;,
+  &quot;case_count&quot;: 8,
+  &quot;step_count&quot;: 13,
+  &quot;failed_checks&quot;: [
+    {
+      &quot;case&quot;: &quot;clear_switch_keeps_context&quot;,
+      &quot;step&quot;: &quot;switch&quot;,
+      &quot;errors&quot;: [
+        &quot;profile_mismatch:everest_preference:None&quot;
+      ]
+    },
+    {
+      &quot;case&quot;: &quot;specific_inventory_not_general_information&quot;,
+      &quot;step&quot;: &quot;no_booking_authority&quot;,
+      &quot;errors&quot;: [
+        &quot;handoff&quot;,
+        &quot;no_send&quot;
+      ]
+    }
+  ],
+  &quot;failed_runs&quot;: 0,
+  &quot;model_calls&quot;: 28,
+  &quot;cost_cny&quot;: 0.40018584,
+  &quot;system_characters_mean&quot;: 25251,
+  &quot;reply_characters_mean&quot;: 218,
+  &quot;model_duration_ms_sum&quot;: 142876
+}</pre></details><p>模型输出、模拟交付、来源摘要和成本记录保存在 <code>output/consultative-20261101/</code>；新样例在 <code>backend/tests/fixtures/consultative_*.json</code>。
+可复现入口：<code>backend/scripts/evaluate_consultative_reception.py</code>。修订后的验收样例只做了结构检查，没有重新调用模型；原始运行输入、输出和失败记录保留，没有将人工复核计作新一轮真实模型通过。测试禁止向模型端点之外的地址发请求，所有客户消息与图片投递均模拟。</p></section>
+<section class="box"><h2>未验证部分</h2><p>没有在生产实客中启用，没有补测图片理解、手机收图、新渠道、完整后端全量测试，也没有完成长期偏好行为验证。已运行的244项相关回归通过，并不能替代这些验证。</p>
+<p>仓库：China2Go main 工作区。生产版本和rujing2代码未改；共享预算账本只做本轮授权和真实调用记账。</p></section></main></html>
