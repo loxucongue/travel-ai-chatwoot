@@ -331,12 +331,11 @@
             "厕所"
           ]
         ],
-        "excludes": [
-          "隨叫隨停",
-          "想停就停"
-        ],
         "text": "了解，我是怕坐太久，中間想上廁所怎麼辦？",
-        "seconds": 3
+        "seconds": 3,
+        "manual_checks": [
+          "No promise of arbitrary stops; distinguish explicit negation from a promise."
+        ]
       },
       {
         "id": "no_replay_on_ack",
@@ -431,7 +430,9 @@
             "自理",
             "不含",
             "不包含",
-            "自行"
+            "自行",
+            "沒有包含",
+            "没有包含"
           ]
         ],
         "excludes": [
@@ -550,12 +551,133 @@
           "send",
           "not_handoff",
           "no_new_introduction",
-          "no_contact_invitation",
-          "no_altitude_guarantee"
+          "no_contact_invitation"
         ],
         "expected_route": "tibet_linzhi_8d",
         "text": "我只是怕高反，沒有說要換行程。不上珠峰是不是就不會高反？",
-        "seconds": 3
+        "seconds": 3,
+        "manual_checks": [
+          "No guarantee against altitude illness; read negation in the whole sentence."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "peach11_comparison_and_quote",
+    "title": "桃花11日区别、比较与正常报价",
+    "entry": "2027 林芝桃花＋珠峰 11 日",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_11d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "我選的桃花11日，也是不去珠峰，所以不住絨布對嗎？",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_11d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "eleven_not_nine",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "peach_11d_2027",
+        "contains_any": [
+          [
+            "珠峰"
+          ],
+          [
+            "絨布",
+            "绒布"
+          ]
+        ]
+      },
+      {
+        "id": "comparison_is_not_switch",
+        "text": "明白，先不換。我只比較一下，9日的早餐是不是也有含？",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "peach_11d_2027",
+        "contains_any": [
+          [
+            "早餐"
+          ]
+        ]
+      },
+      {
+        "id": "direct_quote_still_works",
+        "text": "那我現在兩位、三月底拼團，11日多少錢？",
+        "seconds": 3,
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation",
+          "exact_quote"
+        ],
+        "expected_route": "peach_11d_2027",
+        "quote_script_id": "price_shared_2"
       }
     ]
   }

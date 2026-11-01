@@ -41,7 +41,8 @@ def test_each_route_only_receives_own_fact_references(library, route):
     text, ids = experience.render(library, bundle, route)
     rows = json.loads(text[text.index('[{'):])
     allowed = {f['id'] for f in bundle['routes'][route]['facts']}
-    assert len(ids) == 4 and all(set(r['本线路事实ID']) <= allowed for r in rows)
+    assert len(ids) == 3 and all(set(r['本线路事实ID']) <= allowed for r in rows)
+    assert 'advisor.meals' not in ids  # Held back after real-model overstatement.
     assert bundle == before
     # References belonging to an unrelated eight-day product must never leak.
     for other in ('tibet_essence_8d', 'tibet_linzhi_8d', 'tibet_winter_8d'):
@@ -61,8 +62,8 @@ def test_missing_facts_disable_only_affected_card_and_preserve_original_data(lib
     route = 'tibet_winter_8d'
     bundle['routes'][route]['facts'] = [f for f in bundle['routes'][route]['facts'] if f['id'] != route + '.hotel']
     text, ids = experience.render(library, bundle, route)
-    assert 'advisor.hotel' not in ids and len(ids) == 3
-    assert 'advisor.meals' in ids
+    assert 'advisor.hotel' not in ids and len(ids) == 2
+    assert 'advisor.arrival' in ids
 
 
 @pytest.mark.parametrize('profile,enabled,business,available', [
@@ -97,9 +98,9 @@ def test_optional_library_failure_does_not_break_reception(library, monkeypatch,
 
 
 def test_disable_one_entry_and_reject_ambiguous_scope(library):
-    library.experiences[1].enabled = False
-    assert 'advisor.meals' not in experience.render(library, catalog(library), 'peach_9d_2027')[1]
-    data = library.experiences[1].model_dump()
+    library.experiences[2].enabled = False
+    assert 'advisor.vehicle' not in experience.render(library, catalog(library), 'peach_9d_2027')[1]
+    data = library.experiences[2].model_dump()
     data['route_fact_ids'] = {}
     with pytest.raises(ValueError, match='route_method_requires_evidence'):
         experience.Experience.model_validate(data)
@@ -131,7 +132,7 @@ def test_model_keeps_its_complete_answer_and_trace_does_not_claim_usage(library,
     evidence = next(x['advisor_experience'] for x in logs if x.get('node') == 'reception_v3')
     assert evidence['status'] == 'provided_not_verified_used'
     assert evidence['provided_by_skill']['peach-9d-2027'] == [
-        'advisor.meals', 'advisor.vehicle', 'advisor.arrival', 'advisor.hotel']
+        'advisor.vehicle', 'advisor.arrival', 'advisor.hotel']
     assert evidence['version'] == library.version
 
 
@@ -152,3 +153,44 @@ def test_comparison_loads_separate_route_evidence_without_selecting_route(librar
     assert not decision['start_introduction']
     evidence = next(x['advisor_experience'] for x in reversed(logs) if x.get('node') == 'reception_v3')
     assert {'peach-9d-2027', 'peach-11d-2027'} <= evidence['provided_by_skill'].keys()
+
+
+def test_rejected_draft_remains_unsent_while_customer_task_is_repaired(monkeypatch):
+    from app.reception_v3 import runtime
+    from test_reception_v3_skills import context, model, final
+    monkeypatch.setattr(settings, 'reception_route_understanding_enabled', False)
+    c = context('peach_9d_2027')
+    c['messages'] = [{'id': 'latest', 'direction': 'incoming', 'content': '我只是比较住宿，没有要换线'}]
+    requests = model(monkeypatch, [final(messages=[{'text': '尚未发送的草稿'}]),
+                                   final(messages=[{'text': '当前问题的完整回答'}])])
+    errors = iter(['需要修正报价决策字段', None])
+    monkeypatch.setattr(runtime, 'quote_error', lambda *a, **k: next(errors))
+    decision, logs, _ = runtime.run_agent(c)
+    feedback = [json.loads(m['content']) for m in requests[1]['messages']
+                if m.get('role') == 'user' and 'decision_validation_feedback' in m.get('content', '')]
+    assert feedback[0]['candidate_delivered'] is False
+    assert feedback[0]['original_event'] == 'customer_message'
+    assert any(m.get('content') == c['messages'][0]['content'] for m in requests[1]['messages'])
+    assert logs[0]['status'] == 'quote_rejected'
+    assert decision['messages'] == runtime.Decision(messages=[{'text': '当前问题的完整回答'}]).model_dump()['messages']
+
+
+def test_semantic_comparison_reads_other_product_without_checking_departure(library, monkeypatch):
+    from app.reception_v3 import runtime
+    from test_reception_v3_skills import model, final, tool
+    from test_route_understanding_20261031 import ctx, result, semantic_model, NINE, ELEVEN
+    c = ctx('我不换线，只比较一下两条的早餐包含吗？')
+    c['profile']['departure_window'] = '2027年1月'
+    for value in c['skills']['routes'].values():
+        value['departure_availability'] = {'season_start': '2027-03-20', 'season_end': '2027-04-10'}
+    understanding = result(c, intent='compare')
+    understanding['has_question'] = True
+    semantic_model(monkeypatch, [understanding])
+    model(monkeypatch, [
+        {'content': '', 'tool_calls': [tool('load_skill', {'name': 'peach-9d-2027'})]},
+        final(route_variant=ELEVEN, messages=[{'text': '两条的酒店早餐都包含。'}])])
+    monkeypatch.setattr(runtime, 'departure_quote', lambda *a, **kw: pytest.fail('A factual comparison does not request availability.'))
+    decision, logs, _ = runtime.run_agent(c)
+    assert decision['route_variant'] == ELEVEN and decision['route_choice'] == 'unchanged'
+    assert not decision['start_introduction'] and not decision['profile'].get('_route_offer')
+    assert not any(l.get('status') == 'quote_rejected' for l in logs)

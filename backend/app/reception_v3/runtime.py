@@ -520,7 +520,13 @@ def run_agent(context: dict):
                 quote_repaired = True
                 messages.append({'role':'assistant', 'content':json.dumps(decision,ensure_ascii=False),
                                  'reasoning_content':message.get('reasoning_content','')})
-                messages.append({'role':'user','content':quote_problem})
+                messages.append({'role':'user','content':json.dumps({
+                    'kind': 'decision_validation_feedback', 'candidate_delivered': False,
+                    'original_event': context.get('event'), 'validation_error': quote_problem,
+                    'instruction': '上一候选尚未发送，不能把它当作已向客户回答的历史。'
+                        '这是内部校验反馈，不是新的客户消息；请继续处理原始任务，修正决策字段及必要的答复。'
+                        '读取另一线路资料用于比较不代表推荐或选线；保留不受校验影响的有效答案。',
+                }, ensure_ascii=False)})
                 continue
             party_problem = reply_contract_error(decision, context)
             if party_problem:

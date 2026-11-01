@@ -149,8 +149,11 @@ def generation_instruction(context):
             '優先於產品Skill中泛指「客戶選擇此線」的流程說明；讀取產品資料或核價不表示客戶已選線。\n'
             + json.dumps({'interpretation': understanding, 'selected_route_before_turn': selected}, ensure_ascii=False)
             + '\nintent非select時，route_variant必須保留selected_route_before_turn（可為空），'
-            '不能開始另一條線的完整介紹；回答另一條線的費用/詳情用route_choice=recommend、start_introduction=false，'
-            'profile.discussion_route填所討論產品，從該線取報價，不能為了取模板改route_variant。'
+            '不能開始另一條線的完整介紹。只核對或比較其他線的住宿、交通、包含等非報價資料，'
+            '可load_skill讀取該線，route_choice=unchanged、start_introduction=false，不新增discussion_route；'
+            '比較不是推薦，不需要為純資料答疑查可售日期。真正提出替代線推薦，或客戶明確詢問另一線報價需取其價格模板時，'
+            '才用route_choice=recommend、start_introduction=false，profile.discussion_route填該產品並核對其價格條件；'
+            '不能為了取模板改route_variant。'
             'intent=select時依selected_route承接；若客觀日期或天數不符，可先說明限制，不能偷換產品。'
             '先回答本輪問題，不把詢價重寫為「您已選定」或「接著開始完整介紹」。'
             '客戶補充已選線的月份、人數時，按原接待進度開始或繼續該線介紹，不需要重新選一次線。'

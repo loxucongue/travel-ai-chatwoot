@@ -272,8 +272,12 @@ def main():
                         if check=='exact_quote':
                             from app.reception_v3.quotes import personalize_quotes
                             route = personalize_quotes(db, row, bundle)['routes'][row.controls['route_variant']]
-                            quote = next(s['answer_text'] for s in route['scripts'] if s['id']=='price')
-                            if text.count(quote) != 1:failures.append(check)
+                            quote_id = step.get('quote_script_id', 'price')
+                            quote = next((s['answer_text'] for s in route['scripts'] if s['id']==quote_id), None)
+                            if quote is None:
+                                failures.append('missing_expected_quote_script:' + quote_id)
+                            elif text.count(quote) != 1:
+                                failures.append(check)
                         if check=='no_surcharge' and re.search(r'單房差|独立成团.*400|獨立成團.*400|加價',text):failures.append(check)
                         if check=='only_requested_surcharge':
                             amounts = re.findall(r'([0-9][0-9,]*)\s*(?:元|/人)',text)
