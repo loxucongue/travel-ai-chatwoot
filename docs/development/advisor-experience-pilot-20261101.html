@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>顾问经验第一批试验 · 2026-11-01</title>
+<style>body{max-width:1120px;margin:40px auto;padding:0 24px;font:16px/1.75 system-ui,sans-serif;color:#183047;background:#f7f9fb}h1{font-size:30px}h2{margin-top:32px;font-size:21px}table{border-collapse:collapse;width:100%;background:white}th,td{text-align:left;vertical-align:top;border:1px solid #dce3eb;padding:12px}th{background:#edf2f7}code{overflow-wrap:anywhere}.notice{padding:18px;background:#fff4da;border-left:4px solid #d89c20}a{color:#1265a8}.small{font-size:14px;color:#526577}</style>
+<h1>顾问经验第一批试验</h1>
+<p>2026-11-01 · China2Go · 基于 main / d2c6810 · 仅开发与隔离测试</p>
+<p class="notice"><strong>候选代码已完成，未上线。148项程序回归通过；真实模型优化前后对照未完成，不能据此宣称回复更自然或已经消除变机械的风险。</strong></p>
+<h2>本轮目标与取舍</h2>
+<p>从顾问答复提炼如何理解问题、如何解释差异，而产品安排仍读取当前线路资料。客户的自然语言由现有接待模型理解，不新增关键词命中即套话的分支，也不在生成后删句。程序只检查明确的配置条件：线路归属、事实引用是否存在、版本是否可用。</p>
+<p>来源工作簿为“China2Go_转人工场景与顾问答复_待审核_20261030.xlsx”。本地237条候选仍为待审核；本轮没有把其中的历史价格、库存、航班、设施推断或临时安排当作新产品事实。顾问的原话也不自动成为永久规则。</p>
+<table><thead><tr><th>第一批内容</th><th>借鉴什么</th><th>如何区分线路</th></tr></thead><tbody>
+<tr><td>用餐与包含项目</td><td>先回答客户问的餐次，再处理其实际顾虑；只问早餐就简短回答。</td><td>分别引用本线包含／不含，不把个别餐厅安排推广为全部线路承诺。</td></tr>
+<tr><td>车辆与人数</td><td>区分报名人数、拼团总人数与车型；针对拥挤、行李、休息解释。</td><td>读取本线车辆与休息资料；两人报名不等于包车，七人不套六人团车型。</td></tr>
+<tr><td>航班与集合</td><td>分清询问费用还是目的地，资料足够就直接答。</td><td>分别读取进出城市；精华8天、林芝8天、冰川8天不能因同为8天而混用。</td></tr>
+<tr><td>酒店差异</td><td>解释本轮有关的例外、季节变化；实际余房仍需核实。</td><td>分别读取各线住宿；不上珠峰的线路不套用绒布，冬季不能沿用夏季住宿。</td></tr>
+<tr><td>需求澄清与承接</td><td>回应新增信息、沿用已知资料、接住纠正；确有必要才问一个问题。</td><td>沟通方法共用；不携带酒店、价格或具体服务承诺，不自动改线。</td></tr>
+</tbody></table>
+<h2>怎样维护</h2>
+<p>经验放在独立的 <code>data/knowledge/china2go/advisor-experience/library.json</code> 中，每条有来源案例、适用线路、当前事实ID、启停状态；整库有版本、审核说明、复核日期。修改经验不需要改写选线程序。新线路不自动继承其他线路的经验依据。</p>
+<p>一个事实引用缺失时，只跳过对应经验；资料过期、暂停或格式损坏时使用原有接待流程，不因此转人工。日志记录提供给模型的版本和经验ID，但“已提供”不等于“实际采用”，更不等于客户问题已经解决。</p>
+<p>本版为 pilot，开关默认关闭；即使误打开开关，生产环境也不加载 pilot。只有评估环境且客户发送关闭才能加载。完整业务审核页面、自动收集候选、批量审批和线上效果回流不在本批范围内。</p>
+<h2>实际测试结果</h2>
+<table><thead><tr><th>验证层次</th><th>结果</th><th>能证明什么／不能证明什么</th></tr></thead><tbody>
+<tr><td>相关程序回归</td><td>148通过，0失败；其中新增经验模块22项。</td><td>覆盖六线隔离、失效与停用、关闭回退、比较不自动选线、完整答复不被改写、试验环境误开渠道写入的保护，以及现有接待／报价／跟进回归。不是本轮全量后端测试。</td></tr>
+<tr><td>当前线上资料快照</td><td>6条线路均能解析4条本线经验，1条通用方法独立加载。</td><td>确认引用存在且归属正确；不能单凭ID存在证明所有原资料事实已重新获业务批准。</td></tr>
+<tr><td>真实模型基线</td><td>完成冬游酒店→比较精华8天冬季住宿→只问早餐，共3轮，自动断言通过。</td><td>这是优化前基线。第一轮有较多背景展开；第二轮“多安排一晚”的精确性应在人工复核中继续检查。</td></tr>
+<tr><td>其他基线与候选模型</td><td>受预算保护停止；候选版尚未运行真实对照。</td><td>不能报告为模型场景全部通过，不能判断候选是否更自然、是否会过度保守。</td></tr>
+</tbody></table>
+<p>完整计划为5组连续对话、12个检查节点，使用同一生产资料快照分别开关经验模块。对话是根据顾问案例设计的合成变体，不能称为完整原会话重放。六条线路的程序隔离已测，真实模型覆盖仍需完成。</p>
+<table><thead><tr><th>对话</th><th>重点观察</th></tr></thead><tbody>
+<tr><td>冬游住宿与其他8日比较（3轮）</td><td>不全说希尔顿、不串绒布、只比较不换线；单问早餐不再铺陈。</td></tr>
+<tr><td>精华8日进出城市（2轮）</td><td>纠正林芝／拉萨混淆；机票包含问题不机械索取全部航班信息。</td></tr>
+<tr><td>桃花9日车辆与休息（3轮）</td><td>不把两人拼团说成独享车；回应厕所顾虑；谢谢后不重播。</td></tr>
+<tr><td>全览10日用餐（2轮）</td><td>不展开整张报价；客户说明无需加餐后不重复问人数／线路。</td></tr>
+<tr><td>林芝8日住宿与高度顾虑（2轮）</td><td>不套绒布；普通顾虑不自动换线，不保证没有高反。</td></tr>
+</tbody></table>
+<h2>“会不会变呆”的验收门槛</h2>
+<p>人工逐轮复核必须同时满足：事实与线路正确；本轮问题有回答；不把每轮都变成提问、介绍好处或索资；客户纠正后能调整；简单问题可以短答；缺少经验不机械转人工；明确暂停和人工接管继续生效。比较语义和最终发送结果，不要求命中固定句式。任何关键串线、错误承诺、漏答或新增机械追问都先修复复测，再考虑启用。</p>
+<h2>费用、并行窗口与发布</h2>
+<p>截至本记录，共用账本额度85元，已计费／预留84.04851384元，剩余0.95148616元。本轮增加0.39068080元。剩余额度低于下一次完整上下文的保守预留，追加最多5元的询问尚未收到确认；没有提高限额或绕过预算保护。</p>
+<p>只在 China2Go main 对应工作区开发，未改 rujing2，未部署或向客户发送测试消息。开始前 main 与 origin/main 均为 d2c6810；提交前再次核对并行改动。模型效果未验收前保持关闭。</p>
+<h2>可复核文件</h2>
+<ul>
+<li><a href="../../data/knowledge/china2go/advisor-experience/library.json">候选经验数据</a>、<a href="../../data/knowledge/china2go/advisor-experience/README.md">维护说明</a></li>
+<li><a href="../../backend/tests/test_advisor_experience.py">新增测试</a>、<a href="../../backend/tests/fixtures/advisor_experience_journeys_20261101.json">连续对话用例</a></li>
+<li><a href="../../output/advisor-learning-20261101/regression.xml">148项回归结果</a>、<a href="../../output/advisor-learning-20261101/baseline-20261101T032220Z/summary.json">真实基线及中断记录</a></li>
+<li class="small">生产快照与完整模型输出位于本机 output/advisor-learning-20261101/，未作为公开知识或线上资料发布。</li>
+</ul></html>

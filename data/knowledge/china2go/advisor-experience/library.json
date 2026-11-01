@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "version": "2026-11-01.pilot-1",
+  "status": "pilot",
+  "reviewed_by": "Codex：第一批隔离测试候选",
+  "review_note": "用户批准开发与测试；本版只提炼沟通方法，事实引用现有线路，不批准历史报价、库存或新服务承诺。测试通过后仍待业务效果审核。",
+  "review_due": "2026-12-01",
+  "experiences": [
+    {
+      "id": "advisor.need_clarification",
+      "title": "接住客户真正关心的事",
+      "scope": "conversation_method",
+      "scenario": "客户补充、更正需求，或用日常说法表达顾虑。",
+      "approach": "先回应这次新增的意思，已知资料直接沿用。信息足以回答就直接答；确实影响答案的资料缺失时，只问最有用的一个问题。客户更正目的地、线路或偏好时接住更正，重新核对对应产品。说考虑同时有问题时先回答问题，是否邀请私讯仍按原留资规则。",
+      "avoid": "不是每轮都要提问或介绍好处；不把‘谢谢、知道了’当成新咨询，不因看过历史留资案例就再次索资，不沿用其他产品的事实、顾问姓名或优惠。普通考虑与明确暂停、健康原因暂缓要结合上下文区分。",
+      "source_cases": ["S003/#307", "S004/#308", "S107/#478", "S233/#520", "S209/#499"]
+    },
+    {
+      "id": "advisor.meals",
+      "title": "把用餐费用与实际顾虑说清楚",
+      "scope": "route_method",
+      "scenario": "客户关心餐食是否包含、是否要自行支付或能否增加用餐安排。",
+      "approach": "先根据本线路包含/不含回答客户具体问的餐次。客户担心怎么吃时再说明资料中确有依据的安排；要增加包餐、特殊饮食或改成定制团，就区分现有标准与尚需核实的安排。单问早餐不必展开其他费用。",
+      "avoid": "不把某位顾问描述的餐厅停靠、酒店周围餐厅多，推广为所有线路保证；不把拼团不含正餐解释成任何独团也不能安排。不主动报金额、重复整张报价或问已知线路。",
+      "source_cases": ["S007/#313", "#477"],
+      "route_fact_ids": {
+        "peach_9d_2027": ["route.9.price", "peach_9d_2027.fee_exclusions"],
+        "peach_11d_2027": ["route.11.price", "peach_11d_2027.fee_exclusions"],
+        "tibet_essence_8d": ["tibet_essence_8d.included", "tibet_essence_8d.excluded"],
+        "tibet_overview_10d": ["tibet_overview_10d.included", "tibet_overview_10d.excluded"],
+        "tibet_linzhi_8d": ["tibet_linzhi_8d.included", "tibet_linzhi_8d.excluded"],
+        "tibet_winter_8d": ["tibet_winter_8d.included"]
+      }
+    },
+    {
+      "id": "advisor.vehicle",
+      "title": "区分报名人数、成团人数和车辆安排",
+      "scope": "route_method",
+      "scenario": "客户问坐几个人、行李、车程或小团和独团的区别。",
+      "approach": "先区分客户自己有几位、拼团可能总共几位和实际车型，解释本线确认的安排。担心拥挤时回应这个顾虑，担心长车程时用本线休息安排回答；不固定追问人数。客户只是报人数，不自动把它变成已选独团。",
+      "avoid": "车辆总座位不等于全部可供游客乘坐，不把两人报名说成两人独享整车；7人以上不套6人团车辆。没有本线容量数据时不猜载客数或行李件数；不承诺随叫随停、任意改线或不疲劳。",
+      "source_cases": ["S024/#353", "S025/#353"],
+      "route_fact_ids": {
+        "peach_9d_2027": ["route.shared.vehicle_reference", "peach_9d_2027.long_drive_rest"],
+        "peach_11d_2027": ["route.shared.vehicle_reference", "peach_11d_2027.long_drive_rest"],
+        "tibet_essence_8d": ["tibet_essence_8d.group", "tibet_essence_8d.long_drive_rest"],
+        "tibet_overview_10d": ["tibet_overview_10d.group", "tibet_overview_10d.long_drive_rest"],
+        "tibet_linzhi_8d": ["tibet_linzhi_8d.group", "tibet_linzhi_8d.long_drive_rest"],
+        "tibet_winter_8d": ["tibet_winter_8d.group", "tibet_winter_8d.long_drive_rest"]
+      }
+    },
+    {
+      "id": "advisor.arrival",
+      "title": "先核本线进出城市，再承接交通安排",
+      "scope": "route_method",
+      "scenario": "客户问机票是否包含、飞哪里、哪里集合、如何接送。",
+      "approach": "先回答所问的是费用包含还是进出城市，再按当前线路事实说明。只在航班建议确实缺资料时询问尚未知道的出发地或时间；线路不同要重新核对，不能因为都叫8天就共用接机城市。",
+      "avoid": "顾问历史票价、航班时刻、飞行时长、第三方购票渠道不是当前事实。不替客户预订、不保证衔接，不把某次成都陪同办手续推广为所有线路服务。只问机票含不含时不机械索要完整航班资料。",
+      "source_cases": ["S008/#318", "#475", "S107/#478", "S108/#478", "#496"],
+      "route_fact_ids": {
+        "peach_9d_2027": ["route.9.days", "route.9.price"],
+        "peach_11d_2027": ["route.11.days", "route.11.price"],
+        "tibet_essence_8d": ["tibet_essence_8d.scope", "tibet_essence_8d.included", "tibet_essence_8d.excluded"],
+        "tibet_overview_10d": ["tibet_overview_10d.scope", "tibet_overview_10d.included", "tibet_overview_10d.excluded"],
+        "tibet_linzhi_8d": ["tibet_linzhi_8d.scope", "tibet_linzhi_8d.included", "tibet_linzhi_8d.excluded"],
+        "tibet_winter_8d": ["tibet_winter_8d.itinerary", "tibet_winter_8d.included"]
+      }
+    },
+    {
+      "id": "advisor.hotel",
+      "title": "按线路和季节解释住宿差异",
+      "scope": "route_method",
+      "scenario": "客户问酒店品牌、房间设施、是否都住同一种酒店或住宿能否保证。",
+      "approach": "先回答本线已确认的住宿，再说明与本轮问题有关的例外或季节变化。客户拿另一条线路来比较时分别读取两条当前资料，明确哪条是哪条；普通住宿问题能直接答，实际余房、锁房与未确认设施依原交接规则核实。",
+      "avoid": "不把‘所有酒店供氧’说成所有晚数都住希尔顿；不把珠峰住宿套给不上珠峰线路；不从图片或酒店品牌推断设施、氧气浓度/时数、医疗效果或库存。未经批准的替代酒店不转成默认安排。",
+      "source_cases": ["#313", "#477", "#496"],
+      "route_fact_ids": {
+        "peach_9d_2027": ["route.9.scope", "route.shared.hotel_reference"],
+        "peach_11d_2027": ["route.11.scope", "route.11.rongbuk", "route.shared.hotel_reference"],
+        "tibet_essence_8d": ["tibet_essence_8d.accommodation", "tibet_essence_8d.hotel"],
+        "tibet_overview_10d": ["tibet_overview_10d.accommodation", "tibet_overview_10d.hotel"],
+        "tibet_linzhi_8d": ["tibet_linzhi_8d.scope", "tibet_linzhi_8d.hotel"],
+        "tibet_winter_8d": ["tibet_winter_8d.itinerary", "tibet_winter_8d.hotel"]
+      }
+    }
+  ]
+}

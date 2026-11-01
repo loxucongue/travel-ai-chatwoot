@@ -361,6 +361,9 @@ def run_agent(context: dict):
             message = body['choices'][0]['message']
             log = {**_call_log(turn + 1, started, body, 'completed', None),
                    'node': 'reception_v3', 'loaded_skills': dict(loaded),
+                   'advisor_experience': {'version': registry.experience_library.version if registry.experience_library else None,
+                       'provided_by_skill': dict(registry.provided_experiences),
+                       'status': 'provided_not_verified_used' if registry.provided_experiences else 'disabled_or_unavailable'},
                    'vision_image_count': sum(len(parts) for parts in images.values()),
                    'system_characters': len(prompt), 'reasoning_effort': 'low', 'tool_calls': []}
             logs.append(log)

@@ -110,6 +110,9 @@ class SkillRegistry:
 
     def __init__(self, bundle, materials=(), root=SKILL_ROOT):
         self.bundle, self.materials = bundle, materials
+        from app.reception_v3.advisor_experience import load_library
+        self.experience_library = load_library()
+        self.provided_experiences = {}
         self.skills = {}
         for path in sorted(root.glob('*/SKILL.md')):
             text = path.read_text(encoding='utf-8')
@@ -202,5 +205,11 @@ class SkillRegistry:
                 [m for m in self.materials if route_id in m.get('routes', [])], ensure_ascii=False)
         else:
             raise ValueError(f'skill_route_configuration_missing:{name}')
+        from app.reception_v3.advisor_experience import render
+        experience_text, experience_ids = render(
+            self.experience_library, self.bundle, None if name == 'tibet-reception' else route_id)
+        body += experience_text
+        if experience_ids:
+            self.provided_experiences[name] = experience_ids
         return {'name': name, 'description': item['description'], 'instructions': body,
                 'digest': hashlib.sha256(body.encode()).hexdigest()}

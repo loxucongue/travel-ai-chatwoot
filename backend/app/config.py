@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     reception_repeat_review_enabled: bool = False
     reception_route_understanding_enabled: bool = False
     reception_route_understanding_model: str = ""
+    reception_advisor_experience_enabled: bool = False
     customer_sticker_recognition_enabled: bool = False
     customer_image_allowed_hosts: str = "app.chatwoot.com"
     customer_image_storage_hosts: str = "prod-chatwoot-assets.s3.amazonaws.com"

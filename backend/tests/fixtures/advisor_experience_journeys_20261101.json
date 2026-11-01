@@ -1,0 +1,562 @@
+[
+  {
+    "id": "winter_hotel_comparison",
+    "title": "winter_hotel_comparison",
+    "entry": "冬遊西藏｜冰川藍冰8天",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "tibet_winter_8d",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "冰川8天的酒店也全部都是希爾頓嗎？有絨布嗎？",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年1月",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "tibet_winter_8d",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "winter_hotel",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_winter_8d",
+        "contains_any": [
+          [
+            "波密",
+            "山水"
+          ]
+        ],
+        "excludes": [
+          "保證入住"
+        ]
+      },
+      {
+        "id": "compare_without_switch",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_winter_8d",
+        "contains_any": [
+          [
+            "小鎮",
+            "小镇"
+          ]
+        ],
+        "text": "先不換，我只是問：跟拉薩進出的精華8天，冬天住宿有什麼不同？",
+        "seconds": 3
+      },
+      {
+        "id": "small_question",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_winter_8d",
+        "contains_any": [
+          [
+            "早餐"
+          ]
+        ],
+        "excludes": [
+          "單房差",
+          "单房差",
+          "小費"
+        ],
+        "text": "知道了，那冰川8天早餐有包嗎？只問早餐。",
+        "seconds": 3
+      }
+    ]
+  },
+  {
+    "id": "arrival_different_eight_day_routes",
+    "title": "arrival_different_eight_day_routes",
+    "entry": "西藏精華8天・拉薩＋珠峰",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "tibet_essence_8d",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "我看大家說要飛林芝，那我訂林芝去參加這個精華8天就對了嗎？",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年5月",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "tibet_essence_8d",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "correct_city",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_essence_8d",
+        "contains_any": [
+          [
+            "拉薩",
+            "拉萨"
+          ]
+        ]
+      },
+      {
+        "id": "flight_inclusion",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_essence_8d",
+        "contains_any": [
+          [
+            "機票",
+            "机票"
+          ]
+        ],
+        "text": "好，那還是看拉薩進出的精華8天。機票是另外買對嗎？",
+        "seconds": 3
+      }
+    ]
+  },
+  {
+    "id": "vehicle_party_and_rest",
+    "title": "vehicle_party_and_rest",
+    "entry": "2027 林芝桃花 9 日（不上珠峰）",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "peach_9d_2027",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "我們兩位拼團，是不是整台車就坐我們兩個，行李可以隨便帶？",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年3月底",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "peach_9d_2027",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "party_not_vehicle",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "peach_9d_2027",
+        "contains_any": [
+          [
+            "其他",
+            "團友",
+            "旅客",
+            "拼團"
+          ]
+        ]
+      },
+      {
+        "id": "rest_not_detour",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "peach_9d_2027",
+        "contains_any": [
+          [
+            "休息",
+            "廁所",
+            "厕所"
+          ]
+        ],
+        "excludes": [
+          "隨叫隨停",
+          "想停就停"
+        ],
+        "text": "了解，我是怕坐太久，中間想上廁所怎麼辦？",
+        "seconds": 3
+      },
+      {
+        "id": "no_replay_on_ack",
+        "checks": [
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "text": "知道了，謝謝",
+        "seconds": 3
+      }
+    ]
+  },
+  {
+    "id": "meals_no_price_dump",
+    "title": "meals_no_price_dump",
+    "entry": "西藏全覽10天・林芝＋拉薩＋珠峰",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "tibet_overview_10d",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "午餐晚餐也算在團費裡嗎？我不是問團費多少。",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年6月",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "tibet_overview_10d",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "meal_scope",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_overview_10d",
+        "contains_any": [
+          [
+            "自理",
+            "不含",
+            "不包含",
+            "自行"
+          ]
+        ],
+        "excludes": [
+          "12,280",
+          "12280",
+          "單房差"
+        ]
+      },
+      {
+        "id": "already_known_no_reask",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_overview_10d",
+        "excludes": [
+          "幾位",
+          "哪條行程",
+          "出發城市"
+        ],
+        "text": "我是想吃自己喜歡的，不用幫我加餐。早餐有就好。",
+        "seconds": 3
+      }
+    ]
+  },
+  {
+    "id": "linzhi_no_everest_not_medical_guarantee",
+    "title": "linzhi_no_everest_not_medical_guarantee",
+    "entry": "不上珠峰・林芝入藏8日",
+    "replay_context": {
+      "now": "2026-11-01T03:30:00+00:00",
+      "event": "customer_message",
+      "route_variant": "tibet_linzhi_8d",
+      "messages": [
+        {
+          "id": "customer-previous",
+          "direction": "incoming",
+          "content": "行程圖和介紹已收到，先在這裡問就好，不加好友。",
+          "status": "received",
+          "created_at": "2026-11-01T03:27:00+00:00"
+        },
+        {
+          "id": "assistant-previous",
+          "direction": "outgoing",
+          "attribution": "ai",
+          "content": "好的，有想了解的都可以在這裡問。",
+          "status": "simulated_delivered",
+          "created_at": "2026-11-01T03:28:00+00:00"
+        },
+        {
+          "id": "customer-current",
+          "direction": "incoming",
+          "content": "林芝不上珠峰8天，是不是也住絨布那家？",
+          "status": "received",
+          "created_at": "2026-11-01T03:29:57+00:00"
+        }
+      ],
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027年5月",
+        "contact_capture_declined": true,
+        "contact_preference": "current_channel_only"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "intake_deadline": null,
+        "introduction_route": "tibet_linzhi_8d",
+        "buffered_questions": [
+          "customer-current"
+        ],
+        "followup_settings": {
+          "material_selection": "configured_rules",
+          "advisor_reply_followup_enabled": true,
+          "enabled": true,
+          "live_enabled": true,
+          "intervals_minutes": [
+            360
+          ],
+          "initial_checkpoints_minutes": null,
+          "recurring_interval_minutes": 180,
+          "daily_at": "09:00",
+          "active_start": "07:00",
+          "active_end": "01:00",
+          "max_proactive_messages_per_day": 1
+        },
+        "followup_last_customer_at": "2026-11-01T03:29:57+00:00",
+        "followup_customer_replied": true
+      }
+    },
+    "steps": [
+      {
+        "id": "no_rongbuk",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation"
+        ],
+        "expected_route": "tibet_linzhi_8d",
+        "contains_any": [
+          [
+            "不住",
+            "不安排",
+            "沒有",
+            "不會"
+          ]
+        ]
+      },
+      {
+        "id": "clarify_health_concern",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact_invitation",
+          "no_altitude_guarantee"
+        ],
+        "expected_route": "tibet_linzhi_8d",
+        "text": "我只是怕高反，沒有說要換行程。不上珠峰是不是就不會高反？",
+        "seconds": 3
+      }
+    ]
+  }
+]
