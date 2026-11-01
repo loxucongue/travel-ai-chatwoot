@@ -129,7 +129,7 @@ def test_dialogue_and_customer_preferences_remain_in_current_context(monkeypatch
     ]
     requests = model(monkeypatch, [final(messages=[{'text': '住宿回答'}])])
     runtime.run_agent(c)
-    messages = requests[0]['messages']
+    messages = [m for m in requests[0]['messages'] if m.get('content') != runtime.TRAVEL_WINDOW_INSTRUCTION]
     assert [m['role'] for m in messages[1:-1]] == ['user', 'assistant', 'user']
     assert [m['content'] for m in messages[1:-1]] == [m['content'] for m in c['messages']]
     current = json.loads(messages[-1]['content'])
@@ -198,7 +198,7 @@ def test_unknown_skill_is_a_tool_error_then_model_can_correct(monkeypatch):
         {'content': None, 'tool_calls': [tool('load_skill', {'name': 'peach-11d-2027'}, 't2')]},
         final(route_variant='peach_11d_2027', start_introduction=True)])
     decision, logs, _ = runtime.run_agent(context())
-    assert 'skill_not_found' in requests[1]['messages'][-1]['content']
+    assert any('skill_not_found' in m.get('content', '') for m in requests[1]['messages'] if m['role'] == 'tool')
     assert decision['start_introduction']
     assert set(logs[-1]['loaded_skills']) == {'tibet-reception', 'peach-11d-2027'}
 

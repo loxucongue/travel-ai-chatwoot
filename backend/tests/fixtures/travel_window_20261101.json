@@ -1,0 +1,891 @@
+[
+  {
+    "id": "taiwan_window_and_extension",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-c",
+          "direction": "incoming",
+          "content": "我們兩位想拼團，看看桃花9天不上珠峰的行程。"
+        },
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條2027年桃花9日是林芝進、拉薩出。您和朋友打算什麼時候出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "whole_holiday",
+        "text": "假期時間4/3–4/11，但是必須包含從台灣出發和回台灣的時間。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_contact",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "11天",
+            "11 天",
+            "十一天",
+            "11個日曆日"
+          ],
+          [
+            "2天",
+            "兩天",
+            "2 天"
+          ],
+          [
+            "轉機",
+            "轉飛"
+          ]
+        ],
+        "excludes": [
+          "4/3有團",
+          "4/3這天有",
+          "一兩天",
+          "入藏函",
+          "延誤",
+          "早班"
+        ],
+        "tool_expectations": [
+          {
+            "name": "calculate_travel_window",
+            "arguments": {
+              "start": "2027-04-03",
+              "end": "2027-04-11",
+              "itinerary_days": 9,
+              "days_before": 1,
+              "days_after": 1
+            }
+          }
+        ],
+        "forbidden_tools": [
+          "get_departure_quote"
+        ]
+      },
+      {
+        "id": "extend",
+        "text": "那我請假改成4/3到4/13，兩頭都包含了，還是原來這個9天的拼團，這樣能對上哪天出團？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_reask_party"
+        ],
+        "contains_any": [
+          [
+            "4/4",
+            "4月4",
+            "4月04"
+          ]
+        ],
+        "excludes": [
+          "4/3出發",
+          "4月3日出發"
+        ],
+        "tool_expectations": [
+          {
+            "name": "calculate_travel_window",
+            "arguments": {
+              "start": "2027-04-03",
+              "end": "2027-04-13",
+              "itinerary_days": 9,
+              "days_before": 1,
+              "days_after": 1
+            }
+          },
+          {
+            "name": "get_departure_quote",
+            "arguments": {
+              "start": "2027-04-04",
+              "end": "2027-04-04"
+            }
+          }
+        ]
+      },
+      {
+        "id": "morning_reason",
+        "text": "為什麼要搭早班機入藏？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "延誤",
+            "取消",
+            "應變",
+            "處理時間"
+          ]
+        ]
+      },
+      {
+        "id": "return_reason",
+        "text": "回程也要住成都嗎？我還以為當天能回家。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "一晚",
+            "隔天",
+            "晚上"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "departure_dates_only",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "桃花9日行程資料在上方，您預計哪天出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "starts_only",
+        "text": "2027年4月3日到4月11日之間哪天出發都行，我回程沒有時間限制。兩位拼團，想看目前有哪些團期。",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "4/3",
+            "4月3",
+            "4月03"
+          ]
+        ],
+        "excludes": [
+          "差2天",
+          "不夠",
+          "假期只有",
+          "需要11天"
+        ],
+        "forbidden_tools": [
+          "calculate_travel_window"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "singapore_duration_only",
+    "entry": "西藏桃花11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "桃花加珠峰11天的行程資料在上方。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "no_dates",
+        "text": "我們從新加坡出發，拼團。明年春天總共只能請12天假，要連同出門到回新加坡都算在內，這個11天能去嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "13天",
+            "13 天",
+            "十三天"
+          ],
+          [
+            "1天",
+            "一天"
+          ]
+        ],
+        "excludes": [
+          "只有台灣",
+          "不適用",
+          "7日行程"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "private_transfer_exception",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 4,
+        "group_type": "private"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-c",
+          "direction": "incoming",
+          "content": "我們4位自己包團，不跟其他人拼。桃花9天的行程看過了。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "private",
+        "text": "假期4/3到4/11要包括台北來回，包團能排嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "航班",
+            "航程",
+            "銜接"
+          ]
+        ],
+        "excludes": [
+          "一定能",
+          "必須11天",
+          "一定要11天",
+          "不用預留",
+          "不用轉機",
+          "可以直接安排"
+        ],
+        "forbidden_tools": [
+          "calculate_travel_window"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "already_in_chengdu",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您看過的這條是2027年桃花9日，林芝進拉薩出。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "completed_inbound",
+        "text": "我們4/2就會先到成都住一晚，4/3開始放假，到4/12要回到台灣。兩位拼9天的桃花，時間夠嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "excludes": [
+          "還差1天",
+          "還差一天",
+          "需要延長",
+          "4/4才能"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "intake_constraint_priority",
+    "entry": "桃花9日",
+    "known_entry": true,
+    "now": "2026-11-01T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "party_and_holiday",
+        "text": "2位拼團，假期2027年4月3日到4月11日，包含從台灣出發及回台灣。可以參加這個9天嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "11天",
+            "11 天",
+            "十一天",
+            "11個日曆日"
+          ],
+          [
+            "2天",
+            "兩天",
+            "2 天"
+          ]
+        ],
+        "image_count": 0,
+        "tool_expectations": [
+          {
+            "name": "calculate_travel_window",
+            "arguments": {
+              "start": "2027-04-03",
+              "end": "2027-04-11",
+              "itinerary_days": 9,
+              "days_before": 1,
+              "days_after": 1
+            }
+          }
+        ],
+        "forbidden_tools": [
+          "get_departure_quote"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cannot_invent_short_route",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是桃花9日，2027年3至4月出發。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "shortfall",
+        "text": "我全部假期含香港往返只有9天，只有2位拼團。你們有沒有7天的桃花拼團可以剛好塞進去？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "excludes": [
+          "推薦7天",
+          "七天桃花拼團有",
+          "7日桃花拼團有",
+          "可以縮短成7"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ambiguous_window_then_clarify",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您想安排2027年桃花9日，時間大概怎麼抓呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "ambiguous",
+        "text": "大概4/3到4/11吧，這樣可以嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "excludes": [
+          "可以參加",
+          "剛好9天",
+          "一定不夠"
+        ],
+        "forbidden_tools": [
+          "calculate_travel_window"
+        ]
+      },
+      {
+        "id": "clarified",
+        "text": "這是整段假期，4月11日晚上要回到香港，前一天還在上班，去程也得算。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "2天",
+            "兩天",
+            "2 天"
+          ]
+        ],
+        "tool_expectations": [
+          {
+            "name": "calculate_travel_window",
+            "arguments": {
+              "itinerary_days": 9,
+              "days_before": 1,
+              "days_after": 1,
+              "start": "2027-04-03",
+              "end": "2027-04-11"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "holdout_home_deadline",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-c",
+          "direction": "incoming",
+          "content": "我們兩位想拼團，看看桃花9天不上珠峰的行程。"
+        },
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條2027年桃花9日是林芝進、拉薩出。您和朋友打算什麼時候出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "deadline",
+        "text": "最早四月三號才走得開，十一號晚上就得回香港上班了，飛來飛去也要算在裡面，九日那個排得下嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "11天",
+            "11 天",
+            "十一天",
+            "11個日曆日"
+          ],
+          [
+            "2天",
+            "兩天",
+            "2 天"
+          ]
+        ],
+        "tool_expectations": [
+          {
+            "name": "calculate_travel_window",
+            "arguments": {
+              "start": "2027-04-03",
+              "end": "2027-04-11",
+              "itinerary_days": 9,
+              "days_before": 1,
+              "days_after": 1
+            }
+          }
+        ],
+        "forbidden_tools": [
+          "get_departure_quote"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "holdout_corrected_scope",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "holiday_window": {
+          "start": "2027-04-03",
+          "end": "2027-04-11",
+          "scope": "whole_trip"
+        }
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "content": "4/3到4/11。"
+        },
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "如果是包含往返的完整假期，9日行程建議留11天，還差2天。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "correct",
+        "text": "你誤會了，4/3到4/11是任一天出發都行，不是說11號前要回來，回程不限。看原來那個9天拼團的團期就好。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "tool_expectations": [
+          {
+            "name": "get_departure_quote",
+            "arguments": {
+              "start": "2027-04-03",
+              "end": "2027-04-11"
+            }
+          }
+        ],
+        "forbidden_tools": [
+          "calculate_travel_window"
+        ],
+        "profile_absent": [
+          "holiday_window"
+        ],
+        "excludes": [
+          "還差2天",
+          "假期不夠"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "holdout_duration_fits_but_no_departure",
+    "entry": "西藏全覽10天",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您看的是2027年西藏全覽10天，林芝進、拉薩出，含珠峰。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "fixed_window",
+        "text": "我們2位拼團，2027年8月1日從台灣出發、8月12日一定要回到台灣，共12天，可以接到這條10天的哪一團？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "tool_expectations": [
+          {
+            "name": "calculate_travel_window",
+            "arguments": {
+              "start": "2027-08-01",
+              "end": "2027-08-12",
+              "itinerary_days": 10,
+              "days_before": 1,
+              "days_after": 1
+            }
+          },
+          {
+            "name": "get_departure_quote",
+            "arguments": {
+              "start": "2027-08-02",
+              "end": "2027-08-02"
+            }
+          }
+        ],
+        "excludes": [
+          "8/2有團",
+          "8月2日有團",
+          "8/3出發就剛好",
+          "8月3日出發就剛好"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "holdout_mid_introduction",
+    "entry": "桃花9日",
+    "known_entry": true,
+    "now": "2026-11-01T02:00:00+00:00",
+    "steps": [
+      {
+        "id": "party",
+        "text": "2位拼團",
+        "drain": false
+      },
+      {
+        "id": "new_limit",
+        "text": "先等一下，我剛剛確認只能4月3日從香港出發，4月11日晚上回香港，整段就這9天，你這個9日行程能安排嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "previous_drafts_cancelled",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "11天",
+            "11 天",
+            "十一天",
+            "11個日曆日"
+          ],
+          [
+            "2天",
+            "兩天",
+            "2 天"
+          ]
+        ],
+        "tool_expectations": [
+          {
+            "name": "calculate_travel_window",
+            "arguments": {
+              "start": "2027-04-03",
+              "end": "2027-04-11",
+              "itinerary_days": 9,
+              "days_before": 1,
+              "days_after": 1
+            }
+          }
+        ],
+        "forbidden_tools": [
+          "get_departure_quote"
+        ],
+        "image_count": 0
+      }
+    ]
+  },
+  {
+    "id": "holdout_non_time_questions",
+    "entry": "西藏桃花9日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-01T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "seed-c",
+          "direction": "incoming",
+          "content": "我們兩位想拼團，看看桃花9天不上珠峰的行程。"
+        },
+        {
+          "id": "seed-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條2027年桃花9日是林芝進、拉薩出。您和朋友打算什麼時候出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "vehicle",
+        "text": "車上有供氧設備嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction",
+          "no_price"
+        ],
+        "contains_any": [
+          [
+            "氧"
+          ]
+        ],
+        "forbidden_tools": [
+          "calculate_travel_window"
+        ],
+        "excludes": [
+          "11天",
+          "假期",
+          "往返交通"
+        ]
+      },
+      {
+        "id": "price",
+        "text": "我們兩位拼團，這個桃花9日團費一人多少？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_new_introduction"
+        ],
+        "contains_any": [
+          [
+            "10,780",
+            "10780"
+          ]
+        ],
+        "forbidden_tools": [
+          "calculate_travel_window"
+        ],
+        "excludes": [
+          "11天",
+          "假期不夠"
+        ]
+      }
+    ]
+  }
+]

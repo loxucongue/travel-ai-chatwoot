@@ -216,7 +216,7 @@ def test_month_review_checks_both_peach_products_without_selecting_one(monkeypat
         profile={'discussion_route':ELEVEN},messages=[{'text':'先看看2027年桃花加珠峰11日嗎？'}])
     requests=model(monkeypatch,[result,result])
     d,logs,_=runtime.run_agent(c)
-    task=json.loads(requests[0]['messages'][-1]['content'])
+    task=json.loads(next(m['content'] for m in reversed(requests[0]['messages']) if m['role']=='user'))
     checks=task['spring_departure_options']
     assert set(checks)=={NINE,ELEVEN}
     assert all(checks[r]['availability_checked'] for r in checks)

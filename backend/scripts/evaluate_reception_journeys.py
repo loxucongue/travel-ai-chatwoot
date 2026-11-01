@@ -132,6 +132,8 @@ def main():
     source_paths += [backend/'app/reception_v3/quotes.py', backend/'app/reception_v3/skills.py', backend/'app/reception_config.py']
     source_paths += [backend/'app/config.py', backend/'app/reception_v3/repetition.py']
     source_paths += [backend/'app/reception_v3/seasonal_quotes.py', backend/'app/reception_v3/party_quotes.py']
+    source_paths += [backend/'app/reception_v3/travel_dates.py',
+                     backend.parent/'data/knowledge/china2go/service-knowledge/service-knowledge.json']
     source_paths += [backend/'app/reception_v3/large_party.py', backend/'app/reception_v3/lead_priority.py']
     source_paths += [backend/'app/reception_v3/route_choice.py', backend/'app/reception_v3/customer_reactions.py',
                      backend/'app/reception_v3/followup_window.py', backend/'app/reception_v3/material_rules.py',
@@ -215,6 +217,7 @@ def main():
             try:
                 entry = {'id':'entry', 'checks': (['intake'] if case.get('known_entry',True) else []) + case.get('entry_checks',[])}
                 for i, step in enumerate(([] if case.get('replay_context') else [entry]) + case['steps']):
+                    before_runs = {r.id for r in db.scalars(select(AutomationRun))}
                     before = {m['id'] for m in row.messages if m.get('status') == 'simulated_delivered'}
                     previous_drafts = {m['id'] for m in row.messages if m.get('status') == 'draft'}
                     if step.get('text'):
@@ -304,6 +307,17 @@ def main():
                             failures.append('missing_any:'+str(alternatives))
                     for token in step.get('excludes',[]):
                         if token in text:failures.append('unexpected:'+token)
+                    tool_calls = [call for run in db.scalars(select(AutomationRun).order_by(AutomationRun.id))
+                                  if run.id not in before_runs for call in run.trace.get('skill_tool_calls', [])]
+                    for expected in step.get('tool_expectations', []):
+                        matching = [call for call in tool_calls if call['name'] == expected['name']
+                                    and not call.get('error')]
+                        if not any(all(json.loads(call['arguments']).get(k) == v
+                                       for k,v in expected.get('arguments', {}).items()) for call in matching):
+                            failures.append('missing_tool_evidence:'+expected['name'])
+                    for name in step.get('forbidden_tools', []):
+                        if any(call['name'] == name for call in tool_calls):
+                            failures.append('unexpected_tool:'+name)
                     if 'expected_route' in step and row.controls.get('route_variant','') != step['expected_route']:
                         failures.append('unexpected_route:'+row.controls.get('route_variant',''))
                     for key, expected in step.get('profile_equals',{}).items():
@@ -321,7 +335,8 @@ def main():
                         if any(m.get('content_type')!='text' and materials.get(m.get('asset_key'),{}).get('routes')==[route] for m in emitted):
                             failures.append('unexpected_asset_route:'+route)
                     record={'id':step['id'],'request':step,'now':row.virtual_now,'emitted':emitted,
-                            'text':text,'route':row.controls.get('route_variant'),'state':state,'profile':row.memory,'failures':failures}
+                            'text':text,'route':row.controls.get('route_variant'),'state':state,'profile':row.memory,
+                            'tool_calls':tool_calls,'failures':failures}
                     records.append(deepcopy(record))
                     print(json.dumps({'case':case['id'],'step':step['id'],'text':text[:550],'failures':failures},ensure_ascii=False),flush=True)
             except Exception as exc:

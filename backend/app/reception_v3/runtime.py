@@ -10,12 +10,13 @@ from app.config import settings
 from app.model_transport import _post_with_deadline, _call_log, EvaluationCallError
 from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
-from app.reception_v3.prompt import SYSTEM_PROMPT
+from app.reception_v3.prompt import SYSTEM_PROMPT, TRAVEL_WINDOW_INSTRUCTION
 from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task, validation_error as lead_priority_error
 from app.reception_v3.large_party import reply_contract_error
 from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
 from app.reception_v3.route_choice import PEACH_ROUTES, choice_error
 from app.reception_v3.route_understanding import interpret, generation_instruction, DecisionContractError
+from app.reception_v3.travel_dates import calculate_travel_window
 
 
 class Message(BaseModel):
@@ -257,12 +258,23 @@ def run_agent(context: dict):
         {'type': 'function', 'function': {'name': 'get_service_facts',
          'description': '读取当前可用的官网通用服务知识，回答线路资料没有覆盖的问题。',
          'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': False}}},
+        {'type': 'function', 'function': {'name': 'calculate_travel_window',
+         'description': '核算完整假期能否容纳行程与前后交通预留，日期含首尾。先按上下文理解日期范围，再从业务资料取行程天数和前后预留；本工具不判断拼团/包团或航班。仅有假期天数用available_days；只需算所需天数可省略假期。fits_duration不代表有团或航班可接，匹配团期必须再用返回的possible_departure_window查get_departure_quote。',
+         'parameters': {'type': 'object', 'properties': {
+             'itinerary_days': {'type': 'integer', 'minimum': 1, 'maximum': 730},
+             'days_before': {'type': 'integer', 'minimum': 0, 'maximum': 730},
+             'days_after': {'type': 'integer', 'minimum': 0, 'maximum': 730},
+             'start': {'type': 'string', 'description': '完整假期首日 YYYY-MM-DD，与end一起传'},
+             'end': {'type': 'string', 'description': '必须回到出发地的末日 YYYY-MM-DD'},
+             'available_days': {'type': 'integer', 'minimum': 1, 'maximum': 730,
+                                'description': '只知总假期天数时传；有日期时不必重复传'}},
+             'required': ['itinerary_days', 'days_before', 'days_after'], 'additionalProperties': False}}},
     ]
     seasonal_routes = [key for key, spec in context['skills']['routes'].items()
                        if spec.get('seasonal_pricing') or spec.get('departure_availability')]
     if seasonal_routes:
         tools.append({'type':'function','function':{'name':'get_departure_quote',
-            'description':'核對出發團期、季節價、長假及30天入藏函期限，同時傳客人最新人數和拼團/獨團選擇。日期來自客人原話；月份傳整月，不能自行挑一天。private_departure代表4位起可獨團自選日期，不需改定班日、不是訂位確認或拼團價授權。unavailable先推薦返回的同期可用線路或邀請開放通知；advisor才須人工確認。常規線只有quoted可報價；桃花線not_seasonal依其現行模板。',
+            'description':'核對出發團期、季節價、長假及30天入藏函期限，同時傳客人最新人數和拼團/獨團選擇。start/end是可出發日範圍，不是整段假期；客人說完整往返假期時先calculate_travel_window，只用其非空possible_departure_window查團期。只說出發月份則傳整月，不能自行挑一天。private_departure代表4位起可獨團自選日期，不需改定班日、不是訂位確認或拼團價授權。unavailable先推薦返回的同期可用線路或邀請開放通知；advisor才須人工確認。常規線只有quoted可報價；桃花線not_seasonal依其現行模板。',
             'parameters':{'type':'object','properties':{'route':{'type':'string','enum':seasonal_routes},
                 'start':{'type':'string','description':'客人已表達的起始出發日期 YYYY-MM-DD'},
                 'end':{'type':'string','description':'末日期 YYYY-MM-DD；單一日期與start相同'},
@@ -331,6 +343,9 @@ def run_agent(context: dict):
             routing_instruction = generation_instruction(context)
             if routing_instruction:
                 request_messages = request_messages + [{'role': 'system', 'content': routing_instruction}]
+            # Keep the reasoning contract after large route/tool payloads. It
+            # applies through model understanding, not customer-text matching.
+            request_messages = request_messages + [{'role': 'system', 'content': TRAVEL_WINDOW_INSTRUCTION}]
             payload = {'model': settings.deepseek_vision_model if images else settings.deepseek_model, 'messages': request_messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
                        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,
@@ -379,6 +394,8 @@ def run_agent(context: dict):
                             result = load(args['name'])
                         elif function['name'] == 'get_service_facts':
                             result = knowledge
+                        elif function['name'] == 'calculate_travel_window':
+                            result = calculate_travel_window(**args)
                         elif function['name'] == 'get_departure_quote':
                             profile = context.get('profile', {})
                             party_size = args.get('party_size', profile.get('party_size') or profile.get('party_size_min'))
@@ -407,6 +424,8 @@ def run_agent(context: dict):
                         result = {'error': str(exc)}
                     log['tool_calls'].append({'name': function['name'], 'arguments': function['arguments'],
                                               'digest': result.get('digest'), 'error': result.get('error')})
+                    if function['name'] == 'calculate_travel_window':
+                        log['tool_calls'][-1]['result'] = result
                     messages.append({'role': 'tool', 'tool_call_id': call['id'],
                                      'content': json.dumps(result, ensure_ascii=False)})
                 log['loaded_skills'] = dict(loaded)

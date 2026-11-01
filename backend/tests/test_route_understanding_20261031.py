@@ -100,7 +100,7 @@ def test_choice_repair_contains_rejected_candidate_and_authority_after_product_t
                for m in requests[1]['messages'])
     for request in requests:
         assert request['messages'][-1]['role'] == 'system'
-        assert '"intent": "inquire"' in request['messages'][-1]['content']
+        assert any('"intent": "inquire"' in m['content'] for m in request['messages'] if m['role'] == 'system')
 
 
 def test_semantic_nonselection_allows_existing_route_introduction_after_intake():
@@ -117,7 +117,7 @@ def test_real_ambiguity_is_one_question_without_full_generation_or_handoff(monke
     d, logs, _ = runtime.run_agent(c)
     assert d['action'] == 'reply' and not d['route_variant'] and not d['start_introduction']
     assert d['interrupt'] and d['messages'][0]['text'] == value['clarification']
-    assert semantic.from_run(SimpleNamespace(trace={'logs': logs}, input_snapshot=c)) == value
+    assert semantic.from_run(SimpleNamespace(trace={'logs': logs}, input_snapshot=c)) == semantic.Understanding.model_validate(value).model_dump()
 
 
 @pytest.mark.parametrize('mutation', ['advisor_as_customer', 'old_customer', 'invented_quote', 'unknown_route', 'draft_offer'])
