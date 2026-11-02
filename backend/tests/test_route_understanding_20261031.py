@@ -51,6 +51,37 @@ def semantic_model(monkeypatch, responses):
     return requests
 
 
+def test_only_delivered_outgoing_material_supplies_reference_route():
+    c=ctx('就上面這張圖的路線')
+    images=[{'id':'shown','direction':'outgoing','status':'sent','content_type':'image',
+             'content':'','asset_key':'reference','route_variant':NINE},
+            {'id':'draft','direction':'outgoing','status':'draft','content_type':'image',
+             'content':'','asset_key':'other','route_variant':ELEVEN},
+            {'id':'customer-image','direction':'incoming','content':'這張嗎',
+             'asset_key':'customer','route_variant':ELEVEN}]
+    c['messages']=c['messages'][:1]+images+c['messages'][1:]
+    data=semantic.task(c)
+    history={m['id']:m for m in data['history']}
+    assert history['shown']['shown_route']==NINE
+    assert 'draft' not in history and 'shown_route' not in history['customer-image']
+    assert data['selected_route_before_turn']==ELEVEN
+    assert data['current_message_ids']==['customer']
+
+
+@pytest.mark.parametrize('remaining,expected',[(30,20),(3,3)])
+def test_semantic_request_uses_configured_timeout_within_turn_deadline(monkeypatch,remaining,expected):
+    c=ctx();timeouts=[]
+    monkeypatch.setattr(settings,'deepseek_timeout_seconds',20)
+    monkeypatch.setattr(semantic.time,'monotonic',lambda:100)
+    def post(payload,timeout):
+        timeouts.append(timeout)
+        return httpx.Response(200,request=httpx.Request('POST','https://test.invalid'),json={
+            'choices':[{'message':{'content':json.dumps(result(c))}}]})
+    monkeypatch.setattr(semantic,'_post_with_deadline',post)
+    semantic.interpret(c,100+remaining)
+    assert timeouts==[expected]
+
+
 @pytest.mark.parametrize('text', ['桃花9日', '九日', '第二條', '不上珠峰那個', '剛才誤點，我是要九日'])
 def test_semantic_selection_replaces_action_word_allowlist(monkeypatch, text):
     c = ctx(text)

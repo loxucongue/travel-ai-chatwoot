@@ -13,20 +13,26 @@ def count(profile):
 def policy_for(bundle, route, profile):
     policy = bundle.get('routes', {}).get(route, {}).get('large_party')
     size = count(profile)
-    return policy if policy and policy.get('enabled') and size is not None and size >= policy['minimum'] else None
+    if not policy or not policy.get('enabled'):
+        return None
+    explicit_private = policy.get('include_explicit_private', False) and profile.get('group_type') == 'private'
+    return policy if explicit_private or (size is not None and size >= policy['minimum']) else None
 
 
 def party_description(profile):
     if type(profile.get('party_size')) is int:
         return str(profile['party_size']) + '位'
     if profile.get('party_size_range'):
-        return str(profile['party_size_range']).strip().rstrip('位人 ') + '位'
-    return str(count(profile)) + '位以上'
+        description = str(profile['party_size_range']).strip()
+        return description if any(unit in description for unit in ('位', '人')) else description + '位'
+    return str(count(profile)) + '位以上' if count(profile) is not None else ''
 
 
 def reply_contract_error(decision, context):
     """Do not silently discard model answers when replacing the group intro."""
     profile = {**context.get('profile', {}), **decision.get('profile', {})}
+    if profile.get('contact_value') or profile.get('contact_status') in ('self_reported_added', 'attachment_pending_verification'):
+        return None
     route = decision.get('route_variant') or context.get('route_variant', '')
     if (decision.get('route_choice') == 'recommend'
             or not policy_for(context.get('skills', {}), route, profile)):
@@ -35,7 +41,7 @@ def reply_contract_error(decision, context):
     if rejects_current_route(route, profile):
         return None
     if decision['action'] == 'handoff' and decision.get('handoff_type') == 'party_size':
-        return ('本线路已启用大团介绍后交接，不能仅因人数提前handoff。'
+        return ('本线路已启用独立成团介绍后交接，不能仅因人数或包团意向提前handoff。'
                 '请先处理本轮实际问题：有可回答的问题就reply、answer_before_introduction=true、'
                 'messages只写答案；仅补人数就reply、messages=[]。介绍和最终交接由程序完成。'
                 '真正缺少报价或库存事实等其他交接原因仍按对应handoff_type处理。')
@@ -43,7 +49,7 @@ def reply_contract_error(decision, context):
         return None
     messages = decision['messages']
     if messages and not decision.get('answer_before_introduction'):
-        return ('本轮已启用7人以上配置介绍。请重新检查客户最新消息：若有实际问题，'
+        return ('本轮已启用独立成团配置介绍。请重新检查客户最新消息：若有实际问题，'
                 '设置answer_before_introduction=true，messages只保留该问题的直接答案；'
                 '若仅补人数或确认，设置false且messages=[]。独团承接和联系邀请由程序发送，'
                 '不要把真正的问题答案与配置承接一起丢弃。')
@@ -78,6 +84,8 @@ def validate_policy(policy, groups):
         raise ValueError('large_party_invalid')
     if type(policy.get('minimum')) is not int or policy['minimum'] < 7:
         raise ValueError('large_party_minimum')
+    if 'include_explicit_private' in policy and type(policy['include_explicit_private']) is not bool:
+        raise ValueError('large_party_private_flag')
     for field in ('introduction_sequence', 'brief_sequence'):
         sequence = policy.get(field)
         if not isinstance(sequence, list) or not sequence or len(sequence) != len(set(sequence)) or any(k not in groups for k in sequence):
@@ -116,6 +124,12 @@ def begin(db, row, run, bundle, decision):
                           if (p := policy_for(bundle, key, row.memory))), None)
         if candidate:
             value['large_party_intake'] = True
+            if candidate.get('include_explicit_private') and row.memory.get('group_type') == 'private':
+                # The model can offer a reference map and answer questions without
+                # pretending the customer has selected that route. Do not replace
+                # that reply with the old numeric-group intake question.
+                service.save(row, value)
+                return False
             prompt = candidate.get('unknown_preference_text', candidate['unknown_route_text']) if row.memory.get('trip_days') else candidate['unknown_route_text']
             decision.update(action='reply', start_introduction=False,
                 messages=Decision(messages=[{'text':prompt}]).model_dump()['messages'])
@@ -188,7 +202,7 @@ def begin(db, row, run, bundle, decision):
     texts = {m.get('content') for m in delivered if m.get('content')}
     parts = undelivered_parts(row, parts)
     opening = policy['completed_text'] if complete else policy['opening_text']
-    opening = opening.replace('{party_size}', str(count(row.memory)))
+    opening = opening.replace('{party_size}', str(count(row.memory)) if count(row.memory) is not None else '人數待確認')
     opening = opening.replace('{party_description}', party_description(row.memory))
     prefix = [] if opening in texts else [{'content_type':'text', 'content':opening}]
     # Resolve actual questions through the existing validated reply path.
@@ -215,7 +229,7 @@ def begin(db, row, run, bundle, decision):
     parts = unique
     row.messages = [{**m, 'status':'cancelled'} if m.get('status') == 'draft' else m for m in row.messages]
     row.controls = {**row.controls, 'route_variant':route}
-    value.update(pending_event=None, next_check_at=None, next_check_minutes=None, intake_status='done',
+    value.update(pending_event=None, next_check_at=None, next_check_minutes=None, intake_status='done', opening_started=True,
                  intake_deadline=None, route_review_pending=False, departure_review_pending=False,
                  delivery_kind=None, delivery_due_at=None, introduction_route=route)
     service.append_plan(row, value, parts, 'large_party', spec['interval_seconds'], run.id)

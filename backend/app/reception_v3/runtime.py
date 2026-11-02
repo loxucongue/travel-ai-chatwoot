@@ -114,7 +114,8 @@ def run_agent(context: dict):
     deadline = time.monotonic() + 60
     understanding_logs, understanding_hash = [], None
     if settings.reception_route_understanding_enabled and context.get('event') == 'customer_message':
-        understanding, understanding_logs, understanding_hash = interpret(context, min(deadline, time.monotonic() + 16))
+        understanding, understanding_logs, understanding_hash = interpret(
+            context, min(deadline, time.monotonic() + settings.deepseek_timeout_seconds))
         if understanding:
             context = {**context, 'route_understanding': understanding}
             if understanding['intent'] == 'ambiguous':

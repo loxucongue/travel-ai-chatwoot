@@ -1,0 +1,498 @@
+[
+  {
+    "id": "four_plus_selected",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "我人數有4位以上，想自己包團",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "handoff",
+          "no_price",
+          "one_itinerary_map"
+        ],
+        "excludes": [
+          "滿2人就發團",
+          "6人就滿團",
+          "普通6人團",
+          "9座",
+          "9 座"
+        ],
+        "profile_equals": {
+          "group_type": "private"
+        }
+      }
+    ]
+  },
+  {
+    "id": "five_private_meals",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "我們5位想自己包團，請問包含早餐嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "handoff",
+          "no_price",
+          "one_itinerary_map"
+        ],
+        "excludes": [
+          "先記下來",
+          "接著把",
+          "滿2人就發團",
+          "6人就滿團",
+          "9座",
+          "9 座"
+        ],
+        "profile_equals": {
+          "group_type": "private"
+        },
+        "contains_any": [
+          [
+            "早餐"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "four_shared",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "我們4位，跟其他客人拼團就好",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "not_handoff",
+          "no_price",
+          "one_itinerary_map"
+        ],
+        "excludes": [],
+        "profile_equals": {
+          "party_size": 4,
+          "group_type": "shared"
+        }
+      }
+    ]
+  },
+  {
+    "id": "negative_private",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "不想自己包團，我們6位要參加拼團",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "not_handoff",
+          "no_price",
+          "one_itinerary_map"
+        ],
+        "excludes": [],
+        "profile_equals": {
+          "party_size": 6,
+          "group_type": "shared"
+        }
+      }
+    ]
+  },
+  {
+    "id": "completed_private",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "剛剛的行程看過了，我們4位想自己一團",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "handoff",
+          "no_price",
+          "no_itinerary_map"
+        ],
+        "excludes": [
+          "滿2人就發團",
+          "6人就滿團",
+          "普通6人團",
+          "9座",
+          "9 座"
+        ],
+        "profile_equals": {
+          "group_type": "private"
+        }
+      }
+    ]
+  },
+  {
+    "id": "unknown_count_private",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "我們想自己包團，先介紹一下這條行程吧",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "handoff",
+          "no_price",
+          "one_itinerary_map"
+        ],
+        "excludes": [
+          "滿2人就發團",
+          "6人就滿團",
+          "普通6人團",
+          "9座",
+          "9 座"
+        ],
+        "profile_equals": {
+          "group_type": "private"
+        }
+      }
+    ]
+  },
+  {
+    "id": "unselected_private_map_then_choice",
+    "entry": "我人數有4位以上，想自己包團",
+    "known_entry": false,
+    "now": "2026-11-02T02:00:00+00:00",
+    "entry_checks": [
+      "send",
+      "not_handoff",
+      "one_itinerary_map",
+      "no_price"
+    ],
+    "steps": [
+      {
+        "id": "select_after_reference",
+        "text": "就上面這張行程圖的路線，先給我介紹一下",
+        "checks": [
+          "send",
+          "handoff",
+          "no_price",
+          "no_itinerary_map"
+        ],
+        "profile_equals": {
+          "group_type": "private"
+        },
+        "excludes": [
+          "滿2人就發團",
+          "6人就滿團",
+          "9座",
+          "9 座"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "compare_not_committed",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "我們4位，包團跟拼團有什麼不同？還沒決定要哪種",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "not_handoff",
+          "no_price",
+          "no_itinerary_map"
+        ],
+        "excludes": [],
+        "profile_equals": {
+          "group_type": "undecided"
+        }
+      }
+    ]
+  },
+  {
+    "id": "seven_numeric",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "我們7位",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "handoff",
+          "no_price",
+          "one_itinerary_map"
+        ],
+        "excludes": [
+          "滿2人就發團",
+          "6人就滿團",
+          "普通6人團",
+          "9座",
+          "9 座"
+        ],
+        "profile_equals": {
+          "party_size": 7
+        }
+      }
+    ]
+  },
+  {
+    "id": "indirect_private",
+    "entry": "西藏桃花＋珠峰11日",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解西藏桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "request",
+        "text": "我們一家五口想單獨安排，別跟其他人併車",
+        "checks": [
+          "send",
+          "no_duplicate_messages",
+          "handoff",
+          "no_price",
+          "one_itinerary_map"
+        ],
+        "excludes": [
+          "滿2人就發團",
+          "6人就滿團",
+          "普通6人團",
+          "9座",
+          "9 座"
+        ],
+        "profile_equals": {
+          "party_size": 5,
+          "group_type": "private"
+        }
+      }
+    ]
+  }
+]

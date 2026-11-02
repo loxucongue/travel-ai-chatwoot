@@ -559,7 +559,8 @@ def apply_decision(db, row, run, bundle, decision):
             and decision['action'] != 'handoff' and decision['opt_out'] is not True
             and not decision['interrupt'] and decision.get('route_choice') != 'recommend'):
         decision = {**decision, 'start_introduction': True,
-                    'messages': decision['messages'] if value.get('intake_field') == 'departure_window' else []}
+                    'messages': decision['messages'] if (value.get('intake_field') == 'departure_window'
+                        or decision.get('answer_before_introduction')) else []}
         run.trace = {**(run.trace or {}), 'execution_reason': 'intake_answer_starts_introduction'}
         run.decision = decision
     previous_memory = row.memory

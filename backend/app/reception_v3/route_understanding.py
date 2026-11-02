@@ -85,6 +85,11 @@ def task(context):
             'advisor' if m.get('attribution') in ('human', 'inferred_human') else 'assistant'),
             'text': m.get('content') or '', 'created_at': m.get('created_at'),
             'attachment': bool(m.get('attachments') or m.get('content_type', 'text') != 'text')})
+        if (m['direction'] == 'outgoing' and m.get('asset_key')
+                and m.get('route_variant') in context['skills']['routes']):
+            # A delivered reference image is visible conversation context, not
+            # customer selection. Keep its catalog identity for model pronouns.
+            history[-1]['shown_route'] = m['route_variant']
     buffered = {m.get('id') for m in context.get('buffered_questions', [])}
     current = [m for m in history if m['speaker'] == 'customer' and m['id'] in buffered]
     if not current:
@@ -139,6 +144,7 @@ PROMPT = '''你理解客戶本輪選線語義與旅行時間的範圍，不報�
 依公開對話、當前合併消息及目錄，輸出指定JSON。客戶最新糾正優先；legacy_recommendation_hint只是一條舊記錄，不能當作全部選項或客戶選擇。
 intent為select/inquire/compare/decline/acknowledge/other/ambiguous。只有select填selected_route。
 select是客戶已決定以某個具體產品作為後續接待主線，不是僅僅對它有興趣，也不是訂位或保證可售。不要求固定動詞；回答上一輪選項的產品簡稱、序號、指代都應結合上下文理解。
+客戶看過參考行程圖後，明確說「就上面這張行程圖的路線，先給我介紹一下」是要以那條作為接下來完整介紹的主線，使用select；這不代表確認報名。只問「這條多少錢／住宿如何／差在哪」仍是inquire，不因問題涉及圖片就選線。
 排除一個產品不等於接受剩餘產品：客戶只有拒絕、沒有表達替代選擇時用decline，selected_route留空，discussed_routes只填被拒絕的產品；不能用二選一的排除法替他選線。若客戶同時明確指定另一條，才按那個正向選擇處理。
 先區分查詢信息與改變選擇：即使上一輪問了選哪條，客戶只追問某產品費用、住宿、可否安排，也仍是inquire，提到產品名只是指出問題對象，selected_route留空。只有同時表達選定該產品的意願才select並has_question=true。比較兩產品差異、優缺點用compare，而不是一般inquire。
 景點偏好不是具體產品選擇：表示仍想去某景點、擔心高度、希望輕鬆，只更新需求理解，用other/inquire；不能因為近期某選項符合這個偏好，就替客戶接受那個產品。既有主線也可能符合偏好。補人數/月份同樣不是接受替代線。
@@ -148,6 +154,8 @@ acknowledge是單純收到/謝謝/點讚，不能據此確認報名或聯絡方�
 ambiguous僅在本輪確實需要消除選線歧義時使用，clarification只寫一個自然繁體確認問題，不帶產品事實或價格。普通酒店疑問、客戶還在比較、單純猶豫不需要強迫選線，使用inquire/compare/other。
 未決定不等於指代不清：客戶表明尚未決定、要商量、只轉述他人的選擇時，已經能理解其意願，使用other，不要用ambiguous逼他選擇。ambiguous只用於客戶確實要進行具體選線/介紹動作，但對象無法從上下文解析的情況。無詢問也未請求建議的保留意見用other，純致謝/收到才acknowledge。
 discussed_routes記本輪涉及的線路。evidence引用本輪customer消息ID及逐字原文，不能引用advisor作為客戶意願。
+頂層evidence的每一項message_id都必須在current_message_ids內。不要為補充已知人數或包團意向，把先前客戶消息混入這個陣列；歷史條件僅可引用在travel_time.evidence。例如本輪「就上面那條，先介紹一下」，頂層evidence只引用這句；上一輪「4位以上想包團」可支持travel_time.group_type，但其證據放travel_time.evidence。歷史我方參考圖的配文放offered_options，不能放頂層evidence。
+已發素材的shown_route是該圖片對應的目錄線路，僅提供圖片上下文，不表示客戶選定。客戶明確要接著介紹「上面這張圖的路線」時，結合shown_route理解指代；不能因圖片沒有文字就忽略它。offered_options僅引用我方實際發過的文字，無文字的圖片不用填此陣列，不編造quote；頂層evidence仍只引用客戶本輪意願。
 evidence.quote是原始文字證據，保留簡繁體、標點和原語言，不能轉換、翻譯或潤色。例如客戶「行程包含用餐吗？」就照抄「行程包含用餐吗？」；不能改成「行程包含用餐嗎？」。只有clarification是對客答覆，使用自然繁體；證據不是答覆。
 offered_options按對話中的順序記錄近期我方實際提供的可選行程，每項{route,message_id,quote}；可保留多條，quote必須逐字出自已發我方消息，不得從目錄猜已發選項。
 travel_time只解讀時間問題前提，不心算天數或虛構日期。task：沒問時間用none；日期不知是否含往返用clarify_scope；明確完整往返的拼團時間可行性用check_shared_window；包團的實際起訖地/航班未核實用check_actual_connections；只查可出發日用check_departures；只問早班機/過夜等原因用explain_connections。
@@ -209,7 +217,7 @@ def interpret(context, deadline):
             remaining = deadline - started
             if remaining <= 0:
                 raise TimeoutError('route_understanding_timeout')
-            response = _post_with_deadline(payload, min(remaining, 12))
+            response = _post_with_deadline(payload, min(remaining, settings.deepseek_timeout_seconds))
             response.raise_for_status(); body = response.json()
             raw = _json_object(body['choices'][0]['message']['content'])
             result = validate(raw, data)

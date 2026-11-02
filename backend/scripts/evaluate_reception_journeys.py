@@ -136,6 +136,7 @@ def main():
                      backend.parent/'data/knowledge/china2go/service-knowledge/service-knowledge.json']
     source_paths += [backend/'app/reception_v3/large_party.py', backend/'app/reception_v3/lead_priority.py']
     source_paths += [backend/'app/reception_v3/route_choice.py', backend/'app/reception_v3/customer_reactions.py',
+                     backend/'app/reception_v3/route_understanding.py',
                      backend/'app/reception_v3/followup_window.py', backend/'app/reception_v3/material_rules.py',
                      backend/'app/reception_v3/customer_images.py']
     def fingerprints():

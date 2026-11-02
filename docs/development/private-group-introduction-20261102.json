@@ -1,0 +1,216 @@
+{
+  "date": "2026-11-02",
+  "status": "implemented_and_committed_pending_real_model_validation_not_deployed",
+  "business_request": "麗麗 2026-11-01 21:14：明确想自己包团的客户，包括4位以上，也按8425-2独立成团介绍后交接流程处理。",
+  "source": {
+    "url": "https://china2go.com/8425-2/",
+    "live_fetch": "403",
+    "archived_text": "data/knowledge/china2go/drafts/business-feedback-20261027/8425-2.txt"
+  },
+  "changes": [
+    "模型判断group_type；配置include_explicit_private默认false，部署时在六条已有线路启用；人数门槛保留7。",
+    "明确包团先独团介绍后交接；未选线先参考图；普通4–6人拼团、团型比较和否定包团不自动转入。",
+    "保留客户当轮实际问题答案，避免人数采集覆盖；已留资继续按assist_until_advisor答疑。",
+    "未知人数不虚构7人；已发图文沿用现有整体去重；人数范围不重复添加位字。",
+    "已发送图片携带线路身份供选线模型理解指代，仍由模型依据本轮客户意愿选线。",
+    "前置选线模型使用已有deepseek_timeout_seconds，仍受整轮60秒时限限制。"
+  ],
+  "regression": {
+    "passed": true,
+    "tests": 176,
+    "customer_channels_disabled": true,
+    "customer_test_sends": 0,
+    "output": "........................................................................ [ 40%]\n........................................................................ [ 81%]\n................................                                         [100%]\n- generated xml file: /opt/china2go-ai/releases/private-group-20261102T011849Z/linux-tests.xml -\n176 passed, 1 warning in 37.23s\n"
+  },
+  "real_model_validation": {
+    "current_final_run": "real-20261102T011834Z",
+    "results": [
+      {
+        "case": "four_plus_selected",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "five_private_meals",
+        "steps": 1,
+        "real_model_calls": 4,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "Client error '402 Payment Required' for url 'https://api.deepseek.com/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "four_shared",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "Client error '402 Payment Required' for url 'https://api.deepseek.com/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "negative_private",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "Client error '402 Payment Required' for url 'https://api.deepseek.com/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "completed_private",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "Client error '402 Payment Required' for url 'https://api.deepseek.com/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "unknown_count_private",
+        "steps": 1,
+        "real_model_calls": 1,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "model_test_budget_exhausted"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "unselected_private_map_then_choice",
+        "steps": 1,
+        "real_model_calls": 0,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "model_test_budget_exhausted"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "compare_not_committed",
+        "steps": 1,
+        "real_model_calls": 0,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "model_test_budget_exhausted"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "seven_numeric",
+        "steps": 1,
+        "real_model_calls": 0,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "model_test_budget_exhausted"
+            ]
+          }
+        ]
+      },
+      {
+        "case": "indirect_private",
+        "steps": 1,
+        "real_model_calls": 0,
+        "failures": [
+          {
+            "step": "execution_error",
+            "errors": [
+              "model_test_budget_exhausted"
+            ]
+          }
+        ]
+      }
+    ],
+    "completed": false,
+    "note": "此前版本8个场景通过；未选线后的完整介绍场景发现证据、图片上下文和超时问题，已修正。最终版本全量重跑被供应商402和保守测试账本上限中断，不算通过。"
+  },
+  "account_blocker": {
+    "test_account_balance": {
+      "is_available": true,
+      "balance_infos": [
+        {
+          "currency": "CNY",
+          "total_balance": "0.09",
+          "granted_balance": "0.00",
+          "topped_up_balance": "0.09"
+        }
+      ]
+    },
+    "same_key_as_production": true,
+    "production": {
+      "balance": {
+        "is_available": true,
+        "balance_infos": [
+          {
+            "currency": "CNY",
+            "total_balance": "0.09",
+            "granted_balance": "0.00",
+            "topped_up_balance": "0.09"
+          }
+        ]
+      },
+      "production_402_log_lines": 0,
+      "recent_reply_jobs": [],
+      "release": "manual-lead-20261101T124517Z",
+      "checked_at": "2026-11-02T01:21:04.907476+00:00"
+    },
+    "test_accounting": {
+      "requests": 84,
+      "known_usage_cny": 2.07850368,
+      "conservative_total_including_unknown": 7.84949568,
+      "unknown_usage_requests": 23
+    }
+  },
+  "public_health": [
+    {
+      "url": "https://api.luoxuecong.asia/v1/health",
+      "status": 200
+    },
+    {
+      "url": "https://api.luoxuecong.asia/v1/health/ready",
+      "status": 200
+    }
+  ],
+  "deployment": {
+    "performed": false,
+    "production_release": "manual-lead-20261101T124517Z",
+    "candidate_stage": "/opt/china2go-ai/releases/private-group-20261102T011849Z",
+    "no_customer_test_messages": true,
+    "no_historical_replay": true
+  },
+  "remaining": [
+    "充值DeepSeek API账户，保持线上足够余额；当前¥0.09且线上与本地测试共用Key。",
+    "在当前代码版本重新完成10组真实模型测试，特别是参考图后选线、隐含独团意愿。",
+    "全部通过后合并main，备份部署六条线路政策，核对版本/配置/健康/通知处理状态。"
+  ],
+  "evidence_directory": "output/private-group-20261102",
+  "recorded_at": "2026-11-02T01:22:09.741823+00:00"
+}
