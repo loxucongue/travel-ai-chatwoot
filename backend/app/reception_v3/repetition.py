@@ -70,7 +70,11 @@ def review(decision, context, deadline):
         '删除已经在历史团队答复中说过、客户本轮未要求重述的语义重复，包括换说法重讲人数条件、日期规则、收尾安慰或反复劝客户改安排。'
         '先判断客户新增意思：补充月份不需要重复已解释的包团条件，补充排假原因不需要再劝调整假期。'
         '客户明确重新询问、没有理解、条件改变需要重新核对时，必须保留回答该问题所需的信息；不要因为出现旧词就删除。'
-        '新增事实、回答客户当前问题、首次推荐的年份、必要限制和必要的短确认保留。已经提问未获回复的问题不换词再问。'
+        '新增事实、回答客户当前问题、首次推荐的年份、必要限制和必要的短确认保留。'
+        '已经提问未获回复的问题，不因时间经过或仅换词就再问。'
+        '当本轮客户主动提出实质新需求，且当前业务目标允许继续邀请私讯时，'
+        '结合新需求说明不同的一对一服务帮助并再次邀请，不仅因为出现相同渠道名称就删除。'
+        '客户明确拒绝或要求稍后联系时，没有这个例外；沉默不算新需求。'
         '只删除有明确历史依据的重复分句，不能删去否定或条件造成承诺改变；没有把握返回空数组。'
         '客户本轮首次补充原因时，承接该原因的简短确认不是重复安慰，必须保留。'
         '但确认后的旧邀约不受这个保护：历史已说“时间有弹性再联系”，候选又说“以后有其他假期再告诉我”，'
@@ -86,7 +90,9 @@ def review(decision, context, deadline):
             '无法确认适合发送的句子也删除；删除后的片段不完整则一并删除，宁可本轮不发。')
     payload={'model':settings.deepseek_model, 'messages':[
         {'role':'system','content':prompt}, {'role':'user','content':json.dumps({
-            'event':context.get('event'), 'history':history, 'candidate_clauses':clauses},ensure_ascii=False)}],
+            'event':context.get('event'), 'history':history, 'candidate_clauses':clauses,
+            'business_goal':context.get('skills', {}).get('reply', {}).get('goal', ''),
+            'lead_capture':context.get('skills', {}).get('lead_capture', {})},ensure_ascii=False)}],
         'response_format':{'type':'json_object'},'thinking':{'type':'disabled'},'max_tokens':700,
         'stream':True,'stream_options':{'include_usage':True}}
     started=time.monotonic(); digest=_request_hash(payload); body={}

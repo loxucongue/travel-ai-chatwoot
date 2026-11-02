@@ -69,6 +69,41 @@ def test_empty_reply_cannot_silently_drop_an_intended_handoff():
     assert Decision(action='reply', start_introduction=True).start_introduction
 
 
+def test_paid_rehearsal_checks_actual_installed_config_and_route_before_running(tmp_path):
+    from test_business_isolation import run_isolated
+    from test_xiamen_install import BOOTSTRAP
+    run_isolated(tmp_path, BOOTSTRAP + '''
+installer.install(apply=True)
+import importlib.util
+spec = importlib.util.spec_from_file_location('rehearsal', Path.cwd() / 'scripts/rehearse_rujing2_xiamen.py')
+rehearsal = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(rehearsal)
+from app.operations import save_setting
+with SessionLocal() as db:
+    digest = rehearsal.verify_effective_configuration(db, Path(engine.url.database).parent)
+    assert (Path(engine.url.database).parent / f'effective-skills-{digest}.json').is_file()
+    config = get_reception_configuration(db)
+    config['reply']['goal'] = 'Old installed policy'
+    save_setting(db, SETTING_KEY, config); db.commit()
+    try:
+        rehearsal.verify_effective_configuration(db, Path(engine.url.database).parent)
+        raise AssertionError('must not label old settings as a test of new files')
+    except ValueError as exc:
+        assert str(exc) == 'rehearsal_configuration_stale_run_refresh'
+    config['reply'].update(installer.read('reception-config.json')['reply'])
+    save_setting(db, SETTING_KEY, config); db.commit()
+    path = Path(ROUTE_PACKAGES['xiamen_3_6d']['source_path'])
+    package = json.loads(path.read_text(encoding='utf-8'))
+    package['knowledge_facts'][0]['text'] = 'Old installed fact'
+    path.write_text(json.dumps(package, ensure_ascii=False), encoding='utf-8')
+    try:
+        rehearsal.verify_effective_configuration(db, Path(engine.url.database).parent)
+        raise AssertionError('must not test stale route facts')
+    except ValueError as exc:
+        assert str(exc) == 'rehearsal_route_stale_run_refresh'
+''')
+
+
 def test_campaign_video_followup_resolves_real_media_and_deduplicates(tmp_path):
     from test_business_isolation import run_isolated
     from test_xiamen_install import BOOTSTRAP

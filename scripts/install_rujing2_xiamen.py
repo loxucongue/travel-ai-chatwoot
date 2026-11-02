@@ -27,7 +27,8 @@ def digest(path):
 
 
 def read(name):
-    return json.loads((PACK / name).read_text(encoding='utf8'))
+    from app.business_text import read_business_json
+    return read_business_json(PACK / name)
 
 
 def install(apply=False):

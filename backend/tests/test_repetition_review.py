@@ -80,3 +80,25 @@ def test_review_failure_retains_answer_and_is_auditable(monkeypatch):
     result,logs,_=repetition.review(d,{'messages':[
         {'direction':'outgoing','content':'之前說過','status':'sent'}]},time.monotonic()+20)
     assert result==d and logs[0]['status']=='failed'
+
+
+def test_reviewer_receives_business_goal_and_contact_policy_with_new_customer_need(monkeypatch):
+    monkeypatch.setattr(settings,'reception_repeat_review_enabled',True)
+    seen=[]
+    def post(payload,timeout):
+        seen.append(json.loads(payload['messages'][-1]['content']))
+        return httpx.Response(200,request=httpx.Request('POST','https://test.invalid'),json={
+            'choices':[{'message':{'content':'{"remove_clause_ids":[]}'}}]})
+    monkeypatch.setattr(repetition,'_post_with_deadline',post)
+    ctx={'event':'customer_message','skills':{
+        'reply':{'goal':'Answer questions and invite private consultation for new needs'},
+        'lead_capture':{'enabled':True,'channels':['LINE']}},
+        'messages':[{'direction':'outgoing','content':'May I have your LINE ID?','status':'delivered'},
+                    {'direction':'incoming','content':'We need something suitable for children.'}]}
+    d=Decision(messages=[{'text':'A planner can discuss child-friendly arrangements. May I have your LINE ID?',
+                          'purpose':'contact_invitation'}]).model_dump()
+    result,logs,_=repetition.review(d,ctx,time.monotonic()+20)
+    assert seen[0]['business_goal']==ctx['skills']['reply']['goal']
+    assert seen[0]['lead_capture']==ctx['skills']['lead_capture']
+    assert seen[0]['history'][-1]['text']==ctx['messages'][-1]['content']
+    assert result==d and logs[0]['status']=='completed'

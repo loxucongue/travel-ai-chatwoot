@@ -38,6 +38,31 @@ def final(**kwargs):
     return {'content': json.dumps(runtime.Decision(**kwargs).model_dump(), ensure_ascii=False)}
 
 
+@pytest.mark.parametrize('field', ['route_variant', 'discussion_route'])
+def test_unknown_route_reference_repaired_by_model_without_guessing_intent(monkeypatch, field):
+    c = context('peach_9d_2027')
+    bad = {'route_variant': 'pech_9d_2027'} if field == 'route_variant' else {'profile': {'discussion_route': 'pech_9d_2027'}}
+    requests = model(monkeypatch, [final(messages=[{'text': 'invalid draft'}], **bad),
+        final(messages=[{'text': 'corrected answer'}], route_variant='peach_9d_2027')])
+    decision, logs, _ = runtime.run_agent(c)
+    assert len(requests) == 2
+    assert decision['route_variant'] == 'peach_9d_2027'
+    assert decision['route_choice'] == 'unchanged'
+    assert decision['messages'][0]['text'] == 'corrected answer'
+    assert c['route_variant'] == 'peach_9d_2027'
+    feedback = requests[1]['messages'][-1]['content']
+    assert 'unknown_route_reference' in feedback and 'peach_11d_2027' in feedback
+    assert 'unknown_route_reference' in logs[0]['error_code']
+
+
+def test_unknown_route_repair_is_bounded_and_does_not_accept_last_bad_draft(monkeypatch):
+    bad = final(route_variant='invented_product', messages=[{'text': 'invalid draft'}])
+    requests = model(monkeypatch, [bad, bad])
+    with pytest.raises(Exception, match='unknown_route_reference'):
+        runtime.run_agent(context('peach_9d_2027'))
+    assert len(requests) == 2
+
+
 def tool(name, arguments, id='t1'):
     return {'id': id, 'type': 'function', 'function': {'name': name, 'arguments': json.dumps(arguments)}}
 

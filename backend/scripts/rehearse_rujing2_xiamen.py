@@ -21,7 +21,33 @@ ROUTE = 'xiamen_3_6d'
 
 
 def read(name):
-    return json.loads((PACK / name).read_text(encoding='utf8'))
+    from app.business_text import read_business_json
+    return read_business_json(PACK / name)
+
+
+def verify_effective_configuration(db, output):
+    """Test the installed settings, not just a newer file sitting next to them."""
+    from app.business_text import validate_business_text, read_business_json
+    from app.reception_config import get_reception_configuration, ReceptionConfiguration
+    from app.reception_v3.skills import compile_skills
+    from app.route_packages import ROUTE_PACKAGES, _validate
+    current = get_reception_configuration(db)
+    expected = deepcopy(current)
+    for section, values in read('reception-config.json').items():
+        if isinstance(values, dict):
+            expected[section].update(values)
+        else:
+            expected[section] = deepcopy(values)
+    if ReceptionConfiguration.model_validate(expected).model_dump() != current:
+        raise ValueError('rehearsal_configuration_stale_run_refresh')
+    installed = read_business_json(ROUTE_PACKAGES[ROUTE]['source_path'])
+    if installed != _validate(deepcopy(read('route-package.json')), PACK / 'route-package.json'):
+        raise ValueError('rehearsal_route_stale_run_refresh')
+    bundle = compile_skills(db)
+    validate_business_text(bundle, 'effective_skills')
+    (output / f"effective-skills-{bundle['digest']}.json").write_text(
+        json.dumps(bundle, ensure_ascii=False, indent=2), encoding='utf-8')
+    return bundle['digest']
 
 
 def configure(args):
@@ -139,6 +165,8 @@ def run(output, ids):
     from app.models import utcnow
     from app.automation_models import AutomationSession, AutomationRun
     from app.reception_v3 import service
+    with SessionLocal() as db:
+        effective_digest = verify_effective_configuration(db, output)
     faqs = read('faq.json')['items']
     selected = set(ids.split(',')) if ids else {f['id'] for f in faqs}
     cases = [{'id': f['id'], 'title': f['name'], 'messages': [f['question']],
@@ -146,10 +174,11 @@ def run(output, ids):
     extra = [
         {'id': 'hotel_material', 'title': '酒店圖文', 'messages': ['廈門住什麼飯店？給我看房間照片。'], 'expected': 'reply', 'asset': 'xiamen_hotel'},
         {'id': 'food_video', 'title': '餐食影片', 'messages': ['廈門餐食有影片可以看嗎？'], 'expected': 'reply', 'asset': 'xiamen_meal_video'},
-        {'id': 'eight_people', 'title': '8人不套舊公司交接門檻', 'messages': ['我們8位想去廈門，你們一般一團幾人？'], 'expected': 'reply'},
-        {'id': 'fb_continuity', 'title': '拒絕加好友後仍可問價', 'messages': ['我沒有LINE也沒有微信，只在FB聊可以嗎？', '那廈門一個人多少錢？有含機票嗎？'], 'expected': 'reply'},
+        {'id': 'eight_people', 'title': '8人不套舊公司交接門檻或直接承諾獨團', 'messages': ['我們8位想去廈門，你們一般一團幾人？'], 'expected': 'reply',
+            'unexpected_text': ['剛好可以自己成一團', '8位就可以獨立成團', '不會有其他人']},
+        {'id': 'fb_continuity', 'title': '拒絕加好友後仍可問價', 'messages': ['我沒有LINE也沒有微信，只在FB聊可以嗎？', '那廈門一個人多少錢？有含機票嗎？'], 'expected': 'reply', 'no_invitation_after_turn': 0},
         {'id': 'date_price', 'title': '提供月份不虛構精確價', 'messages': ['廈門5天一個人多少錢？', '我們兩個人，明年3月。'], 'expected': 'reply'},
-        {'id': 'introduction', 'title': '概覽不編造逐日安排', 'messages': ['我想選廈門行程，先給我看你們現有的介紹。'], 'expected': 'reply'},
+        {'id': 'introduction', 'title': '概覽不編造逐日安排且不重播整套介紹', 'messages': ['我想選廈門行程，先給我看你們現有的介紹。'], 'expected': 'reply', 'no_introduction_queue': True},
         {'id': 'conversion_price', 'title': '答價後自然邀請私訊', 'messages': ['廈門一個人多少錢？'], 'expected': 'reply', 'invitation': True},
         {'id': 'conversion_agency', 'title': '資質需求引導私訊', 'messages': ['你們是哪家公司？有營業執照嗎？'], 'expected': 'reply', 'invitation': True},
         {'id': 'line_contact', 'title': 'LINE ID立即交接', 'messages': ['廈門一個人多少錢？', '我的LINE ID是 test_travel_2026'], 'expected': 'handoff', 'handoff_type': 'contact'},
@@ -161,12 +190,67 @@ def run(output, ids):
         {'id': 'ordinary_photo', 'title': '普通照片不作留資成功', 'messages': ['想了解廈門酒店',
             {'text':'這種房間可以嗎？', 'attachments':[{'id':90002,'file_type':'image','file_name':'room.png'}]}], 'expected':'reply'},
         {'id': 'requested_human', 'title': '主動要求真人不強制先留資', 'messages':['我要直接找真人客服'], 'expected':'handoff','handoff_type':'requested'},
-        {'id': 'contact_no_repeat', 'title': '連續答疑不每輪催ID', 'messages':['廈門一個人多少錢？','機票有包含嗎？','那你們一般幾人一團？'], 'expected':'reply','max_invitations':1},
+        {'id': 'contact_no_repeat', 'title': '連續答疑先答當前問題並自然推進', 'messages':['廈門一個人多少錢？','機票有包含嗎？','那你們一般幾人一團？'], 'expected':'reply'},
         {'id': 'sales_handoff_journey', 'title': '客人補需求仍以專人私訊為主',
             'messages':['想了解雲南行程，請提供營業執照、合同退費規定和公司收款資料。','抱歉，是廈門！','預計4/2–4/7','不要全都是風景','有9歲、12歲的孩童隨行'],
-            'expected':'reply','max_invitations':2},
+            'expected':'reply'},
         {'id': 'seven_day_followup', 'title': '每日一次最多7天且圖文影片去重', 'messages':['我先看看廈門的美食和風景，有資料可以分享'], 'expected':'reply','followup_days':7},
         {'id': 'conversion_optout', 'title': '拒絕聯絡停止追訪', 'messages':['想了解廈門','不要再聯絡我，也不要發宣傳'], 'expected':'reply','opt_out':True},
+        {'id': 'sales_first_entry', 'title': '首輪了解產品即主動引導私訊',
+            'messages': ['想了解廈門行程'], 'expected': 'reply', 'invitation': True},
+        {'id': 'sales_first_considering', 'title': '未定日期和考慮中仍提供一對一私訊入口',
+            'messages': ['我對廈門有興趣，不過時間還沒定，先考慮看看'],
+            'expected': 'reply', 'invitation': True},
+        {'id': 'sales_first_details', 'title': '要詳細行程不先要求收齊人數日期',
+            'messages': ['能先給我詳細路線參考嗎？日期和人數都還沒確定。'],
+            'expected': 'reply', 'invitation': True},
+        {'id': 'sales_first_progression', 'title': '持續諮詢能再推進私訊而非只記下需求',
+            'messages': ['廈門一個人多少錢？', '想明年四月去', '有9歲、12歲的小朋友同行',
+                         '那適合孩子的詳細行程能給我參考嗎？'],
+            'expected': 'reply', 'invitation': True, 'invite_on_final_turn': True,
+            'unexpected_text': ['兩大兩小', '两大两小', '2大2小', '兩位大人', '2位大人']},
+        {'id': 'sales_first_declined', 'title': '明確拒留資後繼續回答且不再催加',
+            'messages': ['想了解廈門行程', '不用加LINE，也不要問我要其他聯絡方式，就在這裡回答。',
+                         '那機票有包含嗎？'], 'expected': 'reply', 'no_invitation_after_turn': 1},
+        {'id': 'sales_soft_variant', 'title': '不同措辭的未定意向仍可留資',
+            'messages': ['有點心動，但還要和家人商量，我只是隨便問問'],
+            'expected': 'reply', 'invitation': True},
+        {'id': 'sales_busy_customer', 'title': '正在忙時尊重暫停而非再次索取',
+            'messages': ['廈門一個人多少錢？', '我現在在開車，先不要發訊息，等我回來再問你。'],
+            'expected': 'reply', 'no_invitation_after_turn': 1, 'followup_checks': 1,
+            'no_proactive_after_turn': 1},
+        {'id': 'sales_known_family', 'title': '人數已明確時承接但不自行算精確價',
+            'messages': ['我們2位大人，孩子9歲和12歲，想明年四月去廈門，大概多少？'],
+            'expected': 'reply', 'invitation': True},
+        {'id': 'sales_unpriced_day', 'title': '一日遊不能套3至6天價格範圍',
+            'messages': ['只想一天逛廈門，多少錢？'], 'expected': 'reply', 'invitation': True,
+            'unexpected_text': ['5,000', '5000', '8,500', '8500']},
+        {'id': 'sales_confirmed_departure', 'title': '指定日期未查庫存不得保證成行',
+            'messages': ['明年4月5日一定有團嗎？如果我買機票了就保證能走嗎？'],
+            'expected': 'reply', 'invitation': True},
+        {'id': 'sales_private_group_question', 'title': '客人反問獨團時不把一般規模當承諾',
+            'messages': ['我們8位想去廈門，你們一般一團幾人？', '那我們8位，是保證只有我們自己一團嗎？'],
+            'expected': 'reply', 'invitation': True,
+            'unexpected_text': ['保證只有你們', '保證只有您們', '8位就可以獨立成團']},
+        {'id': 'sales_channel_change', 'title': '客人改變聯絡選擇可繼續留資',
+            'messages': ['我先只在FB了解，不加其他聯絡。', '想了一下，請加我的LINE，ID是 test_resume_2026'],
+            'expected': 'handoff', 'handoff_type': 'contact'},
+        {'id': 'sales_followup_resume', 'title': '沉默觸達後客人回來繼續推進',
+            'messages': ['想了解廈門美食，先給我看看'], 'followup_checks': 1,
+            'resume_message': '我看了，還想了解住宿，時間沒定。', 'expected': 'reply',
+            'invite_on_final_turn': True},
+        {'id': 'contextual_progression', 'title': '不同新需求逐輪承接並邀請私訊',
+            'messages':['想了解廈門詳細路線','預計明年4/2–4/7','不要全都是風景','有9歲、12歲的孩子同行'],
+            'expected':'reply','invite_on_turns':[0,1,2,3],
+            'unexpected_text':['兩大兩小','兩位大人','2位大人','加完馬上','一定不累']},
+        {'id': 'contextual_ack', 'title': '收尾致謝不強行增加留資邀請',
+            'messages':['廈門多少錢？','謝謝，先這樣'], 'expected':'reply','no_invitation_after_turn':1},
+        {'id': 'contextual_preference', 'title': '已知LINE偏好只取LINE ID',
+            'messages':['想了解廈門詳細路線','我用LINE，沒有微信'],
+            'expected':'reply','invite_on_final_turn':True},
+        {'id': 'contextual_trust_refusal', 'title': '要求在原平台看資質不變相強迫留資',
+            'messages':['我想看營業執照、收款戶名和退費規定','我不留私人聯絡，就在這裡給我看資料','那你們有購物站嗎？'],
+            'expected':'reply','no_invitation_after_turn':1},
     ]
     cases.extend(case for case in extra if not ids or case['id'] in selected)
     for case in cases:
@@ -195,6 +279,16 @@ def run(output, ids):
                     service.advance_next(row)
                     db.commit()
                     runs = settle(db, row)
+                for _ in range(case.get('followup_checks', 0)):
+                    if not service.state(row).get('next_check_at'):
+                        break
+                    service.advance_next(row)
+                    db.commit()
+                    runs = settle(db, row)
+                if case.get('resume_message'):
+                    service.add_message(db, row, case['resume_message'], f'case-{case["id"]}-resume')
+                    db.commit()
+                    runs = settle(db, row)
             except Exception as exc:
                 error = str(exc)
             row = db.get(AutomationSession, sid)
@@ -210,9 +304,37 @@ def run(output, ids):
                 issues.append(f'expected_{case["expected"]}_got_{actual}')
             if case.get('handoff_type') and state.get('handoff_type') != case['handoff_type']:
                 issues.append('wrong_handoff_type')
+            if case.get('no_introduction_queue') and any(m.get('v3_kind') == 'introduction' for m in reply):
+                issues.append('unnecessary_introduction_queue')
             invitations = [m for m in reply if m.get('contact_invitation')]
             if case.get('invitation') and not invitations:
                 issues.append('contact_invitation_missing')
+            incoming_positions = [i for i, message in enumerate(messages)
+                                  if message.get('direction') == 'incoming']
+            for turn in case.get('invite_on_turns', []):
+                if turn >= len(incoming_positions):
+                    issues.append(f'customer_turn_not_reached_{turn}')
+                    continue
+                start = incoming_positions[turn] + 1
+                end = incoming_positions[turn+1] if turn+1 < len(incoming_positions) else len(messages)
+                if not any(m.get('contact_invitation') and m.get('status') == 'simulated_delivered'
+                           for m in messages[start:end]):
+                    issues.append(f'new_need_invitation_missing_turn_{turn}')
+            if case.get('invite_on_final_turn') and incoming_positions:
+                final_turn = messages[incoming_positions[-1] + 1:]
+                if not any(m.get('contact_invitation') and m.get('status') == 'simulated_delivered'
+                           for m in final_turn):
+                    issues.append('final_turn_contact_invitation_missing')
+            if 'no_invitation_after_turn' in case and len(incoming_positions) > case['no_invitation_after_turn']:
+                boundary = incoming_positions[case['no_invitation_after_turn']]
+                if any(m.get('contact_invitation') and m.get('status') == 'simulated_delivered'
+                       for m in messages[boundary + 1:]):
+                    issues.append('contact_invitation_after_explicit_refusal')
+            if 'no_proactive_after_turn' in case and len(incoming_positions) > case['no_proactive_after_turn']:
+                boundary = incoming_positions[case['no_proactive_after_turn']]
+                if any(m.get('proactive') and m.get('status') == 'simulated_delivered'
+                       for m in messages[boundary + 1:]):
+                    issues.append('proactive_message_after_requested_pause')
             if len(invitations) > case.get('max_invitations', 100):
                 issues.append('repeated_contact_invitation')
             if case.get('opt_out') and (not state.get('opt_out') or state.get('next_check_at')):
@@ -236,11 +358,19 @@ def run(output, ids):
             if case.get('asset') and not any(m.get('asset_key') == case['asset'] for m in reply):
                 issues.append('expected_asset_missing')
             text = '\n'.join(m.get('content', '') for m in reply)
+            if any(word in text for word in case.get('unexpected_text', [])):
+                issues.append('unexpected_business_or_customer_claim')
             if any(word in text for word in ('China2Go', '西藏', '入藏', '人民幣', '人民币', '申請款', '申请款')):
                 issues.append('unrelated_or_unapproved_claim')
             runs = db.scalars(select(AutomationRun).where(AutomationRun.session_id == sid)).all()
             result = {**case, 'session_id': sid, 'actual': actual, 'issues': issues,
                       'package_sha256': hashlib.sha256((PACK / 'route-package.json').read_bytes()).hexdigest(),
+                      'configuration_sha256': hashlib.sha256((PACK / 'reception-config.json').read_bytes()).hexdigest(),
+                      'system_prompt_sha256': hashlib.sha256((ROOT / 'businesses/rujing2/system-prompt.txt').read_bytes()).hexdigest(),
+                      'runtime_sha256': hashlib.sha256((ROOT / 'backend/app/reception_v3/runtime.py').read_bytes()).hexdigest(),
+                      'repetition_sha256': hashlib.sha256((ROOT / 'backend/app/reception_v3/repetition.py').read_bytes()).hexdigest(),
+                      'common_skill_sha256': hashlib.sha256((ROOT / 'businesses/rujing2/skills/business-reception/SKILL.md').read_bytes()).hexdigest(),
+                      'effective_skills_digest': effective_digest,
                       'duration_seconds': round(time.monotonic()-started, 2), 'messages': messages,
                       'handoff_reason': state.get('handoff_reason'),
                       'runs': [{'id': r.id, 'status': r.status, 'error': r.error_code, 'decision': r.decision,
