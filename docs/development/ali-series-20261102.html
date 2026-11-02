@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>阿里系列与包团流程上线核验</title>
+<style>body{max-width:1000px;margin:40px auto;padding:0 24px;font:16px/1.8 system-ui,sans-serif;color:#263544;background:#fafbfc}h1,h2{line-height:1.4;color:#18394a}h2{margin-top:36px}table{border-collapse:collapse;width:100%;background:white}th,td{border:1px solid #d9e2e8;padding:10px;text-align:left;vertical-align:top}code{overflow-wrap:anywhere}.result{border-left:5px solid #15806b;padding:16px;background:#eaf7f2}small{color:#536776}a{color:#066b94}</style>
+<h1>西藏阿里系列与包团流程：完成记录</h1>
+<p class="result">已补齐资料、运行逻辑和测试，并部署。线上发行版本：<code>ali-series-20261102T133738Z</code>；代码提交：<code>a0666cade8f20b3998a18282b5352a5b125b276e</code>。线上核验时间（UTC）：2026-11-02T14:06:39.348008+00:00。</p>
+<h2>1. 本次补齐了什么</h2>
+<table><tr><th>需求</th><th>实际结果</th></tr>
+<tr><td>西藏阿里独立系列</td><td>新增启用阿里北线15天，独立路线资料、介绍、确切团期报价、问答及跟进素材。线上可用路线由6条变为7条；普通西藏路线没有改成阿里。</td></tr>
+<tr><td>原始图片和7人以上素材</td><td>逐一校验两份原始ZIP，共26份文件（阿里18份、7人以上8份），41处线路绑定可解析；新增19条跟进素材规则。重复格式仍归档，只在配置中选择实际要发送的版本。</td></tr>
+<tr><td>7人以上及明确包团</td><td>已选线时先发基本行程图、对应亮点和客人照片，再通知顾问。4–6人明确要包团也适用；仅说明人数不自动认定包团。未选线先了解偏好，等待节点可发一张参考图，保持未选定状态。</td></tr>
+<tr><td>绒布旅馆疑问</td><td>保留既有房源预留、数量有限、征用／天气及合同说明，并通过本轮模型回归。不能承诺已替客人锁房、一定入住。</td></tr></table>
+<p>来源：<a href="https://china2go.com/0808-2/">阿里业务资料</a>、<a href="https://china2go.com/8425-2/">7人以上业务资料</a>及用户提供的原始压缩包；2026-11-02重新读取核对。包团适用范围按后续业务明确的“想自己包团”更新。</p>
+<h2>2. 一条阿里咨询怎样流转</h2>
+<ol><li>收到客户消息，先通过渠道、AI标签、人工接管及发送权限检查；模型结合对话识别阿里意向。只问纳木措不会自动切到阿里。</li>
+<li>加载阿里Skill、事实和素材目录。明确选择15天后启动介绍；未知人数先问，已有信息不重问。图片使用已校验素材，不由模型编造链接。</li>
+<li>普通拼团介绍后了解未知体能、65岁以上同行情况和月份。介绍前的“想先看看行程”不会重新解释成介绍后的考虑收尾。</li>
+<li>客户问价时，模型调用团期工具。工具按配置的确切出发日期、报名人数、团型和办证期限返回依据，模型引用对应报价模板；不外推2028年团期，也不擅自换月报低价。</li>
+<li>模型选择下一跟进阶段，执行器保存时间。完整报价后等3小时，合适时首次邀请LINE／微信；之后半天评估阿里专属素材，再按每日节点跟进。</li>
+<li>客户新问题优先答疑；停发、已拒绝留资、人工接手、渠道窗口及发送限制优先执行。通知顾问与顾问实际接手分开：尚未认领且AI仍获授权时可承接，人工接手后停止。</li></ol>
+<p>体能节点配置为5分钟、再30分钟、无已读依据时60分钟及次日检查。它们是评估时间，不是保证每次发消息；全局每日上限、夜间静默、7天窗口会使节点顺延或停止。本轮完整模型测试核对了5、180、720、1440分钟状态，以及夜间顺延和客户停发。</p>
+<h2>3. 报价与住宿边界</h2>
+<table><tr><th>已公布日期</th><th>拼团每人价</th><th>单人房差</th><th>条件</th></tr>
+<tr><td>2027/5/10、6/10</td><td>人民币24,800元</td><td>5,100元</td><td>5月报名人数门槛先核对；不足4位先讨论其他日期，未同意前不改报6月。</td></tr>
+<tr><td>2027/7/10、8/10、9/10、10/10</td><td>人民币26,800元</td><td>6,000元</td><td>10月先解释下雪／封山可能，再确认是否选择该团期。</td></tr></table>
+<p>本线4人成团、最多6人，一位可报名不等于已保证成团。独立包团交顾问核价，不套普通西藏4人减200等优惠。单人愿意拼房也说明未拼成仍需补房差；D7止热寺为无供氧多人间，不承诺全程供氧或单间。</p>
+<h2>4. 配置怎样生效</h2>
+<table><tr><th>资料／配置</th><th>生效方式</th><th>边界</th></tr>
+<tr><td>线路包：事实、固定回答、介绍顺序、团期价格、专属跟进时间</td><td>安装并通过校验后编译到当前路线资料，模型读取业务规则，执行器按配置发送及计时。</td><td>新固定日期与专属阶段由线路包管理，本次没有新增逐项可视化编辑页；不能宣称改任意文本就一定改变报价。</td></tr>
+<tr><td>素材库与跟进规则</td><td>素材启用、路线绑定、标签和用途都匹配后进入模型候选；模型结合上下文选用。</td><td>上传文件不等于自动发送。撤销、已发去重、渠道权限、客户拒绝或人工接管均可使配置不发送。</td></tr>
+<tr><td>路线开关、渠道AI模式、全局跟进限制</td><td>仍使用现有接待和系统设置；阿里加入启用目录。</td><td>LINE手动启用模式、留资后AI承接及现有通知名单保持原值。启用路线不越过渠道授权。</td></tr>
+<tr><td>模型业务Skill</td><td>说明怎样理解需求、先问什么、何时交顾问；本次修正时序误读和参考图日期核对提示。</td><td>通过发布代码更新；不以新增客户文本正则代替语义识别，也不靠删除客户可见答案掩盖错误。</td></tr></table>
+<h2>5. 测试和上线证据</h2>
+<ul><li>本地后端全量：1503项通过；服务器Linux相关回归：298项通过。</li>
+<li>真实模型14个业务场景分批通过：前一批12个报价／问答／已选线包团场景；最后针对时序和提示修复重测2条完整链路，具体批次见下表。</li>
+<li>隔离数据库安装及重复安装检查通过；素材数量、绑定、规则和配置读回正确。</li>
+<li>部署前完成代码、运行线路包及数据库备份；数据库备份校验通过。安装期间未新增客户消息、转人工任务、通知或历史会话。</li>
+<li>线上20个发布文件校验、7条路线就绪、26份素材与41处绑定校验通过。API、worker、playground、nginx、cloudflared均运行，公共健康接口可达。</li>
+<li>线上核验时新增日志Traceback：0；ERROR行：0。这是本次核验时点状态，不代替持续监控。</li>
+<li>未向真实客户或顾问发送测试消息，也没有补发历史洗单。本次未验证手机推送或实际阅读情况。</li></ul>
+<details><summary>展开14个业务场景与批次</summary><table><tr><th>场景</th><th>结果</th><th>证据批次（UTC）</th></tr><tr><td>ali_june_solo_quote</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_july_four_shared</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_may_two</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_may_four</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_october_risk</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_unpublished</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_dormitory</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_equipment</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ordinary_namtso</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_13_custom</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>rongbuk_doubt</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>private_seven_known</td><td>通过</td><td>real-20261102T134139Z</td></tr><tr><td>ali_full_flow</td><td>通过</td><td>real-20261102T135548Z</td></tr><tr><td>private_unknown_preferences</td><td>通过</td><td>real-20261102T135548Z</td></tr></table></details>
+<p><small>备份目录：<code>/opt/china2go-ai/backups/ali-series-20261102T133738Z</code><br>完整本地测试、模型响应、线上核验文件保存在 <code>output/ali-series-20261102/</code>；原始客户资料和连接凭据不写入本文。</small></p>
+<h2>6. 仍须业务提供的内容</h2>
+<ul><li>阿里12天／13天的正式路线、日期价格和素材：目前只识别需求并交顾问，不作为已发布产品自动售卖。</li>
+<li>完整转山装备清单附件：现有建议可以回答；要求完整文件而库内没有时请顾问补发，不假称文件已发送。</li>
+<li>业务后续准备的2027羊年转湖文章：目前只用已给资料中的文化及行程说明，没有编造尚未提供文章的内容。</li></ul>
+</html>
