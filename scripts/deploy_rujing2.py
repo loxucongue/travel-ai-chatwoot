@@ -144,12 +144,16 @@ if not p.exists():
     run(client, f"cd {stage}/backend && runuser -u rujing2 -- {REMOTE}/venv/bin/python -c " + shlex.quote(
         "from app.config import settings; from app.db import SessionLocal; from app.reception_v3.skills import compile_skills,SkillRegistry; "
         "assert settings.business_profile=='rujing2'; b=compile_skills(SessionLocal()); assert SkillRegistry(b).index(); print('Business preflight passed')"))
+    live_running = run(client, 'systemctl is-active rujing2-worker || true').strip() == 'active'
+    services = 'rujing2-api rujing2-playground' + (' rujing2-worker' if live_running else '')
     run(client, f"test ! -L {REMOTE}/current || readlink {REMOTE}/current > {stage}/previous-release.txt\nln -s {stage} {REMOTE}/current-next\nmv -Tf {REMOTE}/current-next {REMOTE}/current")
     try:
-        run(client, f"cp {stage}/deploy/rujing2/*.service /etc/systemd/system/\ncp {stage}/deploy/rujing2/nginx.conf /etc/nginx/sites-available/rujing2\nln -sf /etc/nginx/sites-available/rujing2 /etc/nginx/sites-enabled/rujing2\nnginx -t\nsystemctl daemon-reload\nsystemctl enable rujing2-api rujing2-playground\nsystemctl restart rujing2-api rujing2-playground\nsystemctl reload nginx")
+        run(client, f"cp {stage}/deploy/rujing2/*.service /etc/systemd/system/\ncp {stage}/deploy/rujing2/nginx.conf /etc/nginx/sites-available/rujing2\nln -sf /etc/nginx/sites-available/rujing2 /etc/nginx/sites-enabled/rujing2\nnginx -t\nsystemctl daemon-reload\nsystemctl enable rujing2-api rujing2-playground\nsystemctl restart {services}\nsystemctl reload nginx")
         check(client)
+        if live_running:
+            run(client, 'systemctl is-active rujing2-worker')
     except Exception:
-        run(client, f"if [ -s {stage}/previous-release.txt ]; then ln -sfn \"$(cat {stage}/previous-release.txt)\" {REMOTE}/current; systemctl restart rujing2-api rujing2-playground; fi")
+        run(client, f"if [ -s {stage}/previous-release.txt ]; then ln -sfn \"$(cat {stage}/previous-release.txt)\" {REMOTE}/current; systemctl restart {services}; fi")
         raise
     with client.open_sftp() as sftp:
         sftp.get(REMOTE + '/shared/initial-admin.json', str(OUTPUT / 'initial-admin.json'))

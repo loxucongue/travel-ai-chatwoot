@@ -2,7 +2,7 @@
 
 日期：2026-10-26。维护分支：`codex/rujing2`。基线：`90cbd6f`。
 
-2026-10-30 最新状态：厦门资料及回复修复已发布，服务器演练入口为 [AI 演练场](http://47.82.3.154/#/playground)。当前代码 `bba8b05`，版本目录 `rujing2-20261030T091720Z`；沿用原管理员账号，真实客户发送保持关闭。下文保留拆分和分阶段验证记录。
+2026-11-02 最新状态：服务器运行 `3404dfd`，已启用账号 `193812` 的 Facebook 收件箱 `150646` 自动接待，Chatwoot 回调及内部机器人便笺已验证。Facebook 客户新消息尚未在 Chatwoot 出现，客户入站至 AI 回复的完整实发链路仍待核验，不能据此宣称已完成线上验收。控制台与 [AI 演练场](http://47.82.3.154/#/playground)沿用原管理员。下文保留分阶段历史记录，以文末正式接入记录为准。
 
 ## 仓库分析与拆分边界
 
@@ -175,6 +175,30 @@
 - 更新前比较完整已审核快照，创建一致备份 `shared/data/backups/before-contextual-20261102T125347Z.db`；仅更新本活动配置、资料与所属素材规则，保留其他配置。代码发布与业务配置安装分开执行。
 - 首次发布遇到启动检查过早：原脚本固定等待两秒，API 本次约四秒就绪，因此自动回滚。检查现改为最多等待 45 秒、逐次 HTTP 就绪重试，持续失败仍触发回滚；两项新回归测试通过。重新核验已上传版本和备份后成功切换。此部署脚本修复提交为 `b22d19f`，不改变已验证的运行代码。
 - 发布文件 SHA-256、素材哈希及服务状态均已核验。API、演练 worker 和 Nginx 正常；真实发送、Chatwoot 写入、实发 SOP 和素材实发批准保持关闭，实发收件箱为空，实发 worker 禁用。本次没有向真实客户发送消息。
+
+## 2026-11-02 Chatwoot 正式接入
+
+- 运行版本：`3404dfd`，目录 `/opt/rujing2-ai/releases/rujing2-20261102T133025Z`；发布清单与 8 个素材的 SHA-256 已核验。实发启用时间为北京时间 2026-11-02 21:32:38。
+- Chatwoot Cloud 账号 `193812`，目标收件箱 `150646`（China福建 happy traveling），Facebook Page ID `172769632576780`。网站收件箱 `150574` 保持关闭。API Token 经 SSH 写入后由系统加密保存在数据库；不进入源码或文档。
+- Webhook `20958` 已注册 7 类事件：message_created、message_updated、conversation_created、conversation_updated、conversation_status_changed、contact_created、contact_updated。服务器实际接收并处理了私人便笺和 ai 标签更新回调，无待处理／失败事件。
+- `APP_PROFILE=live_reply`，Chatwoot 写入、对客总开关、租户及目标渠道 AI 已开启。`live_reply.armed_at` 与 `auto_new_customers_since` 均设置为启用时间；取消会话白名单限制，新增客户自动接待。旧人工会话保留原控制状态；用户指定的测试会话 #1 单独添加 ai 标签。
+- `rujing2-api`、`rujing2-playground`、`rujing2-worker` 和 Nginx 正常，实发 Worker 已设开机启动；两个实发心跳新鲜，公网就绪检查正常。演练专用 `MODEL_TEST_COST_LEDGER` 环境变量已移除，原 5 元估算账本与历史保留；正式调用不再受演练专用账本限制。
+- 35 FAQ、台币参考报价、持续推进 LINE／微信私讯的规则及 6 图 2 视频沿用已验证的 v4 资料。8 个素材按用户“全部接入”的授权批准用于正式接待；每日最多一次沉默触达仍开启。
+- 修复 Facebook 自动发送窗口：最多七天是业务跟进期限，自动回复／素材发送另外受最后客户消息后 24 小时限制；不会因 Chatwoot `can_reply=true` 就使用人工七天延期。调用模型前、人工交回 AI 时及实际发送前均检查；过期暂停可由真实新客户消息恢复，旧标签更新、人工消息及素材发送不会自行续期。其他渠道和演练的七天规则保留。
+- 销售交接默认通知当前负责人；未分配时使用 Huangyanchun（`280603`）。内部 AgentBot `11678` 仅作为私人交接便笺发送者，没有绑定收件箱，也未启用 Captain。测试会话 #1 私人便笺 `966780508` 已确认 `private=true`、发送者为该 AgentBot；这不能替代 Facebook 客户收件验证。
+- 新增窗口限制、恢复行为及相关回归 128 项通过；部署脚本另 6 项通过。部署脚本现在会在发布和失败回滚时重启原本已运行的实发 Worker，原本关闭时不会自行开启。该脚本从本机运行，不需要为脚本修改重新切换服务器代码。
+- 正式配置启动后，服务器演练 #26 完成真实模型两轮检查：TWD 参考报价并邀请私讯、收到测试 LINE ID 后交接。该会话环境为 playground，结束后已停止，未作为真实客户回执计数。
+- 启用前一致备份：`shared/data/backups/before-live-20261102T133238Z/`，包含数据库和环境文件；更早的连接配置前备份同样保留。原管理员、素材、会话与业务资料保留。
+
+### 剩余验收与操作
+
+1. 测试会话 #1 的旧客户消息来自 10 月 27 日，当前应显示 `automated_window_closed`，不会补发旧消息。需要 Facebook／Messenger 客户端发送新消息，随后核对 Chatwoot 入站、模型运行及 sent／delivered／read 回执。
+2. 用户已反馈发送；截至本次核查，Chatwoot API 仍仅有两个旧会话，没有新的客户消息，收件箱 `reauthorization_required=false`。已请用户确认发送账号、文字及 Chatwoot 是否可见；原因尚未确定，不能归因于模型或直接认定 Facebook 授权失效。
+3. 收到回复后再从客户侧发送测试 LINE ID，确认 AI 停止、人工接管标签及负责人内部通知。文本留资已在演练与自动化测试验证，完整 Facebook 实发交接尚待这一步。
+4. 后台总发送开关可暂停对客消息；单会话删除 ai 标签／添加人工接管可停止该会话。恢复时使用后台 AI 控制，或在 Chatwoot 解除阻断标签并重新添加 ai。
+5. 当前公网入口和回调仍为 HTTP IP，尚未配置正式域名与 HTTPS。后续启用 TLS 时同步更新 `PUBLIC_API_BASE_URL`、前端来源、Cookie 设置和现有 Webhook URL，避免重复注册回调。
+
+官方参考：[Facebook 渠道授权与重连](https://www.chatwoot.com/hc/user-guide/articles/1677778588-how-to-setup-a-facebook-channel)、[标准窗口与人工七天延期](https://www.chatwoot.com/hc/user-guide/articles/1745225158-what-is-human-agent-tag-in-instagram-messenger-channel)、[账户 Webhook](https://developers.chatwoot.com/api-reference/webhooks/add-a-webhook)、[内部 AgentBot](https://developers.chatwoot.com/api-reference/account-agentbots/create-an-agent-bot)。
 
 ## 验证记录
 

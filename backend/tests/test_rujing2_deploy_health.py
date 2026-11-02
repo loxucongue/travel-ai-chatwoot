@@ -5,6 +5,8 @@ import shlex
 import time
 import urllib.error
 import urllib.request
+from contextlib import nullcontext
+from types import SimpleNamespace
 
 import pytest
 
@@ -50,3 +52,38 @@ def test_healthcheck_waits_for_listener_but_fails_within_deadline(monkeypatch, r
         assert len(attempts) == ready_after + 1
         assert clock[0] == 6
         assert commands[-1] == 'systemctl is-active rujing2-api rujing2-playground nginx'
+
+
+@pytest.mark.parametrize('live_running', [True, False])
+@pytest.mark.parametrize('unhealthy', [True, False])
+def test_release_and_rollback_restart_live_worker_only_when_already_active(monkeypatch, tmp_path, live_running, unhealthy):
+    deployer = load_deployer()
+    commands = []
+    monkeypatch.setattr(deployer, 'OUTPUT', tmp_path)
+
+    def run(client, command):
+        commands.append(command)
+        if command == 'systemctl is-active rujing2-worker || true':
+            return 'active\n' if live_running else 'inactive\n'
+        return ''
+
+    def check(client):
+        if unhealthy:
+            raise RuntimeError('listener failed')
+
+    monkeypatch.setattr(deployer, 'run', run)
+    monkeypatch.setattr(deployer, 'check', check)
+    sftp = SimpleNamespace(put=lambda *args:None, get=lambda *args:None)
+    client = SimpleNamespace(open_sftp=lambda:nullcontext(sftp))
+    if unhealthy:
+        with pytest.raises(RuntimeError, match='listener failed'):
+            deployer.deploy(client, tmp_path/'package.tar.gz', {'release':'test-release'})
+    else:
+        deployer.deploy(client, tmp_path/'package.tar.gz', {'release':'test-release'})
+    restarts = [c for c in commands if 'systemctl restart' in c]
+    assert len(restarts) == (2 if unhealthy else 1)
+    for command in restarts:
+        restart = command.split('systemctl restart ', 1)[1].split('\n')[0].split(';')[0]
+        assert ('rujing2-worker' in restart.split()) is live_running
+    assert not any('systemctl enable rujing2-worker' in c for c in commands)
+    assert ('systemctl is-active rujing2-worker' in commands) is (live_running and not unhealthy)
