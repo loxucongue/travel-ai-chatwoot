@@ -104,7 +104,8 @@ def task(context):
             'selected_route_before_turn': context.get('route_variant', ''),
             'prior_route_dialogue': context.get('profile', {}).get('_route_dialogue', {}),
             'legacy_recommendation_hint': context.get('profile', {}).get('discussion_route', ''),
-            'routes': [{'id': key, 'name': spec['name'], 'aliases': spec.get('aliases', [])}
+            'routes': [{'id': key, 'name': spec['name'], 'aliases': spec.get('aliases', []),
+                        'guidance': spec.get('routing_guidance', '')}
                        for key, spec in context['skills']['routes'].items()]}
 
 

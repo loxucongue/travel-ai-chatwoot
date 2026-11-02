@@ -222,6 +222,14 @@ def _available_departures(spec, days, today, party_size=None, group_type='undeci
     policy = spec.get('seasonal_pricing') or spec.get('departure_availability')
     if not policy:
         return []  # Missing availability is not evidence of a saleable product.
+    if policy.get('schedule_mode') == 'fixed_dates':
+        if group_type == 'private' or party_size is not None and party_size >= 7:
+            return []
+        return [entry['date'] for entry in policy['departures']
+                if date.fromisoformat(entry['date']) in days
+                and (date.fromisoformat(entry['date'])-today).days >= policy['minimum_notice_days']
+                and (entry['minimum_party_size'] == 1
+                     or party_size is not None and party_size >= entry['minimum_party_size'])]
     result = []
     for day in days:
         if day.year not in policy['years'] or (day-today).days < policy['minimum_notice_days']:
@@ -274,6 +282,9 @@ def _unavailable_result(bundle, route, days, today, reason, code, party_size=Non
 
 
 def validate_pricing(policy):
+    if isinstance(policy, dict) and policy.get('schedule_mode') == 'fixed_dates':
+        from app.reception_v3.scheduled_departures import validate
+        return validate(policy)
     if not isinstance(policy, dict) or not policy.get('years') or not policy.get('bands'):
         raise ValueError('seasonal_pricing_invalid')
     if any(type(y) is not int or not 2000 <= y <= 2100 for y in policy['years']):
@@ -332,6 +343,9 @@ def departure_quote(bundle, route, start, end, now, *, party_size=None, group_ty
         return {'status':'ask_date', 'reason':'日期範圍不完整或過長'}
     if begin < today:
         return {'status':'ask_date', 'reason':'出發日期已過，先確認年份'}
+    if policy.get('schedule_mode') == 'fixed_dates':
+        from app.reception_v3.scheduled_departures import quote
+        return quote(route, policy, begin, finish, today, party_size, group_type)
     days = [begin + timedelta(days=i) for i in range((finish-begin).days+1)]
     if (begin-today).days < policy['minimum_notice_days']:
         return {'status':'advisor', 'reason':'不足30天辦理入藏函，需先由顧問確認'}

@@ -339,7 +339,12 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     rules = {r['id']: r for r in eligible_rules(bundle, list(materials.values()), route,
         conversation_labels(db, row), 'silence_due' if followup else 'customer_message', row.messages)}
     decision = deepcopy(decision)
-    configured_only = followup and bundle.get('silence', {}).get('material_selection') == 'configured_rules'
+    from app.reception_v3.route_followup import reference_preview_allowed
+    reference_preview = followup and reference_preview_allowed({
+        'skills':bundle,'route_variant':row.controls.get('route_variant',''),
+        'profile':row.memory or {},'state':state(row),'event':'silence_due'},decision)
+    configured_only = (followup and not reference_preview
+                       and bundle.get('silence', {}).get('material_selection') == 'configured_rules')
     for message in decision['messages']:
         rule_id = message.get('material_rule_id')
         if not rule_id:
@@ -354,6 +359,10 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     if followup:
         # Route comparison is valid during a customer answer, not unsolicited outreach.
         allowed = {m['key'] for m in followup_materials(list(materials.values()), row.messages, route, row.memory)}
+        if reference_preview:
+            from app.reception_v3.material_rules import itinerary_previews
+            preview = itinerary_previews(bundle,list(materials.values()),row.messages,row.memory).get(content_route,{})
+            allowed = {m['key'] for m in preview.get('assets',[]) if not m['already_delivered']}
         keys = [key for message in decision['messages'] for key in message['asset_keys']]
         if (route != row.controls.get('route_variant', '') or decision['start_introduction']
                 or len(keys) > 1 or any(key not in allowed for key in keys)):
@@ -652,6 +661,13 @@ def apply_decision(db, row, run, bundle, decision):
     stopped = (value.get('opt_out') or value.get('handoff') or value.get('lead_assist') or not bundle['silence']['enabled']
                or row.memory.get('reception_status') == 'abusive')
     appointment = decision['next_check_minutes'] if run.input_snapshot.get('event') == 'customer_message' else None
+    from app.reception_v3.route_followup import apply as apply_checkpoint
+    checkpoint_delay = apply_checkpoint(value, decision, bundle, route, row.memory)
+    if checkpoint_delay:
+        appointment = checkpoint_delay
+    if decision.get('stop_followup') and (checkpoint_delay or route_policy.get('followup_policy') or
+            (route_policy.get('large_party') or {}).get('followup_policy')):
+        stopped = True
     value['appointment_pending'] = bool(appointment)
     value['next_check_minutes'] = None if stopped else (appointment or configured_delay)
     value['last_reason'] = decision['reason']
@@ -910,6 +926,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                      and date(m['created_at']).astimezone(ZoneInfo('Asia/Taipei')).date() == local.date()}
             if len(today) >= silence.get('max_proactive_messages_per_day', 6):
                 value.update(pending_event=None, next_check_at=None, followup_skip_reason='daily_limit')
+                from app.reception_v3.route_followup import policy_for as followup_policy
+                if followup_policy(bundle,row.controls.get('route_variant',''),row.memory):
+                    schedule_daily_followup(value,{**silence,'daily_at':silence.get('daily_at') or '09:00'},row.virtual_now)
                 row.due_at = None
                 save(row, value)
                 db.commit()

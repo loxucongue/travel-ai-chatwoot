@@ -1,0 +1,780 @@
+[
+  {
+    "id": "ali_june_solo_quote",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027年6月"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我一位，想參加2027年6月阿里15天拼團，請問多少錢？願意拼房。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "24,800",
+            "24800"
+          ],
+          [
+            "5,100",
+            "5100"
+          ],
+          [
+            "未拼",
+            "拼不",
+            "沒拼",
+            "沒有拼成",
+            "無法拼"
+          ]
+        ],
+        "excludes": [
+          "24,600",
+          "24600",
+          "不用補單房差"
+        ],
+        "expected_route": "tibet_ali_15d"
+      }
+    ]
+  },
+  {
+    "id": "ali_july_four_shared",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 4,
+        "group_type": "shared",
+        "departure_window": "2027年7月"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們4位選2027年7月阿里15天拼團，不包團，費用多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "26,800",
+            "26800"
+          ]
+        ],
+        "excludes": [
+          "26,600",
+          "26600",
+          "24,800",
+          "24800"
+        ],
+        "expected_route": "tibet_ali_15d"
+      }
+    ]
+  },
+  {
+    "id": "ali_may_two",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們2位，2027年5月可以報阿里15天嗎？價錢呢？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "4位",
+            "4人",
+            "四位",
+            "四人"
+          ],
+          [
+            "6月",
+            "6/10",
+            "六月"
+          ]
+        ],
+        "excludes": [
+          "24,800",
+          "24800"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_may_four",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 4,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們4位選2027年5月阿里15天拼團，報價多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "24,800",
+            "24800"
+          ]
+        ],
+        "excludes": [
+          "24,600",
+          "24600"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_october_risk",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們2位想2027年10月10日阿里15天，費用多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "雪",
+            "封山"
+          ]
+        ],
+        "excludes": [
+          "26,800",
+          "26800"
+        ]
+      },
+      {
+        "id": "accept",
+        "text": "知道可能下雪封山，還是選10月10日，請報價。",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "26,800",
+            "26800"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_unpublished",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "2028年6月阿里15天有團嗎？多少錢？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "未",
+            "還沒",
+            "尚"
+          ]
+        ],
+        "excludes": [
+          "2028年6月10日出發",
+          "24,800",
+          "24800"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_dormitory",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "轉山那晚也有氧氣和獨立房間嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "多人",
+            "床位"
+          ],
+          [
+            "無供氧",
+            "沒有供氧",
+            "不供氧",
+            "不提供氧",
+            "沒有氧"
+          ]
+        ],
+        "excludes": [
+          "全程供氧住宿"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_equipment",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "可以先給我轉山裝備清單檔案嗎？",
+        "checks": [
+          "handoff"
+        ],
+        "excludes": [
+          "檔案已傳",
+          "檔案已發",
+          "附件已",
+          "https://",
+          "http://"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ordinary_namtso",
+    "entry": "西藏旅遊",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我只想去納木措看看，不想轉山，有短一點的西藏行程嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "24,800",
+          "26800"
+        ],
+        "excluded_asset_routes": [
+          "tibet_ali_15d"
+        ],
+        "profile_absent": [
+          "selected_ali"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_13_custom",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條阿里北線15天包含兩天轉山。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我去過西藏，想走阿里中線13天，不轉山。",
+        "checks": [
+          "handoff"
+        ],
+        "excludes": [
+          "13天每人",
+          "26,800",
+          "24,800"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rongbuk_doubt",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2,
+        "departure_window": "2027年8月"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "8月10天全覽有珠峰住宿。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "絨布旅館真的可以住嗎？網路說訂不到，你們騙人嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "房",
+            "預留"
+          ],
+          [
+            "合約",
+            "合同"
+          ]
+        ],
+        "excludes": [
+          "保證一定住到",
+          "肯定住到"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_full_flow",
+    "entry": "岡仁波齊精華轉山＋阿里大環線北線15天",
+    "now": "2026-11-02T02:00:00+00:00",
+    "known_entry": true,
+    "steps": [
+      {
+        "id": "party",
+        "text": "我們兩位，想先看看行程。",
+        "checks": [
+          "send",
+          "one_itinerary_map",
+          "no_price"
+        ],
+        "itinerary_route": "tibet_ali_15d",
+        "expected_route": "tibet_ali_15d",
+        "contains_any": [
+          [
+            "爬山",
+            "健走"
+          ],
+          [
+            "65",
+            "長輩"
+          ]
+        ],
+        "state_present": [
+          "route_checkpoint"
+        ]
+      },
+      {
+        "id": "fitness",
+        "text": "都有登山習慣，都是40歲。",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "幾月",
+            "月份",
+            "什麼時候",
+            "哪個月"
+          ]
+        ]
+      },
+      {
+        "id": "month",
+        "text": "2027年6月，請報價。",
+        "checks": [
+          "send"
+        ],
+        "contains_any": [
+          [
+            "24,800",
+            "24800"
+          ]
+        ],
+        "state_present": [
+          "route_checkpoint"
+        ]
+      },
+      {
+        "id": "quote_wait",
+        "next_check": true,
+        "checks": [
+          "send",
+          "contact_invitation",
+          "no_price"
+        ]
+      },
+      {
+        "id": "photo_due_quiet_hours",
+        "next_check": true,
+        "checks": [
+          "no_send"
+        ]
+      },
+      {
+        "id": "photo",
+        "next_check": true,
+        "checks": [
+          "one_new_photo",
+          "no_contact_invitation"
+        ]
+      },
+      {
+        "id": "return",
+        "text": "轉山第一晚有氧氣嗎？",
+        "checks": [
+          "send"
+        ],
+        "contains_any": [
+          [
+            "無供氧",
+            "沒有供氧",
+            "不供氧",
+            "沒有氧"
+          ]
+        ]
+      },
+      {
+        "id": "stop",
+        "text": "暫時不考慮，請不要再發訊息。",
+        "checks": [
+          "opt_out"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "private_seven_known",
+    "entry": "我們7位就選西藏桃花9天不上珠峰這條，自己包團，請給完整介紹。",
+    "now": "2026-11-02T02:00:00+00:00",
+    "known_entry": false,
+    "entry_checks": [
+      "one_itinerary_map",
+      "not_handoff"
+    ],
+    "steps": [
+      {
+        "id": "followup",
+        "next_check": true,
+        "checks": [
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "9座VIP",
+          "6人就滿團"
+        ]
+      },
+      {
+        "id": "question",
+        "text": "午餐晚餐包含嗎？",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "不含",
+            "不包含",
+            "自理"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "private_unknown_preferences",
+    "entry": "西藏旅遊",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T02:00:00+00:00",
+      "route_variant": "",
+      "profile": {},
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": []
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "您好，請問想怎麼安排西藏旅遊？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們4位想包團，大概4月，不知道怎麼選行程。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_itinerary_map"
+        ],
+        "contains_any": [
+          [
+            "桃花"
+          ]
+        ],
+        "expected_route": "",
+        "state_present": [
+          "route_checkpoint"
+        ]
+      },
+      {
+        "id": "reference_after_wait",
+        "next_check": true,
+        "checks": [
+          "send",
+          "one_itinerary_map",
+          "not_handoff"
+        ],
+        "expected_route": "",
+        "excludes": [
+          "我替您選定",
+          "已幫您選定"
+        ]
+      }
+    ]
+  }
+]

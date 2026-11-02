@@ -119,10 +119,14 @@ def choice_error(decision, context):
     if ('peach_preference' in decision.get('profile', {})
             and decision['profile']['peach_preference'] not in ('avoid', 'want', 'undecided')):
         return 'peach_preference只用avoid、want或undecided；想去珠峰不等於拒絕桃花。'
+    from app.reception_v3.route_followup import reference_preview_allowed
+    reference_preview = reference_preview_allowed(context, decision)
     if context.get('event') != 'customer_message' and (
-            choice != 'unchanged' or (old and selected != old)
-            or any(k in decision.get('profile', {}) and decision['profile'][k] != context.get('profile',{}).get(k)
-                   for k in ('everest_preference', 'peach_preference', 'altitude_concern', 'discussion_route'))):
+            (choice != 'unchanged' and not reference_preview) or (old and selected != old)
+            or any(k in decision.get('profile', {}) and decision['profile'][k] != context.get('profile',{}).get(
+                       k, 'undecided' if k in ('everest_preference','peach_preference') else None)
+                   for k in ('everest_preference', 'peach_preference', 'altitude_concern', 'discussion_route')
+                   if not (reference_preview and k == 'discussion_route'))):
         return '沉默或介紹完成事件不能替客人選線、改偏好或建立新的轉薦；保留已確認選擇。'
     if choice == 'recommend':
         suggested = profile.get('discussion_route')

@@ -232,7 +232,8 @@ def _validate(package: dict, source: Path) -> dict:
 
     for legacy in ('sop', 'runtime_sop', 'journey_policy', 'policies'):
         package.pop(legacy, None)
-    if package.get('seasonal_pricing') and any(b['script_id'] not in fixed_answer_ids for b in package['seasonal_pricing']['bands']):
+    if package.get('seasonal_pricing') and any(b['script_id'] not in fixed_answer_ids for b in
+            package['seasonal_pricing'].get('bands', package['seasonal_pricing'].get('departures', []))):
         raise RoutePackageError(f'route_package_pricing_script_missing:{route_id}')
     if package.get('party_pricing'):
         from app.reception_v3.party_quotes import validate_party_pricing
@@ -240,6 +241,9 @@ def _validate(package: dict, source: Path) -> dict:
             validate_party_pricing(package['party_pricing'])
         except (ValueError, KeyError, TypeError) as exc:
             raise RoutePackageError(f'route_package_party_pricing_invalid:{route_id}') from exc
+    if package.get('followup_policy') is not None:
+        from app.reception_v3.route_followup import validate
+        validate(package['followup_policy'], groups)
     if package.get('large_party') is not None:
         from app.reception_v3.large_party import validate_policy
         try:
@@ -364,6 +368,8 @@ def reload_route_packages() -> None:
         "source": deepcopy(package.get("source", {})),
         "default_entry_message": package["default_entry_message"],
         "ai_guidance": package.get("ai_guidance", ""),
+        "routing_guidance": package.get("routing_guidance", ""),
+        "followup_policy": deepcopy(package.get("followup_policy")),
         "intake": deepcopy(package.get("intake")),
         "entry_comparison": deepcopy(package.get("entry_comparison")),
         "seasonal_pricing": deepcopy(package.get("seasonal_pricing")),

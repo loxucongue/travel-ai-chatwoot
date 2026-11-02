@@ -38,6 +38,18 @@ def final(**kwargs):
     return {'content': json.dumps(runtime.Decision(**kwargs).model_dump(), ensure_ascii=False)}
 
 
+def task_payload(request):
+    """Find the task by its contract, independent of later system reminders."""
+    for message in reversed(request['messages']):
+        if message.get('role') != 'user':continue
+        try:
+            value=json.loads(message.get('content',''))
+        except (ValueError,TypeError):
+            continue
+        if isinstance(value,dict) and 'event' in value:return value
+    raise AssertionError('model_task_payload_missing')
+
+
 def tool(name, arguments, id='t1'):
     return {'id': id, 'type': 'function', 'function': {'name': name, 'arguments': json.dumps(arguments)}}
 

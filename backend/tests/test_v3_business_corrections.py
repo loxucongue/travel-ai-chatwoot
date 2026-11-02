@@ -7,7 +7,7 @@ from app.reception_v3 import service, skills, runtime
 from app.reception_config import get_reception_configuration
 from app.route_packages import PACKAGE_ROOT, _validate
 from test_reception_v3 import create, step, answer
-from test_reception_v3_skills import context, model, final, tool
+from test_reception_v3_skills import context, model, final, tool, task_payload
 
 
 def test_service_facts_and_original_script_reach_generation_and_delivery(session_factory, monkeypatch):
@@ -19,7 +19,7 @@ def test_service_facts_and_original_script_reach_generation_and_delivery(session
             {'tool_calls': [tool('get_service_facts', {})]},
             final(messages=[{'script_id': 'tour_doctor_service'}])])
         decision, _, _ = runtime.run_agent(c)
-        first = json.loads(requests[0]['messages'][-1]['content'])
+        first = task_payload(requests[0])
         assert 'service.medical_support' in {f.get('id') for f in first['service_knowledge']['facts']}
         tool_result = next(m for m in requests[1]['messages'] if m['role'] == 'tool')
         assert 'service.medical_support' in tool_result['content']

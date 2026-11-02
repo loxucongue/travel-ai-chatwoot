@@ -6,7 +6,7 @@ from app.reception_v3 import runtime, service
 from test_daily_followup_20261014 import spec
 from test_v3_intake_followup import create
 from test_reception_v3 import answer, step, delivered
-from test_reception_v3_skills import context, model, final
+from test_reception_v3_skills import context, model, final, task_payload
 
 
 def test_silent_days_preserve_window_then_customer_can_resume(session_factory, monkeypatch):
@@ -54,7 +54,7 @@ def test_runtime_exposes_history_without_forcing_followup_sales(monkeypatch):
     payload = json.dumps(requests[0], ensure_ascii=False)
     assert '我先看看謝謝' in payload and '好呀，您先看看。' in payload
     assert '任务类型不代表必须发送或追加问题' in payload
-    task = json.loads(requests[0]['messages'][-1]['content'])
+    task = task_payload(requests[0])
     assert task['conversation_focus'] == {
         'latest_customer_statement':'我先看看謝謝',
         'recent_team_statements':['好呀，您先看看。'],
@@ -69,7 +69,7 @@ def test_recency_view_is_bounded_without_removing_full_conversation(monkeypatch)
         for i in range(7)] + [{'direction':'incoming','content':'請再說一次'}]
     requests = model(monkeypatch, [final(messages=[{'text':'重新說明。'}])])
     runtime.run_agent(c)
-    task = json.loads(requests[0]['messages'][-1]['content'])
+    task = task_payload(requests[0])
     assert task['conversation_focus']['recent_team_statements'] == [str(i)*1200 for i in range(3,7)]
     assert any(m.get('content') == '0'*1800 for m in requests[0]['messages'])
 

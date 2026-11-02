@@ -4,7 +4,7 @@ import json
 
 from app.reception_v3 import runtime, service
 from app.reception_v3.material_rules import itinerary_previews
-from test_reception_v3_skills import context, model, final
+from test_reception_v3_skills import context, model, final, task_payload
 from test_reception_v3 import answer, step
 from test_v3_intake_followup import config, create
 
@@ -49,7 +49,7 @@ def test_private_group_entry_model_sees_map_without_product_skill(monkeypatch):
     requests = model(monkeypatch,[final(messages=[{'text':'先給您看11日參考行程。','asset_keys':['map-11']}],
         profile={'party_size_range':'4位以上','party_size_min':4,'group_type':'private'})])
     decision,logs,_ = runtime.run_agent(c)
-    task = json.loads(requests[0]['messages'][-1]['content'])
+    task = task_payload(requests[0])
     assert task['itinerary_previews']['peach_11d_2027']['assets'][0]['key'] == 'map-11'
     assert decision['messages'][0]['asset_keys'] == ['map-11']
     assert decision['route_variant'] == '' and not decision['start_introduction']

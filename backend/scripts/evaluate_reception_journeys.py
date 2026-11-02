@@ -134,7 +134,8 @@ def main():
     source_paths += [backend/'app/reception_v3/seasonal_quotes.py', backend/'app/reception_v3/party_quotes.py']
     source_paths += [backend/'app/reception_v3/travel_dates.py',
                      backend.parent/'data/knowledge/china2go/service-knowledge/service-knowledge.json']
-    source_paths += [backend/'app/reception_v3/large_party.py', backend/'app/reception_v3/lead_priority.py']
+    source_paths += [backend/'app/reception_v3/large_party.py', backend/'app/reception_v3/lead_priority.py',
+                     backend/'app/reception_v3/route_followup.py', backend/'app/reception_v3/scheduled_departures.py']
     source_paths += [backend/'app/reception_v3/route_choice.py', backend/'app/reception_v3/customer_reactions.py',
                      backend/'app/reception_v3/route_understanding.py',
                      backend/'app/reception_v3/followup_window.py', backend/'app/reception_v3/material_rules.py',
@@ -251,6 +252,7 @@ def main():
                         if check=='no_price' and has_unrequested_price(text, bundle):failures.append(check)
                         if check=='no_altitude_guarantee' and has_altitude_guarantee(text):failures.append(check)
                         if check=='handoff' and not state.get('handoff'):failures.append(check)
+                        if check=='answer_or_handoff' and not text.strip() and not state.get('handoff'):failures.append(check)
                         if check=='not_handoff' and state.get('handoff'):failures.append(check)
                         if check=='opt_out' and not state.get('opt_out'):failures.append(check)
                         if check=='send' and not emitted:failures.append(check)

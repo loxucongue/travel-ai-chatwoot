@@ -60,6 +60,8 @@ def compile_skills(db, now=None):
                 route.get('default_entry_message', '')]))),
             'facts': deepcopy(route['knowledge_facts']),
             'guidance': route.get('ai_guidance', ''),
+            'routing_guidance': route.get('routing_guidance', ''),
+            'followup_policy': deepcopy(route.get('followup_policy')),
             'intake': deepcopy(route.get('intake')),
             'entry_comparison': deepcopy(route.get('entry_comparison')),
             'seasonal_pricing': deepcopy(route.get('seasonal_pricing')),
@@ -178,6 +180,8 @@ class SkillRegistry:
                 body += '\n已公布出发团期（不代表库存保证）：' + json.dumps(route['departure_availability'], ensure_ascii=False)
             if route.get('guidance'):
                 body += '\n接待说明：' + route['guidance']
+            if route.get('followup_policy'):
+                body += '\n本線專用跟進檢查點（優先於普通每日時鐘，仍受發送權限與窗口限制）：' + json.dumps(route['followup_policy'], ensure_ascii=False)
             if (route.get('large_party') or {}).get('enabled'):
                 body += '\n优先适用的独立成团介绍后交接规则（人数门槛及明确包团是否适用均以配置为准，覆盖旧直接交接句）：' + json.dumps(route['large_party'], ensure_ascii=False)
             body += f"\n\n## 完整介绍原文\n逐条间隔：{route['interval_seconds']} 秒\n"

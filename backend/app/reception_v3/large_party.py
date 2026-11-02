@@ -31,6 +31,8 @@ def party_description(profile):
 def reply_contract_error(decision, context):
     """Do not silently discard model answers when replacing the group intro."""
     profile = {**context.get('profile', {}), **decision.get('profile', {})}
+    if context.get('state', {}).get('group_advisor_pending'):
+        return None
     if profile.get('contact_value') or profile.get('contact_status') in ('self_reported_added', 'attachment_pending_verification'):
         return None
     route = decision.get('route_variant') or context.get('route_variant', '')
@@ -86,6 +88,13 @@ def validate_policy(policy, groups):
         raise ValueError('large_party_minimum')
     if 'include_explicit_private' in policy and type(policy['include_explicit_private']) is not bool:
         raise ValueError('large_party_private_flag')
+    if 'notify_then_followup' in policy and type(policy['notify_then_followup']) is not bool:
+        raise ValueError('large_party_notify_flag')
+    if policy.get('followup_policy') is not None:
+        from app.reception_v3.route_followup import validate
+        validate(policy['followup_policy'],groups)
+    if policy.get('notify_then_followup') and not (policy.get('followup_policy') or {}).get('checkpoints',{}).get('advisor_wait'):
+        raise ValueError('large_party_advisor_checkpoint_missing')
     for field in ('introduction_sequence', 'brief_sequence'):
         sequence = policy.get(field)
         if not isinstance(sequence, list) or not sequence or len(sequence) != len(set(sequence)) or any(k not in groups for k in sequence):
@@ -108,7 +117,16 @@ def begin(db, row, run, bundle, decision):
     from app.reception_v3.route_choice import rejects_current_route
     value = service.state(row)
     route = decision['route_variant'] or row.controls.get('route_variant', '')
+    if value.get('group_advisor_pending'):
+        return False
     policy = policy_for(bundle, route, row.memory)
+    from app.reception_v3.route_followup import policy_for as followup_policy
+    checkpoints = (followup_policy(bundle,route,row.memory) or {}).get('reference_preview_checkpoints',[])
+    if decision.get('followup_checkpoint') in checkpoints:
+        # A semantic clarification must not be replaced by a configured intro.
+        value['large_party_intake'] = True
+        service.save(row,value)
+        return False
     # Other handoff reasons (contact, explicit human request, missing facts)
     # remain immediate and must never be delayed by a sales introduction.
     eligible = (decision['opt_out'] is not True and not value.get('opt_out')
@@ -212,6 +230,8 @@ def begin(db, row, run, bundle, decision):
         _, answer = service.parts_for(db, row, bundle, {**decision, 'start_introduction':False})
     contact = bundle.get('lead_capture', {})
     may_invite = contact.get('enabled', True) and not row.memory.get('contact_capture_declined')
+    if policy.get('notify_then_followup') and any(m.get('contact_invitation') for m in delivered):
+        may_invite = False
     closing_parts = [] if closing in texts or not may_invite else [{
         'content_type':'text', 'content':closing, 'contact_invitation':True,
         'contact_channels':list(contact.get('channels', []))}]
@@ -269,6 +289,39 @@ def finish(db, row):
     latest = next((m.get('content', '') for m in reversed(row.messages) if m.get('direction') == 'incoming'), '')
     summary += '；客戶最新原話：' + latest[:1000]
     value.pop('handoff_after_plan', None)
+    bundle = service.compile_skills(db)
+    policy = policy_for(bundle,pending['route'],row.memory) or {}
+    if policy.get('notify_then_followup'):
+        # A notification is not an advisor claim. Existing claim/assignment,
+        # manual-stop and human-message gates still take precedence everywhere.
+        if row.environment == 'live':
+            from app.models import ConversationState
+            from app.operations import ensure_handoff
+            task = ensure_handoff(db,db.get(ConversationState,row.conversation_state_id),
+                                  'party_size',summary,allow_ai_assist=True)
+            value['group_advisor_task_id'] = task.id
+            from sqlalchemy import select
+            from app.models import ConversationLabelAddition, MessageEvent
+            label = '高價值・獨立成團'
+            source = db.scalar(select(MessageEvent.id).where(
+                MessageEvent.conversation_state_id == row.conversation_state_id,
+                MessageEvent.direction == 'incoming', MessageEvent.private.is_(False)
+            ).order_by(MessageEvent.id.desc()).limit(1))
+            if source and not db.get(ConversationLabelAddition,(row.conversation_state_id,label)):
+                db.add(ConversationLabelAddition(conversation_state_id=row.conversation_state_id,
+                    label=label,source_message_id=source))
+        else:
+            row.controls={**row.controls,'evaluation_labels':list(dict.fromkeys([
+                *row.controls.get('evaluation_labels',[]),'高價值・獨立成團']))}
+        value.update(group_advisor_pending=True,pending_event=None,
+            completed_introductions=list(dict.fromkeys([*value.get('completed_introductions',[]),pending['route']])),
+            route_checkpoint='advisor_wait', appointment_pending=True,
+            next_check_minutes=policy['followup_policy']['checkpoints']['advisor_wait'],
+            followup_settings=deepcopy(bundle['silence']))
+        value['next_check_at']=service.later(row.virtual_now,value['next_check_minutes']*60)
+        service.save(row,value)
+        row.due_at=None
+        return True
     value.update(handoff=True, handoff_type='party_size', handoff_reason=summary,
                  completed_introductions=list(dict.fromkeys([*value.get('completed_introductions', []), pending['route']])))
     service.save(row, value)

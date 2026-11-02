@@ -15,7 +15,7 @@ from test_business_feedback_20261019 import seed, queue
 from test_human_return_20261016 import prepared, arm, activate, sync
 from test_live_audit_fixes import event
 from test_seasonal_runtime_journeys import runtime_context
-from test_reception_v3_skills import model, final
+from test_reception_v3_skills import model, final, task_payload
 
 
 def test_candidate_changes_only_party_intake_wait():
@@ -232,7 +232,7 @@ def test_current_month_runtime_preserves_notice_check_instead_of_asking_year(mon
     c['messages'] = [{'id':'month', 'direction':'incoming', 'content':'希望十月份'}]
     requests = model(monkeypatch, [final(action='wait')])
     runtime.run_agent(c)
-    checked = json.loads(requests[0]['messages'][-1]['content'])['departure_review']
+    checked = task_payload(requests[0])['departure_review']
     assert checked['result']['status'] == 'advisor'
     assert '不足30天' in checked['result']['reason']
 
@@ -248,7 +248,7 @@ def test_month_short_answer_reaches_runtime_with_year_evidence(monkeypatch):
     c['messages'] = [{'id':'month', 'direction':'incoming', 'content':'希望二月份'}]
     requests = model(monkeypatch, [final(action='wait')])
     runtime.run_agent(c)
-    current = json.loads(requests[0]['messages'][-1]['content'])
+    current = task_payload(requests[0])
     assert current['departure_review']['start']=='2027-02-01'
     assert current['departure_review']['end']=='2027-02-28'
     assert current['departure_review']['year_inferred'] is True

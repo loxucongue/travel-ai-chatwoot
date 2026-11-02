@@ -6,7 +6,7 @@ from app.models import ConversationState, MessageEvent, HandoffTask, Notificatio
 from app.reception_v3 import live, service, runtime, skills
 from scripts.update_line_qr_wording import update_configuration, update_package, QR_INVITATION
 from live_fixture import setup
-from test_reception_v3_skills import context, model, final
+from test_reception_v3_skills import context, model, final, task_payload
 
 
 def test_wording_migration_preserves_other_config_and_is_idempotent():
@@ -37,11 +37,12 @@ def test_incoming_image_caption_and_source_reach_model_as_customer_attachment(mo
     c['buffered_questions'] = [item]
     requests = model(monkeypatch, [final(action='handoff', interrupt=True)])
     runtime.run_agent(c)
-    outgoing = requests[0]['messages'][-2]
+    outgoing = next(m for m in requests[0]['messages']
+                    if m.get('role')=='user' and '客户附件' in m.get('content',''))
     assert outgoing['role'] == 'user'
     assert '這是我的LINE' in outgoing['content'] and 'cw-123' in outgoing['content']
     assert '客户附件' in outgoing['content'] and '已交付附件' not in outgoing['content']
-    buffered = json.loads(requests[0]['messages'][-1]['content'])['buffered_questions'][0]
+    buffered = task_payload(requests[0])['buffered_questions'][0]
     assert buffered['source_message_id'] == 'cw-123' and buffered['attachments'][0]['id'] == 45
 
 

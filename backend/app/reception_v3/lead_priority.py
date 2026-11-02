@@ -29,6 +29,10 @@ def local_day(value):
 
 
 def task(context):
+    from app.reception_v3.route_followup import policy_for
+    policy = policy_for(context.get('skills',{}),context.get('route_variant',''),context.get('profile',{}))
+    if policy and policy.get('lead_priority_override'):
+        return None
     config = context.get('skills', {}).get('lead_capture', {})
     state, profile = context.get('state', {}), context.get('profile', {})
     if (context.get('event') != 'silence_due' or not config.get('enabled')
