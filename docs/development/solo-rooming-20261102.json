@@ -1,0 +1,132 @@
+{
+  "business_source": "Linger 2026-11-02 12:16，会话#533：单人接受拼房，最终没拼成仍需补单人房差。",
+  "status": "tested_pending_deployment",
+  "production_evidence": {
+    "conversation_id": 533,
+    "route": "tibet_winter_8d",
+    "party_size": 1,
+    "incorrect_previous_reply": "一位報名不用補單房差",
+    "source": "read-only production session record"
+  },
+  "changes": [
+    "单人团费报价、单人确认接受拼房时，模型补充未拼成仍需补房差；金额读取当前线路事实或按日期核对工具。",
+    "解除旧版未问房差不提的指引冲突，保留多人普通报价不主动扩展房差。",
+    "核对房差不触发完整团费模板；不把接受拼房当作已成功配对或必付单住费用。",
+    "金额未知、跨季或特别团期未提供房差时不猜金额；此前错误免差承诺可在客户追问时更正。"
+  ],
+  "implementation": "Model instructions and route Skill guidance only; existing quote data/tools retained.",
+  "regression": {
+    "passed": true,
+    "tests": 178,
+    "customer_channels_disabled": true,
+    "customer_test_sends": 0,
+    "output": "........................................................................ [ 40%]\n........................................................................ [ 80%]\n..................................                                       [100%]\n- generated xml file: /opt/china2go-ai/releases/solo-rooming-20261102T054328Z/linux-tests.xml -\n178 passed, 1 warning in 7.11s\n"
+  },
+  "real_model_validation": {
+    "model": "deepseek-v4-flash",
+    "artifact": "real-20261102T054058Z",
+    "results": [
+      {
+        "case": "winter_accept_share",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "winter_solo_quote",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "peach9_solo_quote",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "peach11_accept_share",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "essence_peak_solo_quote",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "linzhi_solo_quote",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "overview_solo_quote",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "overview_peak_changed",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "special_no_room_amount",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "month_unknown_share",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "couple_no_solo_warning",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "odd_party_not_single",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "correct_previous_free_claim",
+        "steps": 1,
+        "real_model_calls": 4,
+        "failures": []
+      },
+      {
+        "case": "single_room_requested",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      }
+    ],
+    "passed": true,
+    "manual_review": "Reviewed conditional rooming language, route/season amounts, lack of unsolicited full quote, no automatic room assignment, no solo warning for couples/odd-size shared parties."
+  },
+  "test_iteration_notes": [
+    "First focused run correctly disclosed the supplement but unnecessarily repeated the full tour price for room-sharing acceptance. Clarified model instructions and reran successfully.",
+    "Linux preparation initially omitted historical test scripts/assets. Bundled those test dependencies into the isolated candidate; no production files were changed during preparation.",
+    "Updated a historical release test that incorrectly assumed routes were still inactive: it now compares the active catalog before/after validating draft data, preserving the actual no-mutation requirement on both local and active production snapshots."
+  ],
+  "test_accounting": {
+    "requests": 51,
+    "known_usage_cny": 1.83756856,
+    "conservative_including_unknown_cny": 2.64722456,
+    "unknown_usage_requests": 4
+  },
+  "customer_test_sends": 0,
+  "historical_replays": 0,
+  "evidence_directory": "output/solo-rooming-20261102",
+  "recorded_at": "2026-11-02T05:49:27.591093+00:00"
+}

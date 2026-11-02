@@ -57,12 +57,13 @@ def test_notice_30_days_is_not_the_peach_offer_expiry():
 
 
 @pytest.mark.parametrize('route',[EIGHT,TEN])
-def test_release_source_copy_assets_and_inactive_catalog(route):
+def test_release_source_copy_assets_preserves_active_catalog(route):
+    registered_before = deepcopy(ROUTE_PACKAGES)
     package=_validate(deepcopy(PACKAGES[route]),Path('release.json'))
     source=PACKAGE_ROOT.parent/'website-1013-20261014/content.html'
     assert hashlib.sha256(source.read_bytes()).hexdigest()==package['source']['snapshot_sha256']
     text=source.with_name('content.txt').read_text(encoding='utf8')
-    assert route not in ROUTE_PACKAGES  # Preparation cannot activate live reception.
+    assert ROUTE_PACKAGES == registered_before  # Validation cannot activate or replace live routes.
     for answer in package['fixed_answers']:
         if answer['answer_origin']=='website_verbatim':
             assert all(line in text for line in answer['answer_text'].splitlines())

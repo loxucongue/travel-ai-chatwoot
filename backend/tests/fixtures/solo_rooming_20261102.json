@@ -1,0 +1,1001 @@
+[
+  {
+    "id": "winter_accept_share",
+    "entry": "tibet_winter_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_winter_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2026-12-24"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_winter_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我一位，想參加2026年12月24日的冰川8日團。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "另外想先跟您確認住宿：您會介意和同團旅客兩人一房，還是想自己住一間呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "不介意兩人一房",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "1500",
+            "1,500"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差",
+          "9,280",
+          "9280",
+          "12,780",
+          "12780"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "winter_solo_quote",
+    "entry": "tibet_winter_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_winter_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2026-12-24"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_winter_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我1位，2026年12月24日出發，團費多少？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "1500",
+            "1,500"
+          ],
+          [
+            "9280",
+            "9,280"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "peach9_solo_quote",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027-03-28"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我一個人，2027年3月28日，費用多少？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "2700",
+            "2,700"
+          ],
+          [
+            "10780",
+            "10,780"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "peach11_accept_share",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027-03-28"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我可以跟別人一起住，不介意拼房",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "3200",
+            "3,200"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差",
+          "9,280",
+          "9280",
+          "12,780",
+          "12780"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "essence_peak_solo_quote",
+    "entry": "tibet_essence_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027年8月"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "2027年8月我自己一位去，多少錢？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "2800",
+            "2,800"
+          ],
+          [
+            "9980",
+            "9,980"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "linzhi_solo_quote",
+    "entry": "tibet_linzhi_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_linzhi_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027年6月"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_linzhi_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "2027年6月我1位，跟團多少錢？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "2200",
+            "2,200"
+          ],
+          [
+            "9580",
+            "9,580"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "overview_solo_quote",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027年6月"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我一位2027年6月去，請給我報價",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "3000",
+            "3,000"
+          ],
+          [
+            "12280",
+            "12,280"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "overview_peak_changed",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027年6月"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我一位2027年6月去。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "如果最終沒拼成房，單人房差是人民幣3,000元。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "改成2027年8月，我一位也接受拼房，房差還是剛剛說的金額嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "3200",
+            "3,200"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "special_no_room_amount",
+    "entry": "tibet_winter_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_winter_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2027-02-05"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_winter_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我一位，想參加2027年2月5日春節團，可以拼房，請報團費",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "10980",
+            "10,980"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差",
+          "1,500",
+          "1500"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "month_unknown_share",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我可以跟別人一起住，不介意拼房",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差",
+          "2,400",
+          "2400",
+          "3,000",
+          "3000",
+          "3,200",
+          "3200"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "couple_no_solo_warning",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2,
+        "group_type": "shared",
+        "departure_window": "2027-03-28"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，2位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們夫妻2位住一間，2027年3月28日出發，團費多少？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "10780",
+            "10,780"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差",
+          "房差",
+          "拼房",
+          "單住"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "odd_party_not_single",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 5,
+        "group_type": "shared",
+        "departure_window": "2027-03-28"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，5位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們5位參加拼團，2027年3月28日，請問每人多少錢？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "10580",
+            "10,580"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差",
+          "房差",
+          "拼房",
+          "單住"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "correct_previous_free_claim",
+    "entry": "tibet_winter_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_winter_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2026-12-24"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_winter_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我一位，想參加2026年12月24日的冰川8日團。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "另外想先跟您確認住宿：您會介意和同團旅客兩人一房，還是想自己住一間呢？"
+        },
+        {
+          "id": "old-c2",
+          "direction": "incoming",
+          "content": "不介意兩人一房"
+        },
+        {
+          "id": "old-a2",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "好的，那我幫您按兩人一房記錄下來，一位報名不用補單房差。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "所以只要我願意拼房，就一定不用加錢對嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼房",
+            "拼成",
+            "拼到",
+            "拼不成",
+            "配對",
+            "配对"
+          ],
+          [
+            "房差"
+          ],
+          [
+            "1500",
+            "1,500"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差",
+          "9,280",
+          "9280",
+          "12,780",
+          "12780"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "single_room_requested",
+    "entry": "tibet_winter_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-02T05:00:00+00:00",
+      "route_variant": "tibet_winter_8d",
+      "profile": {
+        "party_size": 1,
+        "group_type": "shared",
+        "departure_window": "2026-12-24"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_winter_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old-c",
+          "direction": "incoming",
+          "content": "我想了解這條行程，1位。"
+        },
+        {
+          "id": "old-a",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "行程圖和詳細介紹都在上面，您可以接著問我。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我不接受拼房，要自己住一間，房差多少？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "1500",
+            "1,500"
+          ]
+        ],
+        "excludes": [
+          "一位報名不用補單房差",
+          "一位報名不用補",
+          "保證拼房成功",
+          "一定拼得到",
+          "我們吸收房差"
+        ]
+      }
+    ]
+  }
+]
