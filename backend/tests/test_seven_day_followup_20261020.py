@@ -75,7 +75,7 @@ def test_old_two_day_session_rearmed_without_replaying_or_changing_customer_time
 
 
 @pytest.mark.parametrize('age', [2, 6])
-def test_manual_ai_tag_answers_old_unanswered_question_without_old_human_tag_return(session_factory, monkeypatch, age):
+def test_manual_ai_tag_does_not_reopen_expired_facebook_window(session_factory, monkeypatch, age):
     setup(session_factory, monkeypatch)
     with session_factory() as db:
         row = session(db)
@@ -86,8 +86,9 @@ def test_manual_ai_tag_answers_old_unanswered_question_without_old_human_tag_ret
         db.commit()
         event(db, 'conversation_updated', [], 11)
         event(db, 'conversation_updated', ['ai'], 12)
-        assert service.state(row)['pending_event'] == 'customer_message'
-        assert dt(row.due_at) <= dt(utcnow())
+        assert service.state(row)['pending_event'] is None
+        assert service.state(row)['last_reason'] == 'automated_window_closed'
+        assert row.due_at is None
         assert not row.controls['human']
         assert all(t.status == 'cancelled' for t in db.scalars(select(HandoffTask)))
         generation = row.generation
@@ -97,8 +98,11 @@ def test_manual_ai_tag_answers_old_unanswered_question_without_old_human_tag_ret
         assert db.get(ConversationLabelSync, 1).target == 'ai'
 
 
-@pytest.mark.parametrize('can_reply,expected', [(True, 1), (False, 0)])
-def test_day_three_delivery_obeys_actual_channel_availability(session_factory, monkeypatch, can_reply, expected):
+@pytest.mark.parametrize('channel,can_reply,expected', [
+    ('Channel::FacebookPage', True, 0), ('Channel::FacebookPage', False, 0),
+    ('Channel::WebWidget', True, 1), ('Channel::WebWidget', False, 0),
+])
+def test_day_three_delivery_obeys_actual_channel_availability(session_factory, monkeypatch, channel, can_reply, expected):
     setup(session_factory, monkeypatch)
     fake = FakeChatwoot(); fake.can_reply = can_reply
     sent = []
@@ -106,6 +110,7 @@ def test_day_three_delivery_obeys_actual_channel_availability(session_factory, m
     monkeypatch.setattr(live, 'client_for', lambda _: fake)
     with session_factory() as db:
         row = session(db); row.messages = []
+        db.get(ConversationState, 1).inbox.channel_type = channel
         db.get(ConversationState, 1).last_customer_message_at = (dt(utcnow()) - timedelta(days=3)).isoformat()
         value = service.state(row); value['pending_event'] = None
         service.append_plan(row, value, [{'content':'跟進', 'content_type':'text', 'proactive':True}], 'reply', 1, 999)

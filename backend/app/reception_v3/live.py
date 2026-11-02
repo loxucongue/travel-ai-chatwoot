@@ -152,7 +152,34 @@ def cancel(db, conversation_id, reason):
             row, conversation.effective_ai_state, conversation.effective_state_reason)
 
 
+def automated_window_open(conversation, now=None):
+    """Messenger's human-agent extension is not permission for automated sends."""
+    if conversation.inbox.channel_type != 'Channel::FacebookPage':
+        return True
+    last = conversation.last_customer_message_at
+    if not last:
+        return False
+    try:
+        age = dt(now or utcnow()) - dt(message_timestamp(last))
+        return timedelta(0) <= age < timedelta(hours=24)
+    except (ValueError, TypeError, OverflowError, OSError):
+        return False
+
+
+def pause_outside_automated_window(db, conversation):
+    if automated_window_open(conversation):
+        return False
+    row = session_for(db, conversation.id)
+    # Preserve deliberate operator stops and human ownership. A window pause
+    # alone is resumable when a real new customer message arrives.
+    if row and row.controls.get('simulation', {}).get('status') == 'running':
+        cancel(db, conversation.id, 'automated_window_closed')
+    return True
+
+
 def permitted(db, conversation, *, purpose='reply'):
+    if not automated_window_open(conversation):
+        return False
     from app.delivery_status import channel_delivery_blocked
     if channel_delivery_blocked(db, conversation.id):
         return False
@@ -353,7 +380,8 @@ def return_by_ai_label(db, conversation):
     latest = next((m for m in reversed(history) if m.status!='failed'), None)
     # Answer the outstanding customer turn now; do not replay a reply already
     # supplied by a human, revive cancelled drafts, or send outside the window.
-    if latest and latest.direction=='incoming' and within_window(latest.created_at, now):
+    if (latest and latest.direction=='incoming' and within_window(latest.created_at, now)
+            and automated_window_open(conversation, now)):
         last_outgoing = max((m.chatwoot_message_id for m in history if m.direction=='outgoing' and m.status!='failed'),default=0)
         outstanding = [m for m in history if m.direction=='incoming' and m.chatwoot_message_id>last_outgoing][-10:]
         from app.reception_v3.customer_images import attachment_metadata
@@ -373,6 +401,7 @@ def return_by_ai_label(db, conversation):
     row.virtual_now = now
     service.save(row,value);service.control(row,'resume')
     conversation.effective_ai_state,conversation.effective_state_reason='AI_ACTIVE','operator_ai_label_return'
+    pause_outside_automated_window(db, conversation)
     if label_keys(conversation.labels or []) != label_keys(desired_labels(conversation.labels or [],'ai')):
         queue_labels(db,conversation,'ai')
     audit(db,None,'conversation.ai_returned_by_label','conversation',conversation.chatwoot_conversation_id,
@@ -449,7 +478,8 @@ def accept(db, conversation, message):
         row.controls = {'simulation': {'status':'running', 'last_wall_at':now, 'start_virtual_at':now},
                         'v3': {'buffered_questions':[], 'opening_started':bool(history)}}
     if row.controls.get('simulation', {}).get('status') != 'running':
-        if service.state(row).get('last_reason') in ('global_message_sending_disabled', 'ai_reception_allowlist_changed'):
+        if service.state(row).get('last_reason') in ('global_message_sending_disabled', 'ai_reception_allowlist_changed',
+                                                   'automated_window_closed'):
             service.control(row, 'resume')
         else:
             return
@@ -493,6 +523,9 @@ def deliver_one(db, row):
     if not value.get('delivery_due_at') or dt(value['delivery_due_at']) > dt(row.virtual_now):
         return
     conversation = db.get(ConversationState, row.conversation_state_id)
+    if pause_outside_automated_window(db, conversation):
+        db.commit()
+        return
     from app.conversation_labels import sync_ready
     from app.outgoing_identity import pending as origin_pending
     if origin_pending(db, conversation.id):
@@ -565,6 +598,9 @@ def deliver_one(db, row):
         generation = row.generation
         db.refresh(row)
         db.refresh(conversation)
+        if pause_outside_automated_window(db, conversation):
+            db.commit()
+            return
         if origin_pending(db, conversation.id):
             return
         if (row.generation != generation or row.controls.get('simulation', {}).get('status') != 'running'

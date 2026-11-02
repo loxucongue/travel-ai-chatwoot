@@ -823,7 +823,10 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             continue
         if environment == 'live':
             from app.models import ConversationState
-            from app.reception_v3.live import permitted
+            from app.reception_v3.live import permitted, pause_outside_automated_window
+            if pause_outside_automated_window(db, db.get(ConversationState, row.conversation_state_id)):
+                db.commit()
+                continue
             from app.reception_v3.human_followup import activate_due
             if row.controls.get('human_followup',{}).get('enabled'):
                 activate_due(db,db.get(ConversationState,row.conversation_state_id),row)

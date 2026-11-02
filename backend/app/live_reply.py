@@ -111,6 +111,8 @@ def mirror_event(db, event):
             event.status,event.processed_at='live_observed',utcnow()
             db.commit()
             return
-        cancel(db,state.id,'control_changed')
+        from app.reception_v3.live import pause_outside_automated_window
+        if not pause_outside_automated_window(db, state):
+            cancel(db,state.id,'control_changed')
     event.status,event.processed_at='live_observed',utcnow()
     db.commit()
