@@ -1,6 +1,6 @@
 {
   "business_source": "Linger 2026-11-02 12:16，会话#533：单人接受拼房，最终没拼成仍需补单人房差。",
-  "status": "tested_pending_deployment",
+  "status": "deployed_and_verified",
   "production_evidence": {
     "conversation_id": 533,
     "route": "tibet_winter_8d",
@@ -128,5 +128,75 @@
   "customer_test_sends": 0,
   "historical_replays": 0,
   "evidence_directory": "output/solo-rooming-20261102",
-  "recorded_at": "2026-11-02T05:49:27.591093+00:00"
+  "recorded_at": "2026-11-02T05:52:41.656901+00:00",
+  "deployment": {
+    "release": "solo-rooming-20261102T054328Z",
+    "git_commit": "52c59a5432d3888073fe078a8a117281a311a9c5",
+    "at": "2026-11-02T05:51:15.636007+00:00",
+    "backup": "/opt/china2go-ai/backups/solo-rooming-20261102T054328Z",
+    "engine": "reception-v3-e4c77b75c8d5e699",
+    "schema": "a038_lead_assist",
+    "customer_state_unchanged_during_install": true,
+    "database_mutations": false,
+    "configuration_unchanged": true
+  },
+  "verification": {
+    "checked_at": "2026-11-02T05:51:45.920876+00:00",
+    "release": "solo-rooming-20261102T054328Z",
+    "commit": "52c59a5432d3888073fe078a8a117281a311a9c5",
+    "engine": "reception-v3-e4c77b75c8d5e699",
+    "digest": "712142769380ffc0954e12eef9c8edd59e3554896727c0d6c1c2b44dd458262d",
+    "line_mode": "manual",
+    "backup": "/opt/china2go-ai/backups/solo-rooming-20261102T054328Z",
+    "files_verified": 9,
+    "pricing_digest": "6af543797fea6f9953987d4841bb914ef93b0cc8dd08c61666de7895371b6772",
+    "schema": "a038_lead_assist",
+    "new_outbound_statuses": {},
+    "new_notification_statuses": {},
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "new_tracebacks": 0,
+    "new_error_lines": 0,
+    "free_gib": 16.85,
+    "public_checks": [
+      {
+        "url": "https://api.luoxuecong.asia/v1/health",
+        "status": 200
+      },
+      {
+        "url": "https://api.luoxuecong.asia/v1/health/ready",
+        "status": 200
+      },
+      {
+        "url": "https://ai.luoxuecong.asia/",
+        "status": 200
+      }
+    ]
+  },
+  "limits": "Real-model tests used isolated customer state and simulated delivery. No real-customer test messages or historical corrections were sent; future replies use the new guidance."
 }
