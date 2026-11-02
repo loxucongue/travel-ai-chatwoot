@@ -1,6 +1,6 @@
 {
   "date": "2026-11-02",
-  "status": "validation_passed_pending_deployment",
+  "status": "deployed_and_verified",
   "business_request": "麗麗 2026-11-01 21:14：明确想自己包团的客户，包括4位以上，也按8425-2独立成团介绍后交接流程处理。",
   "source": {
     "url": "https://china2go.com/8425-2/",
@@ -99,20 +99,26 @@
     {
       "url": "https://api.luoxuecong.asia/v1/health/ready",
       "status": 200
+    },
+    {
+      "url": "https://ai.luoxuecong.asia/",
+      "status": 200
     }
   ],
   "deployment": {
-    "performed": false,
-    "production_release": "manual-lead-20261101T124517Z",
-    "candidate_stage": "/opt/china2go-ai/releases/private-group-20261102T011849Z",
+    "performed": true,
+    "production_release": "private-group-20261102T011849Z",
+    "commit": "85b7df2c1f1813340cdef4bd9324c9dde22e1c17",
+    "at": "2026-11-02T01:31:15.023089+00:00",
+    "backup": "/opt/china2go-ai/backups/private-group-20261102T011849Z",
+    "schema": "a038_lead_assist",
+    "customer_state_unchanged_during_install": true,
     "no_customer_test_messages": true,
     "no_historical_replay": true
   },
-  "remaining": [
-    "Push tested commit to main, create verified backup, deploy and verify effective route policies and service health."
-  ],
+  "remaining": [],
   "evidence_directory": "output/private-group-20261102",
-  "recorded_at": "2026-11-02T01:29:42.362005+00:00",
+  "recorded_at": "2026-11-02T01:32:21.546332+00:00",
   "account_blocker_history": {
     "resolved": true,
     "cause": "Previous real-model tests stopped on provider HTTP402 at CNY0.09; those runs remain recorded as incomplete, not passes.",
@@ -125,5 +131,97 @@
     "conservative_total_including_unknown_cny": 8.86999472,
     "unknown_usage_requests": 23,
     "note": "Conservative reservations for timed-out/error calls are not confirmed supplier charges."
-  }
+  },
+  "verification": {
+    "checked_at": "2026-11-02T01:31:30.310045+00:00",
+    "release": "private-group-20261102T011849Z",
+    "commit": "85b7df2c1f1813340cdef4bd9324c9dde22e1c17",
+    "engine": "reception-v3-dece148a92b288db",
+    "digest": "712142769380ffc0954e12eef9c8edd59e3554896727c0d6c1c2b44dd458262d",
+    "line_mode": "manual",
+    "backup": "/opt/china2go-ai/backups/private-group-20261102T011849Z",
+    "files_verified": 19,
+    "schema": "a038_lead_assist",
+    "new_outbound_statuses": {},
+    "new_notification_statuses": {},
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "new_tracebacks": 0,
+    "new_error_lines": 0,
+    "free_gib": 17.33,
+    "public_checks": [
+      {
+        "url": "https://api.luoxuecong.asia/v1/health",
+        "status": 200
+      },
+      {
+        "url": "https://api.luoxuecong.asia/v1/health/ready",
+        "status": 200
+      },
+      {
+        "url": "https://ai.luoxuecong.asia/",
+        "status": 200
+      }
+    ]
+  },
+  "effective_route_policies": {
+    "peach_11d_2027": {
+      "include_explicit_private": true,
+      "minimum": 7
+    },
+    "peach_9d_2027": {
+      "include_explicit_private": true,
+      "minimum": 7
+    },
+    "tibet_essence_8d": {
+      "include_explicit_private": true,
+      "minimum": 7
+    },
+    "tibet_linzhi_8d": {
+      "include_explicit_private": true,
+      "minimum": 7
+    },
+    "tibet_overview_10d": {
+      "include_explicit_private": true,
+      "minimum": 7
+    },
+    "tibet_winter_8d": {
+      "include_explicit_private": true,
+      "minimum": 7
+    }
+  },
+  "provider_status": {
+    "balance_cny": "19.13",
+    "checked_at": "2026-11-02T01:31:33.558688+00:00",
+    "same_key_as_production": true,
+    "recent_production_402_log_lines": 0
+  },
+  "limits": [
+    "No real-customer test messages; no claim that phone notifications were received/read. Model semantics remain probabilistic; verification covers the recorded cases."
+  ]
 }
