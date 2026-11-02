@@ -158,9 +158,25 @@ if not p.exists():
 
 
 def check(client):
-    run(client, "python3 -c " + shlex.quote(
-        "import time,urllib.request; time.sleep(2); "
-        "r=urllib.request.urlopen('http://127.0.0.1:8012/v1/health',timeout=10); print(r.read().decode())"))
+    # A successful systemd restart does not mean the HTTP listener is ready.
+    # Keep retries bounded so a real startup failure still triggers rollback.
+    code = '''
+import time, urllib.error, urllib.request
+deadline = time.monotonic() + 45
+while True:
+    try:
+        with urllib.request.urlopen('http://127.0.0.1:8012/v1/health',
+                timeout=min(5, max(0.1, deadline - time.monotonic()))) as response:
+            body = response.read().decode()
+        print(body)
+        break
+    except (urllib.error.URLError, OSError):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise
+        time.sleep(min(2, remaining))
+'''
+    run(client, "python3 -c " + shlex.quote(code))
     run(client, 'systemctl is-active rujing2-api rujing2-playground nginx')
 
 
