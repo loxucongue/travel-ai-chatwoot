@@ -1,0 +1,177 @@
+{
+  "status": "deployed_and_verified",
+  "date": "2026-11-03",
+  "problem": "人数比较及优惠说明被旧输出限制与报价校验误拦，导致只报金额、反问人数或重复整份报价。",
+  "changes": [
+    "提供同一配置计算出的每人减额、独团加价、标准价和历史低价标记给模型。",
+    "模型负责解释人数档位；清除通用Skill、线路Skill与两条已发布线路资料中禁止解释优惠的旧指令。",
+    "已有依据的价格说明可以原样发送；比较时可说明同线路同团型已核实的相关档位。完整模板仍验证人数、团型和日期。",
+    "修复金额提取将“团费一样，6位才更低”中的人数误认为报价的问题。",
+    "只问优惠规则或能否再减时直接简答；优惠已计入，不重复扣减，不展示早鸟。"
+  ],
+  "unchanged": [
+    "实际报价金额与优惠档位",
+    "独团加价",
+    "有效旧低价承诺",
+    "渠道开关",
+    "人工接管及通知名单",
+    "客户状态与历史消息"
+  ],
+  "tests": {
+    "backend_regression": {
+      "tests": 1544,
+      "failures": 0,
+      "errors": 0
+    },
+    "final_quote_regression": {
+      "tests": 335,
+      "failures": 0,
+      "errors": 0
+    },
+    "coverage_note": "完整后端回归通过后，最后一处同价比较补充相关已核实档位的调整已由最终335项报价回归和最终11个真实模型场景复验；两组自动化测试有重叠，不合并为独立用例总数。",
+    "real_model_cases": 11,
+    "real_model_calls_final_batch": 27,
+    "cases": [
+      {
+        "case": "two_four",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "three_five",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "four_six",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "same_price",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "nine_day_two_four",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "discount_rules_only",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "discount_already_included",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "unavailable_month",
+        "steps": 1,
+        "real_model_calls": 3,
+        "failures": []
+      },
+      {
+        "case": "range_without_quote",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "seasonal_no_peach_discount",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      },
+      {
+        "case": "production_4324",
+        "steps": 1,
+        "real_model_calls": 2,
+        "failures": []
+      }
+    ],
+    "customer_test_sends": 0,
+    "model": "deepseek-v4-flash",
+    "bundle_digest": "272396f405ab5de9d2aed93ade867e423be089010f27aa1058de30e2270f27d7",
+    "manual_review": "核对两条桃花线每人价、3/5奇数档位、同价不编造价差、每人优惠不是整单优惠、已含优惠不二次扣减、不可售月份不报原线价格，以及其他线路不自动套用桃花优惠。"
+  },
+  "sample": "4位一起報名每人減200元，6位每人減400元，上面的每人價都已經算進去了～",
+  "deployment": {
+    "release": "discount-explanation-20261103T024439Z",
+    "commit": "e6ceafde3fc7b0ccf19a9bd9ae857edac6f402e9",
+    "at": "2026-11-03T02:51:25.111007+00:00",
+    "engine": "reception-v3-22031f93fdb07140",
+    "files_verified": 13,
+    "configuration_unchanged": true,
+    "backup": "/opt/china2go-ai/backups/discount-explanation-20261103T024439Z",
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "new_tracebacks": 0,
+    "new_error_lines": 0,
+    "customer_test_sends": 0,
+    "checked_at": "2026-11-03T02:52:26.182771+00:00",
+    "public_checks": [
+      {
+        "url": "https://api.luoxuecong.asia/v1/health",
+        "status": 200
+      },
+      {
+        "url": "https://api.luoxuecong.asia/v1/health/ready",
+        "status": 200
+      },
+      {
+        "url": "https://ai.luoxuecong.asia/",
+        "status": 200
+      }
+    ]
+  },
+  "business_configuration_change": {
+    "route_guidance": "Remove obsolete discount-explanation restriction only; prices, channels and handoff unchanged."
+  },
+  "credential_status": "用户提供的新密钥在当前DeepSeek地址认证返回401，未写入任何配置；原密钥线上可用，测试及部署继续使用原配置。",
+  "cost_cny": {
+    "known_usage": 4.979767,
+    "unknown_usage_reserve": 1.237332,
+    "limit": 8,
+    "note": "包含未通过的迭代；未知用量按保守预留记录，不作为已确认实际扣费。"
+  },
+  "limitations": [
+    "真实模型测试覆盖本次场景，不保证所有未来自然语言回复。",
+    "上线核验为配置、文件、健康和日志检查；未向真实客户发送测试消息。"
+  ],
+  "evidence": "output/discount-explanation-20261103/"
+}
