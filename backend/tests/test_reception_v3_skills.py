@@ -89,6 +89,21 @@ def test_optional_script_reference_null_does_not_retry_or_rewrite(monkeypatch):
     assert decision['messages'][0]['script_id'] is None
 
 
+def test_protocol_repair_follows_recurring_context_and_preserves_reply(monkeypatch):
+    c = context('peach_9d_2027')
+    c['messages'] = [{'direction': 'outgoing', 'content': '已傳行程圖。', 'status': 'sent'},
+                     {'direction': 'incoming', 'content': '有早餐嗎？'}]
+    requests = model(monkeypatch, [{'content': 'not a JSON decision'},
+                                  final(messages=[{'text': '有包含酒店早餐。'}])])
+    decision, logs, _ = runtime.run_agent(c)
+    retry = requests[1]['messages']
+    assert retry[-2]['content'] == 'not a JSON decision'
+    assert retry[-1]['role'] == 'user' and '校验错误' in retry[-1]['content']
+    assert sum(m.get('content') == 'not a JSON decision' for m in retry) == 1
+    assert logs[0]['status'] == 'invalid_json' and logs[-1]['status'] == 'completed'
+    assert decision['messages'][0]['text'] == '有包含酒店早餐。'
+
+
 @pytest.mark.parametrize('empty_type', ['', None])
 @pytest.mark.parametrize('action', ['reply', 'handoff'])
 def test_empty_handoff_classification_preserves_decision_without_repair(monkeypatch, empty_type, action):
@@ -117,6 +132,7 @@ def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
     assert 'PRICE_ONLY_9' not in first and 'PRICE_ONLY_11' not in first
     results = [m for m in requests[1]['messages'] if m['role'] == 'tool']
     assert [r['tool_call_id'] for r in results] == ['t1', 't2']
+    assert requests[1]['messages'][-2:] == results
     assert 'PRICE_ONLY_9' in results[0]['content'] and 'PRICE_ONLY_11' in results[1]['content']
     assert len(logs[-1]['loaded_skills']) == 3
     assert requests[0]['thinking'] == {'type': 'enabled'}
@@ -141,9 +157,9 @@ def test_dialogue_and_customer_preferences_remain_in_current_context(monkeypatch
     ]
     requests = model(monkeypatch, [final(messages=[{'text': '住宿回答'}])])
     runtime.run_agent(c)
-    messages = [m for m in requests[0]['messages'] if m.get('content') != runtime.TRAVEL_WINDOW_INSTRUCTION + runtime.CONTACT_CONTINUITY_INSTRUCTION]
-    assert [m['role'] for m in messages[1:-1]] == ['user', 'assistant', 'user']
-    assert [m['content'] for m in messages[1:-1]] == [m['content'] for m in c['messages']]
+    messages = [m for m in requests[0]['messages'] if m.get('role') != 'system']
+    assert [m['role'] for m in messages[:-1]] == ['user', 'assistant', 'user']
+    assert [m['content'] for m in messages[:-1]] == [m['content'] for m in c['messages']]
     current = json.loads(messages[-1]['content'])
     assert 'messages' not in current
     assert 'transport-id' not in json.dumps(messages, ensure_ascii=False)

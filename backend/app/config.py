@@ -31,6 +31,13 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"
+    gemini_fallback_enabled: bool = False
+    google_gemini_base_url: str = "https://linkai.shop"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_temperature: float = Field(default=0.2, ge=0, le=2)
+    model_primary_probe_seconds: float = Field(default=8, gt=0, le=20)
+    model_primary_cooldown_seconds: float = Field(default=60, ge=0, le=300)
     deepseek_vision_model: str = "deepseek-flash"
     customer_image_vision_enabled: bool = False
     reception_repeat_review_enabled: bool = False

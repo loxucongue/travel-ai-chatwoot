@@ -61,6 +61,21 @@ def test_reference_honors_existing_valid_lower_price(session_factory, monkeypatc
         assert shared_reference(personalize_quotes(db, row, current())['routes']['nine'])['price_cny'] == 12180
 
 
+def test_quote_evidence_ids_round_trip_and_repair_unknown_references():
+    value = current()
+    for script in value['routes']['nine']['scripts']:
+        if script['id'] == 'price_shared_6':
+            script['status'] = 'disabled'
+    evidence = pricing_evidence(value)['nine']['per_person_prices']
+    assert 'price_shared_6' not in {p['script_id'] for p in evidence}
+    for price in evidence:
+        decision = Decision(route_variant='nine', messages=[{'quote_options': [price['script_id']]}]).model_dump()
+        assert quote_error(decision, value, {'group_type': price['group_type']}) is None
+    invalid = Decision(route_variant='nine', messages=[{'quote_options': ['nine.per_person_prices.4.shared']}]).model_dump()
+    error = quote_error(invalid, value, {})
+    assert 'price_shared_4' in error and 'price_shared_6' not in error
+
+
 @pytest.mark.parametrize('start_intro', [False, True])
 def test_intake_does_not_discard_a_model_answer(session_factory, monkeypatch, start_intro):
     text = '團費包含酒店早餐，午晚餐不包含。'

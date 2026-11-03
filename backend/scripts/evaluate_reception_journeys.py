@@ -51,12 +51,17 @@ def main():
     parser.add_argument('--workers', type=int, choices=(1, 2), default=2)
     parser.add_argument('--full-journeys', action='store_true', help='Require continuous entry-to-followup conversations, without seeded history')
     parser.add_argument('--check-only', action='store_true', help='Validate test data without loading settings or calling a model')
+    parser.add_argument('--force-primary-unavailable', action='store_true', help='Return synthetic 503 for primary only; the fallback uses its real API')
     args = parser.parse_args()
     args.output = args.output.resolve()
     if args.image_fixtures:
         args.image_fixtures = args.image_fixtures.resolve()
     snapshot = json.loads(args.snapshot.read_text(encoding='utf-8-sig'))
     cases = json.loads(args.cases.read_text(encoding='utf-8-sig'))
+    for case in cases:
+        ids = [step.get('id') for step in case['steps']]
+        if any(not isinstance(value, str) or not value for value in ids) or len(ids) != len(set(ids)):
+            raise ValueError('journey_step_ids_required_and_unique:' + case['id'])
     if args.full_journeys:
         for case in cases:
             if case.get('replay_context') or len([s for s in case['steps'] if s.get('text')]) < 4:
@@ -83,14 +88,24 @@ def main():
     import httpx
     original = httpx.Client.send
     original_async = httpx.AsyncClient.send
-    allowed = settings.deepseek_base_url.rstrip('/') + '/chat/completions'
+    from app.model_transport import gemini_available, gemini_endpoint
+    primary = settings.deepseek_base_url.rstrip('/') + '/chat/completions'
+    allowed = {primary}
+    if gemini_available():
+        allowed.add(gemini_endpoint())
+    if args.force_primary_unavailable and not gemini_available():
+        raise ValueError('forced_primary_failure_requires_fallback')
     def guard(client, request, *a, **kw):
-        if request.method != 'POST' or str(request.url) != allowed:
+        if request.method != 'POST' or str(request.url) not in allowed:
             raise RuntimeError('effect_test_external_write_blocked')
+        if args.force_primary_unavailable and str(request.url) == primary:
+            return httpx.Response(503, request=request, json={'error': {'type': 'evaluation_primary_unavailable'}})
         return original(client, request, *a, **kw)
     async def guard_async(client, request, *a, **kw):
-        if request.method != 'POST' or str(request.url) != allowed:
+        if request.method != 'POST' or str(request.url) not in allowed:
             raise RuntimeError('effect_test_external_write_blocked')
+        if args.force_primary_unavailable and str(request.url) == primary:
+            return httpx.Response(503, request=request, json={'error': {'type': 'evaluation_primary_unavailable'}})
         return await original_async(client, request, *a, **kw)
     httpx.Client.send, httpx.AsyncClient.send = guard, guard_async
     from sqlalchemy import create_engine, select
@@ -131,6 +146,7 @@ def main():
                     backend/'app/reception_v3/live.py', *sorted((backend/'app/reception_v3/skills').glob('*/SKILL.md'))]
     source_paths += [backend/'app/reception_v3/quotes.py', backend/'app/reception_v3/skills.py', backend/'app/reception_config.py']
     source_paths += [backend/'app/config.py', backend/'app/reception_v3/repetition.py']
+    source_paths += [backend/'app/model_transport.py', backend/'app/model_metering.py']
     source_paths += [backend/'app/reception_v3/seasonal_quotes.py', backend/'app/reception_v3/party_quotes.py']
     source_paths += [backend/'app/reception_v3/travel_dates.py',
                      backend.parent/'data/knowledge/china2go/service-knowledge/service-knowledge.json']
@@ -144,6 +160,7 @@ def main():
         return {str(p.relative_to(backend.parent) if p.is_relative_to(backend.parent) else p): hashlib.sha256(p.read_bytes()).hexdigest() for p in source_paths + image_sources}
     tested_sources = fingerprints()
     (args.output/'manifest.json').write_text(json.dumps({'sources': tested_sources,
+        'forced_primary_unavailable': args.force_primary_unavailable,
         'snapshot_sha256': hashlib.sha256(json.dumps(snapshot, sort_keys=True, ensure_ascii=False).encode()).hexdigest(),
         'cases_sha256': hashlib.sha256(json.dumps(cases, sort_keys=True, ensure_ascii=False).encode()).hexdigest()}, indent=2), encoding='utf8')
     active_bundle = ContextVar('journey_configuration')

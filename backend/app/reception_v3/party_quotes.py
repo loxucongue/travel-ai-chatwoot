@@ -113,13 +113,14 @@ def pricing_evidence(bundle):
             continue
         prices = []
         for script in spec['scripts']:
-            if not script.get('price_cny') or not script.get('quote_group_type'):
+            if script.get('status') != 'active' or not script.get('price_cny') or not script.get('quote_group_type'):
                 continue
             count, group = script['party_size_min'], script['quote_group_type']
             discount = discount_per_person(policy, count)
             supplement = policy['private_supplements_per_person'][str(count)] if group == 'private' else 0
             standard = policy['base_price_cny'] - discount + supplement
             prices.append({
+                'script_id': script['id'],
                 'party_size': count, 'group_type': group, 'price_cny': script['price_cny'],
                 'discount_per_person_cny': discount, 'private_supplement_per_person_cny': supplement,
                 'standard_price_cny': standard, 'honors_prior_lower_quote': script['price_cny'] < standard,
@@ -176,7 +177,9 @@ def quote_error(decision, bundle, previous, default_route=''):
             return 'quote_options需至少一個人數模板ID且不可重複；本條text、script_id及素材留空，補充說明另放一條。'
         scripts = {s['id']: s for s in spec['scripts'] if s.get('status') == 'active' and s.get('price_cny')}
         if any(key not in scripts or not scripts[key].get('quote_group_type') for key in ids):
-            return '比較方案中有未配置或停用的人數報價，不能推算；先提供可核對的方案，其他交顧問確認。'
+            available = [key for key, value in scripts.items() if value.get('quote_group_type')]
+            return ('quote_options引用了不存在或停用的ID，請按pricing_evidence中對應方案的script_id修正；'
+                    '不要使用資料路徑或改寫客戶的假設人數為已確定人數。可用ID：' + ', '.join(available))
         groups = {scripts[key]['quote_group_type'] for key in ids}
         group = profile.get('group_type', 'undecided')
         if len(groups) != 1 or groups != {group if group in ('shared', 'private') else 'shared'}:

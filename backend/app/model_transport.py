@@ -1,10 +1,43 @@
 """Metered streaming HTTP transport, without reply policy or verification."""
 import asyncio,json,time,threading
 import httpx
+from copy import deepcopy
 from app.config import settings
 _model_tls=None
 _model_tls_lock=threading.Lock()
 _transport=threading.local()
+_primary_lock=threading.Lock()
+_primary_failures={}
+
+
+def gemini_endpoint():
+    base = settings.google_gemini_base_url.rstrip('/')
+    return base + ('/chat/completions' if base.endswith('/v1') else '/v1/chat/completions')
+
+
+def gemini_available():
+    return bool(settings.gemini_fallback_enabled and settings.gemini_api_key
+                and settings.google_gemini_base_url and settings.gemini_model)
+
+
+def _retryable(exc):
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in {401, 403, 408, 429} or exc.response.status_code >= 500
+    return isinstance(exc, (httpx.TransportError, TimeoutError))
+
+
+def _gemini_payload(payload):
+    # Translate provider-only controls, without changing business messages/tools.
+    result = deepcopy(payload)
+    result['model'] = settings.gemini_model
+    result['temperature'] = settings.gemini_temperature
+    thinking = result.pop('thinking', None)
+    if thinking:
+        result['reasoning_effort'] = ('none' if thinking.get('type') == 'disabled'
+                                      else result.get('reasoning_effort', 'low'))
+    for message in result.get('messages', []):
+        message.pop('reasoning_content', None)
+    return result
 
 def _model_ssl_context():
     """Share immutable trust configuration, never clients or event loops.
@@ -28,25 +61,71 @@ class EvaluationCallError(RuntimeError):
 
 
 def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
+    """One shared deadline, separately metered attempts, no partial reply delivery."""
+    from app.model_metering import calls
+    deadline = time.monotonic() + timeout
+    available = gemini_available()
+    identity = (settings.deepseek_base_url, settings.deepseek_api_key)
+    records = calls.get() or []
+    # Keep a tool conversation on the provider that successfully took it over.
+    sticky = any(r.get('provider') == 'gemini' and r['status'] == 'completed' for r in records)
+    with _primary_lock:
+        cooling = _primary_failures.get(identity, 0) > time.monotonic()
+    reason = 'turn_continuation' if sticky else 'primary_cooldown' if cooling else None
+    if not available or not (sticky or cooling):
+        primary_timeout = min(timeout / 2, settings.model_primary_probe_seconds) if available else timeout
+        try:
+            response = _metered_attempt(payload, primary_timeout, 'deepseek')
+            with _primary_lock:
+                _primary_failures.pop(identity, None)
+            return response
+        except Exception as exc:
+            if not available or not _retryable(exc):
+                raise
+            reason = 'http_' + str(exc.response.status_code) if isinstance(exc, httpx.HTTPStatusError) else type(exc).__name__
+            with _primary_lock:
+                _primary_failures[identity] = time.monotonic() + settings.model_primary_cooldown_seconds
+            if deadline <= time.monotonic():
+                raise
+    return _metered_attempt(_gemini_payload(payload), max(0, deadline-time.monotonic()), 'gemini', reason)
+
+
+def _metered_attempt(payload, timeout, provider, fallback_reason=None):
     from app.model_metering import begin_request, end_request
-    handle = begin_request(payload)
+    handle = begin_request(payload, provider=provider, fallback_reason=fallback_reason)
+    body = None
     try:
-        response = _post_unmetered(payload, timeout)
-        end_request(handle, response.json())
+        response = (_post_unmetered(payload, timeout) if provider == 'deepseek' else
+                    _post_unmetered(payload, timeout, endpoint=gemini_endpoint(), api_key=settings.gemini_api_key))
+        response.extensions['model_provider'] = provider
+        response.extensions['fallback_reason'] = fallback_reason
+        response.extensions.setdefault('call_timing', {}).update(provider=provider, fallback_reason=fallback_reason)
+        try:
+            body = response.json()
+            if (payload.get('response_format') or {}).get('type') == 'json_object':
+                from app.model_gateway import _json_object
+                message = body['choices'][0]['message']
+                if not message.get('tool_calls'):
+                    _json_object(message.get('content') or '')
+        except (ValueError, TypeError, KeyError, IndexError) as exc:
+            raise httpx.ReadError('invalid_model_response_format', request=response.request) from exc
+        end_request(handle, body)
         return response
     except Exception as exc:
-        end_request(handle, error=exc)
+        end_request(handle, body if isinstance(body, dict) else None, error=exc)
         raise
 
 
-def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
+def _post_unmetered(payload: dict, timeout: float, *, endpoint=None, api_key=None) -> httpx.Response:
     # Each calling thread owns its loop and connection pool; API threads never share an asyncio client.
     if not hasattr(_transport, "runner"):
         _transport.runner = asyncio.Runner()
     async def send():
         started = time.monotonic()
         timing = {"phase": "connect", "headers_ms": None, "first_token_ms": None}
-        identity = (settings.deepseek_base_url, settings.deepseek_api_key)
+        url = endpoint or f"{settings.deepseek_base_url.rstrip('/')}/chat/completions"
+        key = settings.deepseek_api_key if api_key is None else api_key
+        identity = (endpoint or settings.deepseek_base_url, key)
         if getattr(_transport, "identity", None) != identity:
             if getattr(_transport, "client", None) is not None:
                 await _transport.client.aclose()
@@ -55,9 +134,9 @@ def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
         timing['initialization_ms'] = int((time.monotonic() - started) * 1000)
         try:
             async with asyncio.timeout(max(0, timeout - (time.monotonic() - started))):
-                async with _transport.client.stream("POST", f"{settings.deepseek_base_url.rstrip('/')}/chat/completions", json=payload,
+                async with _transport.client.stream("POST", url, json=payload,
                             timeout=httpx.Timeout(timeout, connect=min(5, timeout)),
-                            headers={"Authorization": f"Bearer {settings.deepseek_api_key}", "Content-Type": "application/json"}) as response:
+                            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}) as response:
                         response.raise_for_status()
                         timing.update(phase="waiting_for_model", headers_ms=int((time.monotonic() - started) * 1000))
                         if "text/event-stream" not in response.headers.get("content-type", ""):
@@ -128,4 +207,4 @@ def close_deepseek_transport():
 
 def _call_log(attempt: int, started: float, body: dict, status: str, error: str | None) -> dict:
     usage = body.get("usage") if isinstance(body, dict) and isinstance(body.get("usage"), dict) else {}
-    return {"attempt": attempt, "duration_ms": int((time.monotonic() - started) * 1000), "input_tokens": usage.get("prompt_tokens"), "output_tokens": usage.get("completion_tokens"), "status": status, "error_code": error, "response_meta": {"finish_reason": ((body.get("choices") or [{}])[0].get("finish_reason") if isinstance(body, dict) else None)}}
+    return {"attempt": attempt, "duration_ms": int((time.monotonic() - started) * 1000), "input_tokens": usage.get("prompt_tokens"), "output_tokens": usage.get("completion_tokens"), "status": status, "error_code": error, "response_meta": {"model": body.get('model') if isinstance(body, dict) else None, "finish_reason": ((body.get("choices") or [{}])[0].get("finish_reason") if isinstance(body, dict) else None)}}
