@@ -102,9 +102,11 @@ def pricing_evidence(bundle):
             'source_ref': policy['source_ref'],
             'per_person_prices': [
                 {'party_size': s['party_size_min'], 'group_type': s['quote_group_type'], 'price_cny': s['price_cny']}
-                for s in price_scripts(policy)],
+                for s in spec['scripts'] if s.get('price_cny') and s.get('quote_group_type')],
             'usage': '人数区间不等于价格不同。比较上表每人价，相同就说明同价，不以不存在的价差催问人数。'
-                     '区间跨档才说明差别；正式最终报价仍按已确认人数和模板。'
+                     '客户要求比较两种或多种人数时，用messages[].quote_options列出相应price_*模板ID，'
+                     '系统分别列出各方案每人价并共用包含/不含说明，无须先选定人数。'
+                     '比较方案不是报名人数，不据此更新profile.party_size。单一确定人数仍用script_id。'
                      '此表不代表日期可售。客户改了月份，先核对日期；该日期不可售就不报原线价格，也不为原线追问核价人数。',
         }
     return result
@@ -115,16 +117,35 @@ def quote_error(decision, bundle, previous, default_route=''):
     from app.reception_v3.route_choice import reply_route
     route = reply_route(decision, previous, default_route)
     spec = bundle['routes'].get(route, {})
+    comparisons = [m for m in decision['messages'] if m.get('quote_options')]
+    if comparisons and not spec.get('party_pricing'):
+        return '此線沒有按人數核價模板，不使用quote_options；沿用此線日期核價工具及已核對的報價。'
     if not spec.get('party_pricing') or decision['action'] == 'handoff':
         return None
     pricing = [m for m in decision['messages'] if (m.get('script_id') or '').startswith('price')
-               or contains_trip_quote(m.get('text', ''))]
+               or contains_trip_quote(m.get('text', '')) or m.get('quote_options')]
     if not pricing:
         return None
     profile = effective_profile(previous, decision.get('profile', {}))
+    if comparisons:
+        if len(pricing) != 1:
+            return '比較人數請集中在一條quote_options，不能混入其他團費或重複報價。'
+        message = comparisons[0]
+        ids = message['quote_options']
+        if (len(ids) < 2 or len(ids) != len(set(ids)) or message.get('text')
+                or message.get('script_id') or message.get('asset_keys') or message.get('material_rule_id')):
+            return 'quote_options需至少兩個不同的人數模板ID；本條text、script_id及素材留空，補充說明另放一條。'
+        scripts = {s['id']: s for s in spec['scripts'] if s.get('status') == 'active' and s.get('price_cny')}
+        if any(key not in scripts or not scripts[key].get('quote_group_type') for key in ids):
+            return '比較方案中有未配置或停用的人數報價，不能推算；先提供可核對的方案，其他交顧問確認。'
+        groups = {scripts[key]['quote_group_type'] for key in ids}
+        group = profile.get('group_type', 'undecided')
+        if len(groups) != 1 or groups != {group if group in ('shared', 'private') else 'shared'}:
+            return '本次比較需使用同一團型；未選團型先提供拼團參考價，不套用其他團型或猜獨團加價。'
+        return None
     count = profile.get('party_size')
     if type(count) is not int or count < 1 or profile.get('party_size_range'):
-        return '最終每人價需要明確人數；先問本次要按幾位核價，不把人數區間下界當確定人數，不自行報金額。'
+        return '單一最終報價需要明確人數；若客人想比較不同人數，用quote_options列出對應模板，無須先選定人數，不把比較方案寫成確定報名人數。'
     group = profile.get('group_type', 'undecided')
     if group not in ('shared', 'private', 'undecided'):
         return '先確認拼團或獨團選擇，不猜團型核價。'
@@ -136,6 +157,23 @@ def quote_error(decision, bundle, previous, default_route=''):
     if len(pricing) != 1 or any(m.get('script_id')!=expected or m.get('text') for m in pricing):
         return f'本輪核價只能引用{expected}，text留空，系統發送最終每人價與包含／不含；不可自行改寫金額或重複報價。'
     return None
+
+
+def comparison_text(spec, ids):
+    """Render verified alternatives without repeating their shared inclusions.
+
+    Preserve the configured price line's wording and every surrounding term;
+    amounts come from personalized scripts, including any valid legacy ceiling.
+    The caller validates the IDs and common group before rendering.
+    """
+    scripts = {s['id']: s for s in spec['scripts']}
+    selected = [scripts[key] for key in ids]
+    template = spec['party_pricing'][selected[0]['quote_group_type'] + '_template']
+    before, after = template.split('{amount}')
+    header, _, price_prefix = before.rpartition('\n')
+    price_suffix, _, footer = after.partition('\n')
+    lines = [f"{s['party_size_min']}位報名：{price_prefix}{s['price_cny']:,}{price_suffix}" for s in selected]
+    return '\n'.join(part for part in (header, '\n'.join(lines), footer) if part)
 
 
 def apply_price_scripts(spec, *, legacy_ceiling=None):

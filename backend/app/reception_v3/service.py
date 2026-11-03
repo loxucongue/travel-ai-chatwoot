@@ -324,7 +324,7 @@ def scripts(bundle, route):
 
 def parts_for(db, row, bundle, decision, *, followup=False):
     from app.reception_v3.seasonal_quotes import seasonal_group
-    from app.reception_v3.party_quotes import quote_error as party_quote_error
+    from app.reception_v3.party_quotes import quote_error as party_quote_error, comparison_text
     from app.reception_v3.route_choice import reply_route
     route = decision['route_variant'] or row.controls.get('route_variant', '')
     content_route = reply_route(decision, row.memory, route)
@@ -410,7 +410,9 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         if message['script_id'] and not message['text'] and script is None:
             raise ValueError('v3_unknown_script')
         offset = len(parts)
-        add(message['text'] or (script['text'] if script else ''),
+        text = (comparison_text(bundle['routes'][content_route], message['quote_options'])
+                if message.get('quote_options') else message['text'] or (script['text'] if script else ''))
+        add(text,
             message['asset_keys'])
         if message.get('purpose') == 'contact_invitation' or message.get('script_id') == 'contact_request':
             for part in parts[offset:]:
@@ -552,7 +554,7 @@ def apply_decision(db, row, run, bundle, decision):
         if decision['action'] not in ('reply','wait') or decision['start_introduction'] or len(decision['messages'])>1:
             raise ValueError('invalid_advisor_followup')
         parts=[{'content':m['text'],'content_type':'text'} for m in decision['messages'] if m['text']]
-        if any(m['script_id'] or m['asset_keys'] for m in decision['messages']):
+        if any(m['script_id'] or m.get('quote_options') or m['asset_keys'] for m in decision['messages']):
             raise ValueError('invalid_advisor_followup')
         value.update(pending_event=None,next_check_at=None,next_check_minutes=1440,appointment_pending=False,
                      last_reason=decision['reason'],followup_settings=deepcopy(bundle['silence']))

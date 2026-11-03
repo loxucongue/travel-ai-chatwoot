@@ -23,6 +23,7 @@ class Message(BaseModel):
     model_config = ConfigDict(extra='forbid')
     text: str = ''
     script_id: str | None = ''
+    quote_options: list[str] = Field(default_factory=list)
     asset_keys: list[str] = Field(default_factory=list)
     material_rule_id: str = ''
     purpose: Literal['reply', 'contact_invitation'] = 'reply'
@@ -98,7 +99,7 @@ reply最多一条200字以内文字。wait时messages=[]。不要输出其他字
         if (decision['action'] not in ('reply','wait') or decision['start_introduction'] or decision['profile']
                 or decision['route_variant'] or decision['route_choice'] != 'unchanged' or len(decision['messages']) > 1
                 or (decision['action']=='wait' and decision['messages'])
-                or any(m['script_id'] or m['asset_keys'] or m['material_rule_id'] or len(m['text'])>200 or contains_trip_quote(m['text']) for m in decision['messages'])):
+                or any(m['script_id'] or m['quote_options'] or m['asset_keys'] or m['material_rule_id'] or len(m['text'])>200 or contains_trip_quote(m['text']) for m in decision['messages'])):
             raise ValueError('invalid_advisor_followup')
         logs = [{**_call_log(1,started,body,'completed',None),'node':'advisor_followup',
                  'call_timing':response.extensions.get('call_timing',{})}]
@@ -571,7 +572,8 @@ def run_agent(context: dict):
                 messages.append({'role':'user', 'content':lead_problem +
                     '\n上一份JSON只是未執行草稿，沒有發給客戶、沒有寫入profile。請回傳修正後的完整決策，保留本輪已識別的人數/團型等profile及需要回答的內容，不要誤以為已發送而改成wait。'})
                 continue
-            log.update(script_ids=[m['script_id'] for m in decision['messages'] if m['script_id']],
+            log.update(script_ids=[key for m in decision['messages']
+                                   for key in ([m['script_id']] if m['script_id'] else m['quote_options'])],
                        asset_keys=[k for m in decision['messages'] for k in m['asset_keys']])
             # Persist tool evidence, not a model-authored availability claim.
             decision['profile'].pop('_departure_check', None)

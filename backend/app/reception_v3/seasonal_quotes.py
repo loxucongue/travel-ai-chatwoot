@@ -439,7 +439,7 @@ def quote_error(decision, bundle, checked, availability=None, *, require_interru
             and decision['action'] != 'handoff' and decision.get('start_introduction')):
         return '本線此時段銷售口徑待確認，不開始完整介紹；可推薦已確認且符合客人日期的產品，堅持本線則靜默交顧問核對。'
     if (availability or {}).get(route, {}).get('status') == 'private_departure' and decision['action'] != 'handoff':
-        if any((m.get('script_id') or '').startswith('price') or contains_trip_quote(m.get('text', ''))
+        if any(m.get('quote_options') or (m.get('script_id') or '').startswith('price') or contains_trip_quote(m.get('text', ''))
                for m in decision['messages']):
             return '自選日期已符合獨團人數門檻，但不是拼團報價授權；不套定班價。只問日期先說可自選；問實際獨團總價則靜默handoff。'
     if (availability or {}).get(route, {}).get('status') == 'unavailable' and decision['action'] != 'handoff':
@@ -447,7 +447,7 @@ def quote_error(decision, bundle, checked, availability=None, *, require_interru
                 or decision['action'] == 'queue'
                 or (availability[route].get('winter_recommendation') and
                     any(m.get('asset_keys') for m in decision['messages']))
-                or any((m.get('script_id') or '').startswith('price') or contains_trip_quote(m.get('text', ''))
+                or any(m.get('quote_options') or (m.get('script_id') or '').startswith('price') or contains_trip_quote(m.get('text', ''))
                        for m in decision['messages'])):
             return ('上一候选未发送。已核對本線在客人所問時段未開放：即使前一句问过费用，也必须删除本线的所有团费金额和price_*消息，'
                     '不能一边说无团期一边报本线价格；不能只把script_id改成自由文字保留金额。'

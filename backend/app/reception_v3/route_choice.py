@@ -154,7 +154,7 @@ def choice_error(decision, context):
         if context.get('state', {}).get('delivery_kind') in ('intake', 'introduction') and not decision['interrupt']:
             return '已拒絕當前線但尚未選定替代線，仍須interrupt=true停止原圖文。'
         if (choice != 'recommend' and
-                any((m.get('script_id') or '').startswith('price') for m in decision['messages'])):
+                any(m.get('quote_options') or (m.get('script_id') or '').startswith('price') for m in decision['messages'])):
             return '已拒絕當前線，不能引用原線價格；推薦後等客人確認替代產品。'
         if context.get('event') == 'silence_due' and decision['messages']:
             return '客人已拒絕當前線且尚未選定替代線，本輪wait，不繼續舊線推廣或替客人改線。'

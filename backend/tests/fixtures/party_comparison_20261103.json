@@ -1,0 +1,523 @@
+[
+  {
+    "id": "two_four",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size_range": [
+          2,
+          4
+        ],
+        "group_type": "shared",
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我們是朋友，預計2到4位，沒有長輩或小孩。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "quote",
+        "text": "2位和4位費用？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "12,780",
+            "12780"
+          ],
+          [
+            "12,580",
+            "12580"
+          ],
+          [
+            "2位",
+            "2人"
+          ],
+          [
+            "4位",
+            "4人"
+          ]
+        ],
+        "excludes": [
+          "沒辦法用區間",
+          "給我確定的數字",
+          "先確認這次是",
+          "早鳥"
+        ],
+        "profile_absent": [
+          "party_size"
+        ],
+        "image_count": 0
+      },
+      {
+        "id": "confirm",
+        "text": "好，最後確定4位參加拼團，日期不變。費用再給我一下。",
+        "checks": [
+          "send",
+          "not_handoff"
+        ],
+        "contains_any": [
+          [
+            "12,580",
+            "12580"
+          ]
+        ],
+        "excludes": [
+          "12,780"
+        ],
+        "profile_equals": {
+          "party_size": 4
+        }
+      }
+    ]
+  },
+  {
+    "id": "three_five",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size_range": [
+          2,
+          4
+        ],
+        "group_type": "shared",
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我們是朋友，預計2到4位，沒有長輩或小孩。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "quote",
+        "text": "可能3或5人，兩種價格先列給我，我們看完再決定。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "12,780",
+            "12780"
+          ],
+          [
+            "12,580",
+            "12580"
+          ],
+          [
+            "3位",
+            "3人"
+          ],
+          [
+            "5位",
+            "5人"
+          ]
+        ],
+        "excludes": [
+          "沒辦法用區間",
+          "給我確定的數字",
+          "先確認這次是",
+          "早鳥"
+        ],
+        "profile_absent": [
+          "party_size"
+        ],
+        "image_count": 0
+      }
+    ]
+  },
+  {
+    "id": "same_price",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size_range": [
+          2,
+          4
+        ],
+        "group_type": "shared",
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我們是朋友，預計2到4位，沒有長輩或小孩。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "quote",
+        "text": "2人跟3人各多少？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "12,780",
+            "12780"
+          ],
+          [
+            "2位",
+            "2人"
+          ],
+          [
+            "3位",
+            "3人"
+          ]
+        ],
+        "excludes": [
+          "沒辦法用區間",
+          "給我確定的數字",
+          "先確認這次是",
+          "早鳥"
+        ],
+        "profile_absent": [
+          "party_size"
+        ],
+        "image_count": 0
+      }
+    ]
+  },
+  {
+    "id": "four_six",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size_range": [
+          2,
+          4
+        ],
+        "group_type": "shared",
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我們是朋友，預計2到4位，沒有長輩或小孩。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "quote",
+        "text": "4位及6位各多少錢？我們還沒確定。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "12,580",
+            "12580"
+          ],
+          [
+            "12,380",
+            "12380"
+          ],
+          [
+            "4位",
+            "4人"
+          ],
+          [
+            "6位",
+            "6人"
+          ]
+        ],
+        "excludes": [
+          "沒辦法用區間",
+          "給我確定的數字",
+          "先確認這次是",
+          "早鳥"
+        ],
+        "profile_absent": [
+          "party_size"
+        ],
+        "image_count": 0
+      }
+    ]
+  },
+  {
+    "id": "nine_day_two_four",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size_range": [
+          2,
+          4
+        ],
+        "group_type": "shared",
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是不上珠峰的桃花9日行程。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我們是朋友，預計2到4位，沒有長輩或小孩。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "quote",
+        "text": "9天2位和4位費用？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "10,780",
+            "10780"
+          ],
+          [
+            "10,580",
+            "10580"
+          ],
+          [
+            "2位",
+            "2人"
+          ],
+          [
+            "4位",
+            "4人"
+          ]
+        ],
+        "excludes": [
+          "沒辦法用區間",
+          "給我確定的數字",
+          "先確認這次是",
+          "早鳥"
+        ],
+        "profile_absent": [
+          "party_size"
+        ],
+        "image_count": 0
+      }
+    ]
+  },
+  {
+    "id": "unavailable_month",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size_range": [
+          2,
+          4
+        ],
+        "group_type": "shared",
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我們是朋友，預計2到4位，沒有長輩或小孩。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "closed",
+        "text": "改成2027年8月參加這條桃花11日，2位和4位各多少？",
+        "checks": [
+          "send",
+          "no_price"
+        ],
+        "excludes": [
+          "12,780",
+          "12,580"
+        ],
+        "profile_absent": [
+          "party_size"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "range_without_quote",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T02:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size_range": [
+          2,
+          4
+        ],
+        "group_type": "shared",
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是桃花加珠峰11日的行程。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我們是朋友，預計2到4位，沒有長輩或小孩。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "friends",
+        "text": "我們就是2到4位朋友，想先看看風景。",
+        "checks": [
+          "not_handoff",
+          "no_price"
+        ],
+        "profile_absent": [
+          "party_size"
+        ]
+      }
+    ]
+  }
+]
