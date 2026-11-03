@@ -139,5 +139,5 @@
   ],
   "secrets": "Keys and backups stored only in ignored local output/env files and restricted server paths; no credential value in tracked files.",
   "superseded_by": "docs/development/gemini-fallback-20261103.json",
-  "latest_status": "Consultative changes deployed in db6d2e7 after 489 deterministic tests and final 18-case primary acceptance. Earlier validation and provider outage evidence below is historical and retained. Gemini remains disabled after 15/18 acceptance."
+  "latest_status": "Consultative changes deployed in db6d2e7 after 489 deterministic tests and final 18-case primary acceptance. Earlier validation and provider outage evidence below is historical and retained. Gemini fallback was subsequently enabled by explicit user request; 26 fallback tests and two isolated real-Gemini failover probes passed. Gemini business acceptance remains 15/18; see gemini-fallback-activation-20261103.json."
 }

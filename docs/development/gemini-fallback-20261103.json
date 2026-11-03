@@ -1,11 +1,11 @@
 {
   "date": "2026-11-03",
-  "status": "deployed_with_gemini_disabled",
+  "status": "deployed_with_gemini_enabled_by_explicit_user_request",
   "source_commit": "db6d2e7bf4ac53c13866607d6551986736c67232",
   "primary_model": "deepseek-v4-flash",
   "fallback_model": "gemini-2.5-flash",
   "fallback_base_url": "https://linkai.shop",
-  "fallback_enabled": false,
+  "fallback_enabled": true,
   "changes": [
     "Optional metered fallback for authentication, quota/rate limits, timeouts, transient server failures and invalid primary JSON; disabled by default.",
     "One shared per-call deadline; 8-second primary probe and 60-second process-local outage cooldown; a tool turn stays on its successful fallback.",
@@ -227,7 +227,7 @@
     "customer_test_sends": 0,
     "network_isolation": "Only configured model POST endpoints allowed; delivery simulated in isolated SQLite."
   },
-  "rollout_gate": "Do not enable fallback until the full Gemini business acceptance passes; connection success alone is insufficient.",
+  "rollout_gate": "The user explicitly requested activation after being informed of the 15/18 Gemini business result. Automatic fallback is enabled; known business failures remain open.",
   "credentials": "Stored only in ignored local/private server environment files; no keys committed or copied into this report.",
   "cost_accounting": {
     "cumulative_estimate_or_reserved_cny": 159.19663892,
@@ -240,7 +240,7 @@
     "git_commit": "db6d2e7bf4ac53c13866607d6551986736c67232",
     "engine": "reception-v3-74a08d6d9d33964a",
     "digest": "89e56e3c542228c4fb524eb08624718b473fb7ba26dbcaa046153e6682dab095",
-    "fallback_enabled": false,
+    "fallback_enabled": true,
     "fallback_model": "gemini-2.5-flash",
     "fallback_base_url": "https://linkai.shop",
     "primary_unchanged": true,
@@ -306,7 +306,85 @@
   "remaining_work": [
     "Gemini: retain the customer private-group requirement instead of answering with a shared-group quote.",
     "Gemini: answer an already-quoted equal price and a discount-only question without resending full quote templates.",
-    "Gemini: rerun full acceptance and review primary timeout thresholds before enabling automatic fallback.",
+    "Gemini: improve the remaining business failures and rerun full acceptance; fallback was explicitly enabled by the user before those improvements.",
     "Primary: retain the prior intermittent same-price amount repetition as a style follow-up; final acceptance passing does not erase earlier evidence."
-  ]
+  ],
+  "previous_rollout_gate": "Do not enable fallback until the full Gemini business acceptance passes; connection success alone is insufficient.",
+  "activation_audit": "docs/development/gemini-fallback-activation-20261103.json",
+  "activation": {
+    "at": "2026-11-03T12:59:16.853042+00:00",
+    "enabled": true,
+    "fallback_model": "gemini-2.5-flash",
+    "fallback_base_url": "https://linkai.shop",
+    "backup": "/opt/china2go-ai/backups/gemini-enable-20261103T125916Z",
+    "authorization": "Explicit user request to enable automatic Gemini fallback after disclosure of 15/18 business acceptance.",
+    "configuration_keys_changed": [
+      "GEMINI_FALLBACK_ENABLED"
+    ],
+    "primary_unchanged": true,
+    "code_unchanged": true,
+    "business_settings_unchanged": true,
+    "business_acceptance": {
+      "passed": false,
+      "passed_cases": 15,
+      "cases": 18
+    },
+    "primary_probe_seconds": 8.0,
+    "primary_cooldown_seconds": 60.0,
+    "env_owner": "china2go",
+    "env_group": "china2go",
+    "env_mode": "0o600",
+    "customer_test_sends": 0,
+    "healthy": true
+  },
+  "previous_live_verification": {
+    "passed": true,
+    "release": "gemini-fallback-20261103T120944Z",
+    "git_commit": "db6d2e7bf4ac53c13866607d6551986736c67232",
+    "engine": "reception-v3-74a08d6d9d33964a",
+    "digest": "89e56e3c542228c4fb524eb08624718b473fb7ba26dbcaa046153e6682dab095",
+    "fallback_enabled": false,
+    "fallback_model": "gemini-2.5-flash",
+    "fallback_base_url": "https://linkai.shop",
+    "primary_unchanged": true,
+    "primary_model": "deepseek-v4-flash",
+    "business_settings_unchanged": true,
+    "env_owner": "china2go",
+    "env_group": "china2go",
+    "env_mode": "0o600",
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "health": {
+      "https://api.luoxuecong.asia/v1/health": 200,
+      "https://api.luoxuecong.asia/v1/health/ready": 200,
+      "https://ai.luoxuecong.asia/": 200
+    },
+    "customer_test_sends": 0,
+    "backup": "/opt/china2go-ai/backups/gemini-fallback-20261103T120944Z"
+  }
 }
