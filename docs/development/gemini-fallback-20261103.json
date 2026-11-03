@@ -1,7 +1,7 @@
 {
   "date": "2026-11-03",
-  "status": "not_deployed",
-  "source_commit": "553ea3f034ca47616f547a2d5e978807cd17280c",
+  "status": "deployed_with_gemini_disabled",
+  "source_commit": "db6d2e7bf4ac53c13866607d6551986736c67232",
   "primary_model": "deepseek-v4-flash",
   "fallback_model": "gemini-2.5-flash",
   "fallback_base_url": "https://linkai.shop",
@@ -234,5 +234,79 @@
     "not_actual_bill": true,
     "note": "Gateway rates are conservative estimates; failed/unknown and synthetic primary attempts retain reservations. Earlier iterations are included; minimal probes are recorded separately."
   },
-  "live_verification": null
+  "live_verification": {
+    "passed": true,
+    "release": "gemini-fallback-20261103T120944Z",
+    "git_commit": "db6d2e7bf4ac53c13866607d6551986736c67232",
+    "engine": "reception-v3-74a08d6d9d33964a",
+    "digest": "89e56e3c542228c4fb524eb08624718b473fb7ba26dbcaa046153e6682dab095",
+    "fallback_enabled": false,
+    "fallback_model": "gemini-2.5-flash",
+    "fallback_base_url": "https://linkai.shop",
+    "primary_unchanged": true,
+    "primary_model": "deepseek-v4-flash",
+    "business_settings_unchanged": true,
+    "env_owner": "china2go",
+    "env_group": "china2go",
+    "env_mode": "0o600",
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "health": {
+      "https://api.luoxuecong.asia/v1/health": 200,
+      "https://api.luoxuecong.asia/v1/health/ready": 200,
+      "https://ai.luoxuecong.asia/": 200
+    },
+    "customer_test_sends": 0,
+    "backup": "/opt/china2go-ai/backups/gemini-fallback-20261103T120944Z"
+  },
+  "live_provider_probe": {
+    "passed": true,
+    "status": 200,
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "duration_ms": 847,
+    "attempts": [
+      {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "status": "completed",
+        "http_status": null,
+        "error": null,
+        "fallback_reason": null,
+        "duration_ms": 848
+      }
+    ],
+    "customer_test_sends": 0
+  },
+  "remaining_work": [
+    "Gemini: retain the customer private-group requirement instead of answering with a shared-group quote.",
+    "Gemini: answer an already-quoted equal price and a discount-only question without resending full quote templates.",
+    "Gemini: rerun full acceptance and review primary timeout thresholds before enabling automatic fallback.",
+    "Primary: retain the prior intermittent same-price amount repetition as a style follow-up; final acceptance passing does not erase earlier evidence."
+  ]
 }
