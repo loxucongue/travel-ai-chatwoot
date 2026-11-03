@@ -1,6 +1,6 @@
 {
   "generated_at": "2026-11-03T12:27:50.169787+00:00",
-  "conclusion": "除本轮Facebook实际往返与人工实际收单外，所列功能验收已完成。",
+  "conclusion": "所列功能验收与Facebook真实文字往返已完成；待业务完成真实留联后的通知和人工接单确认。",
   "release": "rujing2-20261103T122150Z",
   "deployed_commit": "4d55a2d03fc24af4963b08c225c6183fa5be59fa",
   "business_version": "20261103-xiamen-fact-boundaries-v8",
@@ -1050,24 +1050,24 @@
       "app_profile": "live_reply",
       "workers": {
         "live-reply-worker": {
-          "last_seen_at": "2026-11-03T12:26:40.942619+00:00",
+          "last_seen_at": "2026-11-03T14:48:49.983318+00:00",
           "age_seconds": 0,
           "healthy": true
         },
         "live-maintenance-worker": {
-          "last_seen_at": "2026-11-03T12:26:40.955792+00:00",
+          "last_seen_at": "2026-11-03T14:48:49.463670+00:00",
           "age_seconds": 0,
           "healthy": true
         }
       },
       "reasons": [],
       "worker_type": "live-reply-worker",
-      "worker_last_seen_at": "2026-11-03T12:26:40.942619+00:00",
+      "worker_last_seen_at": "2026-11-03T14:48:49.983318+00:00",
       "reactive_live_configured": true,
       "reactive_live_enabled": true,
       "customer_sending_paused": false,
       "chatwoot_status": "connected",
-      "last_webhook_at": "2026-11-03T07:30:53.692758+00:00",
+      "last_webhook_at": "2026-11-03T14:46:58.799196+00:00",
       "pending_events": 0,
       "queues": {
         "events": {
@@ -1116,7 +1116,6 @@
     "configuration_unchanged": true
   },
   "pending": [
-    "Facebook客户端新消息到AI回复和素材的实际展示与送达回执。",
     "业务确认默认接单人，并完成真实留联后的内部通知、认领、手机提醒核验。"
   ],
   "limits": [
@@ -1132,5 +1131,83 @@
     "handover-worker-smoke.log": "c736b965dd8e9d02de22f58d9d1c7f6225d68438b06669b8cae307da3a96ca21",
     "handover-fallback-current.log": "3d2efc082328d6ea5171f1a6f0b6cd824b3536384678c4eb22bf90bc8cbca523",
     "handover-final-v8-health.log": "aae5f23f207f6c95feaae6f1874ccc984da2b1233c5420bf21934949379e7aaa"
-  }
+  },
+  "facebook_live_acceptance": {
+    "checked_at": "2026-11-03T14:49:49.177254+00:00",
+    "account_id": 193812,
+    "inbox_id": 150646,
+    "conversation_id": 1,
+    "incoming_message_id": 969334143,
+    "incoming_text": "多少钱",
+    "incoming_created_at": "2026-11-03T14:45:56+00:00",
+    "reply_message_id": 969334674,
+    "reply_text": "一般3–6天的行程，每人參考約NT$5,000–8,500，實際會依天數和安排不同。您預計幾位一起出發呢？也可以留LINE或微信，請規劃師依您的日期和人數把包含項目和費用一併說明。",
+    "reply_created_at": "2026-11-03T14:46:06+00:00",
+    "elapsed_seconds": 10,
+    "remote_receipt": "read",
+    "local_outbound_status": "read",
+    "automation_run": 82,
+    "model_calls": [
+      {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "status": "completed",
+        "http_status": null,
+        "duration_ms": 2613,
+        "error": null
+      },
+      {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "status": "completed",
+        "http_status": null,
+        "duration_ms": 2291,
+        "error": null
+      }
+    ],
+    "next_followup_at": "2026-11-04T09:00:00+08:00",
+    "historical_opening_receipts": [
+      {
+        "id": 968381923,
+        "status": "read",
+        "created_at": 1793691024,
+        "attachment_types": []
+      },
+      {
+        "id": 968382052,
+        "status": "read",
+        "created_at": 1793691028,
+        "attachment_types": [
+          "image"
+        ]
+      },
+      {
+        "id": 968382153,
+        "status": "read",
+        "created_at": 1793691031,
+        "attachment_types": [
+          "image"
+        ]
+      },
+      {
+        "id": 968382253,
+        "status": "read",
+        "created_at": 1793691034,
+        "attachment_types": [
+          "image"
+        ]
+      },
+      {
+        "id": 968382327,
+        "status": "read",
+        "created_at": 1793691038,
+        "attachment_types": [
+          "video"
+        ]
+      }
+    ],
+    "scope": "本轮验证已有会话的真实文字入站、模型答复、公开出站和已读回执。未重播开场；旧开场的3图1视频已读仅作为历史回执。尚无本轮真实留联和交接。",
+    "raw_evidence_sha256": "9d9b713f8c64713c5c1dc8aa5e6e8b977487ddaad1c738b6a8cc6611c6a465ad"
+  },
+  "updated_at": "2026-11-03T14:49:49.180293+00:00"
 }
