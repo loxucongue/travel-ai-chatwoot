@@ -10,7 +10,7 @@ from app.config import settings
 from app.business_profile import COMMON_SKILL
 from app.model_transport import _post_with_deadline, _call_log, EvaluationCallError
 from app.model_gateway import _json_object, _request_hash, combine_digests
-from app.reception_v3.skills import SkillRegistry
+from app.reception_v3.skills import SkillRegistry, scripts
 from app.reception_v3.prompt import SYSTEM_PROMPT
 from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task, validation_error as lead_priority_error
 from app.reception_v3.large_party import reply_contract_error
@@ -441,6 +441,22 @@ def run_agent(context: dict):
                         raise ValueError(f'unknown_route_reference:{field}={value!r}; '
                                          f'allowed_ids={list(context["skills"]["routes"])}; '
                                          'use an exact enabled ID or leave the reference empty')
+                # A script-only reply must resolve in the same catalog used
+                # by delivery. Text replies may retain a non-executable hint.
+                from app.reception_v3.route_choice import reply_route
+                content_route = reply_route(decision, context.get('profile', {}),
+                    decision['route_variant'] or context.get('route_variant', ''))
+                if context.get('event') == 'silence_due':
+                    from app.reception_v3.material_rules import followup_material_route
+                    content_route = followup_material_route(context['skills'],
+                        context.get('available_materials', []), context.get('route_variant', ''),
+                        context.get('profile', {}), context.get('messages', []))
+                available_scripts = scripts(context['skills'], content_route)
+                for reply in decision['messages']:
+                    if reply['script_id'] and not reply['text'] and reply['script_id'] not in available_scripts:
+                        raise ValueError(f'unknown_script_reference:{reply["script_id"]!r}; '
+                                         f'allowed_ids={list(available_scripts)}; '
+                                         'use an exact enabled ID or provide a supported text answer')
             except (ValueError, TypeError) as exc:
                 if repaired:
                     raise

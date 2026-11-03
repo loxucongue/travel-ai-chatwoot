@@ -96,6 +96,40 @@ def test_configured_followup_repair_is_bounded(monkeypatch):
     assert len(requests) == 2
 
 
+def test_unknown_script_reference_is_repaired_before_execution(monkeypatch):
+    c = context('peach_9d_2027')
+    c['skills']['routes']['peach_9d_2027']['scripts'].append(
+        {'id':'no_contact_app', 'answer_text':'可以繼續在這裡諮詢。', 'status':'active'})
+    requests = model(monkeypatch, [final(messages=[{'script_id':'xiamen.no_contact_app'}]),
+        final(messages=[{'script_id':'no_contact_app'}])])
+    decision, logs, _ = runtime.run_agent(c)
+    assert len(requests) == 2
+    assert decision['messages'][0]['script_id'] == 'no_contact_app'
+    assert 'unknown_script_reference' in logs[0]['error_code']
+    assert 'allowed_ids=' in requests[1]['messages'][-1]['content']
+    assert c['route_variant'] == 'peach_9d_2027'
+
+
+@pytest.mark.parametrize('invalid', ['invented', 'disabled', 'other-route'])
+def test_unknown_script_repair_is_bounded_and_scoped(monkeypatch, invalid):
+    c = context('peach_9d_2027')
+    c['skills']['common_scripts'] = [{'id':'disabled', 'text':'hidden', 'enabled':False}]
+    c['skills']['routes']['peach_11d_2027']['scripts'].append(
+        {'id':'other-route', 'answer_text':'wrong product', 'status':'active'})
+    bad = final(messages=[{'script_id':invalid}])
+    requests = model(monkeypatch, [bad, bad])
+    with pytest.raises(Exception, match='unknown_script_reference'):
+        runtime.run_agent(c)
+    assert len(requests) == 2
+
+
+def test_text_reply_with_script_hint_preserves_original_text(monkeypatch):
+    requests = model(monkeypatch, [final(messages=[{'text':'回答原稿', 'script_id':'hint-only'}])])
+    decision, _, _ = runtime.run_agent(context('peach_9d_2027'))
+    assert len(requests) == 1
+    assert decision['messages'][0]['text'] == '回答原稿'
+
+
 def test_selected_route_preloads_only_its_complete_config(monkeypatch):
     requests = model(monkeypatch, [final(messages=[{'text': '回答原稿'}])])
     decision, logs, _ = runtime.run_agent(context('peach_9d_2027'))

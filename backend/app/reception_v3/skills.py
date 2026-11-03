@@ -18,6 +18,17 @@ def service_knowledge():
     return json.loads((PACKAGE_ROOT.parent / 'service-knowledge/service-knowledge.json').read_text(encoding='utf-8'))
 
 
+def scripts(bundle, route):
+    """The executable script catalog, shared by model validation and delivery."""
+    result = {s['id']: {'text': s['text'], 'assets': []}
+              for s in bundle['common_scripts'] if s.get('enabled', True)}
+    result.update({s['id']: {'text': s['answer_text'], 'assets': s.get('asset_ids', [])}
+                   for s in bundle['routes'].get(route, {}).get('scripts', []) if s.get('status') == 'active'})
+    for key, group in bundle['routes'].get(route, {}).get('groups', {}).items():
+        result.setdefault(key, {'text': group['text'], 'assets': group['assets']})
+    return result
+
+
 def effective_price_scripts(scripts, now=None, offer=None):
     """Render validity in code; a previously issued offer never rolls forward."""
     today = (now or datetime.now(ZoneInfo('Asia/Taipei'))).astimezone(ZoneInfo('Asia/Taipei')).date().isoformat()

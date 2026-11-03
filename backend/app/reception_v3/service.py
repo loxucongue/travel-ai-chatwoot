@@ -14,7 +14,7 @@ from app.model_metering import calls, metrics
 from app.opening_messages import delivery_items, opening_media_info
 from app.reception_v3 import release_id
 from app.reception_v3.runtime import run_agent
-from app.reception_v3.skills import compile_skills
+from app.reception_v3.skills import compile_skills, scripts
 from app.reception_v3.quotes import personalize_quotes, reserve_quoted_offers
 from app.reception_v3.service_voice import service_voice
 from app.reception_v3.seasonal_quotes import mentions_departure_time
@@ -308,16 +308,6 @@ def append_plan(row, value, parts, kind, interval, run_id=None):
     value['delivery_plan_id'] = plan_id
     value['delivery_interval'] = interval
     value['delivery_due_at'] = row.virtual_now
-
-
-def scripts(bundle, route):
-    result = {s['id']: {'text': s['text'], 'assets': []}
-              for s in bundle['common_scripts'] if s.get('enabled', True)}
-    result.update({s['id']: {'text': s['answer_text'], 'assets': s.get('asset_ids', [])}
-                   for s in bundle['routes'].get(route, {}).get('scripts', []) if s.get('status') == 'active'})
-    for key, group in bundle['routes'].get(route, {}).get('groups', {}).items():
-        result.setdefault(key, {'text': group['text'], 'assets': group['assets']})
-    return result
 
 
 def parts_for(db, row, bundle, decision, *, followup=False):
