@@ -414,6 +414,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
                     part['contact_channels'] = bundle.get('lead_capture', {}).get('channels', [])
                     if followup:
                         part['next_day_contact_invitation'] = bool(bundle.get('lead_capture', {}).get('next_day_invitation_enabled'))
+                        part['contextual_silence_invitation'] = bool(bundle.get('lead_capture', {}).get('contextual_silence_invitation_enabled'))
         if message.get('material_rule_id'):
             original = next(r for r in bundle['material_rules'] if r['id'] == message['material_rule_id'])
             for part in parts[offset:]:
@@ -721,9 +722,10 @@ def skip_revoked_contact(db, row, part):
     profile = row.memory or {}
     if (config.get('enabled', True) and not profile.get('contact_capture_declined')
             and not profile.get('contact_value')
-            and profile.get('contact_status') not in ('captured', 'self_reported_added', 'provided', 'attachment_pending_verification')
+            and profile.get('contact_status') not in ('captured', 'self_reported_added', 'provided', 'attachment_pending_verification', 'declined', 'deferred')
             and (not part.get('contact_channels') or part['contact_channels'] == config.get('channels', []))
-            and (not part.get('next_day_contact_invitation') or config.get('next_day_invitation_enabled'))):
+            and (not part.get('next_day_contact_invitation') or config.get('next_day_invitation_enabled'))
+            and (not part.get('contextual_silence_invitation') or config.get('contextual_silence_invitation_enabled'))):
         return False
     row.messages = [{**m, 'status': 'cancelled', 'cancel_reason':'contact_permission_revoked'}
                     if m.get('id') == part['id'] else m for m in row.messages]

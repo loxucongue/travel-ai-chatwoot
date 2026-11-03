@@ -80,6 +80,12 @@ def review(decision, context, deadline):
         '但确认后的旧邀约不受这个保护：历史已说“时间有弹性再联系”，候选又说“以后有其他假期再告诉我”，'
         '仍是重复邀约，应删除后者；只保留对本轮原因的简短理解，不需要再次收尾邀请。'
         '删除后剩余文字必须自然完整，否则保留。')
+    if (not advisor_followup and context.get('event') == 'silence_due'
+            and context.get('skills', {}).get('lead_capture', {}).get('contextual_silence_invitation_enabled')):
+        prompt += ('\n当前业务允许沉默回合按需求邀请私讯。客户没有新发言，但本轮可以解释尚未讲清楚的一对一服务价值：'
+            '围绕客户真实需求，说明专人要核对什么及如何协助，再自然邀请。'
+            '仅当这次服务说明有具体增量且未拒绝或预约稍后联系时，保留与其衔接的一次邀请，不能仅因出现相同渠道名而删除。'
+            '单纯把旧邀约换词、没有新帮助、反复索取ID，仍删除；不允许虚构客户需求或服务承诺。')
     if advisor_followup:
         prompt += ('\n本次是顾问交回后的定时跟进，客户没有新发言。incoming才是客户；outgoing是我方，'
             '其中human/inferred_human是顾问。旧客户问句已由后续顾问回复处理，不能按新问题再回答。'

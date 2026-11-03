@@ -96,11 +96,20 @@ def validation_error(decision, context):
                      or profile.get('contact_value') or context.get('state', {}).get('opt_out')
                      or profile.get('contact_status') in ('captured', 'self_reported_added', 'provided', 'attachment_pending_verification')):
         return '当前留资关闭、已留资或客户已拒绝；只处理当前问题，不再邀请私讯。'
-    if inviting and context.get('event') == 'silence_due' and (
-            any(m.get('contact_invitation') and m.get('direction') == 'outgoing' and m.get('status') in DELIVERED
-                for m in context.get('messages', []))
-            or (decision.get('lead_review') or {}).get('contact_status', 'unknown') != 'unknown'):
-        return '历史已邀请、已留资、拒绝留资或约定稍后联系，本次沉默节点不能重复邀请。'
+    if inviting and context.get('event') == 'silence_due':
+        contextual = config.get('contextual_silence_invitation_enabled', False)
+        state = context.get('state', {})
+        if state.get('human_followup') or state.get('handoff'):
+            return '人工接待或顾问跟进期间不能重新索取联系方式。'
+        if profile.get('contact_status') in ('declined', 'deferred'):
+            return '客户已拒绝或约定稍后联系，本次不邀请私讯。'
+        reviewed = (decision.get('lead_review') or {}).get('contact_status', 'unknown')
+        if reviewed not in (('unknown', 'invited') if contextual else ('unknown',)):
+            return '已留资、拒绝留资或约定稍后联系，本次不邀请私讯。'
+        if not contextual and any(
+                m.get('contact_invitation') and m.get('direction') == 'outgoing' and m.get('status') in DELIVERED
+                for m in context.get('messages', [])):
+            return '历史已邀请，本次沉默节点不能重复邀请。'
     try:
         result = outcome(decision, context)
     except ValueError as exc:

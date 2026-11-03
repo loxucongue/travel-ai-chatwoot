@@ -164,7 +164,7 @@ class SkillRegistry:
                 'routing': ('enabled_route_variants', 'allow_route_switch', 'preserve_profile_on_switch', 'outside_catalog_action'),
                 'lead_capture': ('enabled', 'channels', 'require_supported_route',
                                  'require_party_size', 'require_departure_window',
-                                 'next_day_invitation_enabled', 'consultation_turn_threshold'),
+                                 'next_day_invitation_enabled', 'contextual_silence_invitation_enabled', 'consultation_turn_threshold'),
             }
             common = {section: {key: self.bundle.get(section, {}).get(key)
                                 for key in keys if key in self.bundle.get(section, {})}
