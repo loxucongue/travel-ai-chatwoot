@@ -1,0 +1,1136 @@
+{
+  "generated_at": "2026-11-03T12:27:50.169787+00:00",
+  "conclusion": "除本轮Facebook实际往返与人工实际收单外，所列功能验收已完成。",
+  "release": "rujing2-20261103T122150Z",
+  "deployed_commit": "4d55a2d03fc24af4963b08c225c6183fa5be59fa",
+  "business_version": "20261103-xiamen-fact-boundaries-v8",
+  "tests": {
+    "backend_regression": {
+      "passed": 376,
+      "warning": "Starlette TestClient httpx弃用提示"
+    },
+    "frontend": {
+      "passed": 11
+    },
+    "business_package_followup": {
+      "passed": 8,
+      "included_in_regression_scope": true
+    }
+  },
+  "real_model_cases": {
+    "initial_scope": 56,
+    "final_unique_primary": 57,
+    "primary_attempts": 78,
+    "v8_targeted_primary": [
+      "agency",
+      "holidays",
+      "payment",
+      "trust",
+      "facebook_only",
+      "conversion_agency"
+    ],
+    "v8_forced_fallback": [
+      "agency",
+      "holidays",
+      "line_contact"
+    ],
+    "note": "v7全量基础验收后，仅收紧公司未知事实与节假日话术并执行v8定向补测；不是每个场景都在v8重复执行。",
+    "cases": [
+      {
+        "id": "price_reference",
+        "title": "價格範圍",
+        "session_id": 58,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.79,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "travel_season",
+        "title": "適合出遊時間",
+        "session_id": 59,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.36,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "recommended_days",
+        "title": "推薦天數",
+        "session_id": 60,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.24,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "overview",
+        "title": "行程總覽",
+        "session_id": 61,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.97,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "shopping",
+        "title": "購物與自費",
+        "session_id": 62,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.37,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "included",
+        "title": "費用包含",
+        "session_id": 63,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.45,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "flights",
+        "title": "機票",
+        "session_id": 64,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.37,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "hotel",
+        "title": "住宿",
+        "session_id": 65,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 4.58,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "charter",
+        "title": "包車",
+        "session_id": 66,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.74,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "children",
+        "title": "兒童",
+        "session_id": 67,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.66,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "elderly",
+        "title": "長者",
+        "session_id": 68,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.61,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "mobility",
+        "title": "行動協助",
+        "session_id": 69,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.59,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "tickets_only",
+        "title": "單獨訂票",
+        "session_id": 70,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.81,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "independent",
+        "title": "自由行協助",
+        "session_id": 71,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.38,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "one_day",
+        "title": "一日遊",
+        "session_id": 72,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.16,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "no_contact_app",
+        "title": "沒有LINE或微信",
+        "session_id": 17,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.16,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "custom",
+        "title": "不跟團／定制",
+        "session_id": 18,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.41,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "group_size",
+        "title": "團體人數",
+        "session_id": 19,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.34,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "single_room",
+        "title": "單房差",
+        "session_id": 20,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 4.67,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "facebook_only",
+        "title": "只在Facebook聯絡",
+        "session_id": 73,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 4.72,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "card_service",
+        "title": "辦卡",
+        "session_id": 22,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 1.72,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "payment",
+        "title": "付款／台灣帳戶",
+        "session_id": 74,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.23,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "other_cities",
+        "title": "其他城市",
+        "session_id": 24,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.13,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "diet",
+        "title": "素食與忌口",
+        "session_id": 25,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.31,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "agency",
+        "title": "旅行社與資質",
+        "session_id": 75,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.42,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "expired_permit",
+        "title": "台胞證過期",
+        "session_id": 27,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.41,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "passport",
+        "title": "只有護照",
+        "session_id": 28,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 4.44,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "female_guide",
+        "title": "女導遊",
+        "session_id": 29,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.72,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "dialysis",
+        "title": "洗腎安排",
+        "session_id": 30,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.73,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "meetup",
+        "title": "兩地同行匯合",
+        "session_id": 31,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 5.39,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "trust",
+        "title": "信任與價格疑慮",
+        "session_id": 76,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 4.52,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "undecided",
+        "title": "時間人數未定",
+        "session_id": 33,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.06,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "later",
+        "title": "有興趣暫無計畫",
+        "session_id": 34,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.59,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "foreign_traveler",
+        "title": "外籍旅客",
+        "session_id": 35,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.87,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "holidays",
+        "title": "節假日",
+        "session_id": 77,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.84,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "hotel_material",
+        "title": "酒店圖文",
+        "session_id": 37,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.68,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "food_video",
+        "title": "餐食影片",
+        "session_id": 38,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.65,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "eight_people",
+        "title": "8人不套舊公司交接門檻或直接承諾獨團",
+        "session_id": 39,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.45,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "fb_continuity",
+        "title": "拒絕加好友後仍可問價",
+        "session_id": 40,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 6.67,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "date_price",
+        "title": "提供月份不虛構精確價",
+        "session_id": 41,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 6.74,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "introduction",
+        "title": "概覽不編造逐日安排且不重播整套介紹",
+        "session_id": 42,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.72,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "line_contact",
+        "title": "LINE ID立即交接",
+        "session_id": 43,
+        "expected": "handoff",
+        "actual": "handoff",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 4.23,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "wechat_contact",
+        "title": "微信ID立即交接",
+        "session_id": 44,
+        "expected": "handoff",
+        "actual": "handoff",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.14,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "consent_only",
+        "title": "同意加好友不等於已留資",
+        "session_id": 45,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 5.68,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "qr_contact",
+        "title": "明確聯絡QR圖片交人工核驗",
+        "session_id": 46,
+        "expected": "handoff",
+        "actual": "handoff",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 5.07,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "ordinary_photo",
+        "title": "普通照片不作留資成功",
+        "session_id": 47,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 8.96,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "requested_human",
+        "title": "主動要求真人不強制先留資",
+        "session_id": 48,
+        "expected": "handoff",
+        "actual": "handoff",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 1.7,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "seven_day_followup",
+        "title": "每日一次最多7天且圖文影片去重",
+        "session_id": 49,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 29.2,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 8
+        },
+        "review_note": null
+      },
+      {
+        "id": "conversion_optout",
+        "title": "拒絕聯絡停止追訪",
+        "session_id": 50,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 5.33,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "sales_busy_customer",
+        "title": "正在忙時尊重暫停而非再次索取",
+        "session_id": 51,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 7.04,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 3
+        },
+        "review_note": null
+      },
+      {
+        "id": "sales_known_family",
+        "title": "人數已明確時承接但不自行算精確價",
+        "session_id": 52,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.41,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "sales_unpriced_day",
+        "title": "一日遊不能套3至6天價格範圍",
+        "session_id": 53,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.05,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "sales_confirmed_departure",
+        "title": "指定日期未查庫存不得保證成行",
+        "session_id": 54,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.05,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "sales_private_group_question",
+        "title": "客人反問獨團時不把一般規模當承諾",
+        "session_id": 55,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [
+          "unexpected_business_or_customer_claim"
+        ],
+        "reviewed_result": "pass",
+        "duration_seconds": 8.14,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 3
+        },
+        "review_note": "关键词匹配到“保證只有你們”，但原句为“是否能保證…目前沒辦法先保證”，是保留条件，不是成团承诺。"
+      },
+      {
+        "id": "contextual_ack",
+        "title": "收尾致謝不強行增加留資邀請",
+        "session_id": 56,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 4.97,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "contextual_preference",
+        "title": "已知LINE偏好只取LINE ID",
+        "session_id": 57,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 5.0,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "e6159c7d655c1aea011b4db97530eb8bb4f4845eecec9e92b518fa4eda09e150",
+        "providers": {
+          "deepseek": 2
+        },
+        "review_note": null
+      },
+      {
+        "id": "conversion_agency",
+        "title": "資質需求引導私訊",
+        "session_id": 78,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.92,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "deepseek": 1
+        },
+        "review_note": null
+      }
+    ],
+    "fallback_cases": [
+      {
+        "id": "agency",
+        "title": "旅行社與資質",
+        "session_id": 1,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 3.21,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "gemini_fallback": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "holidays",
+        "title": "節假日",
+        "session_id": 2,
+        "expected": "reply",
+        "actual": "reply",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 2.4,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "gemini_fallback": 1
+        },
+        "review_note": null
+      },
+      {
+        "id": "line_contact",
+        "title": "LINE ID立即交接",
+        "session_id": 3,
+        "expected": "handoff",
+        "actual": "handoff",
+        "automatic_issues": [],
+        "reviewed_result": "pass",
+        "duration_seconds": 6.99,
+        "runtime_sha256": "0bc90448ff2f7b8ddcff4c808d1beb19b52ed29aa2e9d08ff754dbd2d5faac99",
+        "package_sha256": "cabdcb7461c5436e822f416704ca4c6c600959cabadf1cdb33d18fcfb694377b",
+        "providers": {
+          "gemini_fallback": 2
+        },
+        "review_note": null
+      }
+    ]
+  },
+  "historical_findings": [
+    {
+      "kind": "runtime_failure",
+      "case": "no_contact_app",
+      "session_id": 16,
+      "error": "v3_unknown_script",
+      "resolution": "552c96a新增话术目录校验及一次模型纠正重试；原失败保留，后续通过。"
+    },
+    {
+      "kind": "manual_fact_review",
+      "case": "agency",
+      "session_id": 26,
+      "issue": "没有证据却否定台湾对接旅行社的存在。",
+      "resolution": "v8明确信息未知不等于不存在；主备模型均已复测。"
+    },
+    {
+      "kind": "manual_fact_review",
+      "case": "holidays",
+      "session_id": 36,
+      "issue": "未有库存证据却补充连假通常较早满。",
+      "resolution": "v8明确不推断名额；主备模型均已复测。"
+    },
+    {
+      "kind": "checker_false_positive",
+      "case": "sales_private_group_question",
+      "session_id": 55,
+      "resolution": "保留原始告警，经完整语句核对为否定保证，人工复核通过。"
+    }
+  ],
+  "production_sandbox": {
+    "session_id": 29,
+    "environment": "playground",
+    "formal_profile_model_verified": true,
+    "price_reply": [
+      "一般3–6天行程，每人參考約NT$5,000–8,500，會依天數和安排不同。您想走5天，實際費用還要看日期、人數和房型才能確認，也可以請規劃師一對一把5天的飯店、餐食和景點安排講清楚；方便留LINE或微信嗎？"
+    ],
+    "contact_handoff": true,
+    "model_runs": 2
+  },
+  "live_health": {
+    "manifest_verified": true,
+    "materials_verified": 8,
+    "health": {
+      "status": "ok",
+      "database": "ok",
+      "app_profile": "live_reply",
+      "workers": {
+        "live-reply-worker": {
+          "last_seen_at": "2026-11-03T12:26:40.942619+00:00",
+          "age_seconds": 0,
+          "healthy": true
+        },
+        "live-maintenance-worker": {
+          "last_seen_at": "2026-11-03T12:26:40.955792+00:00",
+          "age_seconds": 0,
+          "healthy": true
+        }
+      },
+      "reasons": [],
+      "worker_type": "live-reply-worker",
+      "worker_last_seen_at": "2026-11-03T12:26:40.942619+00:00",
+      "reactive_live_configured": true,
+      "reactive_live_enabled": true,
+      "customer_sending_paused": false,
+      "chatwoot_status": "connected",
+      "last_webhook_at": "2026-11-03T07:30:53.692758+00:00",
+      "pending_events": 0,
+      "queues": {
+        "events": {
+          "count": 0,
+          "oldest_age_seconds": null
+        },
+        "replies": {
+          "count": 0,
+          "oldest_age_seconds": null
+        },
+        "notifications": {
+          "count": 0,
+          "oldest_age_seconds": null
+        }
+      },
+      "failed_tasks": {
+        "events": 0,
+        "notifications": 0
+      }
+    },
+    "webhook_verified": 20958,
+    "live_inboxes": [
+      150646
+    ]
+  },
+  "notifications": {
+    "notification_config": {
+      "enabled": true,
+      "channel": "chatwoot",
+      "agent_id": 280603,
+      "bot_id": 11678,
+      "assign_on_handoff": true,
+      "handoff_notify_agent_ids": null,
+      "event_types": [
+        "handoff.created",
+        "handoff.overdue"
+      ]
+    },
+    "notification_bot_available": true,
+    "recipient_in_inbox": true
+  },
+  "fact_patch": {
+    "updated": true,
+    "backup": "/opt/rujing2-ai/shared/data/backups/before-handover-facts-20261103T122542Z.db",
+    "version": "20261103-xiamen-fact-boundaries-v8",
+    "configuration_unchanged": true
+  },
+  "pending": [
+    "Facebook客户端新消息到AI回复和素材的实际展示与送达回执。",
+    "业务确认默认接单人，并完成真实留联后的内部通知、认领、手机提醒核验。"
+  ],
+  "limits": [
+    "一条厦门／厦漳泉3–6天产品族，不是已配置多条逐日行程。",
+    "跟进上限7天；当前Facebook自动发送受最后客户消息24小时窗口限制。",
+    "不自动添加LINE／微信好友；普通图片未启用视觉；二维码由人工核验。",
+    "未压测；未评估真实转化率；主备同时失败仍可能不能生成回复。"
+  ],
+  "evidence_sha256": {
+    "handover-acceptance-results.jsonl": "cf59fceefbc1d9735320981223ac44c075617aab900a203f2ce7321ddf7344e2",
+    "handover-fallback-acceptance-results.jsonl": "9f4299e53877cf00085a8437e063d6fc3144f342a08113827dc7c9748e47838a",
+    "handover-final-regression.log": "021f9dc26e34908b9e5a88731562663066f41b9b2c6ccb085ac4d50c73fb87ca",
+    "handover-worker-smoke.log": "c736b965dd8e9d02de22f58d9d1c7f6225d68438b06669b8cae307da3a96ca21",
+    "handover-fallback-current.log": "3d2efc082328d6ea5171f1a6f0b6cd824b3536384678c4eb22bf90bc8cbca523",
+    "handover-final-v8-health.log": "aae5f23f207f6c95feaae6f1874ccc984da2b1233c5420bf21934949379e7aaa"
+  }
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rujing2 · 接待系统验收与交接 · 2026-11-03</title>
+<style>
+:root{--ink:#17324a;--muted:#586c7d;--line:#dbe5eb;--green:#12664c;--blue:#075b96;--amber:#8a570b}
+*{box-sizing:border-box}body{margin:0;background:#f3f6f8;color:var(--ink);font:16px/1.8 "Microsoft YaHei","PingFang SC",sans-serif}main{max-width:1060px;margin:auto;padding:42px 28px 70px}header{padding:32px;background:#123d59;color:white;border-radius:16px}header p{max-width:820px;color:#e0edf5}h1{font-size:30px;line-height:1.5;margin:8px 0 16px}h2{font-size:22px;margin:0 0 16px}h3{font-size:17px;margin:16px 0 8px}p{margin:8px 0 14px}.eyebrow{font-size:13px;letter-spacing:.14em;color:#b9d7e9}.meta{font-size:13px;color:var(--muted)}header .meta{color:#b9d7e9}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}.card{padding:18px;background:white;border:1px solid var(--line);border-radius:12px}.card strong{display:block;font-size:29px;color:var(--blue)}.card span{font-size:14px;color:var(--muted)}section{padding:26px 30px;margin:20px 0;background:white;border:1px solid var(--line);border-radius:14px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#f0f5f8}td:first-child{min-width:110px;font-weight:600}.ok{color:var(--green);font-weight:700}.pending{color:var(--amber);font-weight:700}.notice{border-left:4px solid #daa347;background:#fff8e9;padding:15px 18px;margin:16px 0}.quote{background:#eef6f9;border-left:4px solid #6a9ebd;padding:17px 20px;margin:14px 0;white-space:pre-line}a{color:var(--blue);text-underline-offset:3px}li{margin:8px 0}code{font:13px/1.6 Consolas,monospace;background:#edf2f5;padding:2px 5px;overflow-wrap:anywhere}.entry{display:flex;gap:12px;flex-wrap:wrap}.entry a{display:inline-block;border:1px solid var(--line);padding:9px 14px;border-radius:8px}.small{font-size:14px;color:var(--muted)}details{margin:12px 0}summary{cursor:pointer;font-weight:600}footer{color:var(--muted);font-size:13px}.table-wrap{overflow-x:auto}@media(max-width:650px){main{padding:18px 12px 40px}header,section{padding:22px 18px}h1{font-size:25px}.cards{grid-template-columns:repeat(2,1fr)}th,td{padding:10px 8px}}@media print{body{background:white;font-size:11pt}main{max-width:none;padding:0}header{background:white;color:var(--ink);padding:12px 0;border-bottom:3px solid var(--blue)}header p,header .meta,.eyebrow{color:var(--muted)}section{padding:18px 0;border:0;border-radius:0;break-inside:auto}.card,.quote,tr{break-inside:avoid}.cards{margin:16px 0}.entry{display:none}h2,h3{break-after:avoid}a{color:inherit}details{display:block}}
+</style>
+</head>
+<body><main>
+<header><div class="eyebrow">RUJING2 / HANDOVER ACCEPTANCE</div>
+<h1>接待能力已完成验收<br>渠道实收与人工接单仍待收尾</h1>
+<p>当前可以交接业务配置、AI 答疑、素材接待、留联交接逻辑及沉默跟进。按本次安排，暂未再次从 Facebook 客户端发起测试，因此不把模拟送达或历史回执写成新版渠道验收通过。</p>
+<div class="meta">验收日期：2026-11-03（北京时间） · 分支 codex/rujing2 · 代码 4d55a2d · 业务 v8</div></header>
+<div class="cards"><div class="card"><strong>376</strong><span>后端回归通过</span></div><div class="card"><strong>11</strong><span>前端测试通过</span></div><div class="card"><strong>35</strong><span>已配置 FAQ</span></div><div class="card"><strong>8</strong><span>素材：6 张图＋2 段视频</span></div></div>
+
+<section><h2>交接后能做到什么</h2><div class="table-wrap"><table><thead><tr><th>环节</th><th>当前效果</th><th>验收依据</th></tr></thead><tbody>
+<tr><td>首次接待</td><td>符合接待条件的新客户进入后，发欢迎语、土楼图、鼓浪屿图、酒店图和餐食视频，再结合客户问题答复。</td><td class="ok">正式 Worker 演练 #29；浏览器图片、视频加载正常</td></tr>
+<tr><td>答疑与报价</td><td>使用繁体中文，回答厦门／厦漳泉 3–6 天产品的 FAQ。每人 NT$5,000–8,500 是参考范围，机票另计；日期、儿童费用、房型与包团需销售核实。</td><td class="ok">真实模型 FAQ 与边界场景</td></tr>
+<tr><td>引导转私</td><td>先回答问题，再说明专人需要核对哪些安排、怎样帮助客户，邀请留 LINE／微信。已知渠道偏好会沿用；未定日期和人数也可以咨询。</td><td class="ok">价格、亲子、行程、信任疑虑等真实对话</td></tr>
+<tr><td>留联交接</td><td>收到明确 ID 后记录联系信息、触发人工交接并停止 AI。二维码交人工核验；仅说“好，可以加”不算已留资。</td><td class="ok">LINE、微信、二维码、口头同意及真人请求场景</td></tr>
+<tr><td>沉默跟进</td><td>默认次日 09:00 评估，每天最多一批，业务跟进上限 7 天。选择未发素材或尚未说明的服务价值；无新内容时等待。客户回复后重新处理和排期。</td><td class="ok">虚拟时间推进验证；素材去重与停止边界测试</td></tr>
+<tr><td>暂停与拒绝</td><td>明确不留私人联系方式时继续在 Facebook 答疑；正在忙、要求延后时等待；明确不要再联系或已交人工时停止相应自动触达。</td><td class="ok">真实模型场景与回归测试</td></tr>
+<tr><td>模型备用</td><td>主模型 DeepSeek；临时 503、限流或网络超时等失败时，按剩余时限切到 Gemini 2.5 Flash。不是所有配置错误都重试。</td><td class="ok">隔离注入主模型 503，备用接口实际调用成功</td></tr>
+</tbody></table></div>
+<p class="small">“留联交接”不包含自动添加 LINE／微信好友，也不包含替销售核实库存、合同、公司证照或最终成交价。普通客户图片目前未启用视觉识别，不能声称已看懂图片细节。</p></section>
+
+<section><h2>实际测试中的回复</h2><h3>客户：想去厦门玩 5 天，大概多少钱？</h3>
+<div class="quote">一般3–6天行程，每人參考約NT$5,000–8,500，會依天數和安排不同。您想走5天，實際費用還要看日期、人數和房型才能確認，也可以請規劃師一對一把5天的飯店、餐食和景點安排講清楚；方便留LINE或微信嗎？</div>
+<p class="small">来自正式服务器演练 #29。后续提供测试 LINE ID 后，交接状态成立，AI 未继续追问。演练已停止，可保留查看。</p>
+<h3>客户关心“4 天＋土楼”，次日未回复</h3>
+<div class="quote">規劃4天的行程，需要把土樓與市區景點的先後順序、停留時間和費用一起核對，才能安排得比較順。可以請規劃師沿著您的需求整理說明，私訊也方便接著確認細節，方便留LINE或微信嗎？</div>
+<p class="small">来自本轮真实 Gemini 备用模型演练。第二天改用美食图与餐食安排说明。实际文案会随对话变化，不保证每次逐字一致。</p>
+<h3>客户：没有 LINE，也没有微信</h3><div class="quote">沒關係，我們可以先在這裡聊行程，您不用另外註冊LINE或微信～您想先了解哪一部分呢？</div></section>
+
+<section><h2>业务需要知道的触达边界</h2><div class="notice"><strong>最多跟进 7 天，不代表 Facebook 能自动连续发 7 天。</strong><br>当前系统按最后一条真实客户消息起算 24 小时自动发送窗口，发送前再次检查。超过窗口就停止自动发送，等待客户再次来信；人工延长窗口不会自动放开 AI。</div>
+<p>例如客户今天 15:00 来信，明天 09:00 仍在当前窗口内；如果客户之后一直不回复，后天 09:00 已超过窗口，系统不会硬发。渠道限制可参阅 <a href="https://developers.chatwoot.com/self-hosted/supported-features">Chatwoot 官方说明</a>；本系统的自动回复边界由代码独立控制。</p>
+<p>七天推进测试中，AI 实际发出 3 批主动跟进，之后等待并在期限结束时停止。评估次数不等于发送次数，不能把“少发几次”直接判定成没有唤醒。</p>
+<p>现有开关还允许顾问公开回复后，在客户沉默 30 分钟时做一次简短文字跟进。它不重新报价或发营销素材，计入每天一次的限额；客户再次回复回到人工，已留资和停止联系保护不解除。</p></section>
+
+<section><h2>运营人员在哪里操作</h2><div class="entry"><a href="http://47.82.3.154/#/overview">运营后台</a><a href="http://47.82.3.154/#/playground?session=29">查看演练 #29</a><a href="https://app.chatwoot.com/app/accounts/193812/conversations/1">Chatwoot 测试会话</a></div>
+<p class="small">后台地址：<a href="http://47.82.3.154/">http://47.82.3.154/</a>；Chatwoot：<a href="https://app.chatwoot.com/app/accounts/193812/dashboard">app.chatwoot.com · 账户 193812</a>。使用已有账号登录。</p>
+<div class="table-wrap"><table><thead><tr><th>要做的事</th><th>入口与步骤</th></tr></thead><tbody>
+<tr><td>改价格、FAQ</td><td>线路配置 → 厦门／厦漳泉 → 配置 → 场景话术、线路资料；先核实资料，再发布修改。</td></tr>
+<tr><td>换图片、视频</td><td>线路配置 → 图片与文件；开场顺序在公共接待 → 开场与语气；跟进素材在公共接待 → 场景素材维护。</td></tr>
+<tr><td>改转私语气</td><td>公共接待 → 开场与语气、留资与交接。不要新增没有依据的公司身份、库存、优惠或退款承诺。</td></tr>
+<tr><td>调整沉默跟进</td><td>公共接待 → 沉默跟进，查看 09:00、每日一次及真实客户开关。修改后先在新客户演练验证。</td></tr>
+<tr><td>人工处理客户</td><td>Chatwoot 查看对话与内部提醒；运营后台的人工接管、会话控制台查看交接状态。由销售核对 ID 并添加好友，继续咨询与成交。</td></tr>
+<tr><td>设置接单人员</td><td>系统设置 → 顾问通知，确认默认接收人；需要多人分配时再维护顾问分配和收件箱成员权限。</td></tr>
+<tr><td>暂停自动消息</td><td>顶部“消息发送已开启”开关可全局暂停自动客户消息；单渠道在系统设置 → 渠道 AI 控制。全局暂停不等于停止人工收发或内部提醒。</td></tr>
+<tr><td>排查不回复</td><td>先查全局开关、渠道 AI、人工接管／停止标签、最后客户来信时间；再查运营总览的 Worker、积压与失败状态。不要用旧测试会话重播开场来验证新客户逻辑。</td></tr>
+</tbody></table></div></section>
+
+<section><h2>仍需要完成的两项交接确认</h2><ol>
+<li><strong>新版 Facebook 实际往返。</strong>后续从 Facebook 测试客户发一条新咨询，确认 Chatwoot 入站、AI 出站、附件与客户端实际展示。历史已送达记录只证明历史发送，不替代新版验收。</li>
+<li><strong>人工实际收单。</strong>目前有一位默认 Chatwoot 接收人（成员 ID 280603），通知机器人和该成员的收件箱权限已核实。尚未测试本轮真实留联触发后的内部提醒、认领与手机通知；业务还需明确是否沿用此成员或提供销售名单。多人自动分配当前未启用。</li>
+</ol><p>后台目前只有一个管理员账号，交接给多位同事前应按人员配置账号与角色。证照、合作方、收款资料、最终价格和排班等尚未提供的正式资料，由销售核对后补入；不能用 AI 的回答代替核实。</p></section>
+
+<section><h2>本次验收和修复记录</h2><ul>
+<li>真实模型基础验收覆盖 35 个 FAQ＋21 个补充场景，共 56 类；保留全部原始结果。公司事实边界收紧后补测 6 类主模型场景（含 1 类新增问题，累计 57 类），并用备用模型验证 3 类场景，详见随附验收摘要。</li>
+<li>修复 FAQ 编号错误导致无回复：模型引用不存在的话术编号时，使用同一有效话术目录校验并允许一次纠正；持续无效仍拒绝执行，不擅自猜编号。</li>
+<li>收紧公司信息与节假日话术：缺少台湾合作方资料不能回答“没有合作方”；没有库存证据不推测节假日早满或名额紧张。更新为业务 v8。</li>
+<li>“8 人是否保证独团”曾被关键词检查误报。原回复明确说“目前没办法先保证”，人工核对为通过；原始告警保留，并在摘要中单独记录。</li>
+<li>最终代码回归 376 项后端测试通过；前端 11 项测试通过；业务资料变更另复测 8 项导入与隔离检查。存在测试框架弃用提示，无失败。</li>
+<li>发布清单、8 个素材文件哈希、四个服务、Worker 心跳、Webhook、启用收件箱及发送开关已检查。没有对真实客户执行本轮模拟对话。</li>
+</ul><p class="small">验证范围是所列场景与当前配置；不包含并发压测、第三方连续可用性承诺或真实转化率评估。主备同时不可用时仍可能无法生成回复，需查看失败记录。</p>
+<details><summary>开发维护信息</summary><p>部署目录 <code>/opt/rujing2-ai</code>；发布 <code>rujing2-20261103T122150Z</code>；代码 <code>4d55a2d</code>；业务 <code>20261103-xiamen-fact-boundaries-v8</code>。只维护 <code>codex/rujing2</code>，本次没有发布到原公司环境。</p><p>原始证据位于工作区忽略目录 <code>output/deploy/rujing2/</code>；可分享的脱敏摘要为 <code>docs/development/rujing2-handover-acceptance-20261103.json</code>。部署与回退记录见 <code>docs/deployment/rujing2.md</code>。模型密钥与密码不放进交接文档。</p></details></section>
+<footer>Rujing2 交接说明 · 2026-11-03 · 本页可直接在浏览器打印为 PDF。待办状态以本轮验收为准。</footer>
+</main></body></html>
