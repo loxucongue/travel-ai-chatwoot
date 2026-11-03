@@ -404,13 +404,14 @@ def departure_quote(bundle, route, start, end, now, *, party_size=None, group_ty
             'single_supplement_cny':band['single_supplement_cny']}
 
 
-def contains_trip_quote(text):
+def trip_quote_amounts(text):
     # Block whole-trip quotes in common monetary formats while still allowing
     # answers about small per-person charges (for example a 60-yuan gratuity).
     number = r'\d[\d,]*(?:\.\d+)?'
     pattern = (rf'(?P<per_person>{number})\s*元?\s*/\s*人'
                rf'|每人\s*(?:¥|￥|人民幣|人民币|RMB|CNY)?\s*(?P<each>{number})\s*元'
-               rf'|(?:團費|团费|優惠價|优惠价|精緻小團)[^。\n\d]{{0,60}}(?P<label>{number})'
+               rf'|(?:團費|团费|優惠價|优惠价|精緻小團)[^。！？!?；;\n，,\d]{{0,60}}(?P<label>{number})'
+               rf'(?=\s*(?:元|[。！？!?；;\n，,（(]|$))'
                rf'|(?:人民幣|人民币|RMB|CNY|¥|￥)\s*[¥￥]?\s*(?P<currency>{number})'
                rf'|(?P<yuan>{number})\s*元')
     for match in re.finditer(pattern, text, re.I):
@@ -428,8 +429,11 @@ def contains_trip_quote(text):
                                     r'|(?P<trip>團費|团费|行程|優惠價|优惠价|總價|总价)', prefix))
         if subjects and subjects[-1].group('extra'):
             continue
-        return True
-    return False
+        yield float(amount.replace(',', ''))
+
+
+def contains_trip_quote(text):
+    return next(trip_quote_amounts(text), None) is not None
 
 
 def quote_error(decision, bundle, checked, availability=None, *, require_interrupt=True):

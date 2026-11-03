@@ -78,7 +78,8 @@ def price_scripts(policy, *, legacy_ceiling=None):
                            'party_size_min':int(count), 'party_size_max':int(count),
                            'price_cny':amount, 'quote_group_type':group,
                            'usage_note':'已按原價與明確人數計算。只引用符合本輪人數和團型的script_id，text留空；'
-                                        '不再扣早鳥、不疊加舊活動、不展示截止日或計算分解。'})
+                                        '不展示早鳥或截止日，不疊加舊活動。可另用text依pricing_evidence簡短說明'
+                                        '各人數的每人優惠，最終價已含適用優惠，不再扣一次。'})
     return result
 
 
@@ -98,15 +99,33 @@ def pricing_evidence(bundle):
         policy = spec.get('party_pricing')
         if not policy:
             continue
+        prices = []
+        for script in spec['scripts']:
+            if not script.get('price_cny') or not script.get('quote_group_type'):
+                continue
+            count, group = script['party_size_min'], script['quote_group_type']
+            discount = discount_per_person(policy, count)
+            supplement = policy['private_supplements_per_person'][str(count)] if group == 'private' else 0
+            standard = policy['base_price_cny'] - discount + supplement
+            prices.append({
+                'party_size': count, 'group_type': group, 'price_cny': script['price_cny'],
+                'discount_per_person_cny': discount, 'private_supplement_per_person_cny': supplement,
+                'standard_price_cny': standard, 'honors_prior_lower_quote': script['price_cny'] < standard,
+            })
         result[key] = {
             'source_ref': policy['source_ref'],
-            'per_person_prices': [
-                {'party_size': s['party_size_min'], 'group_type': s['quote_group_type'], 'price_cny': s['price_cny']}
-                for s in spec['scripts'] if s.get('price_cny') and s.get('quote_group_type')],
+            'base_price_cny': policy['base_price_cny'],
+            'per_person_prices': prices,
             'usage': '人数区间不等于价格不同。比较上表每人价，相同就说明同价，不以不存在的价差催问人数。'
                      '客户要求比较两种或多种人数时，用messages[].quote_options列出相应price_*模板ID，'
                      '系统分别列出各方案每人价并共用包含/不含说明，无须先选定人数。'
                      '比较方案不是报名人数，不据此更新profile.party_size。单一确定人数仍用script_id。'
+                     '比较人数报价时，另用一条text自然说明适用的discount_per_person_cny，这是每人减额，'
+                     '不是整单减额；最终价已含优惠，不再扣一次。客户只问优惠规则就解释规则，不必重发完整报价。'
+                     '解释按本轮表格，不按固定例句背金额；无价差就说明同价，不扩大到其他线路。'
+                     '独团加价private_supplement_per_person_cny与人数优惠分开，不能把减额当净价差。'
+                     'honors_prior_lower_quote为true时沿用先前较低报价，不把它说成按本次人数折扣算出的价格，'
+                     '也不在先前报价上再扣人数优惠，不展示旧活动名称或期限。'
                      '此表不代表日期可售。客户改了月份，先核对日期；该日期不可售就不报原线价格，也不为原线追问核价人数。',
         }
     return result
@@ -128,8 +147,8 @@ def quote_error(decision, bundle, previous, default_route=''):
         return None
     profile = effective_profile(previous, decision.get('profile', {}))
     if comparisons:
-        if len(pricing) != 1:
-            return '比較人數請集中在一條quote_options，不能混入其他團費或重複報價。'
+        if len(comparisons) != 1:
+            return '比較人數請集中在一條quote_options，補充解釋另用text並以對應script_id標記金額來源。'
         message = comparisons[0]
         ids = message['quote_options']
         if (len(ids) < 2 or len(ids) != len(set(ids)) or message.get('text')
@@ -142,6 +161,10 @@ def quote_error(decision, bundle, previous, default_route=''):
         group = profile.get('group_type', 'undecided')
         if len(groups) != 1 or groups != {group if group in ('shared', 'private') else 'shared'}:
             return '本次比較需使用同一團型；未選團型先提供拼團參考價，不套用其他團型或猜獨團加價。'
+        explanation_ids = [key for key, s in scripts.items() if s.get('quote_group_type') in groups]
+        for extra in pricing:
+            if extra is not message and not _validated_explanation(extra, spec, explanation_ids):
+                return '完整比較報價只發一次；補充解釋可引用本線同團型已有依據的價格，不另發整份報價或猜配置以外的金額。'
         return None
     count = profile.get('party_size')
     if type(count) is not int or count < 1 or profile.get('party_size_range'):
@@ -154,9 +177,25 @@ def quote_error(decision, bundle, previous, default_route=''):
     script = next((s for s in spec['scripts'] if s['id']==expected), None)
     if script is None:
         return '尚無此人數／團型的完整最終報價模板，不能推斷獨團加價或套用其他團型價格；需要實際報價時靜默交接核對。'
-    if len(pricing) != 1 or any(m.get('script_id')!=expected or m.get('text') for m in pricing):
-        return f'本輪核價只能引用{expected}，text留空，系統發送最終每人價與包含／不含；不可自行改寫金額或重複報價。'
+    full_quotes = [m for m in pricing if not m.get('text')]
+    if (len(full_quotes) > 1 or any(m.get('script_id') != expected for m in full_quotes)
+            or any(not _validated_explanation(m, spec, [expected]) for m in pricing if m.get('text'))):
+        return f'上一候選含本輪方案以外的金額或重複模板，尚未發送。保持客戶問題範圍，只修正沒有依據的金額。只問已含優惠或能否再減，直接用text解釋本方案已核對價格即可，不追加其他人數、不重發包含／不含；可引用{expected}作來源。客戶要完整新報價時才引用此模板並把text留空。'
     return None
+
+
+def _validated_explanation(message, spec, ids):
+    """Verify the model's price source without classifying its wording."""
+    from app.reception_v3.seasonal_quotes import trip_quote_amounts
+    if (not message.get('text') or (message.get('script_id') and message['script_id'] not in ids)
+            or message.get('quote_options') or message.get('asset_keys') or message.get('material_rule_id')):
+        return False
+    scripts = {s['id']: s for s in spec['scripts'] if s.get('status') == 'active' and s.get('price_cny')}
+    if any(key not in scripts for key in ids):
+        return False
+    amounts = {scripts[key]['price_cny'] for key in ids}
+    amounts.add(spec['party_pricing']['base_price_cny'])
+    return set(trip_quote_amounts(message['text'])) <= amounts
 
 
 def comparison_text(spec, ids):
