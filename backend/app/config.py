@@ -43,6 +43,12 @@ class Settings(BaseSettings):
     customer_image_allowed_hosts: str = "app.chatwoot.com"
     customer_image_storage_hosts: str = "prod-chatwoot-assets.s3.amazonaws.com"
     deepseek_timeout_seconds: int = 20
+    gemini_fallback_enabled: bool = False
+    google_gemini_base_url: str = ""
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_fallback_primary_timeout_seconds: float = Field(default=15, gt=0)
+    gemini_fallback_cooldown_seconds: float = Field(default=60, ge=0)
     deepseek_max_input_characters: int = 300000
     evaluation_poll_interval_seconds: float = 1
     evaluation_inbox_id: int = 0
@@ -83,6 +89,8 @@ class Settings(BaseSettings):
         return values
 
     def validate_runtime(self) -> None:
+        if self.gemini_fallback_enabled and not all((self.google_gemini_base_url, self.gemini_api_key, self.gemini_model)):
+            raise ValueError('gemini_fallback_configuration_incomplete')
         if self.outbound_mode not in {"disabled", "record_only", "live"}:
             raise ValueError("invalid_outbound_mode")
         if self.live_sop_scope not in {"allowlist", "ai_label"}:

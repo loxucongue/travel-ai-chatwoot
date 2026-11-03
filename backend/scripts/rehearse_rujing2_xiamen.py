@@ -65,7 +65,9 @@ def configure(args):
     output.mkdir(parents=True, exist_ok=True)
     if args.model_env:
         values = dotenv_values(Path(args.model_env).resolve())
-        for key in ('DEEPSEEK_API_KEY', 'DEEPSEEK_BASE_URL', 'DEEPSEEK_MODEL'):
+        for key in ('DEEPSEEK_API_KEY', 'DEEPSEEK_BASE_URL', 'DEEPSEEK_MODEL',
+                    'GEMINI_FALLBACK_ENABLED', 'GOOGLE_GEMINI_BASE_URL', 'GEMINI_API_KEY', 'GEMINI_MODEL',
+                    'GEMINI_FALLBACK_PRIMARY_TIMEOUT_SECONDS', 'GEMINI_FALLBACK_COOLDOWN_SECONDS'):
             if values.get(key):
                 os.environ[key] = values[key]
     os.environ.update(BUSINESS_PROFILE='rujing2', APP_PROFILE='evaluation', APP_ENV='development',

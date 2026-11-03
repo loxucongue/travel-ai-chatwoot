@@ -1,10 +1,14 @@
 """Metered streaming HTTP transport, without reply policy or verification."""
 import asyncio,json,time,threading
+from copy import deepcopy
+from urllib.parse import urlsplit
 import httpx
 from app.config import settings
 _model_tls=None
 _model_tls_lock=threading.Lock()
 _transport=threading.local()
+_fallback_lock=threading.Lock()
+_primary_unavailable_until={}
 
 def _model_ssl_context():
     """Share immutable trust configuration, never clients or event loops.
@@ -28,25 +32,75 @@ class EvaluationCallError(RuntimeError):
 
 
 def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
+    """Keep both providers inside the caller's deadline; never retry outbound sends."""
+    enabled = bool(settings.gemini_fallback_enabled and settings.google_gemini_base_url and settings.gemini_api_key)
+    if not enabled:
+        return _post_attempt(payload, timeout)
+    deadline = time.monotonic() + timeout
+    identity = (settings.deepseek_base_url, settings.deepseek_api_key)
+    with _fallback_lock:
+        cooling_down = _primary_unavailable_until.get(identity, 0) > time.monotonic()
+    reason = 'primary_cooldown' if cooling_down else None
+    if not cooling_down:
+        try:
+            # Reserve at least half the remaining time for the fallback.
+            response = _post_attempt(payload, min(timeout / 2, settings.gemini_fallback_primary_timeout_seconds))
+            with _fallback_lock:
+                _primary_unavailable_until.pop(identity, None)
+            return response
+        except Exception as exc:
+            transient = (isinstance(exc, (TimeoutError, httpx.TransportError)) or
+                isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code in {429, 500, 502, 503, 504})
+            if not transient:
+                raise
+            reason = f'http_{exc.response.status_code}' if isinstance(exc, httpx.HTTPStatusError) else type(exc).__name__
+            with _fallback_lock:
+                _primary_unavailable_until[identity] = time.monotonic() + settings.gemini_fallback_cooldown_seconds
+            if deadline - time.monotonic() <= 0:
+                raise
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError('model_fallback_deadline_exceeded')
+    fallback = deepcopy(payload)
+    fallback['model'] = settings.gemini_model
+    thinking = fallback.pop('thinking', {})
+    if thinking.get('type') == 'disabled':
+        fallback['reasoning_effort'] = 'none'
+    # DeepSeek's reasoning_content is not part of the gateway's chat protocol.
+    for message in fallback.get('messages') or []:
+        message.pop('reasoning_content', None)
+    base = settings.google_gemini_base_url.rstrip('/')
+    if not urlsplit(base).path:
+        base += '/v1'
+    response = _post_attempt(fallback, remaining, provider=(base, settings.gemini_api_key))
+    response.extensions['model_fallback_reason'] = reason
+    return response
+
+
+def _post_attempt(payload: dict, timeout: float, provider=None) -> httpx.Response:
     from app.model_metering import begin_request, end_request
     handle = begin_request(payload)
+    handle[0]['provider'] = 'gemini_fallback' if provider else 'deepseek'
     try:
-        response = _post_unmetered(payload, timeout)
+        response = _post_unmetered(payload, timeout, provider=provider) if provider else _post_unmetered(payload, timeout)
         end_request(handle, response.json())
+        response.extensions['model_provider'] = handle[0]['provider']
         return response
     except Exception as exc:
+        if isinstance(exc, httpx.HTTPStatusError):
+            handle[0]['http_status'] = exc.response.status_code
         end_request(handle, error=exc)
         raise
 
 
-def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
+def _post_unmetered(payload: dict, timeout: float, provider=None) -> httpx.Response:
     # Each calling thread owns its loop and connection pool; API threads never share an asyncio client.
     if not hasattr(_transport, "runner"):
         _transport.runner = asyncio.Runner()
     async def send():
         started = time.monotonic()
         timing = {"phase": "connect", "headers_ms": None, "first_token_ms": None}
-        identity = (settings.deepseek_base_url, settings.deepseek_api_key)
+        identity = provider or (settings.deepseek_base_url, settings.deepseek_api_key)
         if getattr(_transport, "identity", None) != identity:
             if getattr(_transport, "client", None) is not None:
                 await _transport.client.aclose()
@@ -55,9 +109,9 @@ def _post_unmetered(payload: dict, timeout: float) -> httpx.Response:
         timing['initialization_ms'] = int((time.monotonic() - started) * 1000)
         try:
             async with asyncio.timeout(max(0, timeout - (time.monotonic() - started))):
-                async with _transport.client.stream("POST", f"{settings.deepseek_base_url.rstrip('/')}/chat/completions", json=payload,
+                async with _transport.client.stream("POST", f"{identity[0].rstrip('/')}/chat/completions", json=payload,
                             timeout=httpx.Timeout(timeout, connect=min(5, timeout)),
-                            headers={"Authorization": f"Bearer {settings.deepseek_api_key}", "Content-Type": "application/json"}) as response:
+                            headers={"Authorization": f"Bearer {identity[1]}", "Content-Type": "application/json"}) as response:
                         response.raise_for_status()
                         timing.update(phase="waiting_for_model", headers_ms=int((time.monotonic() - started) * 1000))
                         if "text/event-stream" not in response.headers.get("content-type", ""):

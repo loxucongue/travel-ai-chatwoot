@@ -46,8 +46,12 @@ def _update(record, *, reserve=False):
 
 
 def begin_request(payload):
-    if _ledger_path() is not None and payload.get('model') not in {'deepseek-flash', 'deepseek-v4-flash'}:
-        raise RuntimeError('model_test_requires_deepseek_flash')
+    model = payload.get('model')
+    if _ledger_path() is not None and model not in {'deepseek-flash', 'deepseek-v4-flash', 'gemini-2.5-flash'}:
+        raise RuntimeError('model_test_requires_supported_flash_model')
+    # Gemini gateway tariffs are operator-specific. These are budgeting test
+    # estimates, not a claim about the provider's actual invoice or exchange rate.
+    input_rate, cache_rate, output_rate = (10, 10, 80) if model == 'gemini-2.5-flash' else (2, .04, 8)
     # Byte-level tokenization cannot exceed the serialized request's UTF-8
     # bytes for its visible text. Double that bound and add 64K framing room;
     # cap at the model's 1M input context. Never refund old unknown requests.
@@ -55,7 +59,9 @@ def begin_request(payload):
     maximum = int(payload.get('max_tokens') or 384000)
     record = {'id': uuid.uuid4().hex, 'model': payload.get('model'), 'status': 'reserved',
               'input_token_upper_bound': input_bound,
-              'charged_or_reserved_cny': (input_bound * 2 + maximum * 8) / 1000000,
+              'charged_or_reserved_cny': (input_bound * input_rate + maximum * output_rate) / 1000000,
+              'cost_basis': 'test_estimate',
+              'rates_cny_per_million': {'input':input_rate, 'cached_input':cache_rate, 'output':output_rate},
               'input_tokens': None, 'output_tokens': None, 'duration_ms': None}
     _update(record, reserve=True)
     if calls.get() is not None:
@@ -71,8 +77,9 @@ def end_request(handle, body=None, error=None):
     if isinstance(usage.get('prompt_tokens'), int) and isinstance(usage.get('completion_tokens'), int):
         inp, out = usage['prompt_tokens'], usage['completion_tokens']
         hit = min(inp, max(0, int(usage.get('prompt_cache_hit_tokens') or 0)))
+        rates = record['rates_cny_per_million']
         record.update(input_tokens=inp, output_tokens=out, cached_input_tokens=hit,
-                      charged_or_reserved_cny=((inp-hit)*2 + hit*.04 + out*8)/1000000,
+                      charged_or_reserved_cny=((inp-hit)*rates['input'] + hit*rates['cached_input'] + out*rates['output'])/1000000,
                       usage_known=True)
     else:
         record['usage_known'] = False
