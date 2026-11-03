@@ -102,7 +102,11 @@ def _metered_attempt(payload, timeout, provider, fallback_reason=None):
         response.extensions.setdefault('call_timing', {}).update(provider=provider, fallback_reason=fallback_reason)
         try:
             body = response.json()
-            if (payload.get('response_format') or {}).get('type') == 'json_object':
+            # Validate here only when this attempt can switch providers.
+            # Otherwise leave content repair to the caller's existing bounded
+            # protocol retry; an invalid draft is not a transport failure.
+            if (provider == 'deepseek' and gemini_available()
+                    and (payload.get('response_format') or {}).get('type') == 'json_object'):
                 from app.model_gateway import _json_object
                 message = body['choices'][0]['message']
                 if not message.get('tool_calls'):

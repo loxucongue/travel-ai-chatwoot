@@ -145,6 +145,20 @@ def test_fenced_json_is_valid_and_does_not_trigger_backup(gateway):
     assert len(requests) == 1
 
 
+@pytest.mark.parametrize('fallback_enabled', [False, True])
+def test_last_provider_invalid_draft_reaches_existing_protocol_repair(gateway, monkeypatch, fallback_enabled):
+    handlers, requests, records = gateway
+    monkeypatch.setattr(settings, 'gemini_fallback_enabled', fallback_enabled)
+    invalid = lambda r: httpx.Response(200, json={
+        'choices': [{'message': {'content': 'needs JSON repair'}, 'finish_reason': 'stop'}]})
+    handlers['primary.invalid'] = (lambda r: httpx.Response(503)) if fallback_enabled else invalid
+    handlers['fallback.invalid'] = invalid
+    result = transport._post_with_deadline({**payload(), 'response_format': {'type': 'json_object'}}, 2)
+    assert result.json()['choices'][0]['message']['content'] == 'needs JSON repair'
+    assert records[-1]['provider'] == ('gemini' if fallback_enabled else 'deepseek')
+    assert len(requests) == (2 if fallback_enabled else 1)
+
+
 def test_tool_ids_and_results_survive_switch_without_mutating_primary_payload(gateway):
     handlers, requests, _ = gateway
     handlers['primary.invalid'] = lambda r: httpx.Response(503)
