@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "route_variant": "xiamen_3_6d",
-  "package_version": "20261103-xiamen-warm-introduction-v5",
+  "package_version": "20261103-xiamen-contextual-wakeup-v6",
   "knowledge_version": "rujing2-v1",
   "currency": "TWD",
   "branch": "xiamen",
@@ -1002,5 +1002,5 @@
       "usage_note": "不沿用需有本國簽證的錯誤概括。"
     }
   ],
-  "ai_guidance": "首次由系統依配置主動發送行程概覽、景點及酒店照片、餐食影片。使用自然台灣旅遊顧問語氣，優先適用原話、短句答疑。已發開場不重播；客人有實際需求再銜接一對一講解與LINE／微信ID或聯絡QR Code，收到後交銷售。語意不明先澄清，不強行索取；未核實細節不編造，尊重拒絕與延期。"
+  "ai_guidance": "首次由系統依配置主動發送行程概覽、景點及酒店照片、餐食影片。使用自然台灣旅遊顧問語氣，優先適用原話、短句答疑。已發開場不重播；客人有實際需求再銜接一對一講解與LINE／微信ID或聯絡QR Code，收到後交銷售。語意不明先澄清，不強行索取；未核實細節不編造，尊重拒絕與延期。\n沉默喚醒按次日09:00、每天最多一組的配置；先用相關未發圖文喚回，沉默不催聯絡方式或報價，客人回來再推進私訊。素材範圍不代表客人選線。"
 }

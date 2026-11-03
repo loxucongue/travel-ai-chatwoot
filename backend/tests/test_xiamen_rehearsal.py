@@ -34,12 +34,14 @@ def test_prepare_real_company_materials_in_isolated_playground(tmp_path):
     assert not config['handoff']['large_group_enabled']
     assert config['silence']['enabled']
     assert not config['silence']['live_enabled']
-    assert config['silence']['daily_at'] == '10:00'
+    assert config['silence']['daily_at'] == '09:00'
+    assert config['silence']['advisor_reply_followup_enabled']
     assert config['silence']['max_proactive_messages_per_day'] == 1
     assert not config['intake']['enabled']
     assert not config['lead_capture']['require_party_size']
     assert not config['lead_capture']['require_departure_window']
-    assert len(config['material_rules']) == 8
+    assert len(config['material_rules']) == 11
+    assert sum(r['enabled'] for r in config['material_rules']) == 7
     assert '廈門' in config['reply']['opening_items'][0]['content']
     assert [i['content_type'] for i in config['reply']['opening_items']] == ['text','image','image','image','video']
     assert all(i['media_id'] and i['media_hash'] for i in config['reply']['opening_items'][1:])
@@ -154,10 +156,10 @@ with SessionLocal() as db:
         environment='playground', mode='journey', engine_version='v3',
         controls={'route_variant':'xiamen_3_6d'}, memory={}, messages=[])
     db.add(row); db.flush()
-    decision = Decision(messages=[{'material_rule_id':'xiamen-followup-meal_video'}]).model_dump()
+    decision = Decision(messages=[{'material_rule_id':'xiamen-followup-travelers'}]).model_dump()
     _, parts = service.parts_for(db, row, bundle, decision, followup=True)
     assert [p['content_type'] for p in parts] == ['text','video']
-    assert parts[1]['asset_key'] == 'xiamen_meal_video'
+    assert parts[1]['asset_key'] == 'xiamen_travelers_video'
     assert parts[1]['media_id'] and parts[1]['media_hash']
     row.messages = [{**p, 'direction':'outgoing','status':'delivered'} for p in parts]
     db.commit(); db.expire_all()

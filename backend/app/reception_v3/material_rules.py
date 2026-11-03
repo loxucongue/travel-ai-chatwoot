@@ -3,6 +3,31 @@ import hashlib
 import json
 
 
+def followup_material_route(bundle, materials, route, profile, messages):
+    """Scope outreach to a selected trip or a uniquely delivered campaign preview.
+
+    This is a material scope only, never a customer route selection. Mixed
+    previews, unsent media and an unresolved alternative do not grant a scope.
+    """
+    if route:
+        return route
+    if (profile or {}).get('discussion_route'):
+        return ''
+    delivered = [m for m in messages if m.get('v3_kind') == 'opening'
+                 and m.get('direction') == 'outgoing'
+                 and m.get('status') in ('simulated_delivered', 'submitted', 'sent', 'delivered', 'read')]
+    keys = {m.get('asset_key') for m in delivered} - {None, ''}
+    hashes = {m.get('media_hash') for m in delivered} - {None, ''}
+    ids = {m.get('media_id') for m in delivered} - {None}
+    shown = {r for m in materials if m['key'] in keys or m.get('media_hash') in hashes or m.get('media_id') in ids
+             for r in m.get('routes', [])}
+    if len(shown) != 1:
+        return ''
+    candidate = next(iter(shown))
+    from app.reception_v3.route_choice import rejects_current_route
+    return candidate if candidate in bundle['routes'] and not rejects_current_route(candidate, profile or {}) else ''
+
+
 def itinerary_previews(bundle, materials, messages, profile=None):
     """Expose approved route-map references even before a route Skill is loaded.
 
@@ -43,6 +68,9 @@ def followup_contract_error(decision, context):
     messages = decision.get('messages', [])
     selected = [m['material_rule_id'] for m in messages if m.get('material_rule_id')]
     eligible = {r['id'] for r in context.get('material_rules', [])}
+    if (decision.get('start_introduction') or decision.get('route_choice', 'unchanged') != 'unchanged'
+            or decision.get('route_variant', '') not in ('', context.get('route_variant', ''))):
+        return '沉默跟進不能替客人選線或重播介紹。followup_material_route只是素材範圍，保留原route_variant與route_choice=unchanged、start_introduction=false。'
     if (any(m.get('asset_keys') for m in messages) or len(selected) > 1
             or any(key not in eligible for key in selected)):
         return ('本輪是配置素材的沉默追訪：asset_keys必須為[]，最多選一個本輪material_rules內的'

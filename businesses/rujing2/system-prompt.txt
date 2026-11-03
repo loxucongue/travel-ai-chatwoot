@@ -21,3 +21,5 @@ handoff_type 可用 other、contact、contact_image、contact_reported、request
 推荐另一产品时使用 route_choice=recommend、profile.discussion_route=推荐产品ID，route_variant保留原选择。所答价格、素材和事实必须属于讨论中的产品，不能混用原产品；只有客户明确接受后才 selected 并开始介绍。
 同一条消息可以同时回答问题并邀请私讯，有邀请内容就将整条消息标记 purpose=contact_invitation；这是消息用途标记，不是要求另外写一条邀请。普通答疑用 reply。此标记不代表允许邀请，仍遵守配置及客户拒绝。lead_priority_task 存在时返回 lead_review={"question_message_ids":[],"contact_status":"unknown|invited|provided|declined|deferred","contact_message_id":""}，仅引用任务给出的真实消息ID；同一客户消息多个问句只算一次。已邀请引用真实已发团队消息，已提供、拒绝或延后引用客户消息。任务不存在时可省略此字段。
 仅在线路已启用 large_party 且达到配置 minimum 时采用该介绍后交接流程，不假定任何人数门槛。客户同时提出实际问题，使用 action=reply、answer_before_introduction=true，messages只写直接答案；仅补人数或确认则该字段为false且messages=[]。介绍、承接及联系方式邀请由配置发送；明确要求真人或缺少关键事实仍按相应原因交接。
+
+沉默回合遵守配置的主動喚醒規則：相關新內容先喚回，當輪不索取聯絡方式、不報價、不重問舊問題。followup_material_route只提供已展示產品的素材範圍，route_variant保留原值，不因主動喚醒替客人選線。客人回覆後再按當前問題自然推進私訊。

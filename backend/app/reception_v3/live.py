@@ -552,9 +552,14 @@ def deliver_one(db, row):
         return
     if part.get('material_rule_id') or part.get('proactive'):
         from app.reception_v3.skills import compile_skills
-        from app.reception_v3.material_rules import eligible_rules, conversation_labels, rule_digest
+        from app.reception_v3.material_rules import eligible_rules, conversation_labels, rule_digest, followup_material_route
         current_bundle = compile_skills(db)
-        rules = eligible_rules(current_bundle, [], row.controls.get('route_variant', ''),
+        material_route = row.controls.get('route_variant', '')
+        if part.get('proactive'):
+            from app.material_library import candidate_materials
+            material_route = followup_material_route(current_bundle, candidate_materials(db, conversation.tenant_id),
+                material_route, row.memory, row.messages)
+        rules = eligible_rules(current_bundle, [], material_route,
             conversation_labels(db, row), 'silence_due' if part.get('proactive') else 'customer_message', [])
         allowed_ids = {rule['id'] for rule in rules}
         current = next((r for r in current_bundle.get('material_rules', []) if r['id'] == part.get('material_rule_id')), None)

@@ -333,8 +333,10 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     parts = []
     tenant_id = tenant_for_session(db, row)
     materials = {m['key']: m for m in candidate_materials(db, tenant_id)}
-    from app.reception_v3.material_rules import eligible_rules, selected_asset, conversation_labels, rule_digest
-    rules = {r['id']: r for r in eligible_rules(bundle, list(materials.values()), route,
+    from app.reception_v3.material_rules import eligible_rules, selected_asset, conversation_labels, rule_digest, followup_material_route
+    if followup:
+        content_route = followup_material_route(bundle, list(materials.values()), row.controls.get('route_variant', ''), row.memory, row.messages)
+    rules = {r['id']: r for r in eligible_rules(bundle, list(materials.values()), content_route if followup else route,
         conversation_labels(db, row), 'silence_due' if followup else 'customer_message', row.messages)}
     decision = deepcopy(decision)
     configured_only = followup and bundle.get('silence', {}).get('material_selection') == 'configured_rules'
@@ -351,7 +353,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         message['text'] = message['text'] or rule['approved_text']
     if followup:
         # Route comparison is valid during a customer answer, not unsolicited outreach.
-        allowed = {m['key'] for m in followup_materials(list(materials.values()), row.messages, route, row.memory)}
+        allowed = {m['key'] for m in followup_materials(list(materials.values()), row.messages, content_route, row.memory)}
         keys = [key for message in decision['messages'] for key in message['asset_keys']]
         if (route != row.controls.get('route_variant', '') or decision['start_introduction']
                 or len(keys) > 1 or any(key not in allowed for key in keys)):
@@ -378,7 +380,8 @@ def parts_for(db, row, bundle, decision, *, followup=False):
             # Comparing routes may reference a different route's image without
             # changing the customer's selected route.
             asset_routes = [r for r in materials.get(key, {}).get('routes', []) if r in bundle['routes']]
-            asset_route = route if route in asset_routes or not asset_routes else asset_routes[0]
+            media_route = content_route if followup else route
+            asset_route = media_route if media_route in asset_routes or not asset_routes else asset_routes[0]
             resolved = resolve_materials(db, [key], asset_route, tenant_id)
             for item in resolved:
                 if deduplicate and (key in seen_keys or item.get('media_hash') in seen_hashes
@@ -915,12 +918,17 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                    'messages': [m for m in row.messages if m.get('direction') == 'incoming' or m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')],
                    'buffered_questions': [m for m in row.messages if m.get('id') in value.get('buffered_questions', [])],
                    'available_materials': candidate_materials(db, tenant_for_session(db, row))}
+        from app.reception_v3.material_rules import followup_material_route
+        material_route = context['route_variant']
         if event == 'silence_due':
+            material_route = followup_material_route(bundle, context['available_materials'],
+                context['route_variant'], row.memory, context['messages'])
+            context['followup_material_route'] = material_route
             context['followup_materials'] = followup_materials(
-                context['available_materials'], row.messages, context['route_variant'], row.memory)
+                context['available_materials'], row.messages, material_route, row.memory)
         from app.reception_v3.material_rules import eligible_rules, conversation_labels
         context['material_rules'] = eligible_rules(bundle, context['available_materials'],
-            context['route_variant'], conversation_labels(db, row), event, context['messages'])
+            material_route, conversation_labels(db, row), event, context['messages'])
         if event == 'silence_due' and bundle['silence'].get('material_selection') == 'configured_rules':
             context['followup_materials'] = []
             context['skills'] = deepcopy(bundle)
