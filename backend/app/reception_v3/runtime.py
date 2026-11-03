@@ -570,7 +570,10 @@ def run_agent(context: dict):
                 quote_repaired = True
                 messages.append({'role':'assistant', 'content':json.dumps(decision,ensure_ascii=False),
                                  'reasoning_content':message.get('reasoning_content','')})
-                messages.append({'role':'user','content':quote_problem})
+                messages.append({'role':'user','content':quote_problem +
+                    '\n上一份JSON是未執行草稿，所有messages都尚未發送，也沒有寫入profile。'
+                    '請回傳修正後的完整決策，保留本輪需要回答的內容與已有依據的解釋；'
+                    '不能把草稿中的說明誤當成客人已收到而省略。'})
                 continue
             party_problem = reply_contract_error(decision, context)
             if party_problem:
@@ -578,7 +581,9 @@ def run_agent(context: dict):
                 if any(item is not log and item.get('status') == 'large_party_reply_rejected' for item in logs):
                     raise DecisionContractError('large_party_reply_not_validated')
                 messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
-                messages.append({'role':'user', 'content':party_problem})
+                messages.append({'role':'user', 'content':party_problem +
+                    '\n上一份JSON是未執行草稿，所有messages都尚未發送，也沒有寫入profile。'
+                    '請回傳修正後的完整決策，保留本輪需要回答的內容。'})
                 continue
             lead_problem = lead_priority_error(decision, context) or followup_error(decision, context)
             if lead_problem:
