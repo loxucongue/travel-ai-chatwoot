@@ -1,0 +1,111 @@
+{
+  "request": "同价人数只展示一次金额，对客称优惠价，不称原价；已有报价时简短承接。",
+  "changes": [
+    "按最终有效每人价合并同团型的比较行，保留所有所询人数；不同价仍分别展示。",
+    "更新模型指引：同价用上述优惠价承接，不重复金额或主动解释零折扣；追问规则仍解释每人减额。",
+    "未增加回复删句或关键词过滤；价格配置、渠道、人工交接与客户状态保持不变。"
+  ],
+  "code_commit": "aa37ee838e3803571946717e1f644c6552ba66f4",
+  "validation": {
+    "automated_passed": 217,
+    "final_real_model_cases": 8,
+    "final_real_model_calls": 18,
+    "synthetic_replays_based_on_business_screenshot": true,
+    "customer_test_sends": 0,
+    "cases": [
+      {
+        "id": "nine_two_three",
+        "passed": true
+      },
+      {
+        "id": "eleven_two_three",
+        "passed": true
+      },
+      {
+        "id": "four_five_same",
+        "passed": true
+      },
+      {
+        "id": "already_quoted_same",
+        "passed": true
+      },
+      {
+        "id": "mixed_same_and_different",
+        "passed": true
+      },
+      {
+        "id": "different_two_four",
+        "passed": true
+      },
+      {
+        "id": "discount_rules",
+        "passed": true
+      },
+      {
+        "id": "old_wording_correction",
+        "passed": true
+      }
+    ],
+    "same_price_example": "西藏桃花節9日遊\n2位／3位報名：拼團升級「4-6人小團」優惠價：人民幣¥ 10,780 /人\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費\n2位和3位的每人費用在這個檔位是相同的～都是上述給您的優惠價～"
+  },
+  "model_test_cost": {
+    "all_calls": 39,
+    "cny": 1.752618,
+    "usage_unknown_calls": 0
+  },
+  "deployment": {
+    "release": "equal-price-20261103T060143Z",
+    "commit": "aa37ee838e3803571946717e1f644c6552ba66f4",
+    "at": "2026-11-03T06:08:26.422371+00:00",
+    "engine": "reception-v3-71362ae1944c8402",
+    "files_verified": 6,
+    "configuration_unchanged": true,
+    "backup": "/opt/china2go-ai/backups/equal-price-20261103T060143Z",
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "new_tracebacks": 0,
+    "new_error_lines": 0,
+    "customer_test_sends": 0,
+    "checked_at": "2026-11-03T06:09:18.583301+00:00",
+    "public_checks": [
+      {
+        "url": "https://api.luoxuecong.asia/v1/health",
+        "status": 200
+      },
+      {
+        "url": "https://api.luoxuecong.asia/v1/health/ready",
+        "status": 200
+      },
+      {
+        "url": "https://ai.luoxuecong.asia/",
+        "status": 200
+      }
+    ]
+  },
+  "test_artifacts": "output/equal-price-20261103/ (ignored local evidence)"
+}
