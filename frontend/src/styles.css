@@ -2090,6 +2090,9 @@ td { padding-block: 14px; }
 .ai-chat-engine-choice small { color: #717278; font-size: 12px; }
 
 .ai-chat-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.ai-chat-followup-status { flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 9px 18px; border-bottom: 1px solid #e2eeeb; background: #f5faf8; color: #49635c; font-size: 12px; line-height: 1.5; }
+.ai-chat-followup-status > span { display: inline-flex; align-items: center; gap: 5px; }
+.ai-chat-followup-status svg { flex-shrink: 0; }
 .ai-chat-transcript { width: min(840px, calc(100% - 40px)); min-height: 100%; margin: 0 auto; padding: 34px 0 190px; display: grid; align-content: start; gap: 25px; }
 .ai-chat-transcript .rehearsal-event { max-width: 680px; margin: -4px auto; padding: 4px 10px; border: 0; background: transparent; color: #9b9ca1; font-size: 12px; }
 .ai-chat-transcript .rehearsal-event p { color: #85868b; }

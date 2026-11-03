@@ -57,6 +57,7 @@ type SessionMessage = {
   _delivery_item?: Record<string, unknown>;
   media_id?: number;
   source?: 'ai' | 'sop' | string;
+  proactive?: boolean;
   run_id?: number;
 };
 
@@ -85,6 +86,7 @@ type RunRecord = {
     journey_stage?: string;
     touch_goal?: string;
     touch_reason?: string;
+    reason?: string;
     profile_updates?: Record<string, { value?: unknown; confidence?: number; evidence_quote?: string; reason?: string }>;
     presentations?: Presentation[];
   };
@@ -537,11 +539,30 @@ function RehearsalRunner(props: {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const running = session.simulation.status === 'running';
   const latestRun = session.runs[0];
-  const latestSilence = session.runs.find(run => run.module === 'silence_touch' && run.status === 'completed');
+  const latestSilence = session.runs.find(run => run.module === 'silence_touch');
   const leadStatus = session.controls.lead_capture?.status ?? 'not_started';
   const nextJob = session.jobs.find(job => ['scheduled', 'waiting_dependency', 'model_pending'].includes(job.status));
   const currentStage = session.reception_state?.journey_stage ?? session.controls.journey?.stage ?? latestRun?.decision.journey_stage ?? 'route_selection';
   const lastTouch = session.reception_state?.last_touch ?? latestSilence?.decision;
+  const nextTouchAt = session.reception_state?.next_touch_at ?? nextJob?.scheduled_at;
+  const nextTouchLabel = nextTouchAt
+    ? `${formatTime(nextTouchAt)} · ${running ? '到时评估是否发送' : statusLabel(session.simulation.status)}`
+    : props.processing ? '正在处理，完成后更新排期' : '当前无待执行跟进';
+  const touchMessages = latestSilence ? session.messages.filter(message =>
+    message.run_id === latestSilence.id && message.direction === 'outgoing' && !message.private) : [];
+  const deliveredTouches = touchMessages.filter(message => message.status === 'simulated_delivered').length;
+  const pendingTouches = touchMessages.some(message => ['draft', 'pending', 'submitted'].includes(message.status ?? ''));
+  const failedTouches = touchMessages.some(message => ['failed', 'blocked', 'cancelled', 'submission_unknown'].includes(message.status ?? ''));
+  const touchResult = latestSilence?.status === 'failed'
+    ? '本次评估失败'
+    : latestSilence && latestSilence.status !== 'completed'
+      ? statusLabel(latestSilence.status)
+      : deliveredTouches
+        ? `已模拟送达 ${deliveredTouches} 条${pendingTouches ? '，其余准备发送' : failedTouches ? '，部分消息未送达，请查看投递审计' : ''}`
+        : failedTouches ? '本次消息未确认送达，请查看投递审计'
+          : lastTouch?.action === 'reply' ? '已生成回复，尚未确认送达'
+            : lastTouch?.action === 'wait' || lastTouch?.action === 'no_action' ? '本轮评估后暂不发送'
+              : lastTouch?.action === 'handoff' ? '转人工' : '已完成评估';
   const timeline = useMemo(() => [
     ...session.messages.filter(customerTranscriptMessage).map((item, index) => ({ ...item, kind: 'message' as const, sort: item.timeline_sequence ?? 10000 + index })),
     ...(session.controls.timeline_events ?? []).map((item, index) => ({ ...item, kind: 'event' as const, sort: item.timeline_sequence ?? 20000 + index })),
@@ -555,12 +576,17 @@ function RehearsalRunner(props: {
       </div>
       <div className="ai-chat-topbar-actions">
         <span className="ai-chat-safe"><ShieldCheck size={13} />沙盒</span>
-        <button title="立即测试下一次沉默跟进" disabled={props.busy || props.processing || !running || (!nextJob && !session.reception_state?.next_touch_at)} onClick={props.onAdvanceNext}><FastForward size={17} /><span>测试下一次跟进</span></button>
+        <button title="将模拟时间推进到下一次跟进节点，无需等到真实时间" disabled={props.busy || props.processing || !running || !nextTouchAt} onClick={props.onAdvanceNext}><FastForward size={17} /><span>测试下一次跟进</span></button>
         <button onClick={() => setDetailsOpen(value => !value)}><PanelRight size={17} /><span>接待状态</span></button>
         <button title="新客户演练" disabled={props.busy} onClick={props.onCreate}><Plus size={17} /></button>
         <button className="danger" title="删除演练" disabled={props.busy} onClick={props.onDelete}><Trash2 size={16} /></button>
       </div>
     </header>
+
+    <div className="ai-chat-followup-status" role="status">
+      <span>模拟时间：{formatTime(session.virtual_now)} · {session.simulation.speed_multiplier} 倍速</span>
+      <span><CalendarClock size={14} />下一次跟进评估：{nextTouchLabel}</span>
+    </div>
 
     <div className="ai-chat-scroll" ref={props.streamRef}>
       <div className="ai-chat-transcript">
@@ -603,13 +629,19 @@ function RehearsalRunner(props: {
         <div><dt>接待阶段</dt><dd>{JOURNEY_STAGE_LABELS[currentStage] ?? currentStage}</dd></div>
         <div><dt>接待状态</dt><dd>{session.controls.human ? '已转人工' : statusLabel(session.simulation.status)}</dd></div>
         <div><dt>联系方式</dt><dd>{leadStatus === 'captured' ? '已获得' : leadStatus === 'asked' ? '已索取，等待客户提供' : '尚未索取'}</dd></div>
-        <div><dt>下一次触达</dt><dd>{nextJob ? `${formatTime(nextJob.scheduled_at)} · ${statusLabel(nextJob.status)}` : '当前无待执行跟进'}</dd></div>
+        <div><dt>模拟时间</dt><dd>{formatTime(session.virtual_now)} · {session.simulation.speed_multiplier} 倍速</dd></div>
+        <div><dt>下一次跟进评估</dt><dd>{nextTouchLabel}</dd></div>
       </dl></section>
       <section><h3>客户画像</h3>{Object.keys(session.memory).length ? <dl>{Object.entries(session.memory).filter(([key]) => key !== '_profile_meta').map(([key, value]) => <div key={key}><dt>{MEMORY_LABELS[key] ?? key}</dt><dd>{String(value.value)}{value.quote ? <small>客户原话：{value.quote}</small> : null}{'reason' in value && value.reason ? <small>AI 判断：{String(value.reason)}</small> : null}</dd></div>)}</dl> : <p>AI 会自动记录线路、人数、日期、首次进藏、手续认知、顾虑和决策状态，客户不需要填写表单。</p>}</section>
       <section><h3><CalendarClock size={14} />沉默跟进旅程</h3>{session.jobs.length ? <ol className="ai-chat-job-list">{session.jobs.map((job, index) => <li key={job.id}><span>{['simulated_delivered', 'already_provided', 'skipped', 'skipped_model_failure'].includes(job.status) ? <CheckCircle2 size={14} /> : index + 1}</span><div><strong>{sopNodeLabel(job.node_key)}</strong><small>{formatTime(job.scheduled_at)} · {statusLabel(job.status)}</small>{job.payload?.model_decision?.touch_goal ? <em>{TOUCH_GOAL_LABELS[job.payload.model_decision.touch_goal] ?? job.payload.model_decision.touch_goal}</em> : job.reason ? <em>{sopReason(job.reason)}</em> : null}</div></li>)}</ol> : <p>系统按已配置间隔检查旅程，只在还有相关新价值时生成跟进；没有新内容会安全跳过。</p>}{session.reception_state?.last_warning ? <p className="automation-error">{session.reception_state.last_warning}</p> : null}</section>
-      <section><h3>最近一次沉默触达</h3>{lastTouch?.touch_goal ? <dl><div><dt>触达目标</dt><dd>{TOUCH_GOAL_LABELS[lastTouch.touch_goal] ?? lastTouch.touch_goal}</dd></div><div><dt>选择原因</dt><dd>{lastTouch.touch_reason || '-'}</dd></div><div><dt>触达后阶段</dt><dd>{JOURNEY_STAGE_LABELS[lastTouch.journey_stage || ''] ?? lastTouch.journey_stage ?? '-'}</dd></div></dl> : <p>客户尚未到达第一个沉默触达时间点。</p>}</section>
+      <section><h3>最近一次沉默跟进</h3>{latestSilence || lastTouch ? <dl>
+        <div><dt>执行结果</dt><dd>{touchResult}</dd></div>
+        <div><dt>判断原因</dt><dd>{latestSilence?.error_code || lastTouch?.reason || lastTouch?.touch_reason || '-'}</dd></div>
+        {lastTouch?.touch_goal ? <div><dt>触达目标</dt><dd>{TOUCH_GOAL_LABELS[lastTouch.touch_goal] ?? lastTouch.touch_goal}</dd></div> : null}
+      </dl> : <p>{nextTouchAt ? '尚未执行沉默评估；可点击“测试下一次跟进”推进模拟时间。' : '尚无沉默跟进评估记录。'}</p>}</section>
       <section><h3>最近一次 AI 判断</h3>{latestRun ? <><PresentationSummary presentations={latestRun.decision.presentations} /><dl>
-        <div><dt>处理结果</dt><dd>{latestRun.decision.action === 'handoff' ? '转人工' : latestRun.decision.action === 'no_action' ? '未执行 (no_action)' : latestRun.decision.action === 'reply' ? '生成回复决策' : '未知'}</dd></div>
+        <div><dt>处理结果</dt><dd>{latestRun.decision.action === 'handoff' ? '转人工' : latestRun.decision.action === 'no_action' ? '未执行 (no_action)' : latestRun.decision.action === 'wait' ? '暂不发送，继续等待' : latestRun.decision.action === 'reply' ? '生成回复决策' : '未知'}</dd></div>
+        {latestRun.decision.reason ? <div><dt>判断原因</dt><dd>{latestRun.decision.reason}</dd></div> : null}
         <div><dt>运行校验</dt><dd><RuntimeDetails run={latestRun} /></dd></div>
         <div><dt>线路</dt><dd>{routeName(latestRun.decision.route_variant)}</dd></div>
         <div><dt>留资动作</dt><dd>{latestRun.decision.lead_action === 'ask' ? '已询问联系方式' : latestRun.decision.lead_action === 'captured' ? '已获得联系方式' : '暂不询问'}</dd></div>
@@ -627,7 +659,7 @@ function RehearsalMessage({ message, running, onSelect }: { message: SessionMess
   return <div className={`rehearsal-message ${outgoing ? 'assistant' : 'customer'}`}>
     <span>{outgoing ? ['sop', 'sop_ai'].includes(message.source || '') ? <Workflow size={14} /> : <Bot size={14} /> : <UserRound size={14} />}</span>
     <div>
-      <header><strong>{outgoing ? message.source === 'sop_ai' ? 'AI 沉默跟进' : message.source === 'sop' ? '固定 SOP' : 'AI 客服' : '模拟客户'}</strong><small>{formatTime(message.created_at)}</small></header>
+      <header><strong>{outgoing ? message.proactive || message.source === 'sop_ai' ? 'AI 沉默跟进' : message.source === 'sop' ? '固定 SOP' : 'AI 客服' : '模拟客户'}</strong><small>{formatTime(message.created_at)}</small></header>
       {message.content ? <p>{message.content}</p> : null}
       {!message.content && !message.media_id ? <p>[{message.content_type ?? '消息'}]</p> : null}
       {message.media_id && message.content_type === 'image'
