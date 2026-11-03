@@ -77,7 +77,7 @@ def price_scripts(policy, *, legacy_ceiling=None):
                            'asset_ids':[], 'status':'active', 'topics':['price'],
                            'party_size_min':int(count), 'party_size_max':int(count),
                            'price_cny':amount, 'quote_group_type':group,
-                           'usage_note':'已按原價與明確人數計算。只引用符合本輪人數和團型的script_id，text留空；'
+                           'usage_note':'已按配置基準與明確人數計算，對客稱優惠價，不稱原價。只引用符合本輪人數和團型的script_id，text留空；'
                                         '不展示早鳥或截止日，不疊加舊活動。可另用text依pricing_evidence簡短說明'
                                         '各人數的每人優惠，最終價已含適用優惠，不再扣一次。'})
     return result
@@ -118,11 +118,13 @@ def pricing_evidence(bundle):
             'per_person_prices': prices,
             'usage': '人数区间不等于价格不同。比较上表每人价，相同就说明同价，不以不存在的价差催问人数。'
                      '客户要求比较两种或多种人数时，用messages[].quote_options列出相应price_*模板ID，'
-                     '系统分别列出各方案每人价并共用包含/不含说明，无须先选定人数。'
+                     '系统将最终每人价相同的人数组合并为一行，不同价分别展示，共用包含/不含说明，无须先选定人数。'
                      '比较方案不是报名人数，不据此更新profile.party_size。单一确定人数仍用script_id。'
-                     '比较人数报价时，另用一条text自然说明适用的discount_per_person_cny，这是每人减额，'
+                     '比较的最终每人价不同时，另用一条text自然说明适用的discount_per_person_cny，这是每人减额，'
                      '不是整单减额；最终价已含优惠，不再扣一次。客户只问优惠规则就解释规则，不必重发完整报价。'
-                     '解释按本轮表格，不按固定例句背金额；无价差就说明同价，不扩大到其他线路。'
+                     '解释按本轮表格，不按固定例句背金额。对客称优惠价，不称原价；base_price_cny是计算依据，不是对客价格名称。'
+                     '无价差时只说明这些人数都是上述优惠价，不重复金额、不解释折扣有无或能否再减，也不主动扩展其他人数档位。'
+                     '历史已报过且仍适用的同价，直接text承接上述优惠价，不重发quote_options或完整模板。不扩大到其他线路。'
                      '独团加价private_supplement_per_person_cny与人数优惠分开，不能把减额当净价差。'
                      'honors_prior_lower_quote为true时沿用先前较低报价，不把它说成按本次人数折扣算出的价格，'
                      '也不在先前报价上再扣人数优惠，不展示旧活动名称或期限。'
@@ -199,7 +201,7 @@ def _validated_explanation(message, spec, ids):
 
 
 def comparison_text(spec, ids):
-    """Render verified alternatives without repeating their shared inclusions.
+    """Render verified alternatives, grouping equal effective per-person prices.
 
     Preserve the configured price line's wording and every surrounding term;
     amounts come from personalized scripts, including any valid legacy ceiling.
@@ -211,7 +213,11 @@ def comparison_text(spec, ids):
     before, after = template.split('{amount}')
     header, _, price_prefix = before.rpartition('\n')
     price_suffix, _, footer = after.partition('\n')
-    lines = [f"{s['party_size_min']}位報名：{price_prefix}{s['price_cny']:,}{price_suffix}" for s in selected]
+    by_price = {}
+    for script in selected:
+        by_price.setdefault(script['price_cny'], []).append(script['party_size_min'])
+    lines = [f"{'／'.join(f'{count}位' for count in counts)}報名：{price_prefix}{amount:,}{price_suffix}"
+             for amount, counts in by_price.items()]
     return '\n'.join(part for part in (header, '\n'.join(lines), footer) if part)
 
 

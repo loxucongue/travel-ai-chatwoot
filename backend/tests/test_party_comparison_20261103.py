@@ -33,7 +33,9 @@ def test_hypothetical_options_delivered_without_confirming_party(session_factory
         _, parts = service.parts_for(db, row, value, decision)
         text = '\n'.join(p['content'] for p in parts)
         for count, amount in zip(counts, amounts):
-            assert any(f'{count}位報名：' in line and f'{amount:,} /人' in line for line in text.splitlines())
+            assert any(f'{count}位' in line.split('報名：')[0] and f'{amount:,} /人' in line for line in text.splitlines())
+        for amount in set(amounts):
+            assert text.count(f'{amount:,} /人') == 1
         assert text.count('包含：') == text.count('不含：') == 1
         assert text.count('西藏桃花節11日遊') == 1
         assert row.memory == old and decision['profile'] == {}
@@ -102,7 +104,8 @@ def test_existing_legacy_promise_used_in_both_evidence_and_output(session_factor
         db.flush()
         value = personalize_quotes(db, row, current())
         text = comparison_text(value['routes']['nine'], comparison()['messages'][0]['quote_options'])
-        assert text.count('12,180') == 2 and '12,780' not in text
+        assert text.count('12,180') == 1 and '12,780' not in text
+        assert '2位／4位報名：' in text
         prices = pricing_evidence(value)['nine']['per_person_prices']
         assert {p['price_cny'] for p in prices if p['group_type'] == 'shared'} == {12180}
         assert next(p for p in prices if p['group_type'] == 'private' and p['party_size'] == 4)['price_cny'] == 12980
