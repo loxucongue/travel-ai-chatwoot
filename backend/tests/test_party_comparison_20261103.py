@@ -46,7 +46,7 @@ def test_comparison_does_not_need_to_override_an_existing_confirmed_count():
 
 
 @pytest.mark.parametrize('ids,group', [
-    (['price_shared_2'], 'shared'), (['price_shared_2'] * 2, 'shared'),
+    (['price_shared_2'] * 2, 'shared'),
     (['price_shared_2', 'price_shared_7'], 'shared'),
     (['price_private_4', 'price_private_5'], 'private'),
     (['price_shared_2', 'price_private_4'], 'shared'),

@@ -92,6 +92,18 @@ def effective_profile(previous, changes):
     return profile
 
 
+def shared_reference(spec):
+    """Use an existing baseline shared quote without inventing a customer count.
+
+    The personalized script preserves any valid prior lower price. No new
+    pricing policy or customer intent is inferred here.
+    """
+    return min((s for s in spec['scripts'] if s.get('status') == 'active'
+                and s.get('quote_group_type') == 'shared' and s.get('price_cny')
+                and discount_per_person(spec['party_pricing'], s['party_size_min']) == 0),
+               key=lambda s: s['party_size_min'], default=None)
+
+
 def pricing_evidence(bundle):
     """Expose comparisons from the same configured arithmetic as quote scripts."""
     result = {}
@@ -112,12 +124,18 @@ def pricing_evidence(bundle):
                 'discount_per_person_cny': discount, 'private_supplement_per_person_cny': supplement,
                 'standard_price_cny': standard, 'honors_prior_lower_quote': script['price_cny'] < standard,
             })
+        reference = shared_reference(spec)
         result[key] = {
+            'reference_script_id': reference['id'] if reference else None,
             'source_ref': policy['source_ref'],
             'base_price_cny': policy['base_price_cny'],
             'per_person_prices': prices,
-            'usage': '人数区间不等于价格不同。比较上表每人价，相同就说明同价，不以不存在的价差催问人数。'
-                     '客户要求比较两种或多种人数时，用messages[].quote_options列出相应price_*模板ID，'
+            'usage': '人数尚未确定但客户先问预算时，可用reference_script_id先给拼团参考优惠价，text留空；'
+                     '它只是价格来源，不代表客户单人出行或已确定任何人数，不修改profile人数/团型，也不因此附单人房差。'
+                     '需要时简短说明本线对应人数优惠，让客人先评估，不要求先确定人数才报价。'
+                     '客户明确比较多个方案仍用quote_options；日期、团型、价格依据和历史承诺继续核对。'
+                     '人数区间不等于价格不同。比较上表每人价，相同就说明同价，不以不存在的价差催问人数。'
+                     '客户比较多种人数或假设单个人数方案时，用messages[].quote_options列出相应price_*模板ID（单个假设可只列一个），'
                      '系统将最终每人价相同的人数组合并为一行，不同价分别展示，共用包含/不含说明，无须先选定人数。'
                      '比较方案不是报名人数，不据此更新profile.party_size。单一确定人数仍用script_id。'
                      '比较的最终每人价不同时，另用一条text自然说明适用的discount_per_person_cny，这是每人减额，'
@@ -150,12 +168,12 @@ def quote_error(decision, bundle, previous, default_route=''):
     profile = effective_profile(previous, decision.get('profile', {}))
     if comparisons:
         if len(comparisons) != 1:
-            return '比較人數請集中在一條quote_options，補充解釋另用text並以對應script_id標記金額來源。'
+            return '假設或比較人數請集中在一條quote_options，補充解釋另用text並以對應script_id標記金額來源。'
         message = comparisons[0]
         ids = message['quote_options']
-        if (len(ids) < 2 or len(ids) != len(set(ids)) or message.get('text')
+        if (len(ids) < 1 or len(ids) != len(set(ids)) or message.get('text')
                 or message.get('script_id') or message.get('asset_keys') or message.get('material_rule_id')):
-            return 'quote_options需至少兩個不同的人數模板ID；本條text、script_id及素材留空，補充說明另放一條。'
+            return 'quote_options需至少一個人數模板ID且不可重複；本條text、script_id及素材留空，補充說明另放一條。'
         scripts = {s['id']: s for s in spec['scripts'] if s.get('status') == 'active' and s.get('price_cny')}
         if any(key not in scripts or not scripts[key].get('quote_group_type') for key in ids):
             return '比較方案中有未配置或停用的人數報價，不能推算；先提供可核對的方案，其他交顧問確認。'
@@ -169,8 +187,18 @@ def quote_error(decision, bundle, previous, default_route=''):
                 return '完整比較報價只發一次；補充解釋可引用本線同團型已有依據的價格，不另發整份報價或猜配置以外的金額。'
         return None
     count = profile.get('party_size')
-    if type(count) is not int or count < 1 or profile.get('party_size_range'):
-        return '單一最終報價需要明確人數；若客人想比較不同人數，用quote_options列出對應模板，無須先選定人數，不把比較方案寫成確定報名人數。'
+    if count is None or profile.get('party_size_range'):
+        reference = shared_reference(spec)
+        if not reference or profile.get('group_type', 'undecided') not in ('shared', 'undecided'):
+            return '本次沒有適用的拼團參考價；按已知團型提供可核對方案，不把拼團參考價當包團報價。'
+        expected = reference['id']
+        full_quotes = [m for m in pricing if not m.get('text')]
+        if (len(full_quotes) > 1 or any(m.get('script_id') != expected for m in full_quotes)
+                or any(not _validated_explanation(m, spec, [expected]) for m in pricing if m.get('text'))):
+            return f'人數未定可先用{expected}的拼團參考優惠價，不寫成已確定人數；比較不同人數用quote_options，不能任選較低檔位或編造金額。'
+        return None
+    if type(count) is not int or count < 1:
+        return '人數資料無效，不用它核價；保留客戶實際表達，未知人數可用已配置拼團參考價。'
     group = profile.get('group_type', 'undecided')
     if group not in ('shared', 'private', 'undecided'):
         return '先確認拼團或獨團選擇，不猜團型核價。'
@@ -228,5 +256,5 @@ def apply_price_scripts(spec, *, legacy_ceiling=None):
     # Old static quote groups/facts must not compete with calculated templates.
     for key in ('price_reference', 'price_deferral'):
         if key in spec['groups']:
-            spec['groups'][key]['text'] = '團費依確定人數及拼團／獨團選擇，使用對應price_*完整模板。'
+            spec['groups'][key]['text'] = '人數未定可先用pricing_evidence.reference_script_id提供拼團參考優惠價；比較用quote_options，確認人數後用對應price_*模板。'
     spec['quote_policy'] = None

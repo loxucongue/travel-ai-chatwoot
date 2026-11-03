@@ -565,13 +565,13 @@ def apply_decision(db, row, run, bundle, decision):
         save(row,value);row.due_at=None
         return
     if (value.get('intake_answered') and not value.get('completed_introductions')
+            and (decision['start_introduction'] or not decision['messages'])
             and (value.get('intake_field') != 'departure_window' or decision['start_introduction'])
             and not value.get('opt_out') and not value.get('handoff')
             and decision['action'] != 'handoff' and decision['opt_out'] is not True
             and not decision['interrupt'] and decision.get('route_choice') != 'recommend'):
         decision = {**decision, 'start_introduction': True,
-                    'messages': decision['messages'] if (value.get('intake_field') == 'departure_window'
-                        or decision.get('answer_before_introduction')) else []}
+                    'messages': decision['messages']}
         run.trace = {**(run.trace or {}), 'execution_reason': 'intake_answer_starts_introduction'}
         run.decision = decision
     previous_memory = row.memory
@@ -615,7 +615,8 @@ def apply_decision(db, row, run, bundle, decision):
         from app.reception_v3.lead_assist import notify
         notify(db, row, value, decision, bundle)
     selected_route = decision['route_variant'] or row.controls.get('route_variant', '')
-    if (selected_route and decision['action'] != 'handoff' and decision['opt_out'] is not True
+    if (selected_route and not decision['messages']
+            and decision['action'] != 'handoff' and decision['opt_out'] is not True
             and not decision['interrupt'] and row.memory.get('reception_status') != 'abusive'
             and decision.get('route_choice') != 'recommend'
             and not rejects_current_route(selected_route, row.memory)

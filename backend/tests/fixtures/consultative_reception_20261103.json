@@ -1,0 +1,719 @@
+[
+  {
+    "id": "unknown_budget_then_four",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "已給您桃花9日的行程圖，這條不上珠峰。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "大家還沒決定要不要去，先跟我說這條大概要多少錢？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友"
+        ],
+        "image_count": 0,
+        "profile_absent": [
+          "party_size"
+        ],
+        "contains_any": [
+          [
+            "10,780",
+            "10780"
+          ]
+        ]
+      },
+      {
+        "text": "如果最後四個人一起呢？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友"
+        ],
+        "image_count": 0,
+        "contains_any": [
+          [
+            "10,580",
+            "10580"
+          ],
+          [
+            "200"
+          ]
+        ],
+        "profile_absent": [
+          "party_size"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "uncertain_range_budget",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "已給您桃花9日的行程圖，這條不上珠峰。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "可能兩個到四個人，先給我費用讓大家評估，不用等人數定下來。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友"
+        ],
+        "image_count": 0,
+        "profile_absent": [
+          "party_size"
+        ],
+        "contains_any": [
+          [
+            "10,780",
+            "10780"
+          ],
+          [
+            "200",
+            "10,580",
+            "10580"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eleven_unknown_reference",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是桃花加珠峰11日的行程圖。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "我先了解一下預算，不知道幾個人會跟。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友"
+        ],
+        "image_count": 0,
+        "profile_absent": [
+          "party_size"
+        ],
+        "contains_any": [
+          [
+            "12,780",
+            "12780"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "no_question_required",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "已給您桃花9日的行程圖，這條不上珠峰。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "先報這條拼團費用給我就好，朋友我會自己問。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友"
+        ],
+        "image_count": 0,
+        "profile_absent": [
+          "party_size"
+        ],
+        "contains_any": [
+          [
+            "10,780",
+            "10780"
+          ]
+        ]
+      },
+      {
+        "text": "了解，我先跟朋友商量，只在這裡聊就好。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友",
+          "LINE",
+          "line",
+          "微信",
+          "ID",
+          "幾位",
+          "多少人",
+          "10,780"
+        ],
+        "image_count": 0
+      }
+    ]
+  },
+  {
+    "id": "intake_customer_asks_price",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "waiting",
+        "intake_field": "party_size",
+        "intake_deadline": "2026-11-03T10:01:00+00:00"
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "請問您們大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "人數還不知道，先告訴我這條要多少錢吧。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友"
+        ],
+        "image_count": 0,
+        "profile_absent": [
+          "party_size"
+        ],
+        "contains_any": [
+          [
+            "10,780",
+            "10780"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "intake_customer_asks_meals",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "waiting",
+        "intake_field": "party_size",
+        "intake_deadline": "2026-11-03T10:01:00+00:00"
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "請問您們大概幾位一起出發呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "人數未定，含早餐和晚餐嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友",
+          "幾位",
+          "10,780"
+        ],
+        "image_count": 0,
+        "profile_absent": [
+          "party_size"
+        ],
+        "contains_any": [
+          [
+            "早餐"
+          ],
+          [
+            "晚餐"
+          ],
+          [
+            "不含",
+            "不包含",
+            "自理"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "single_item_no_sales_pressure",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "已給您桃花9日的行程圖，這條不上珠峰。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "現在先問早餐有沒有含，不用急著問我幾個人。",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友",
+          "幾位",
+          "LINE",
+          "10,780"
+        ],
+        "image_count": 0,
+        "profile_absent": [
+          "party_size"
+        ],
+        "contains_any": [
+          [
+            "早餐"
+          ],
+          [
+            "包含",
+            "有含"
+          ]
+        ]
+      },
+      {
+        "text": "不吃辣也可以嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友",
+          "一定可以",
+          "保證",
+          "幾位",
+          "10,780"
+        ],
+        "image_count": 0,
+        "contains_any": [
+          [
+            "需求",
+            "協助",
+            "告知",
+            "說明",
+            "備註",
+            "記錄"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "private_not_shared_reference",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友",
+        "group_type": "private",
+        "party_size": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ],
+        "group_advisor_pending": true
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "已給您桃花9日的行程圖，這條不上珠峰。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "我們自己包團，費用先給我參考看看。",
+        "checks": [
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "10,580",
+          "10,780",
+          "拼團升級"
+        ],
+        "image_count": 0
+      }
+    ]
+  },
+  {
+    "id": "known_price_not_resent",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友",
+        "party_size": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "已給您桃花9日的行程圖，這條不上珠峰。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        },
+        {
+          "id": "a2",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "4位拼團優惠價每人人民幣10,580元，已含每人200元優惠。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "所以已經減過200了嗎？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友",
+          "包含：",
+          "不含：",
+          "10,780"
+        ],
+        "image_count": 0,
+        "contains_any": [
+          [
+            "已含",
+            "已經",
+            "包含",
+            "算進"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unavailable_date_not_reference",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-03T10:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "departure_window": "2027年3月26日",
+        "companions": "朋友"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "a1",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "已給您桃花9日的行程圖，這條不上珠峰。"
+        },
+        {
+          "id": "c1",
+          "direction": "incoming",
+          "status": "received",
+          "content": "我先問問朋友，還沒有確定幾個人。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "text": "如果改八月，這條桃花9日多少錢？",
+        "checks": [
+          "send",
+          "not_handoff",
+          "no_duplicate_messages"
+        ],
+        "excludes": [
+          "原價",
+          "原价",
+          "給我確定的數字",
+          "先確定人數才能",
+          "沒辦法用區間",
+          "家人還是朋友",
+          "10,780",
+          "10,580"
+        ],
+        "image_count": 0,
+        "contains_any": [
+          [
+            "八月",
+            "8月"
+          ]
+        ]
+      }
+    ]
+  }
+]

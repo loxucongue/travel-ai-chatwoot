@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-03",
+  "status": "credential_rotated_code_waiting_for_provider_recovery_and_real_model_acceptance",
+  "base_commit": "a7dfcf2",
+  "production_code_commit": "aa37ee838e3803571946717e1f644c6552ba66f4",
+  "changes": [
+    "通用接待指引改为先回答已知信息，再问确有必要的信息；人数未定与确认报名分开。",
+    "从现有有效拼团报价中提供无额外人数折扣门槛的参考模板，保留有效旧低价；不凭参考模板推定客户人数、独行或团型。",
+    "quote_options支持单一假设人数方案，展示适用人数及价钱；不覆盖已确认人数。多方案继续同价合并。",
+    "人数采集不再清空模型已生成的回答；模型可先答当下问题，再决定是否介绍。",
+    "报价后不强制提问家人/朋友或兴趣，避免反复索资；保留日期、团型、人工接管及资料来源限制。",
+    "不新增自然语言关键词正则，不新增发送后文案删改器。"
+  ],
+  "validation": {
+    "regression_tests_passed": 327,
+    "regression_failures": 0,
+    "pytest_report": "output/consultative-20261103/quotes.xml",
+    "candidate_preflight": {
+      "passed": true,
+      "engine": "reception-v3-5e33f214154488ec",
+      "digest": "89e56e3c542228c4fb524eb08624718b473fb7ba26dbcaa046153e6682dab095",
+      "routes": 7,
+      "customer_test_sends": 0
+    },
+    "prepared_real_model_cases": 18,
+    "new_business_cases": 10,
+    "equal_price_regression_cases": 8,
+    "real_model_status": "blocked by provider HTTP 503/timeouts; effects NOT accepted; not deployed",
+    "latest_failed_run": "real-20261103T095021Z",
+    "customer_test_messages_sent": 0,
+    "cost_accounting": {
+      "ledger_calls": 27,
+      "usage_known_calls": 1,
+      "charged_or_reserved_upper_bound_cny": 6.625436,
+      "note": "Not actual billed spend: failed/incomplete calls retain conservative reservations. Separate minimal provider probes are retained in private output artifacts."
+    }
+  },
+  "credential_rotation": {
+    "at": "2026-11-03T09:48:09.219458+00:00",
+    "new_key_loaded": true,
+    "provider_authentication_status": 200,
+    "model_unchanged": true,
+    "model": "deepseek-v4-flash",
+    "other_environment_unchanged": true,
+    "code_unchanged": true,
+    "backup": "/opt/china2go-ai/backups/key-rotation-20261103T094806Z",
+    "services": {
+      "china2go-worker": {
+        "MainPID": "203919",
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-api": {
+        "MainPID": "203917",
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "MainPID": "203918",
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "customer_test_sends": 0,
+    "provider_completion_probe": "503 observed with both old and new keys before rotation"
+  },
+  "live_verification": {
+    "engine": "reception-v3-71362ae1944c8402",
+    "model": "deepseek-v4-flash",
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active",
+        "SubState": "running"
+      }
+    },
+    "env_owner": "china2go",
+    "env_mode": "0o600",
+    "new_key_matches": true,
+    "public_checks": [
+      {
+        "url": "https://api.luoxuecong.asia/v1/health",
+        "status": 200
+      },
+      {
+        "url": "https://api.luoxuecong.asia/v1/health/ready",
+        "status": 200
+      },
+      {
+        "url": "https://ai.luoxuecong.asia/",
+        "status": 200
+      }
+    ]
+  },
+  "deployment_incident": {
+    "issue": "Credential replacement initially created a file owned by root with mode 0600; systemd services run as china2go and could not read it. API temporarily returned 502.",
+    "recovery": "Restored readable ownership china2go:china2go with mode 0600 and restarted services; repeated rotation now preserves original owner/group/mode after dotenv rewrite. Verified loaded credential digest without logging key, service state and public health endpoints.",
+    "rollback_fix": "Credential rollback restores ownership/mode and restarts already running services so cached credentials are reloaded."
+  },
+  "provider_findings": {
+    "balance_authentication_http": 200,
+    "minimal_completion_succeeded_once": true,
+    "old_and_new_keys_server_completion_http": 503,
+    "model_changed": false,
+    "inference": "Observed provider overload rather than invalid credentials; infrastructure health does not establish AI reply availability."
+  },
+  "remaining": [
+    "Run all 18 isolated real-model journeys against final candidate with current live settings after provider recovery.",
+    "Review actual delivered text and profile state; tune and rerun if behavior fails.",
+    "Only then update acceptance evidence, merge/push main, back up, deploy and verify."
+  ],
+  "resume_workspace": "E:/ai_code/travel_ai_Chatwoot-consultative",
+  "resume_commands": [
+    "python output/consultative-20261103/run_real.py",
+    "python output/consultative-20261103/assess.py"
+  ],
+  "secrets": "Keys and backups stored only in ignored local output/env files and restricted server paths; no credential value in tracked files."
+}
