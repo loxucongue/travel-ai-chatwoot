@@ -175,11 +175,16 @@ def run_agent(context: dict):
             'customer_statements': [m.get('content', '') for m in context.get('messages', [])
                                     if m.get('direction') == 'incoming'][-8:],
             'delivery_evidence': _followup_delivery_evidence(context),
+            'unchanged_route_fields': ({'route_variant':context.get('route_variant', ''),
+                'route_choice':'unchanged', 'start_introduction':False}
+                if context.get('event') == 'silence_due' else None),
             # Business Skills decide whether this event merits a reply. A
             # scheduler event is not an unconditional instruction to sell.
             'instruction': '按已加载的业务Skill，结合实际对话决定本轮回复或等待；任务类型不代表必须发送或追加问题。'
                 'silence_due表示当前调度已到评估时间。普通答疑中的留联邀请不等于已执行过主动唤醒；'
                 '实际主动触达以delivery_evidence为准，不得凭历史文案推测“刚发过沉默跟进”或自行等待另一个时间点。'
+                'unchanged_route_fields非空时，这些字段是本轮只读状态，输出必须逐项原样回填，包括空字符串；'
+                'followup_material_route或已加载线路仅供查询资料，不能拿来覆盖原选线。'
                 '结合当前可用新素材及尚未说清的服务说明评估；尊重拒绝、延期和接管，只有重复内容时仍可wait。',
         }
     current['buffered_questions'] = [
