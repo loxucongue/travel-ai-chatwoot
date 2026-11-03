@@ -244,6 +244,8 @@
 - 代码 `c74b5a6` 已发布到 `rujing2-20261103T090256Z`，发布清单、素材哈希、Webhook、四个服务和原实发范围核验通过。业务 v7 仅随代码发布，**尚未安装到线上活动**：实际配置仍为 `20261103-xiamen-contextual-wakeup-v6`，`contextual_silence_invitation_enabled=false`，没有重排 #28 或任何正式会话。
 - 真实模型验收受阻：本机两次演练、服务器直接探测及服务器隔离演练均收到 DeepSeek HTTP 503；不能据此宣称新话术效果已验证。隔离环境在 `shared/service-contact-preflight/data/`，没有启动独立 Worker 或真实出站。结果日志为本机忽略文件 `output/deploy/rujing2/service-contact-server-preflight.log`。
 - 待接口恢复后，从本机执行 `.venv/Scripts/python.exe -X utf8 output/deploy/rujing2/run_service_contact_preflight.py`，验证 4 天土楼／亲子场景的服务说明与再邀请，以及拒绝、延期、留资交接、不明数字等边界。通过后执行 `output/deploy/rujing2/update_service_contact_20261103.py apply`；该脚本核对已留存的配置快照、备份数据库和产品包，仅更新话术、所属素材规则与新开关，保留排期、五条开场、账户／渠道范围和已有会话。若配置自快照后变化，必须重新比较具体差异，不绕过校验。
+- 11-03 17:33 已按用户提供的最后一把密钥完成轮换：官方接口认证及简单生成均返回 HTTP 200；通过 SFTP 原子替换 `shared/backend.env`，只改 `DEEPSEEK_API_KEY`，三个应用服务重启、Nginx 状态正常。旧环境备份为 `shared/backend.env.before-key-20261103T093307Z`，权限 0600；密钥值不进入仓库或运行日志。
+- 更换后的完整业务验收仍未通过：45 秒演练在首个模型调用超时；仅将隔离环境延长到 90 秒后，首个模型调用约 56.7 秒完成，后续调用返回 HTTP 503。正式调用时限及其他环境配置保留原值。新密钥已生效，v7 业务配置仍未启用；认证成功不能当作完整接待链路已恢复。核验摘要在本机忽略文件 `output/deploy/rujing2/model-key-final-verification.json`。
 
 ## 验证记录
 
