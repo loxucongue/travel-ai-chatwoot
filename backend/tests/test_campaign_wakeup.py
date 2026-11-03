@@ -24,6 +24,16 @@ def test_followup_evidence_does_not_confuse_reply_invitation_with_proactive_deli
     assert evidence['proactive_message_count_after_customer']==0 and evidence['last_team_message_at'] is None
 
 
+@pytest.mark.parametrize('text',['22','4/2','2？'])
+def test_ambiguous_numeric_message_cannot_select_single_available_route(text):
+    from app.reception_v3.route_choice import choice_error
+    context={'event':'customer_message','route_variant':'','skills':{'routes':{'trip':{'name':'Xiamen','aliases':[]}}},
+             'messages':[{'direction':'incoming','content':text}]}
+    decision={'action':'reply','route_variant':'trip','route_choice':'selected','profile':{},'messages':[]}
+    assert choice_error(decision,context)
+    assert choice_error({**decision,'route_variant':'','route_choice':'unchanged'},context) is None
+
+
 def test_material_scope_requires_unique_delivered_opening_not_customer_selection():
     bundle={'routes':{'trip':{},'other':{}}}
     materials=[{'key':'photo','routes':['trip'],'media_id':7,'media_hash':'hash'}]

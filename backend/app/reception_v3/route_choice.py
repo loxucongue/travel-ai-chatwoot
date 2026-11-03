@@ -128,6 +128,15 @@ def rejected_asset(key, materials, profile):
 
 def choice_error(decision, context):
     routes = context['skills']['routes']
+    # Numbers can be dates, party size or an incomplete message; they alone do
+    # not authorize changing the selected product, even in a one-route tenant.
+    if (decision.get('route_variant') and decision['route_variant'] != context.get('route_variant', '')
+            and decision['action'] != 'handoff' and context.get('event') == 'customer_message'):
+        latest = next((m for m in reversed(context.get('messages', [])) if m.get('direction') == 'incoming'), {})
+        text = latest.get('content', '').strip()
+        if (not latest.get('attachments') and re.fullmatch(r'[\d\s.,，。!?？！\-–/]+', text)
+                and advertisement_route(text, routes) != decision['route_variant']):
+            return '本轮只有数字或日期片段，不能据此确认选线。route_variant保留原值、route_choice=unchanged、start_introduction=false；需要时先澄清数字含义，不猜人数或日期。'
     # A delivered reference map is evidence of a preview, not a product choice.
     # Validate this transition independently of product IDs or script wording.
     if (not context.get('route_variant') and decision['route_variant']
