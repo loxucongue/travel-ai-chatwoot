@@ -3,6 +3,27 @@ import pytest
 from app.reception_v3.material_rules import followup_material_route, followup_contract_error
 
 
+def test_followup_evidence_does_not_confuse_reply_invitation_with_proactive_delivery():
+    from app.reception_v3.runtime import _followup_delivery_evidence
+    incoming={'direction':'incoming','created_at':'2026-11-03T15:00:00+08:00'}
+    reply={'direction':'outgoing','status':'delivered','contact_invitation':True,
+           'content':'Please leave LINE','created_at':'2026-11-03T15:00:18+08:00'}
+    context={'now':'2026-11-04T09:00:00+08:00','messages':[incoming,reply]}
+    evidence=_followup_delivery_evidence(context)
+    assert evidence['proactive_message_count_after_customer']==0
+    assert evidence['last_team_message_at']==reply['created_at']
+    for status in ('draft','failed','cancelled'):
+        context['messages'].append({**reply,'proactive':True,'status':status})
+    assert _followup_delivery_evidence(context)['proactive_message_count_after_customer']==0
+    context['messages'].append({**reply,'id':'sent-followup','proactive':True})
+    evidence=_followup_delivery_evidence(context)
+    assert evidence['proactive_message_count_after_customer']==1
+    assert evidence['recent_proactive_deliveries'][0]['id']=='sent-followup'
+    context['messages'].append({**incoming,'created_at':'2026-11-04T10:00:00+08:00'})
+    evidence=_followup_delivery_evidence(context)
+    assert evidence['proactive_message_count_after_customer']==0 and evidence['last_team_message_at'] is None
+
+
 def test_material_scope_requires_unique_delivered_opening_not_customer_selection():
     bundle={'routes':{'trip':{},'other':{}}}
     materials=[{'key':'photo','routes':['trip'],'media_id':7,'media_hash':'hash'}]
