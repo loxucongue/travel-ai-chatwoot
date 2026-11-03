@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "route_variant": "xiamen_3_6d",
-  "package_version": "20261102-xiamen-contextual-conversion-v4",
+  "package_version": "20261103-xiamen-warm-introduction-v5",
   "knowledge_version": "rujing2-v1",
   "currency": "TWD",
   "branch": "xiamen",
@@ -215,7 +215,7 @@
   "content_groups": {
     "intro": {
       "purpose": "廈門行程總覽",
-      "approved_text": "我們有3–6天的行程，時間充裕推薦5天，可安排廈門、漳州、泉州。可以先依您的假期和想玩的方向了解，具體逐日安排再確認。",
+      "approved_text": "我們有3–6天的行程～時間充裕可以看看5天，走走廈門、漳州、泉州。詳細安排可以依您的假期和想玩的方向再確認。",
       "asset_keys": [],
       "initial_delivery": true,
       "delivery_mode": "text_only",
@@ -1002,5 +1002,5 @@
       "usage_note": "不沿用需有本國簽證的錯誤概括。"
     }
   ],
-  "ai_guidance": "前期接待以取得LINE／微信ID或聯絡QR Code交給銷售私聊為目標。先簡短答疑，再依本輪新增需求說明一對一協助並積極邀請；可多輪推進，詳細規劃與成交交由銷售。無需先完成介紹或收齊日期人數；未核實細節不編造，尊重明確拒絕與延期。"
+  "ai_guidance": "首次由系統依配置主動發送行程概覽、景點及酒店照片、餐食影片。使用自然台灣旅遊顧問語氣，優先適用原話、短句答疑。已發開場不重播；客人有實際需求再銜接一對一講解與LINE／微信ID或聯絡QR Code，收到後交銷售。語意不明先澄清，不強行索取；未核實細節不編造，尊重拒絕與延期。"
 }

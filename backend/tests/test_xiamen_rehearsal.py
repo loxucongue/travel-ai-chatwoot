@@ -41,6 +41,9 @@ def test_prepare_real_company_materials_in_isolated_playground(tmp_path):
     assert not config['lead_capture']['require_departure_window']
     assert len(config['material_rules']) == 8
     assert '廈門' in config['reply']['opening_items'][0]['content']
+    assert [i['content_type'] for i in config['reply']['opening_items']] == ['text','image','image','image','video']
+    assert all(i['media_id'] and i['media_hash'] for i in config['reply']['opening_items'][1:])
+    assert config['reply']['tone'] == 'friendly_professional'
     bundle = json.loads((output / 'compiled-skills.json').read_text(encoding='utf8'))
     assert bundle['currency'] == 'TWD'
     assert len(bundle['routes']) == 1
@@ -91,7 +94,8 @@ with SessionLocal() as db:
     except ValueError as exc:
         assert str(exc) == 'rehearsal_configuration_stale_run_refresh'
     config['reply'].update(installer.read('reception-config.json')['reply'])
-    save_setting(db, SETTING_KEY, config); db.commit()
+    from app.reception_config import put_reception_configuration, ReceptionConfiguration
+    put_reception_configuration(db, ReceptionConfiguration.model_validate(config)); db.commit()
     path = Path(ROUTE_PACKAGES['xiamen_3_6d']['source_path'])
     package = json.loads(path.read_text(encoding='utf-8'))
     package['knowledge_facts'][0]['text'] = 'Old installed fact'
@@ -101,6 +105,37 @@ with SessionLocal() as db:
         raise AssertionError('must not test stale route facts')
     except ValueError as exc:
         assert str(exc) == 'rehearsal_route_stale_run_refresh'
+''')
+
+
+def test_first_entry_sends_campaign_introduction_without_model_selection_and_deduplicates(tmp_path):
+    from test_business_isolation import run_isolated
+    from test_xiamen_install import BOOTSTRAP
+    run_isolated(tmp_path, BOOTSTRAP + '''
+result = installer.install(apply=True)
+from app.automation_models import AutomationSession
+from app.reception_v3 import service
+from app.reception_v3.skills import compile_skills
+from app.reception_v3.material_rules import eligible_rules
+from app.material_library import candidate_materials
+with SessionLocal() as db:
+    row = AutomationSession(owner_id=9, inbox_binding_id=result['inbox_id'], environment='playground',
+        mode='journey', engine_version='v3', controls={}, memory={}, messages=[])
+    db.add(row); db.flush()
+    service.start(db,row,'22')
+    opening = [m for m in row.messages if m.get('v3_kind')=='opening']
+    assert [m['content_type'] for m in opening] == ['text','image','image','image','video']
+    assert not row.controls.get('route_variant')  # A preview does not select a trip for the customer.
+    for _ in range(8):
+        service.advance(row,service.later(row.controls['simulation']['last_wall_at'],4))
+    assert all(m.get('status')=='simulated_delivered' for m in row.messages if m.get('v3_kind')=='opening')
+    bundle=compile_skills(db)
+    rules=eligible_rules(bundle,candidate_materials(db,7),'xiamen_3_6d',[],'silence_due',row.messages)
+    opening_keys={m.get('asset_key') for m in opening} - {None}
+    assert len(opening_keys)==4
+    assert not opening_keys.intersection(k for r in rules for k in r['asset_keys'])
+    service.add_message(db,row,'Hello','second')
+    assert len([m for m in row.messages if m.get('v3_kind')=='opening'])==5
 ''')
 
 

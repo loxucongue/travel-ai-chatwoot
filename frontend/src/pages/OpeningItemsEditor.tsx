@@ -60,7 +60,7 @@ export default function OpeningItemsEditor({ config, patch, uploading, errors, d
         <div className="opening-message-actions">
           <strong>消息 {index + 1}</strong>
           <select aria-label={`消息 ${index + 1} 类型`} value={item.content_type} disabled={disabled || busy} onChange={event => {
-            update(item.key, { content_type: event.target.value as OpeningItem['content_type'], media_id: null, media_hash: undefined, media_name: undefined });
+            update(item.key, { content_type: event.target.value as OpeningItem['content_type'], media_id: null, asset_key: '', media_hash: undefined, media_name: undefined });
             clearError(item.key);
           }}><option value="text">文字</option><option value="image">图片</option><option value="video">视频</option></select>
           <span>{Array.from(item.content).length} / {config.reply.opening_character_limit}</span>
@@ -87,7 +87,7 @@ export default function OpeningItemsEditor({ config, patch, uploading, errors, d
               </label>
               <span>{item.media_name || (item.media_id ? `附件 #${item.media_id}` : item.content_type === 'image' ? 'PNG / JPEG / WebP / GIF · 最大 20 MB' : 'MP4 / WebM · 最大 20 MB')}</span>
               {!!item.media_id && <button type="button" className="icon-button" title="移除附件" aria-label={`移除附件 ${index + 1}`} disabled={disabled || busy} onClick={() => {
-                update(item.key, { media_id: null, media_hash: undefined, media_name: undefined });
+                update(item.key, { media_id: null, asset_key: '', media_hash: undefined, media_name: undefined });
                 clearError(item.key);
               }}><Trash2 size={16} /></button>}
             </div>

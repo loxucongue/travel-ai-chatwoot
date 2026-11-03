@@ -38,7 +38,16 @@ def verify_effective_configuration(db, output):
             expected[section].update(values)
         else:
             expected[section] = deepcopy(values)
-    if ReceptionConfiguration.model_validate(expected).model_dump() != current:
+    expected = ReceptionConfiguration.model_validate(expected).model_dump()
+    from app.opening_messages import opening_media_info
+    from app.models import Tenant
+    from sqlalchemy import select
+    tenant = db.scalar(select(Tenant))
+    for item in expected['reply'].get('opening_items') or []:
+        if item['content_type'] != 'text':
+            info = opening_media_info(db, item, tenant.id)
+            item.update({k:info[k] for k in ('media_id', 'media_hash', 'media_name')})
+    if expected != current:
         raise ValueError('rehearsal_configuration_stale_run_refresh')
     installed = read_business_json(ROUTE_PACKAGES[ROUTE]['source_path'])
     if installed != _validate(deepcopy(read('route-package.json')), PACK / 'route-package.json'):

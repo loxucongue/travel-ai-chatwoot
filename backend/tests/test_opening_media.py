@@ -119,3 +119,26 @@ def test_video_signature_is_not_mime_only(session_factory, tmp_path):
         (tmp_path / 'test.mp4').write_bytes(b'<html>not a video</html>')
         with pytest.raises(ValueError, match='opening_video_format_invalid'):
             opening_media_info(db, item, 1)
+
+
+def test_catalog_opening_binds_current_tenant_and_rejects_revoked_or_changed_asset(session_factory, tmp_path):
+    from app.models import KnowledgeVersion, MaterialAsset
+    from app.material_library import CATALOG_VERSION
+    with session_factory() as db:
+        item = media(db, tmp_path)
+        version = KnowledgeVersion(tenant_id=1, version_key=CATALOG_VERSION, title='test', content_hash='test')
+        db.add(version); db.flush()
+        asset = MaterialAsset(knowledge_version_id=version.id, asset_key='welcome_photo', display_name='welcome',
+            source_path=str(tmp_path/'test.png'), media_type='image', usage='opening',
+            file_hash=item['media_hash'], available=True, metadata_json={'stored_media_id':item['media_id']})
+        db.add(asset); db.commit()
+        portable = OpeningItem(key='welcome',content_type='image',asset_key='welcome_photo').model_dump()
+        bound = opening_media_info(db,portable,1)
+        assert bound['media_id']==item['media_id'] and bound['asset_key']=='welcome_photo'
+        with pytest.raises(ValueError,match='opening_media_unavailable'):
+            opening_media_info(db,portable,2)
+        with pytest.raises(ValueError,match='opening_media_binding_changed'):
+            opening_media_info(db,{**portable,'media_id':item['media_id']+100},1)
+        asset.available=False; db.commit()
+        with pytest.raises(ValueError,match='opening_media_unavailable'):
+            opening_media_info(db,portable,1)

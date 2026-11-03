@@ -111,7 +111,7 @@ export default function AiReceptionStrategy() {
       patch(value => {
         const target = value.reply.opening_items.find(entry => entry.key === item.key);
         if (!target || target.content_type !== item.content_type) return;
-        Object.assign(target, { media_id: result.id, media_name: result.name || file.name, media_hash: result.media_hash });
+        Object.assign(target, { media_id: result.id, asset_key: '', media_name: result.name || file.name, media_hash: result.media_hash });
       });
     } catch (error) {
       setUploadErrors(current => ({ ...current, [item.key]: error instanceof Error ? error.message : '上传失败，请重试' }));

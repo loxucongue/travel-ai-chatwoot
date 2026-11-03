@@ -50,6 +50,7 @@ export type OpeningItem = {
   content_type: 'text' | 'image' | 'video';
   content: string;
   media_id?: number | null;
+  asset_key?: string;
   media_hash?: string;
   media_name?: string;
 };

@@ -211,6 +211,8 @@ def put_reception_configuration(db,payload):
         if item['content_type']!='text':
             info=opening_media_info(db,item,tenant.id if tenant else None)
             item['media_hash']=info['media_hash']
+            item['media_id']=info['media_id']
+            item['media_name']=info['media_name']
     save_setting(db,SETTING_KEY,value)
     return value
 

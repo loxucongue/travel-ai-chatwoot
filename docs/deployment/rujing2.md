@@ -2,7 +2,7 @@
 
 日期：2026-10-26。维护分支：`codex/rujing2`。基线：`90cbd6f`。
 
-2026-11-02 最新状态：服务器运行 `3404dfd`，已启用账号 `193812` 的 Facebook 收件箱 `150646` 自动接待，Chatwoot 回调及内部机器人便笺已验证。Facebook 客户新消息尚未在 Chatwoot 出现，客户入站至 AI 回复的完整实发链路仍待核验，不能据此宣称已完成线上验收。控制台与 [AI 演练场](http://47.82.3.154/#/playground)沿用原管理员。下文保留分阶段历史记录，以文末正式接入记录为准。
+2026-11-03 状态：账号 `193812` 的 Facebook 收件箱 `150646` 已收到客户消息；测试会话 #1 的真实入站“22”触发了 AI 开场和答复，两条消息均已有已读回执。首次介绍与素材的调整和发布验收见下文。控制台与 [AI 演练场](http://47.82.3.154/#/playground)沿用原管理员。下文保留分阶段历史记录，以最新记录为准。
 
 ## 仓库分析与拆分边界
 
@@ -199,6 +199,15 @@
 5. 当前公网入口和回调仍为 HTTP IP，尚未配置正式域名与 HTTPS。后续启用 TLS 时同步更新 `PUBLIC_API_BASE_URL`、前端来源、Cookie 设置和现有 Webhook URL，避免重复注册回调。
 
 官方参考：[Facebook 渠道授权与重连](https://www.chatwoot.com/hc/user-guide/articles/1677778588-how-to-setup-a-facebook-channel)、[标准窗口与人工七天延期](https://www.chatwoot.com/hc/user-guide/articles/1745225158-what-is-human-agent-tag-in-instagram-messenger-channel)、[账户 Webhook](https://developers.chatwoot.com/api-reference/webhooks/add-a-webhook)、[内部 AgentBot](https://developers.chatwoot.com/api-reference/account-agentbots/create-an-agent-bot)。
+
+## 2026-11-03 首次介绍与语气调整
+
+- 对照 `origin/main` 的 `a7dfcf2` 中 china2go 接待语气规则：自然繁体、完整短句、适用原话优先、少套话，每轮最多一个收尾问题。沿用厦门事实、台币、35 条 FAQ 和转私交接规则，不导入旧公司身份或价格。
+- 旧配置只有一句文字问候，并明确关闭整套介绍；图片和视频只在询问后由模型选用，因此实际首次回复没有素材。
+- 新客固定开场为欢迎及 3–6 天概览、土楼图、鼓浪屿图、酒店图、餐食视频，按顺序间隔 3 秒。开场由程序调度，无需模型选择线路；后续答疑及跟进按素材标识、文件哈希去重。
+- 开场配置支持当前租户目录的 `asset_key`，发布时绑定真实媒体 ID 和哈希；后台替换文件时清除旧目录绑定。现有会话不会因发布而重放开场。
+- 有实际需求时简短答复后继续推进私讯；“22”、问候、测试消息先澄清或承接。拒绝留联继续答疑，已提供 LINE／微信按原规则交接，不再重复索取。
+- 本地验证：相关后端 52 项、前端 10 项及生产构建通过；六组真实模型演练覆盖首轮素材、语意不明、价格、酒店素材去重、拒绝留联、留联交接。
 
 ## 验证记录
 

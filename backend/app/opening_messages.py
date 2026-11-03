@@ -19,6 +19,7 @@ class OpeningItem(BaseModel):
     content_type: Literal["text", "image", "video"] = "text"
     content: str = Field(default="", max_length=200)
     media_id: int | None = Field(default=None, gt=0)
+    asset_key: str = Field(default="", max_length=100)
     media_hash: str = Field(default="", max_length=64, pattern=r"^(?:[a-f0-9]{64})?$")
     media_name: str = Field(default="", max_length=255)
 
@@ -26,9 +27,9 @@ class OpeningItem(BaseModel):
     def validate_content(self):
         self.content = self.content.strip()
         if self.content_type == "text":
-            if not self.content or self.media_id or self.media_hash:
+            if not self.content or self.media_id or self.media_hash or self.asset_key:
                 raise ValueError("opening_text_invalid")
-        elif not self.media_id:
+        elif not self.media_id and not self.asset_key:
             raise ValueError("opening_media_required")
         return self
 
@@ -42,7 +43,19 @@ def delivery_items(items: list[dict] | None, texts: list[str]) -> list[dict]:
 
 
 def opening_media_info(db, item: dict, tenant_id: int | None) -> dict:
-    media = db.get(StoredMedia, item.get("media_id")) if item.get("media_id") else None
+    asset = None
+    media_id = item.get('media_id')
+    if item.get('asset_key'):
+        from app.material_library import catalog_assets
+        matches = [a for a in catalog_assets(db, tenant_id) if a.asset_key == item['asset_key']] if tenant_id else []
+        if len(matches) != 1 or not matches[0].available:
+            raise ValueError('opening_media_unavailable')
+        asset = matches[0]
+        bound_id = asset.metadata_json.get('stored_media_id')
+        if media_id and media_id != bound_id:
+            raise ValueError('opening_media_binding_changed')
+        media_id = bound_id
+    media = db.get(StoredMedia, media_id) if media_id else None
     if not tenant_id or not media or media.tenant_id != tenant_id:
         raise ValueError("opening_media_unavailable")
     if media.media_type != item.get("content_type"):
@@ -70,9 +83,13 @@ def opening_media_info(db, item: dict, tenant_id: int | None) -> dict:
     else:
         raise ValueError("opening_media_type_invalid")
     digest = hashlib.sha256(data).hexdigest()
+    if asset and digest != asset.file_hash:
+        raise ValueError('opening_media_revision_changed')
     if item.get("media_hash") and digest != item["media_hash"]:
         raise ValueError("opening_media_revision_changed")
     return {"media_id": media.id, "media_hash": digest, "media_name": media.original_name,
             "name": media.original_name, "content_type": media.media_type,
-            "asset_key": None, "content_family": f"file:{digest}", "content_group_key": "",
+            "asset_key": asset.asset_key if asset else None,
+            "content_family": asset.metadata_json.get('content_family', f'file:{digest}') if asset else f"file:{digest}",
+            "content_group_key": "",
             "route_variant": "", "opening_media": True}
