@@ -118,6 +118,31 @@ def test_rule_explanation_headcounts_are_not_mistaken_for_tour_prices():
     assert quote_error(decision, current(), {}) is None
 
 
+@pytest.mark.parametrize('text', [
+    '對的，上面給您的優惠價已經包含每人200元的優惠了～',
+    '上面的优惠价已经包含每人200元优惠。',
+    '團費已含每人200元優惠，不會再扣一次。',
+])
+def test_discount_confirmation_is_delivered_without_being_read_as_tour_total(session_factory, monkeypatch, text):
+    from app.reception_v3.seasonal_quotes import trip_quote_amounts
+    assert list(trip_quote_amounts(text)) == []
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        row.memory = {'party_size': 4, 'group_type': 'shared'}
+        decision = Decision(route_variant='nine', messages=[{'text': text}]).model_dump()
+        assert quote_error(decision, current(), row.memory) is None
+        _, parts = service.parts_for(db, row, current(), decision)
+        assert [p['content'] for p in parts] == [text]
+
+
+@pytest.mark.parametrize('text', ['團費200元', '優惠價：人民幣200元', '團費是￥200元', '优惠价为200元'])
+def test_directly_stated_incorrect_tour_total_is_still_rejected(text):
+    from app.reception_v3.seasonal_quotes import trip_quote_amounts
+    assert list(trip_quote_amounts(text)) == [200]
+    decision = Decision(route_variant='nine', messages=[{'text': text}]).model_dump()
+    assert quote_error(decision, current(), {'party_size': 4, 'group_type': 'shared'})
+
+
 @pytest.mark.parametrize('script', ['', 'price_shared_4'])
 def test_explaining_existing_price_can_repeat_verified_amount_without_resending_template(session_factory, monkeypatch, script):
     explanation = '12,580元已經是原價12,780元扣掉每人200元的價格，不能再減一次。'

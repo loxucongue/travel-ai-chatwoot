@@ -104,6 +104,22 @@ def test_protocol_repair_follows_recurring_context_and_preserves_reply(monkeypat
     assert decision['messages'][0]['text'] == '有包含酒店早餐。'
 
 
+@pytest.mark.parametrize('repeat_fault', [False, True])
+def test_distinct_quote_faults_get_bounded_repairs_without_repeating_one_fault(monkeypatch, repeat_fault):
+    errors = ['date lookup required', 'date lookup required' if repeat_fault else 'quote reference required', None]
+    monkeypatch.setattr(runtime, 'quote_error', lambda *a, **kw: errors.pop(0))
+    requests = model(monkeypatch, [final(messages=[{'text': '保留的答覆'}]) for _ in range(3)])
+    if repeat_fault:
+        with pytest.raises(runtime.EvaluationCallError, match='seasonal_quote_not_validated'):
+            runtime.run_agent(context('peach_9d_2027'))
+        assert len(requests) == 2
+    else:
+        decision, logs, _ = runtime.run_agent(context('peach_9d_2027'))
+        assert len(requests) == 3 and logs[-1]['status'] == 'completed'
+        assert decision['messages'][0]['text'] == '保留的答覆'
+        assert '所有messages都尚未發送' in requests[-1]['messages'][-1]['content']
+
+
 @pytest.mark.parametrize('empty_type', ['', None])
 @pytest.mark.parametrize('action', ['reply', 'handoff'])
 def test_empty_handoff_classification_preserves_decision_without_repair(monkeypatch, empty_type, action):

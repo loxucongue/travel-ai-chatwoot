@@ -410,7 +410,11 @@ def trip_quote_amounts(text):
     number = r'\d[\d,]*(?:\.\d+)?'
     pattern = (rf'(?P<per_person>{number})\s*元?\s*/\s*人'
                rf'|每人\s*(?:¥|￥|人民幣|人民币|RMB|CNY)?\s*(?P<each>{number})\s*元'
-               rf'|(?:團費|团费|優惠價|优惠价|精緻小團)[^。！？!?；;\n，,\d]{{0,60}}(?P<label>{number})'
+               # A price label must directly introduce its amount. Crossing
+               # arbitrary prose mistakes "優惠價已包含每人200元優惠" for
+               # a 200-yuan tour and rejects an otherwise correct explanation.
+               rf'|(?:團費|团费|優惠價|优惠价|精緻小團)[\s：:=為为是]*'
+               rf'(?:人民幣|人民币|RMB|CNY|¥|￥)?\s*[¥￥]?\s*(?P<label>{number})'
                rf'(?=\s*(?:元|[。！？!?；;\n，,（(]|$))'
                rf'|(?:人民幣|人民币|RMB|CNY|¥|￥)\s*[¥￥]?\s*(?P<currency>{number})'
                rf'|(?P<yuan>{number})\s*元')

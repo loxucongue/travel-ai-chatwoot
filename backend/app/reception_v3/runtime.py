@@ -326,7 +326,7 @@ def run_agent(context: dict):
             departure_checks[route] = {**date_evidence, 'route':route, 'result':checked}
         current['spring_departure_options'] = {r:availability_results[r] for r in sorted(PEACH_ROUTES & availability_results.keys())}
         messages[-1] = {'role':'user', 'content':json.dumps(current, ensure_ascii=False)}
-    quote_repaired = False
+    quote_repairs = set()
     choice_repaired = False
     logs = understanding_logs + ([{'node': 'customer_reactions', 'recognized': reactions, 'status': 'verified'}] if reactions else [])
     hashes = [understanding_hash] if understanding_hash else []
@@ -565,9 +565,12 @@ def run_agent(context: dict):
             if quote_problem:
                 log.update(status='quote_rejected', error_code='seasonal_quote_not_validated',
                            validation_error=quote_problem, rejected_decision=decision)
-                if quote_repaired:
+                # A date lookup and a subsequent template-reference error are
+                # different faults. Allow each one repair within the existing
+                # turn deadline/round limit, without looping on the same fault.
+                if quote_problem in quote_repairs or len(quote_repairs) >= 2:
                     raise DecisionContractError('seasonal_quote_not_validated')
-                quote_repaired = True
+                quote_repairs.add(quote_problem)
                 messages.append({'role':'assistant', 'content':json.dumps(decision,ensure_ascii=False),
                                  'reasoning_content':message.get('reasoning_content','')})
                 messages.append({'role':'user','content':quote_problem +
