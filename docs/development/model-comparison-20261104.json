@@ -1,0 +1,208 @@
+{
+  "date": "2026-11-04",
+  "task": "User-requested primary/standby key rotation and same-scenario three-model comparison",
+  "deployment_commit": "a0b3f422a4f7b9cb2a06c3c0562c29fc44be27c2",
+  "configuration": {
+    "primary": "deepseek-flash",
+    "fallback": "qwen-plus",
+    "primary_key_rotated": true,
+    "fallback_key_rotated": true,
+    "fallback_thinking": false,
+    "primary_probe_seconds": 20,
+    "shared_request_deadline_seconds": 45,
+    "primary_cooldown_seconds": 0,
+    "claude_evaluation_only": true
+  },
+  "backup": "/opt/china2go-ai/backups/provider-keys-20261104T061017Z",
+  "tests": {
+    "deterministic_passed": 46,
+    "scenarios_per_model": 24,
+    "customer_turns_per_model": 27,
+    "real_calls_primary_comparison": 204,
+    "production_adapter_qwen_cases": 4,
+    "production_adapter_qwen_auto_passed": 4
+  },
+  "comparison": {
+    "deepseek": {
+      "completed": true,
+      "case_count": 24,
+      "auto_passed": 24,
+      "failures": [],
+      "real_calls": 71,
+      "http_failures": 0,
+      "request_median_seconds": 4.874,
+      "request_p95_seconds": 12.203,
+      "request_over_10s": 7,
+      "turn_model_time_median_seconds": 13.706,
+      "input_tokens": 3730496,
+      "output_tokens": 55987
+    },
+    "qwen": {
+      "completed": true,
+      "case_count": 24,
+      "auto_passed": 22,
+      "failures": [
+        {
+          "case": "unknown_budget_then_four",
+          "steps": 2,
+          "real_model_calls": 4,
+          "failures": [
+            {
+              "step": "turn_2",
+              "errors": [
+                "unexpected_profile:party_size"
+              ]
+            }
+          ]
+        },
+        {
+          "case": "already_quoted_same",
+          "steps": 1,
+          "real_model_calls": 2,
+          "failures": [
+            {
+              "step": "quote",
+              "errors": [
+                "unexpected:包含：",
+                "unexpected:不含："
+              ]
+            }
+          ]
+        }
+      ],
+      "real_calls": 59,
+      "http_failures": 0,
+      "request_median_seconds": 10.721,
+      "request_p95_seconds": 18.715,
+      "request_over_10s": 31,
+      "turn_model_time_median_seconds": 20.537,
+      "input_tokens": 3036231,
+      "output_tokens": 13891
+    },
+    "claude": {
+      "completed": true,
+      "case_count": 24,
+      "auto_passed": 24,
+      "failures": [],
+      "real_calls": 74,
+      "http_failures": 0,
+      "request_median_seconds": 6.13,
+      "request_p95_seconds": 13.588,
+      "request_over_10s": 12,
+      "turn_model_time_median_seconds": 14.924,
+      "input_tokens": 6224994,
+      "output_tokens": 75619
+    }
+  },
+  "manual_findings": {
+    "deepseek": [
+      "Unknown-party reference quote incorrectly says headcount discount already applied."
+    ],
+    "claude": [
+      "Three reference-quote scenarios incorrectly say headcount discounts already applied.",
+      "Offers August alternatives then asks whether customer wants peach blossoms despite known seasonal mismatch."
+    ],
+    "qwen": [
+      "Hypothetical party of four saved as confirmed party size.",
+      "Repeats full price inclusions for same-price follow-up.",
+      "Quotes full prices despite request for discount-only explanation.",
+      "Adds unnecessary tips and overconfident availability language."
+    ]
+  },
+  "decision": "Keep DeepSeek primary; Qwen Plus non-thinking standby; Claude evaluation only. Automatic checks are not semantic acceptance of every statement.",
+  "exploratory_rejections": {
+    "qwen_plus_thinking": "30s timeouts; results archived separately.",
+    "qwen3.8_flash": "Partial exploration stopped after tool round-limit failure and unsolicited image on quote request; excluded from primary comparison."
+  },
+  "methodology": [
+    "Same immutable business snapshot, same 24 seeded-history scenarios and tools, isolated memory database, simulated media delivery.",
+    "Cross-model fallback disabled for comparative run. Native protocol adaptation; DeepSeek low thinking, Qwen no thinking, Claude default.",
+    "Non-streaming comparative request latency; production streaming failover separately verified.",
+    "Metrics count real API requests, not fabricated primary 503s.",
+    "Legacy evaluation trace model/provider/cost labels are not billing records; wrapper call records supply actual provider/model and token counts.",
+    "One run per scenario, not statistically conclusive; no actual vendor billing available."
+  ],
+  "live_model_switch": [
+    {
+      "phase": "primary_healthy",
+      "provider": "deepseek",
+      "passed": true,
+      "calls": [
+        {
+          "model": "deepseek-flash",
+          "provider": "deepseek",
+          "status": "completed",
+          "duration_ms": 920,
+          "http_status": null
+        }
+      ]
+    },
+    {
+      "phase": "primary_failure",
+      "provider": "bailian",
+      "passed": true,
+      "calls": [
+        {
+          "model": "deepseek-flash",
+          "provider": "deepseek",
+          "status": "failed",
+          "duration_ms": 0,
+          "http_status": 503
+        },
+        {
+          "model": "qwen-plus",
+          "provider": "bailian",
+          "status": "completed",
+          "duration_ms": 615,
+          "http_status": null
+        }
+      ]
+    },
+    {
+      "phase": "primary_recovered",
+      "provider": "deepseek",
+      "passed": true,
+      "calls": [
+        {
+          "model": "deepseek-flash",
+          "provider": "deepseek",
+          "status": "completed",
+          "duration_ms": 788,
+          "http_status": null
+        }
+      ]
+    }
+  ],
+  "initial_readiness_503": {
+    "unrelated_existing_notification": 375,
+    "created_at": "2026-11-04T04:05:33.987075+00:00",
+    "claimed_at": "2026-11-04T05:12:18.135Z",
+    "resolution": {
+      "notification_id": 378,
+      "delivery_id": 375,
+      "status": "cancelled",
+      "reason": "handoff_already_acknowledged",
+      "resent": false,
+      "readiness": 200
+    }
+  },
+  "final_verification": {
+    "at": "2026-11-04T06:15:42.443632+00:00",
+    "ready": 200,
+    "services": {
+      "china2go-api": "active",
+      "china2go-worker": "active",
+      "china2go-playground": "active",
+      "nginx": "active",
+      "china2go-cloudflared": "active"
+    },
+    "no_customer_test_messages": true,
+    "prior_verification": "live-verification.json",
+    "stale_notification_resolution": "stale-notification-resolution.json",
+    "passed": true
+  },
+  "artifacts": "output/provider-comparison-20261104/comparison.html",
+  "remote_evidence": "/opt/china2go-ai/evaluations/provider-comparison-20261104",
+  "customer_test_sends": 0,
+  "secrets_in_report": false
+}
