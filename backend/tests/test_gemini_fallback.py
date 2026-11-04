@@ -88,10 +88,34 @@ def test_bailian_protocol_and_next_turn_returns_to_primary(gateway, monkeypatch)
 
 def test_bailian_preserves_requested_thinking_effort(monkeypatch):
     monkeypatch.setattr(settings, 'model_fallback_provider', 'bailian')
+    monkeypatch.setattr(settings, 'model_fallback_thinking_enabled', True)
     original = {**payload(), 'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low'}
     result = transport._gemini_payload(original)
     assert result['enable_thinking'] is True and result['reasoning_effort'] == 'low'
     assert result['max_tokens'] == original['max_tokens']
+
+
+def test_qwen_non_thinking_fallback_does_not_change_primary_or_tools(gateway, monkeypatch):
+    handlers, requests, records = gateway
+    monkeypatch.setattr(settings, 'model_fallback_provider', 'bailian')
+    monkeypatch.setattr(settings, 'model_fallback_thinking_enabled', False)
+    monkeypatch.setattr(settings, 'gemini_model', 'qwen-plus')
+    monkeypatch.setattr(settings, 'model_primary_cooldown_seconds', 0)
+    handlers['primary.invalid'] = lambda r: httpx.Response(503)
+    handlers['fallback.invalid'] = success
+    original = {**payload(), 'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low',
+                'tools': [{'type': 'function', 'function': {'name': 'quote', 'parameters': {'type': 'object'}}}]}
+    transport._post_with_deadline(original, 2)
+    primary, fallback = [json.loads(r.content) for r in requests]
+    assert primary == original
+    assert fallback['model'] == 'qwen-plus' and fallback['enable_thinking'] is False
+    assert 'thinking' not in fallback and 'reasoning_effort' not in fallback
+    assert fallback['tools'] == original['tools'] and fallback['messages'] == original['messages']
+    records.clear()
+    handlers['primary.invalid'] = success
+    transport._post_with_deadline(original, 2)
+    assert requests[-1].url.host == 'primary.invalid'
+    assert json.loads(requests[-1].content) == original
 
 
 @pytest.mark.parametrize('status', [403, 429, 503])

@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-v4-flash"
     gemini_fallback_enabled: bool = False
     model_fallback_provider: Literal['gemini', 'bailian'] = 'gemini'
+    model_fallback_thinking_enabled: bool = True
     google_gemini_base_url: str = "https://linkai.shop"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"

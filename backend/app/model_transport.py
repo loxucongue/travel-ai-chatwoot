@@ -43,7 +43,8 @@ def _gemini_payload(payload):
     result['temperature'] = settings.gemini_temperature
     thinking = result.pop('thinking', None)
     if settings.model_fallback_provider == 'bailian':
-        result['enable_thinking'] = bool(thinking and thinking.get('type') != 'disabled')
+        result['enable_thinking'] = bool(settings.model_fallback_thinking_enabled
+                                        and thinking and thinking.get('type') != 'disabled')
         if not result['enable_thinking']:
             result.pop('reasoning_effort', None)
         return result
