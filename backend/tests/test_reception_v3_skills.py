@@ -104,20 +104,19 @@ def test_protocol_repair_follows_recurring_context_and_preserves_reply(monkeypat
     assert decision['messages'][0]['text'] == '有包含酒店早餐。'
 
 
-@pytest.mark.parametrize('repeat_fault', [False, True])
-def test_distinct_quote_faults_get_bounded_repairs_without_repeating_one_fault(monkeypatch, repeat_fault):
-    errors = ['date lookup required', 'date lookup required' if repeat_fault else 'quote reference required', None]
-    monkeypatch.setattr(runtime, 'quote_error', lambda *a, **kw: errors.pop(0))
-    requests = model(monkeypatch, [final(messages=[{'text': '保留的答覆'}]) for _ in range(3)])
-    if repeat_fault:
-        with pytest.raises(runtime.EvaluationCallError, match='seasonal_quote_not_validated'):
-            runtime.run_agent(context('peach_9d_2027'))
-        assert len(requests) == 2
-    else:
-        decision, logs, _ = runtime.run_agent(context('peach_9d_2027'))
-        assert len(requests) == 3 and logs[-1]['status'] == 'completed'
-        assert decision['messages'][0]['text'] == '保留的答覆'
-        assert '所有messages都尚未發送' in requests[-1]['messages'][-1]['content']
+def test_business_validators_cannot_veto_model_text(monkeypatch):
+    from app.reception_v3 import seasonal_quotes, party_quotes, route_choice, lead_priority, repetition
+    def forbidden(*args, **kwargs):
+        raise AssertionError('post_generation_business_validator_called')
+    for module, name in [(seasonal_quotes, 'quote_error'), (party_quotes, 'quote_error'),
+                         (route_choice, 'choice_error'), (lead_priority, 'validation_error'),
+                         (repetition, 'review')]:
+        monkeypatch.setattr(module, name, forbidden)
+    text = '普通團期每人9,980元；2027/2/5每人10,980元。兩位與三位同價。'
+    requests = model(monkeypatch, [final(messages=[{'text': text}])])
+    decision, logs, _ = runtime.run_agent(context('peach_9d_2027'))
+    assert len(requests) == 1 and logs[-1]['status'] == 'completed'
+    assert decision['messages'][0]['text'] == text
 
 
 @pytest.mark.parametrize('empty_type', ['', None])
@@ -268,14 +267,12 @@ def test_timer_uses_same_selected_skill_and_preserves_output(monkeypatch):
     assert logs[-1]['script_ids'] == ['date']
 
 
-def test_model_selected_route_activates_body_before_final_decision(monkeypatch):
-    requests = model(monkeypatch, [final(route_variant='peach_11d_2027', start_introduction=True),
-                                   final(route_variant='peach_11d_2027', start_introduction=True)])
-    _, logs, _ = runtime.run_agent(context())
-    assert 'INTRO_ONLY_11' not in json.dumps(requests[0])
-    assert 'INTRO_ONLY_11' in json.dumps(requests[1])
-    assert logs[0]['status'] == 'skill_activation'
-    assert 'peach-11d-2027' in logs[-1]['loaded_skills']
+def test_final_model_route_choice_does_not_trigger_post_generation_rewrite(monkeypatch):
+    requests = model(monkeypatch, [final(route_variant='peach_11d_2027', start_introduction=True)])
+    decision, logs, _ = runtime.run_agent(context())
+    assert len(requests) == 1
+    assert decision['route_variant'] == 'peach_11d_2027'
+    assert logs[-1]['status'] == 'completed'
 
 
 def test_contact_description_migration_preserves_opening_authored_text_and_disabled_state():

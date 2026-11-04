@@ -11,11 +11,10 @@ from app.model_transport import _post_with_deadline, _call_log, EvaluationCallEr
 from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
 from app.reception_v3.prompt import SYSTEM_PROMPT, TRAVEL_WINDOW_INSTRUCTION, CONTACT_CONTINUITY_INSTRUCTION, CONSULTATIVE_INSTRUCTION
-from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task, validation_error as lead_priority_error
-from app.reception_v3.large_party import reply_contract_error
-from app.reception_v3.seasonal_quotes import departure_quote, quote_error, month_answer_window, mentions_departure_time, explicit_date_window, reply_calendar_error
-from app.reception_v3.route_choice import PEACH_ROUTES, choice_error
-from app.reception_v3.route_understanding import interpret, generation_instruction, DecisionContractError
+from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task
+from app.reception_v3.seasonal_quotes import departure_quote, month_answer_window, mentions_departure_time, explicit_date_window
+from app.reception_v3.route_choice import PEACH_ROUTES
+from app.reception_v3.route_understanding import interpret, generation_instruction
 from app.reception_v3.travel_dates import calculate_travel_window
 
 
@@ -95,17 +94,14 @@ reply最多一条200字以内文字。wait时messages=[]。不要输出其他字
         response=_post_with_deadline(payload,settings.deepseek_timeout_seconds)
         response.raise_for_status();body=response.json()
         decision=Decision.model_validate(_json_object(body['choices'][0]['message']['content'])).model_dump()
-        from app.reception_v3.seasonal_quotes import contains_trip_quote
         if (decision['action'] not in ('reply','wait') or decision['start_introduction'] or decision['profile']
                 or decision['route_variant'] or decision['route_choice'] != 'unchanged' or len(decision['messages']) > 1
                 or (decision['action']=='wait' and decision['messages'])
-                or any(m['script_id'] or m['quote_options'] or m['asset_keys'] or m['material_rule_id'] or len(m['text'])>200 or contains_trip_quote(m['text']) for m in decision['messages'])):
+                or any(m['script_id'] or m['quote_options'] or m['asset_keys'] or m['material_rule_id'] for m in decision['messages'])):
             raise ValueError('invalid_advisor_followup')
         logs = [{**_call_log(1,started,body,'completed',None),'node':'advisor_followup',
                  'call_timing':response.extensions.get('call_timing',{})}]
-        from app.reception_v3.repetition import review
-        decision, review_logs, review_digest = review(decision, context, started + settings.deepseek_timeout_seconds)
-        return decision, logs + review_logs, combine_digests(digest, review_digest) if review_digest else digest
+        return decision, logs, digest
     except Exception as exc:
         raise EvaluationCallError(str(exc) or type(exc).__name__, [], digest) from exc
 
@@ -132,9 +128,13 @@ def run_agent(context: dict):
         return result
     common = load('tibet-reception')
     preloaded = []
-    selected = registry.route_skill(context.get('route_variant', ''))
-    if selected:
-        preloaded.append(load(selected))
+    understanding = context.get('route_understanding') or {}
+    routes = [context.get('route_variant', ''), understanding.get('selected_route'),
+              (context.get('profile') or {}).get('discussion_route')]
+    for route in routes:
+        selected = registry.route_skill(route or '')
+        if selected and selected not in loaded:
+            preloaded.append(load(selected))
     catalog = [{'id': key, 'name': route['name'], 'aliases': route.get('aliases', []),
                 'guidance': route.get('routing_guidance', '')}
                for key, route in context['skills']['routes'].items()]
@@ -157,7 +157,7 @@ def run_agent(context: dict):
     # Send actual speech with chat roles so repeated invitations are visible.
     current['state'] = {key: value for key, value in current.get('state', {}).items()
                         if key != 'last_reason'}
-    from app.reception_v3.route_followup import task as followup_task, validation_error as followup_error
+    from app.reception_v3.route_followup import task as followup_task
     current['route_followup'] = followup_task(context)
     # Keep a short recency view next to the task, after the much larger product
     # catalog. These are verbatim delivered statements, not model summaries.
@@ -241,10 +241,10 @@ def run_agent(context: dict):
             '只有客户确实询问费用，或正在补齐上一个尚未回答的费用问题时，才按核验结果报价。')
     messages = [{'role': 'system', 'content': prompt}]
     from app.reception_v3.customer_images import read_customer_media
-    from app.reception_v3.customer_reactions import REACTION_TEXT, only_acknowledgements, invalid_ack_decision
+    from app.reception_v3.customer_reactions import REACTION_TEXT, only_acknowledgements
     images, reactions = read_customer_media(context)
     current['customer_reactions'] = reactions
-    acknowledgement_only = only_acknowledgements(context, reactions)
+    current['acknowledgement_only'] = only_acknowledgements(context, reactions)
     for item in context.get('messages', []):
         content = item.get('content', '')
         if item.get('direction') == 'incoming' and item.get('id') in reactions:
@@ -297,7 +297,6 @@ def run_agent(context: dict):
                 'group_type':{'type':'string','enum':['undecided','shared','private'],
                               'description':'客人明確選拼團shared或獨團private；都可以/尚未選為undecided，不能僅憑4位猜獨團。'}},
                 'required':['route','start','end'],'additionalProperties':False}}})
-    checked_quotes = set()
     availability_results = {}
     previous_check = context.get('profile', {}).get('_departure_check') or {}
     offered_check = context.get('profile', {}).get('_offered_departure_check') or {}
@@ -309,8 +308,6 @@ def run_agent(context: dict):
     if month_check:
         availability_results[month_check['route']] = month_check['result']
         departure_checks[month_check['route']] = month_check
-        if month_check['result']['status'] == 'quoted':
-            checked_quotes.add((month_check['route'], month_check['result']['script_id']))
     # Offer eligibility uses the same dated catalog as pricing. A month answer
     # is kept as a month: these checks do not narrow the customer's availability.
     date_evidence = month_check or (previous_check if not mentions_departure_time(latest.get('content', '')) else {})
@@ -326,8 +323,6 @@ def run_agent(context: dict):
             departure_checks[route] = {**date_evidence, 'route':route, 'result':checked}
         current['spring_departure_options'] = {r:availability_results[r] for r in sorted(PEACH_ROUTES & availability_results.keys())}
         messages[-1] = {'role':'user', 'content':json.dumps(current, ensure_ascii=False)}
-    quote_repairs = set()
-    choice_repaired = False
     logs = understanding_logs + ([{'node': 'customer_reactions', 'recognized': reactions, 'status': 'verified'}] if reactions else [])
     hashes = [understanding_hash] if understanding_hash else []
     repaired = False
@@ -443,18 +438,9 @@ def run_agent(context: dict):
                             departure_checks[args['route']] = {
                                 'route': args['route'], 'start': args['start'], 'end': args['end'],
                                 'party_size': party_size, 'group_type': group_type, 'result': result}
-                            checked_quotes = {q for q in checked_quotes if q[0] != args['route']}
-                            if result['status'] == 'quoted':
-                                checked_quotes.add((args['route'], result['script_id']))
                         else:
                             raise ValueError('unknown_tool')
                     except (ValueError, KeyError, TypeError) as exc:
-                        if function['name'] == 'get_departure_quote':
-                            # A failed new date check cannot reuse permission
-                            # from a previous successful date in this turn.
-                            failed_route = args.get('route') if isinstance(args, dict) else None
-                            checked_quotes = ({q for q in checked_quotes if q[0] != failed_route}
-                                              if failed_route in context['skills']['routes'] else set())
                         result = {'error': str(exc)}
                     log['tool_calls'].append({'name': function['name'], 'arguments': function['arguments'],
                                               'digest': result.get('digest'), 'error': result.get('error')})
@@ -479,124 +465,11 @@ def run_agent(context: dict):
                                   + json.dumps(Decision.model_json_schema(), ensure_ascii=False)
                                   + f'\n校验错误：{exc}'}])
                 continue
-            # The model may identify a route without requesting its body (for
-            # example after an earlier comparison). Activate that selected
-            # Skill before completing this turn, just as for a known route at
-            # entry. This loads context; it does not audit or edit reply text.
-            if acknowledgement_only and invalid_ack_decision(decision, context):
-                log.update(status='acknowledgement_guard', rejected_decision=decision)
-                decision = Decision(action='queue' if context.get('state', {}).get('delivery_kind') == 'introduction' else 'wait',
-                                    reason='已识别为点赞回应，保留当前行程与介绍队列，不据此确认其他事项。').model_dump()
-            choice_problem = choice_error(decision, context)
-            if choice_problem:
-                log.update(status='route_choice_rejected', validation_error=choice_problem,
-                           rejected_decision=decision)
-                if choice_repaired:
-                    raise DecisionContractError('route_choice_not_validated')
-                choice_repaired = True
-                messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False),
-                                 'reasoning_content':message.get('reasoning_content','')})
-                messages.append({'role':'user', 'content':choice_problem + ' 上述候選未發送，請修正決策字段和相應客戶文字。'})
-                continue
+            # Business decisions belong to the model. Facts and tools are supplied
+            # before generation; no semantic veto or answer rewrite after it.
             offered = decision.get('route_choice') == 'recommend'
-            proposed = decision['profile'].get('discussion_route') if offered else decision['route_variant']
-            chosen = registry.route_skill(proposed)
-            if chosen and chosen not in loaded:
-                activated = load(chosen)
-                log.update(status='skill_activation', loaded_skills=dict(loaded),
-                           activated_skill=chosen)
-                messages.append({'role': 'system', 'content':
-                    '根据你本轮选择的线路，现已加载对应 Skill。上一候选尚未发送。'
-                    '请依据这些原文完成本轮 JSON 决策：\n' + json.dumps(activated, ensure_ascii=False)})
-                continue
-            target = proposed or context.get('route_variant', '')
-            checking_choice = offered or decision['start_introduction']
-            target_spec = context['skills']['routes'].get(target, {})
-            dated_product = bool(target_spec.get('departure_availability') or target_spec.get('seasonal_pricing'))
-            if dated_product and checking_choice and target not in availability_results:
-                # Reuse only persisted date evidence, not dates invented in the
-                # current model response. A change of product invalidates its price.
-                evidence = month_check or (previous_check if not mentions_departure_time(latest.get('content','')) else {})
-                if evidence.get('start') and evidence.get('end'):
-                    target_group = context.get('profile', {}).get('group_type', 'undecided')
-                    if target_group not in ('undecided', 'shared', 'private'):
-                        target_group = 'undecided'
-                    checked_result = departure_quote(context['skills'], target, evidence['start'], evidence['end'],
-                        context['now'], party_size=context.get('profile', {}).get('party_size')
-                        or context.get('profile', {}).get('party_size_min'),
-                        group_type=target_group)
-                    availability_results[target] = checked_result
-                    departure_checks[target] = {**evidence, 'route':target, 'result':checked_result}
-            # Stopping an unavailable product's queue is a system obligation,
-            # not a flag the model must remember while explaining the dates.
-            actual_route=decision['route_variant'] or context.get('route_variant','')
-            if (availability_results.get(actual_route,{}).get('status')=='unavailable'
-                    and decision['action'] in ('reply','wait') and not decision['start_introduction']):
-                decision['interrupt']=True
-            from app.reception_v3.route_choice import reply_route
-            quote_problem = quote_error(
-                {**decision, 'route_variant': reply_route(decision, context.get('profile'), context.get('route_variant',''))},
-                context['skills'], checked_quotes, availability_results,
-                require_interrupt=(context.get('event') != 'silence_due' or
-                                   context.get('state', {}).get('delivery_kind') in ('introduction', 'intake')))
-            profile_with_update = {**context.get('profile', {}), **decision['profile']}
-            from app.reception_v3.party_quotes import quote_error as party_quote_error
-            quote_problem = quote_problem or party_quote_error(
-                decision, context['skills'], context.get('profile', {}), context.get('route_variant', ''))
-            if (dated_product and checking_choice and target not in availability_results
-                    and any(profile_with_update.get(k) for k in ('departure_window','departure_date_start'))):
-                quote_problem = '已知出發時間，推薦或開始替代線介紹前須用get_departure_quote核對該線日期；不能沿用另一線的可售或價格判斷。'
-            offer_check = availability_results.get(target, {})
-            if offered and offer_check and not (offer_check.get('status') in ('quoted','private_departure','special_options')
-                    or offer_check.get('status') == 'not_seasonal' and offer_check.get('availability_checked')):
-                quote_problem = ('替代線在客人原日期尚不適用，不能記為正式推薦。route_choice=unchanged，先回答日期限制或確認是否可調整，'
-                                 '不要自行把客人日期改為可售日期。核對結果：' + json.dumps(offer_check,ensure_ascii=False))
-            # Keep the first seasonal offer unambiguous across New Year. Use
-            # the tool's date evidence, not the model's inferred calendar year.
-            checked_year = departure_checks.get(target, {}).get('start', '')[:4]
-            if (not quote_problem and offered and target in PEACH_ROUTES
-                    and not context.get('profile', {}).get('_route_offer')
-                    and checked_year.isdigit() and len(checked_year) == 4
-                    and checked_year not in '\n'.join(m['text'] for m in decision['messages'])):
-                quote_problem = f'首次推薦桃花出發日期需明確寫出已核對的{checked_year}年，不能只寫3/20等月日；其餘選線與日期保持不變。'
-            calendar_problem=reply_calendar_error(decision,context,departure_checks)
-            if calendar_problem:
-                quote_problem='\n'.join(p for p in (quote_problem,calendar_problem) if p)
-            if quote_problem:
-                log.update(status='quote_rejected', error_code='seasonal_quote_not_validated',
-                           validation_error=quote_problem, rejected_decision=decision)
-                # A date lookup and a subsequent template-reference error are
-                # different faults. Allow each one repair within the existing
-                # turn deadline/round limit, without looping on the same fault.
-                if quote_problem in quote_repairs or len(quote_repairs) >= 2:
-                    raise DecisionContractError('seasonal_quote_not_validated')
-                quote_repairs.add(quote_problem)
-                messages.append({'role':'assistant', 'content':json.dumps(decision,ensure_ascii=False),
-                                 'reasoning_content':message.get('reasoning_content','')})
-                messages.append({'role':'user','content':quote_problem +
-                    '\n上一份JSON是未執行草稿，所有messages都尚未發送，也沒有寫入profile。'
-                    '請回傳修正後的完整決策，保留本輪需要回答的內容與已有依據的解釋；'
-                    '不能把草稿中的說明誤當成客人已收到而省略。'})
-                continue
-            party_problem = reply_contract_error(decision, context)
-            if party_problem:
-                log.update(status='large_party_reply_rejected', validation_error=party_problem, rejected_decision=decision)
-                if any(item is not log and item.get('status') == 'large_party_reply_rejected' for item in logs):
-                    raise DecisionContractError('large_party_reply_not_validated')
-                messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
-                messages.append({'role':'user', 'content':party_problem +
-                    '\n上一份JSON是未執行草稿，所有messages都尚未發送，也沒有寫入profile。'
-                    '請回傳修正後的完整決策，保留本輪需要回答的內容。'})
-                continue
-            lead_problem = lead_priority_error(decision, context) or followup_error(decision, context)
-            if lead_problem:
-                log.update(status='lead_priority_rejected', validation_error=lead_problem, rejected_decision=decision)
-                if any(item is not log and item.get('status') == 'lead_priority_rejected' for item in logs):
-                    raise DecisionContractError('lead_priority_not_validated')
-                messages.append({'role':'assistant', 'content':json.dumps(decision, ensure_ascii=False)})
-                messages.append({'role':'user', 'content':lead_problem +
-                    '\n上一份JSON只是未執行草稿，沒有發給客戶、沒有寫入profile。請回傳修正後的完整決策，保留本輪已識別的人數/團型等profile及需要回答的內容，不要誤以為已發送而改成wait。'})
-                continue
+            target = (decision['profile'].get('discussion_route') if offered
+                      else decision['route_variant']) or context.get('route_variant', '')
             log.update(script_ids=[key for m in decision['messages']
                                    for key in ([m['script_id']] if m['script_id'] else m['quote_options'])],
                        asset_keys=[k for m in decision['messages'] for k in m['asset_keys']])
@@ -614,13 +487,6 @@ def run_agent(context: dict):
             selected_route = decision['route_variant'] or context.get('route_variant', '')
             if selected_route in departure_checks:
                 decision['profile']['_departure_check'] = departure_checks[selected_route]
-            # Validate the complete model answer first. Only optional timer
-            # touches can be suppressed as a whole; active answers bypass this.
-            from app.reception_v3.repetition import review as review_repetition
-            decision, review_logs, review_hash = review_repetition(decision, context, deadline)
-            logs.extend(review_logs)
-            if review_hash:
-                hashes.append(review_hash)
             return decision, logs, combine_digests(*hashes)
         raise ValueError('v3_tool_round_limit')
     except Exception as exc:

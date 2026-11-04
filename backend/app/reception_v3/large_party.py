@@ -148,6 +148,9 @@ def begin(db, row, run, bundle, decision):
                 # that reply with the old numeric-group intake question.
                 service.save(row, value)
                 return False
+            if decision['messages']:
+                service.save(row, value)
+                return False
             prompt = candidate.get('unknown_preference_text', candidate['unknown_route_text']) if row.memory.get('trip_days') else candidate['unknown_route_text']
             decision.update(action='reply', start_introduction=False,
                 messages=Decision(messages=[{'text':prompt}]).model_dump()['messages'])
@@ -226,7 +229,7 @@ def begin(db, row, run, bundle, decision):
     # Resolve actual questions through the existing validated reply path.
     closing = policy['contact_text']
     answer = []
-    if decision.get('answer_before_introduction') and decision['action'] == 'reply' and decision['messages']:
+    if decision['action'] == 'reply' and decision['messages']:
         _, answer = service.parts_for(db, row, bundle, {**decision, 'start_introduction':False})
     contact = bundle.get('lead_capture', {})
     may_invite = contact.get('enabled', True) and not row.memory.get('contact_capture_declined')

@@ -72,7 +72,5 @@ def reserve_quoted_offers(db, row, bundle, parts):
         db.execute(insert(CustomerQuoteOffer).values(subject_key=subject_key(db, row), route_variant=route,
             offer=price['quote_offer']).on_conflict_do_nothing(index_elements=['subject_key', 'route_variant']))
         promise = get_offer(db, row, route)
-        canonical = effective_price_scripts([policy], datetime.fromisoformat(row.virtual_now.replace('Z', '+00:00')), promise)[0]
         for part in matching:
-            part['content'] = part['content'].replace(price['answer_text'], canonical['answer_text'])
             part['quote_offer'] = {'route_variant': route, **promise}

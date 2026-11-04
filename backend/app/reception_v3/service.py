@@ -17,12 +17,11 @@ from app.reception_v3 import release_id
 from app.reception_v3.runtime import run_agent
 from app.reception_v3.skills import compile_skills
 from app.reception_v3.quotes import personalize_quotes, reserve_quoted_offers
-from app.reception_v3.service_voice import service_voice
 from app.reception_v3.message_chunks import split_parts
 from app.reception_v3.seasonal_quotes import mentions_departure_time
 from app.reception_v3.followup_window import FOLLOWUP_WINDOW, deadline
-from app.reception_v3.route_choice import choice_error, rejects_current_route
-from app.reception_v3.route_understanding import from_run as route_understanding_from_run, DecisionContractError, contract_failure
+from app.reception_v3.route_choice import rejects_current_route
+from app.reception_v3.route_understanding import from_run as route_understanding_from_run, contract_failure
 from app.web_knowledge import active_web_facts
 
 
@@ -300,8 +299,6 @@ def append_plan(row, value, parts, kind, interval, run_id=None):
     plan_id = uuid4().hex
     messages = list(row.messages)
     for index, part in enumerate(parts):
-        if part.get('content_type', 'text') == 'text' and part.get('content'):
-            part = {**part, 'content': service_voice(part['content'])}
         messages.append({**part, 'id': f'v3-{uuid4().hex}', 'direction': 'outgoing',
                          'status': 'draft', 'created_at': row.virtual_now,
                          'timeline_sequence': len(messages) + 1, 'run_id': run_id,
@@ -325,14 +322,12 @@ def scripts(bundle, route):
 
 def parts_for(db, row, bundle, decision, *, followup=False):
     from app.reception_v3.seasonal_quotes import seasonal_group
-    from app.reception_v3.party_quotes import quote_error as party_quote_error, comparison_text
+    from app.reception_v3.party_quotes import comparison_text
     from app.reception_v3.route_choice import reply_route
     route = decision['route_variant'] or row.controls.get('route_variant', '')
     content_route = reply_route(decision, row.memory, route)
     if (route and route not in bundle['routes']) or (content_route and content_route not in bundle['routes']):
         raise ValueError('v3_unknown_route')
-    if party_quote_error(decision, bundle, row.memory or {}, route):
-        raise ValueError('party_quote_not_validated')
     parts = []
     tenant_id = tenant_for_session(db, row)
     materials = {m['key']: m for m in candidate_materials(db, tenant_id)}
@@ -517,37 +512,6 @@ def apply_decision(db, row, run, bundle, decision):
         save(row, value)
         row.due_at = None
         return
-    from app.reception_v3.lead_priority import validation_error as lead_priority_error, outcome as lead_priority_outcome
-    lead_context = {
-        'event': run.input_snapshot.get('event'), 'now': row.virtual_now,
-        'skills': bundle, 'profile': row.memory or {}, 'state': value,
-        'route_variant': row.controls.get('route_variant', ''), 'messages': row.messages}
-    lead_problem = lead_priority_error(decision, lead_context)
-    if lead_problem:
-        raise DecisionContractError('lead_priority_not_validated:' + lead_problem)
-    if lead_priority_outcome(decision, lead_context) == 'wait':
-        # Move the first eligible touch to tomorrow instead of exhausting a
-        # finite same-day schedule while repeatedly waiting. Keep later gaps.
-        silence = bundle['silence']
-        incoming = [m['created_at'] for m in row.messages if m.get('direction') == 'incoming' and m.get('created_at')]
-        value.update(pending_event=None, last_reason=decision['reason'],
-                     followup_last_customer_at=max(incoming, key=date), followup_settings=deepcopy(silence))
-        schedule_daily_followup(value, {**silence, 'daily_at':silence.get('daily_at') or silence.get('active_start', '09:00')},
-                                row.virtual_now, reset=True)
-        if not silence.get('daily_at') and value.get('next_check_at'):
-            intervals = followup_intervals(value, silence)
-            offset = sum(intervals[:value.get('silence_step', 0) + 1])
-            value['followup_anchor'] = later(value['next_check_at'], -offset * 60)
-        save(row, value)
-        row.due_at = None
-        return
-    problem = choice_error(decision, {'skills':bundle, 'route_variant':row.controls.get('route_variant',''),
-        'profile':row.memory or {}, 'state':value, 'event':run.input_snapshot.get('event', 'customer_message'),
-        'route_understanding': route_understanding_from_run(run),
-        'messages':row.messages,
-        'available_materials':candidate_materials(db, tenant_for_session(db, row))})
-    if problem:
-        raise DecisionContractError('route_choice_not_validated:' + problem)
     value.pop('departure_review_pending', None)
     value.pop('route_review_pending', None)
     if value.get('human_followup') and decision['action'] != 'handoff':
@@ -565,16 +529,6 @@ def apply_decision(db, row, run, bundle, decision):
             schedule_followup(value,bundle,row.virtual_now,reset=True)
         save(row,value);row.due_at=None
         return
-    if (value.get('intake_answered') and not value.get('completed_introductions')
-            and (decision['start_introduction'] or not decision['messages'])
-            and (value.get('intake_field') != 'departure_window' or decision['start_introduction'])
-            and not value.get('opt_out') and not value.get('handoff')
-            and decision['action'] != 'handoff' and decision['opt_out'] is not True
-            and not decision['interrupt'] and decision.get('route_choice') != 'recommend'):
-        decision = {**decision, 'start_introduction': True,
-                    'messages': decision['messages']}
-        run.trace = {**(run.trace or {}), 'execution_reason': 'intake_answer_starts_introduction'}
-        run.decision = decision
     previous_memory = row.memory
     if update_profile(db, row, run, decision):
         return
@@ -590,11 +544,6 @@ def apply_decision(db, row, run, bundle, decision):
     if begin_large_party(db, row, run, bundle, decision):
         return
     value = state(row)
-    party = row.memory.get('party_size') or row.memory.get('party_size_min')
-    if not (route_policy.get('large_party') or {}).get('enabled') and route_policy.get('seasonal_pricing') and isinstance(party, (int, float)) and party >= 7:
-        decision = {**decision, 'action':'handoff', 'messages':[], 'start_introduction':False,
-                    'handoff_type':'party_size', 'handoff_reason':'常規線7人以上需顧問安排專屬團型。'}
-        run.decision = decision
     if decision['action'] == 'handoff':
         # Handoff is an internal action, including this turn. Do not resolve
         # or enqueue the model's text/assets, even if it supplied a farewell.
@@ -1114,10 +1063,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 value = state(row)
                 value['last_error'] = error[:200]
                 value['attempts'] = value.get('attempts', 0) + 1
-                # Exhausted output-contract repairs are not transport failures.
-                # Do not run the same rejected plan through three full model turns.
-                maximum_attempts = 1 if contract_failure(exc) else 3
-                run.trace = {**run.trace, 'failure_kind': 'decision_contract' if maximum_attempts == 1 else 'runtime'}
+                # Protocol failures also get bounded retries for unanswered customers.
+                maximum_attempts = 3
+                run.trace = {**run.trace, 'failure_kind': 'decision_contract' if contract_failure(exc) else 'runtime'}
                 optional_transport_failure = (event == 'silence_due' and not context.get('buffered_questions')
                                               and model_transport_failure(exc))
                 if optional_transport_failure:
@@ -1132,7 +1080,7 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                     value['followup_skip_reason'] = 'model_transport_unavailable'
                     run.trace['failure_kind'] = 'optional_outreach_transport'
                     row.due_at = None
-                elif (maximum_attempts == 1 and event in ('silence_due', 'introduction_completed')
+                elif (contract_failure(exc) and event in ('silence_due', 'introduction_completed')
                         and not context.get('buffered_questions')):
                     # Optional outreach may wait, while a real unanswered customer
                     # turn must remain visible to an advisor if output cannot be repaired.
