@@ -1,0 +1,247 @@
+{
+  "date": "2026-11-04",
+  "status": "deployed_and_enabled",
+  "source_commit": "a64aaff9a56ae3543b25520cedb14130befb7f82",
+  "primary": {
+    "unchanged": true,
+    "model": "deepseek-v4-flash"
+  },
+  "fallback": {
+    "provider": "Alibaba Cloud Bailian",
+    "model": "deepseek-v4.1-flash",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "enabled": true
+  },
+  "official_sources": [
+    "https://help.aliyun.com/zh/model-studio/deepseek-api",
+    "https://help.aliyun.com/zh/model-studio/deepseek-v4-1-flash",
+    "https://www.alibabacloud.com/help/en/model-studio/get-api-key"
+  ],
+  "changes": [
+    "Added explicit bailian provider protocol and metering while retaining legacy GEMINI_* environment names for compatibility. MODEL_FALLBACK_PROVIDER=bailian determines protocol and audit identity.",
+    "Bailian enable_thinking follows the primary request; enabled thinking retains requested low reasoning_effort instead of falling back to the provider high default.",
+    "Primary cooldown explicitly set to zero: every new turn starts with primary. A successful fallback may complete the same tool turn without repeated switching.",
+    "Retains the prior 300-second failed-backup circuit and primary recovery after backup failure.",
+    "Primary and backup share the 30-second call deadline, normally reserving up to 20 seconds for primary; tools create further calls within the existing turn rules.",
+    "Primary credentials, primary model, business configuration, AI ownership and customer messages are unchanged by this rollout."
+  ],
+  "validation": {
+    "deterministic_tests_passed": 52,
+    "business_cases": 18,
+    "automated_passed": 17,
+    "semantic_review_passed": 1,
+    "review": {
+      "case": "single_item_no_sales_pressure",
+      "raw_failures": [
+        "missing_any:['需求', '協助', '告知', '說明', '備註', '記錄', '記下來']"
+      ],
+      "reason": "Observed 告訴我們 and 幫您協調 are valid equivalents of the expected 告知/協助. Response answers dietary question, preserves restaurant limitations, and adds no price or sales-pressure question. Original test evidence retained.",
+      "reply": "有喔～這條桃花9日的團費有包含住宿酒店的早餐。午餐和晚餐沒有包含，因為沿途餐廳選擇多，可以依自己口味和預算安排；機票和小費也不含。\n可以的～您先告訴我們不吃辣，用餐時導遊會依沿途餐廳的實際情況幫您協調。西藏有些餐廳調味方式比較固定，能調整到什麼程度，當天會再依餐廳情況確認。"
+    },
+    "real_bailian_calls_after_correction": 59,
+    "real_bailian_failures_after_correction": 0,
+    "synthetic_primary_503_calls": 22,
+    "customer_test_sends": 0,
+    "candidate_switch_probe": {
+      "passed": true,
+      "phases": [
+        {
+          "phase": "primary_healthy",
+          "passed": true,
+          "provider": "deepseek",
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 925,
+              "http_status": null,
+              "error": null
+            }
+          ]
+        },
+        {
+          "phase": "primary_failure",
+          "passed": true,
+          "provider": "bailian",
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "failed",
+              "duration_ms": 0,
+              "http_status": 503,
+              "error": "HTTPStatusError"
+            },
+            {
+              "provider": "bailian",
+              "status": "completed",
+              "duration_ms": 762,
+              "http_status": null,
+              "error": null
+            }
+          ]
+        },
+        {
+          "phase": "next_turn_primary_recovered",
+          "passed": true,
+          "provider": "deepseek",
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 585,
+              "http_status": null,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "customer_test_sends": 0,
+      "failure_injected_only_in_isolated_process": true
+    },
+    "earlier_iteration": {
+      "business_acceptance_passed": false,
+      "retained_artifact": "output/bailian-fallback-20261104/assessment.json",
+      "issue": "Initial adapter removed low reasoning_effort, causing some enabled-thinking requests to hit output limits; a transient timeout then opened backup circuit under forced primary outage. Local conservative test reserve cap was also exhausted. Fixed effort mapping and reran all 18 cases; prior ledger entries were retained.",
+      "original_lexical_false_positives": "Initial keyword check rejected 不用先確定人數才能問 and did not recognize dietary-assistance synonyms. The final run retained one synonym warning, explicitly reviewed rather than silently removed."
+    },
+    "availability_probe_scope": "Plain-text streaming probes test provider selection and valid completion, not general semantic accuracy. Earlier tiny JSON echo probes received malformed primary JSON and correctly switched to backup; the 18-case business suite separately validates structured tool/decision behavior."
+  },
+  "deployment": {
+    "passed": true,
+    "release": "bailian-fallback-20261104T022314Z",
+    "git_commit": "a64aaff9a56ae3543b25520cedb14130befb7f82",
+    "engine": "reception-v3-bb8a868e7695d68f",
+    "backup": "/opt/china2go-ai/backups/bailian-fallback-20261104T022314Z",
+    "configuration_changes": {
+      "fallback_enabled": true,
+      "fallback_provider": "bailian",
+      "fallback_model": "deepseek-v4.1-flash",
+      "primary_cooldown_seconds": 0,
+      "primary_budget_seconds": 30,
+      "fallback_enabled_primary_probe_seconds": 20,
+      "fallback_cooldown_seconds": 300,
+      "primary_credentials_unchanged": true
+    },
+    "business_settings_unchanged": true
+  },
+  "online_verification": {
+    "passed": true,
+    "at_utc": "2026-11-04T02:42:16.049287+00:00",
+    "release": "bailian-fallback-20261104T022314Z",
+    "git_commit": "a64aaff9a56ae3543b25520cedb14130befb7f82",
+    "primary_unchanged": true,
+    "primary_model": "deepseek-v4-flash",
+    "fallback_model": "deepseek-v4.1-flash",
+    "fallback_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "fallback_enabled": true,
+    "fallback_provider": "bailian",
+    "primary_cooldown_seconds": 0,
+    "source_hashes_match": true,
+    "env_owner": "china2go",
+    "env_mode": "0o600",
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      }
+    },
+    "health": {
+      "https://api.luoxuecong.asia/v1/health": 200,
+      "https://api.luoxuecong.asia/v1/health/ready": 200,
+      "https://ai.luoxuecong.asia/": 200
+    },
+    "switch_probe": {
+      "passed": true,
+      "phases": [
+        {
+          "phase": "primary_healthy",
+          "passed": true,
+          "provider": "deepseek",
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 993,
+              "http_status": null,
+              "error": null
+            }
+          ]
+        },
+        {
+          "phase": "primary_failure",
+          "passed": true,
+          "provider": "bailian",
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "failed",
+              "duration_ms": 0,
+              "http_status": 503,
+              "error": "HTTPStatusError"
+            },
+            {
+              "provider": "bailian",
+              "status": "completed",
+              "duration_ms": 840,
+              "http_status": null,
+              "error": null
+            }
+          ]
+        },
+        {
+          "phase": "next_turn_primary_recovered",
+          "passed": true,
+          "provider": "deepseek",
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 538,
+              "http_status": null,
+              "error": null
+            }
+          ]
+        }
+      ],
+      "customer_test_sends": 0,
+      "failure_injected_only_in_isolated_process": true
+    }
+  },
+  "observation": {
+    "cost_accounting": {
+      "reserve_cap_cny": 80,
+      "estimated_or_reserved_cny": 47.570527,
+      "not_actual_bill": true,
+      "calls": 155,
+      "unknown_usage_reservations_retained": true
+    },
+    "live_since_deployment": {
+      "since": "2026-11-04T02:40:54.500410+00:00",
+      "runs": [],
+      "provider_status_counts": {},
+      "model_failed_handoffs": 0
+    }
+  },
+  "limitations": [
+    "Live cutover had no new real-customer model run in the brief observation window; installed-code switch tests ran in an isolated process with no Chatwoot writes.",
+    "Third-party availability is not guaranteed. All providers failing can still require advisor intervention for a waiting customer; optional outreach defers under the previously deployed protection.",
+    "Same-turn provider stickiness remains intentional; next-turn primary-first routing is verified."
+  ],
+  "security": "Credential values excluded from tracked code, reports and test logs. Runtime env remains china2go-owned 0600; backup and candidate credential file restricted."
+}

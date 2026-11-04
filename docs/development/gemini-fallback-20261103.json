@@ -389,5 +389,7 @@
   },
   "previous_status_before_incident": "deployed_with_gemini_enabled_by_explicit_user_request",
   "superseded_by": "docs/development/provider-outage-recovery-20261104.json",
-  "latest_status": "DeepSeek restored with 30-second primary budget. Gemini gateway unavailable; fallback disabled. November 3 activation and validation below are historical evidence. See incident recovery audit for current configuration and restored conversations."
+  "latest_status": "DeepSeek restored with 30-second primary budget. Gemini gateway unavailable; fallback disabled. November 3 activation and validation below are historical evidence. See incident recovery audit for current configuration and restored conversations.",
+  "latest_operational_audit": "docs/development/bailian-fallback-20261104.json",
+  "latest_operational_status": "Gemini replaced by enabled Alibaba Cloud Bailian deepseek-v4.1-flash after isolated acceptance and switch/recovery probes. Primary unchanged; earlier incident evidence retained."
 }

@@ -363,5 +363,7 @@
     "Two pre-existing image submissions have unknown receipts (551 and 614); preserved without blind resend, unrelated to this provider recovery.",
     "Gemini still has previously disclosed business-acceptance gaps (15/18); reassess provider health and business acceptance before re-enabling."
   ],
-  "secrets": "No credential values or customer message bodies included."
+  "secrets": "No credential values or customer message bodies included.",
+  "latest_operational_audit": "docs/development/bailian-fallback-20261104.json",
+  "latest_operational_status": "Gemini replaced by enabled Alibaba Cloud Bailian deepseek-v4.1-flash after isolated acceptance and switch/recovery probes. Primary unchanged; earlier incident evidence retained."
 }
