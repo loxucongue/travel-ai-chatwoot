@@ -1,4 +1,5 @@
 from sqlalchemy import select
+import pytest
 
 
 from app.config import settings
@@ -87,6 +88,65 @@ def seed_conversation(session_factory):
         ))
         db.add(AppSetting(key="global_message_sending", value={"enabled": True}))
         db.commit()
+
+
+@pytest.mark.parametrize('human_label', [False, True])
+def test_controls_recovers_catalog_conflict_without_changing_ownership(authenticated, session_factory, monkeypatch, human_label):
+    from app.automation_models import AutomationSession
+    client, _ = authenticated
+    seed_conversation(session_factory)
+    fake = FakeChatwoot()
+    fake.current_labels = ['ai', '人工接管'] if human_label else ['ai']
+    catalog = fake.list_labels()['payload']
+    monkeypatch.setattr(fake, 'list_labels', lambda: {'payload': list(catalog)})
+    monkeypatch.setattr('app.api.client_for', lambda _: fake)
+    controls = {'human': human_label, 'auto_followup_paused': human_label,
+                'simulation': {'status': 'stopped' if human_label else 'running'},
+                'v3': {'next_check_at': '2026-11-05T09:00:00+08:00'}}
+    with session_factory() as db:
+        row = db.scalar(select(ConversationState))
+        row.labels = list(fake.current_labels)
+        db.add(AutomationSession(owner_id=1, conversation_state_id=row.id,
+                                 environment='live', controls=controls))
+        db.commit()
+    definition = catalog.pop(0)
+    for _ in range(2):
+        response = client.get('/v1/conversations/10/controls')
+        assert response.status_code == 200
+        assert response.json()['ai_sync_status'] == 'conflict'
+    catalog.insert(0, definition)
+    response = client.get('/v1/conversations/10/controls')
+    assert response.status_code == 200
+    assert response.json()['ai_sync_status'] == 'synced'
+    assert response.json()['ai_label_present'] is True
+    with session_factory() as db:
+        row = db.scalar(select(ConversationState))
+        assert row.effective_ai_state == ('HUMAN_HANDOFF' if human_label else 'AI_ACTIVE')
+        assert row.labels == fake.current_labels
+        assert db.scalar(select(AutomationSession)).controls == controls
+        assert db.scalar(select(OutboundMessage)) is None
+    assert fake.calls == []
+
+
+@pytest.mark.parametrize('sync_status', ['pending', 'conflict'])
+def test_controls_does_not_finish_pending_label_intent(authenticated, session_factory, monkeypatch, sync_status):
+    from app.models import ConversationLabelSync
+    client, _ = authenticated
+    seed_conversation(session_factory)
+    fake = FakeChatwoot()
+    fake.current_labels = ['ai']
+    monkeypatch.setattr('app.api.client_for', lambda _: fake)
+    with session_factory() as db:
+        row = db.scalar(select(ConversationState))
+        row.ai_sync_status = sync_status
+        db.add(ConversationLabelSync(conversation_state_id=row.id, target='human', status='pending'))
+        db.commit()
+    response = client.get('/v1/conversations/10/controls')
+    assert response.status_code == 200
+    assert response.json()['ai_sync_status'] == sync_status
+    with session_factory() as db:
+        assert db.scalar(select(ConversationLabelSync)).status == 'pending'
+    assert fake.calls == []
 
 
 def test_label_update_merges_changes_from_chatwoot(authenticated, session_factory, monkeypatch):

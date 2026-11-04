@@ -683,7 +683,14 @@ def conversation_controls(conversation_id: int, user: User = Depends(current_use
         labels = normalize_collection(client.list_labels())
         current_labels = string_payload(client.get_conversation_labels(conversation_id))
         ai_label_catalog_exists = any(str(label.get("title", "")).casefold() == AI_CONTROL_LABEL for label in labels)
-        if current_labels != (row.labels or []) or row.ai_mode == "enabled" and not ai_label_catalog_exists:
+        from app.conversation_labels import sync_ready
+        # A restored catalog entry may leave conversation labels unchanged.
+        # Reconcile that old conflict without completing an in-flight control write.
+        catalog_recovered = (row.ai_sync_status == "conflict" and ai_label_catalog_exists
+                             and sync_ready(db, row))
+        if (current_labels != (row.labels or [])
+                or row.ai_mode == "enabled" and not ai_label_catalog_exists
+                or catalog_recovered):
             sync_local_labels(db, row, current_labels, ai_label_catalog_exists=ai_label_catalog_exists)
             db.commit()
         return {
