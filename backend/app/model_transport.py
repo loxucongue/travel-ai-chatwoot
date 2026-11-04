@@ -22,7 +22,7 @@ def gemini_available():
 
 
 def _fallback_identity():
-    return (gemini_endpoint(), settings.gemini_api_key, settings.gemini_model)
+    return (settings.model_fallback_provider, gemini_endpoint(), settings.gemini_api_key, settings.gemini_model)
 
 
 def _fallback_ready():
@@ -42,6 +42,11 @@ def _gemini_payload(payload):
     result['model'] = settings.gemini_model
     result['temperature'] = settings.gemini_temperature
     thinking = result.pop('thinking', None)
+    if settings.model_fallback_provider == 'bailian':
+        result['enable_thinking'] = bool(thinking and thinking.get('type') != 'disabled')
+        if not result['enable_thinking']:
+            result.pop('reasoning_effort', None)
+        return result
     if thinking:
         result['reasoning_effort'] = ('none' if thinking.get('type') == 'disabled'
                                       else result.get('reasoning_effort', 'low'))
@@ -80,7 +85,7 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
     records = calls.get() or []
     # Continue on the last successful provider, unless its circuit is open.
     previous = next((r for r in reversed(records) if r['status'] == 'completed'), {})
-    sticky = previous.get('provider') == 'gemini'
+    sticky = previous.get('provider') == settings.model_fallback_provider
     with _primary_lock:
         cooling = _primary_failures.get(identity, 0) > time.monotonic()
     reason = 'turn_continuation' if sticky else 'primary_cooldown' if cooling else None
@@ -104,7 +109,7 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
             if deadline <= time.monotonic():
                 raise
     try:
-        response = _metered_attempt(_gemini_payload(payload), max(0, deadline-time.monotonic()), 'gemini', reason)
+        response = _metered_attempt(_gemini_payload(payload), max(0, deadline-time.monotonic()), settings.model_fallback_provider, reason)
         with _primary_lock:
             _fallback_failures.pop(fallback_identity, None)
         return response

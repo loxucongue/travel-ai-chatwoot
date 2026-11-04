@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
@@ -32,6 +33,7 @@ class Settings(BaseSettings):
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"
     gemini_fallback_enabled: bool = False
+    model_fallback_provider: Literal['gemini', 'bailian'] = 'gemini'
     google_gemini_base_url: str = "https://linkai.shop"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"

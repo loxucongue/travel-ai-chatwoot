@@ -46,11 +46,11 @@ def _update(record, *, reserve=False):
 
 
 def begin_request(payload, *, provider='deepseek', fallback_reason=None):
-    if _ledger_path() is not None and payload.get('model') not in {'deepseek-flash', 'deepseek-v4-flash', 'gemini-2.5-flash'}:
+    if _ledger_path() is not None and payload.get('model') not in {'deepseek-flash', 'deepseek-v4-flash', 'gemini-2.5-flash', 'deepseek-v4.1-flash'}:
         raise RuntimeError('model_test_model_not_budgeted')
     # Gateway bills are unavailable here. Gemini amounts are conservative test
     # estimates, explicitly labelled rather than reported as actual charges.
-    rates = (5, 30, 5) if provider == 'gemini' else (2, 8, .04)
+    rates = (5, 30, 5) if provider in {'gemini', 'bailian'} else (2, 8, .04)
     # Byte-level tokenization cannot exceed the serialized request's UTF-8
     # bytes for its visible text. Double that bound and add 64K framing room;
     # cap at the model's 1M input context. Never refund old unknown requests.
@@ -58,7 +58,7 @@ def begin_request(payload, *, provider='deepseek', fallback_reason=None):
     maximum = int(payload.get('max_tokens') or 384000)
     record = {'id': uuid.uuid4().hex, 'model': payload.get('model'), 'provider': provider,
               'fallback_reason': fallback_reason, 'status': 'reserved',
-              'cost_basis': 'gateway_estimate' if provider == 'gemini' else 'configured_estimate',
+              'cost_basis': 'gateway_estimate' if provider in {'gemini', 'bailian'} else 'configured_estimate',
               'rates_cny_per_million': rates,
               'input_token_upper_bound': input_bound,
               'charged_or_reserved_cny': (input_bound * rates[0] + maximum * rates[1]) / 1000000,

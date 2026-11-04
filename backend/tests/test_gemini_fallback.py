@@ -57,6 +57,59 @@ def test_primary_success_never_calls_backup(gateway):
     assert records[0]['status'] == 'completed'
 
 
+def test_bailian_protocol_and_next_turn_returns_to_primary(gateway, monkeypatch):
+    handlers, requests, records = gateway
+    monkeypatch.setattr(settings, 'model_fallback_provider', 'bailian')
+    monkeypatch.setattr(settings, 'google_gemini_base_url', 'https://fallback.invalid/compatible-mode/v1')
+    monkeypatch.setattr(settings, 'gemini_model', 'deepseek-v4.1-flash')
+    monkeypatch.setattr(settings, 'model_primary_cooldown_seconds', 0)
+    handlers['primary.invalid'] = lambda r: httpx.Response(503)
+    handlers['fallback.invalid'] = success
+    request_payload = {**payload(), 'thinking': {'type': 'disabled'}, 'reasoning_effort': 'none',
+                       'tools': [{'type': 'function', 'function': {'name': 'lookup', 'parameters': {'type': 'object'}}}]}
+    result = transport._post_with_deadline(request_payload, 2)
+    body = json.loads(requests[-1].content)
+    assert result.extensions['model_provider'] == 'bailian'
+    assert requests[-1].url.path == '/compatible-mode/v1/chat/completions'
+    assert body['model'] == 'deepseek-v4.1-flash' and body['enable_thinking'] is False
+    assert 'thinking' not in body and 'reasoning_effort' not in body
+    assert body['tools'] == request_payload['tools']
+    assert records[-1]['provider'] == 'bailian'
+    # Same tool turn may continue with its successful fallback.
+    transport._post_with_deadline(request_payload, 2)
+    assert requests[-1].url.host == 'fallback.invalid'
+    # A new customer turn has its own metering context and starts with primary.
+    records.clear()
+    handlers['primary.invalid'] = success
+    result = transport._post_with_deadline(request_payload, 2)
+    assert requests[-1].url.host == 'primary.invalid'
+    assert result.extensions['model_provider'] == 'deepseek'
+
+
+def test_bailian_preserves_requested_thinking_effort(monkeypatch):
+    monkeypatch.setattr(settings, 'model_fallback_provider', 'bailian')
+    original = {**payload(), 'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low'}
+    result = transport._gemini_payload(original)
+    assert result['enable_thinking'] is True and result['reasoning_effort'] == 'low'
+    assert result['max_tokens'] == original['max_tokens']
+
+
+@pytest.mark.parametrize('status', [403, 429, 503])
+def test_bailian_failure_never_keeps_recovered_primary_bypassed(gateway, monkeypatch, status):
+    handlers, requests, records = gateway
+    monkeypatch.setattr(settings, 'model_fallback_provider', 'bailian')
+    monkeypatch.setattr(settings, 'gemini_model', 'deepseek-v4.1-flash')
+    handlers['primary.invalid'] = lambda r: httpx.Response(503)
+    handlers['fallback.invalid'] = lambda r: httpx.Response(status)
+    with pytest.raises(httpx.HTTPStatusError):
+        transport._post_with_deadline(payload(), 2)
+    assert [x['provider'] for x in records] == ['deepseek', 'bailian']
+    handlers['primary.invalid'] = success
+    result = transport._post_with_deadline(payload(), 2)
+    assert result.extensions['model_provider'] == 'deepseek'
+    assert [r.url.host for r in requests] == ['primary.invalid', 'fallback.invalid', 'primary.invalid']
+
+
 @pytest.mark.parametrize('status', [401, 403, 408, 429, 500, 502, 503, 504])
 def test_provider_failure_falls_back_and_accounts_both(gateway, status):
     handlers, requests, records = gateway
