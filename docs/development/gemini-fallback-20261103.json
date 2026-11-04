@@ -1,11 +1,11 @@
 {
   "date": "2026-11-03",
-  "status": "deployed_with_gemini_enabled_by_explicit_user_request",
+  "status": "temporarily_disabled_after_provider_incident_20261104",
   "source_commit": "db6d2e7bf4ac53c13866607d6551986736c67232",
   "primary_model": "deepseek-v4-flash",
   "fallback_model": "gemini-2.5-flash",
   "fallback_base_url": "https://linkai.shop",
-  "fallback_enabled": true,
+  "fallback_enabled": false,
   "changes": [
     "Optional metered fallback for authentication, quota/rate limits, timeouts, transient server failures and invalid primary JSON; disabled by default.",
     "One shared per-call deadline; 8-second primary probe and 60-second process-local outage cooldown; a tool turn stays on its successful fallback.",
@@ -386,5 +386,8 @@
     },
     "customer_test_sends": 0,
     "backup": "/opt/china2go-ai/backups/gemini-fallback-20261103T120944Z"
-  }
+  },
+  "previous_status_before_incident": "deployed_with_gemini_enabled_by_explicit_user_request",
+  "superseded_by": "docs/development/provider-outage-recovery-20261104.json",
+  "latest_status": "DeepSeek restored with 30-second primary budget. Gemini gateway unavailable; fallback disabled. November 3 activation and validation below are historical evidence. See incident recovery audit for current configuration and restored conversations."
 }

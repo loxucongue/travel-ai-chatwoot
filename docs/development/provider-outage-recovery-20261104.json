@@ -1,0 +1,367 @@
+{
+  "date": "2026-11-04",
+  "status": "deployed_primary_restored_fallback_disabled_pending_upstream_recovery",
+  "verified_at_utc": "2026-11-04T02:11:31.705175+00:00",
+  "source_commit": "535ddf592a43d687acdc3d0800e59a35ce329bc2",
+  "authorization": "User requested immediate remediation and maintaining service; DeepSeek reported recovered.",
+  "incident": {
+    "inspection_window_cst": "2026-11-03 20:59 to 2026-11-04 09:42",
+    "deepseek_calls": {
+      "completed": 84,
+      "timed_out": 26,
+      "previous_probe_seconds": 8
+    },
+    "gemini_calls": {
+      "completed": 4,
+      "failed": 196,
+      "http_403": 10,
+      "http_503": 186
+    },
+    "gemini_probe_error": "HTTP 403: All available accounts exhausted (upstream provider pool; not proof of user key balance exhaustion).",
+    "primary_timeout_evidence": "38 previously successful primary calls exceeded 8 seconds; longest 16.833 seconds.",
+    "causes": [
+      "Primary probe deadline was too short for observed healthy responses.",
+      "Failure of fallback did not clear primary outage routing; subsequent requests repeatedly used the failing backup.",
+      "Optional silence-followup transport failures were retried and escalated to advisors as if a customer question was awaiting an answer."
+    ],
+    "model_failed_handoffs": {
+      "customer_turns": 5,
+      "optional_silence_followups": 57
+    },
+    "validation_gap": "Previous tests covered a working fallback after primary failure, but did not cover a failed fallback followed by primary recovery or the downstream mass followup escalation."
+  },
+  "mitigation": {
+    "at_utc": "2026-11-04T01:46:31Z",
+    "primary_probe_http": 200,
+    "fallback_enabled": false,
+    "credentials_preserved": true,
+    "backup": "/opt/china2go-ai/backups/gemini-mitigation-20261104T014631Z"
+  },
+  "changes": [
+    "Primary calls now have a 30-second budget when fallback is disabled or unavailable; no 8-second cutoff.",
+    "When enabled and healthy, fallback shares the same caller deadline: up to 20 seconds for primary and remaining time for fallback under the normal 30-second budget.",
+    "A failed fallback opens a separate 300-second circuit and clears primary outage routing; a request starting on fallback may retry primary within its remaining deadline.",
+    "Provider stickiness follows the last successful provider, allowing recovery back to primary.",
+    "Optional silence followups without a pending customer question are deferred to their next configured slot on provider failure, without rapid retries or creating a handoff.",
+    "Actual pending customer questions retain existing retry and advisor escalation behavior."
+  ],
+  "validation": {
+    "unique_passing_tests": 111,
+    "regression_passed": 110,
+    "additional_live_path_suite_passed": 6,
+    "known_baseline_failure": {
+      "test": "test_route_understanding_20261031.py::test_choice_repair_contains_rejected_candidate_and_authority_after_product_tools",
+      "baseline_reproduced": true,
+      "explanation": "Existing assertion requires final prompt role system; prior implementation intentionally appends repair feedback as user. Excluded from the passing regression count; business prompt unchanged in this incident fix."
+    },
+    "isolated_real_context_replays": {
+      "completed": 3,
+      "real_deepseek_calls": 6,
+      "all_calls_succeeded": true,
+      "customer_test_sends": 0,
+      "cases": [
+        {
+          "source_run_id": 4523,
+          "passed": true,
+          "action": "handoff",
+          "message_count": 0,
+          "handoff_type": "custom",
+          "duration_ms": 4828,
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 4796,
+              "error": null,
+              "http_status": null
+            }
+          ]
+        },
+        {
+          "source_run_id": 4535,
+          "passed": true,
+          "action": "reply",
+          "message_count": 1,
+          "handoff_type": "other",
+          "duration_ms": 19938,
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 4941,
+              "error": null,
+              "http_status": null
+            },
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 1723,
+              "error": null,
+              "http_status": null
+            },
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 7505,
+              "error": null,
+              "http_status": null
+            },
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 5708,
+              "error": null,
+              "http_status": null
+            }
+          ]
+        },
+        {
+          "source_run_id": 4652,
+          "passed": true,
+          "action": "wait",
+          "message_count": 0,
+          "handoff_type": "other",
+          "duration_ms": 6334,
+          "calls": [
+            {
+              "provider": "deepseek",
+              "status": "completed",
+              "duration_ms": 6317,
+              "error": null,
+              "http_status": null
+            }
+          ]
+        }
+      ],
+      "scope": "Validates transport and pipeline completion. Source run 4523 legitimately requests custom advisor handling; no claim that its customer received an answer."
+    }
+  },
+  "deployment": {
+    "passed": true,
+    "release": "model-recovery-20261104T015335Z",
+    "git_commit": "535ddf592a43d687acdc3d0800e59a35ce329bc2",
+    "engine": "reception-v3-bb8a868e7695d68f",
+    "backup": "/opt/china2go-ai/backups/model-recovery-20261104T015335Z",
+    "configuration_changes": {
+      "gemini_fallback_enabled": false,
+      "primary_budget_seconds": 30,
+      "fallback_enabled_primary_probe_seconds": 20,
+      "fallback_cooldown_seconds": 300,
+      "primary_credentials_unchanged": true
+    },
+    "business_settings_unchanged": true
+  },
+  "recovery": {
+    "processed": 57,
+    "restored": 56,
+    "excluded": [
+      {
+        "task_id": 237,
+        "conversation": 451,
+        "eligible": false,
+        "skip_reason": "advisor_followup_owned"
+      }
+    ],
+    "states": {
+      "AI_ACTIVE": 56
+    },
+    "label_statuses": {
+      "synced": 56
+    },
+    "assignees_preserved": true,
+    "no_historical_messages_replayed": true,
+    "post_recovery_customer_outbound_count": 0,
+    "state_backup": "/opt/china2go-ai/backups/model-recovery-20261104T015335Z/recovery-before.jsonl",
+    "next_slot": "2026-11-05 09:00 Asia/Taipei for 54 conversations; 2 expired followup windows remain without scheduled followup.",
+    "eligibility": "Incident-linked optional followup, no advisor/public-message/operator ownership change, matching remote labels and assignee, confirmed system label-sync activity; rechecked per conversation before committing.",
+    "preserved_customer_handoffs": [
+      {
+        "conversation": 609,
+        "id": 175,
+        "status": "completed",
+        "reason_code": "model_failed"
+      },
+      {
+        "conversation": 611,
+        "id": 177,
+        "status": "completed",
+        "reason_code": "model_failed"
+      },
+      {
+        "conversation": 612,
+        "id": 178,
+        "status": "completed",
+        "reason_code": "model_failed"
+      },
+      {
+        "conversation": 615,
+        "id": 180,
+        "status": "pending",
+        "reason_code": "model_failed"
+      },
+      {
+        "conversation": 612,
+        "id": 181,
+        "status": "pending",
+        "reason_code": "followup_customer_replied"
+      },
+      {
+        "conversation": 618,
+        "id": 182,
+        "status": "completed",
+        "reason_code": "model_failed"
+      },
+      {
+        "conversation": 609,
+        "id": 183,
+        "status": "pending",
+        "reason_code": "followup_customer_replied"
+      },
+      {
+        "conversation": 451,
+        "id": 237,
+        "status": "pending",
+        "reason_code": "model_failed"
+      }
+    ]
+  },
+  "online_verification": {
+    "at_utc": "2026-11-04T02:11:31.705175+00:00",
+    "release": "model-recovery-20261104T015335Z",
+    "git_commit": "535ddf592a43d687acdc3d0800e59a35ce329bc2",
+    "config": {
+      "GEMINI_FALLBACK_ENABLED": "false",
+      "DEEPSEEK_TIMEOUT_SECONDS": "30",
+      "MODEL_PRIMARY_PROBE_SECONDS": "20",
+      "MODEL_FALLBACK_COOLDOWN_SECONDS": "300"
+    },
+    "env_permissions": {
+      "owner": "china2go",
+      "group": "china2go",
+      "mode": "0o600"
+    },
+    "services": {
+      "china2go-api": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "china2go-worker": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "china2go-playground": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "nginx": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      },
+      "china2go-cloudflared": {
+        "NRestarts": "0",
+        "ActiveState": "active"
+      }
+    },
+    "health": {
+      "https://api.luoxuecong.asia/v1/health": 200,
+      "https://api.luoxuecong.asia/v1/health/ready": 200,
+      "https://ai.luoxuecong.asia/": 200
+    },
+    "credentials_unchanged": true,
+    "code_hashes": {
+      "backend/app/config.py": "6853cbed1b4162ccb50aa3f9f66dbf1e7c18a34c307043dcdf52a43a26ef10f9",
+      "backend/app/model_transport.py": "1354e2054b3b52a75d74bfff117d103694cb2125078a2b61593eca368336b786",
+      "backend/app/reception_v3/service.py": "f51299f56640d153642137811cbfedea5ad04214174f484428aef02a9c8fb925"
+    },
+    "live_since_mitigation": {
+      "runs": [
+        {
+          "id": 4752,
+          "status": "completed",
+          "conversation": 618
+        }
+      ],
+      "calls": [
+        {
+          "provider": "deepseek",
+          "status": "completed",
+          "http_status": null,
+          "error": null,
+          "duration_ms": 1556
+        },
+        {
+          "provider": "deepseek",
+          "status": "completed",
+          "http_status": null,
+          "error": null,
+          "duration_ms": 1156
+        }
+      ]
+    },
+    "pending_notifications": [],
+    "label_queue": [],
+    "worker_heartbeat": [
+      {
+        "worker_id": "live-reply-worker",
+        "last_seen_at": "2026-11-04T02:11:32.334236+00:00"
+      },
+      {
+        "worker_id": "playground-worker",
+        "last_seen_at": "2026-11-04T02:11:32.467895+00:00"
+      },
+      {
+        "worker_id": "live-relay-worker",
+        "last_seen_at": "2026-11-04T02:11:32.165353+00:00"
+      },
+      {
+        "worker_id": "live-maintenance-worker",
+        "last_seen_at": "2026-11-04T02:11:32.595509+00:00"
+      }
+    ],
+    "inbound_since_mitigation": [
+      {
+        "conversation": 570,
+        "created_at": "2026-11-04T02:07:11.276Z",
+        "effective_ai_state": "HUMAN_HANDOFF"
+      }
+    ],
+    "webhook_since_mitigation": [
+      {
+        "status": "live_observed",
+        "count": 108
+      }
+    ],
+    "active_queues": {
+      "reply_jobs": [],
+      "outbound": [
+        {
+          "status": "submission_unknown",
+          "count": 2,
+          "oldest": "2026-11-01T07:58:35.269053+00:00"
+        }
+      ],
+      "events": []
+    },
+    "new_model_failed_handoffs": [],
+    "disk_available_bytes": 12761653248,
+    "observed_live_run": {
+      "id": 4752,
+      "session_id": 911,
+      "status": "completed",
+      "created_at": "2026-11-04T02:10:38.109800+00:00",
+      "completed_at": "2026-11-04T02:10:40.904179+00:00",
+      "event": "silence_due",
+      "action": "wait",
+      "outbound": [],
+      "new_inbound_count": 0
+    }
+  },
+  "limitations_and_remaining": [
+    "Gemini gateway remains unavailable and is intentionally disabled; this is primary-service recovery, not proof that automatic backup is healthy.",
+    "No eligible AI customer turn occurred after mitigation during this observation window. One real scheduled followup (#618, run 4752) completed with 2 successful DeepSeek calls and chose wait, with no outbound message. The new customer message belonged to an existing human-owned conversation; a real customer reply delivery has not yet been observed after the fix.",
+    "Conversation 615 remains pending for advisor handling. Its isolated replay still classifies it as a custom handoff. Conversation 451 retains its prior advisor-owned followup state; no automatic ownership takeover.",
+    "Two pre-existing image submissions have unknown receipts (551 and 614); preserved without blind resend, unrelated to this provider recovery.",
+    "Gemini still has previously disclosed business-acceptance gaps (15/18); reassess provider health and business acceptance before re-enabling."
+  ],
+  "secrets": "No credential values or customer message bodies included."
+}
