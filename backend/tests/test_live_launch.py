@@ -27,7 +27,11 @@ def test_new_customer_auto_entry_does_not_resume_old_or_stopped_chat(session_fac
             db.add(MessageEvent(conversation_state_id=1,chatwoot_message_id=99,direction='outgoing',content='human'))
         db.commit()
         labels=['人工接管'] if blocked else []
+        catalog=[]
         class Client:
+            def list_labels(self):return {'payload':catalog}
+            def create_label(self,title,*args):
+                item={'id':1,'title':title};catalog.append(item);return item
             def get_conversation(self, cid):
                 return {'id':cid,'inbox_id':128859,'created_at':iso(dt(cutoff)+timedelta(seconds=-1 if old else 1)),'can_reply':True}
             def get_conversation_labels(self,cid):return {'payload':labels}
@@ -38,6 +42,33 @@ def test_new_customer_auto_entry_does_not_resume_old_or_stopped_chat(session_fac
         assert ('ai' in labels)==allowed
         assert live.permitted(db,row)==allowed
         assert not db.scalar(select(HandoffTask))
+        assert bool(catalog)==allowed
+
+
+@pytest.mark.parametrize('failure', ['create_failed', 'not_confirmed'])
+def test_new_customer_catalog_failure_hands_off_before_enabling_ai(session_factory, monkeypatch, failure):
+    setup(session_factory, monkeypatch)
+    with session_factory() as db:
+        row=db.get(ConversationState,1)
+        row.labels=[];row.ai_mode='disabled';row.ai_label_present=False
+        cutoff=iso(dt(utcnow())-timedelta(minutes=1))
+        save_setting(db,'live_reply',{'armed_at':cutoff,'auto_new_customers_since':cutoff})
+        db.commit()
+        writes=[]
+        class Client:
+            def get_conversation(self,cid):
+                return {'id':cid,'inbox_id':128859,'created_at':utcnow(),'can_reply':True}
+            def get_conversation_labels(self,cid):return {'payload':[]}
+            def list_labels(self):return {'payload':[]}
+            def create_label(self,*args):
+                if failure=='create_failed':raise RuntimeError('catalog_unavailable')
+                return {'id':1,'title':'ai'}
+            def set_conversation_labels(self,cid,value):writes.append(value)
+            def close(self):pass
+        monkeypatch.setattr(live,'client_for',lambda _:Client())
+        live.enable_new_customer(db,row,db.get(MessageEvent,1))
+        assert not writes and not live.permitted(db,row)
+        assert db.scalar(select(HandoffTask)).reason_code=='new_customer_activation_failed'
 
 
 @pytest.mark.parametrize('assignee,assignments', [(None,1),(9,0),(7,0)])

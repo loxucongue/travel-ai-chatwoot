@@ -5,7 +5,8 @@ from sqlalchemy import func, select
 
 from app.config import settings
 from app.automation_models import AutomationRun, AutomationSession
-from app.models import ChatwootConnection, NotificationDelivery, WebhookEvent, WorkerHeartbeat
+from app.models import (ChatwootConnection, ConversationState, InboxBinding, Tenant,
+                        NotificationDelivery, WebhookEvent, WorkerHeartbeat)
 from app.operations import setting_value
 from app.outbound_control import global_message_sending_enabled
 
@@ -53,6 +54,14 @@ def runtime_health(db):
         "events": db.scalar(select(func.count()).select_from(WebhookEvent).where(WebhookEvent.status == "dead")),
         "notifications": db.scalar(select(func.count()).select_from(NotificationDelivery).where(NotificationDelivery.status.in_(["dead", "submission_unknown"]))),
     }
+    # Healthy workers do not imply that opted-in conversations can send.
+    # Report conflicts on active reception scopes without counting deliberate stops.
+    failures['ai_label_sync'] = (db.scalar(select(func.count()).select_from(ConversationState)
+        .join(InboxBinding, ConversationState.inbox_binding_id == InboxBinding.id)
+        .join(Tenant, ConversationState.tenant_id == Tenant.id)
+        .where(ConversationState.ai_sync_status == 'conflict', ConversationState.ai_mode == 'enabled',
+               InboxBinding.ai_enabled.is_(True), Tenant.ai_enabled.is_(True)))
+        if settings.app_profile == 'live_reply' else 0)
     for name, item in queues.items():
         if (item["oldest_age_seconds"] or 0) >= 300:
             reasons.append(f"queue_overdue:{name}")

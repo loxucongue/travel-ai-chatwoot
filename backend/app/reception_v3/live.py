@@ -437,6 +437,15 @@ def enable_new_customer(db, conversation, message):
         if (not isinstance(labels, list) or set(labels).intersection(blocking_labels(db))
                 or set(conversation.contact.labels if conversation.contact else []).intersection(blocking_labels(db))):
             return
+        # Chatwoot accepts conversation label strings without creating their
+        # account catalog entries. Confirm both before opting a customer in.
+        from app.chatwoot import normalize_collection
+        catalog = normalize_collection(client.list_labels())
+        if not any(str(item.get('title', '')).casefold() == 'ai' for item in catalog):
+            client.create_label('ai', 'AI 自动接管会话', '#16A34A', True)
+            catalog = normalize_collection(client.list_labels())
+            if not any(str(item.get('title', '')).casefold() == 'ai' for item in catalog):
+                raise ValueError('new_customer_ai_catalog_not_confirmed')
         if not has_ai_label(labels):
             client.set_conversation_labels(conversation.chatwoot_conversation_id, [*labels, 'ai'])
             labels = client.get_conversation_labels(conversation.chatwoot_conversation_id)

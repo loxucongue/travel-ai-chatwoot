@@ -45,6 +45,39 @@ def test_readiness_requires_live_workers_not_playground(session_factory, monkeyp
     assert client.get("/v1/health/ready").status_code == 200
 
 
+def test_readiness_reports_conversation_label_conflict_and_recovers(session_factory, monkeypatch):
+    setup(session_factory,monkeypatch)
+    with session_factory() as db:
+        db.add_all([WorkerHeartbeat(worker_id='live-reply-worker',last_seen_at=utcnow()),
+                    WorkerHeartbeat(worker_id='live-maintenance-worker',last_seen_at=utcnow())])
+        row=db.get(ConversationState,1)
+        row.ai_sync_status='conflict'
+        db.commit()
+        result=runtime_health(db)
+        assert result['status']=='degraded'
+        assert result['failed_tasks']['ai_label_sync']==1
+        assert 'failed_tasks:ai_label_sync' in result['reasons']
+        row.ai_sync_status='synced';db.commit()
+        assert runtime_health(db)['status']=='ok'
+
+
+@pytest.mark.parametrize('inactive', ['inbox','tenant','ai_mode'])
+def test_inactive_conversation_conflict_does_not_degrade_live_readiness(session_factory, monkeypatch, inactive):
+    from app.models import Tenant
+    setup(session_factory,monkeypatch)
+    with session_factory() as db:
+        db.add_all([WorkerHeartbeat(worker_id='live-reply-worker',last_seen_at=utcnow()),
+                    WorkerHeartbeat(worker_id='live-maintenance-worker',last_seen_at=utcnow())])
+        row=db.get(ConversationState,1)
+        row.ai_sync_status='conflict'
+        if inactive=='inbox':row.inbox.ai_enabled=False
+        elif inactive=='tenant':db.get(Tenant,row.tenant_id).ai_enabled=False
+        else:row.ai_mode='disabled'
+        db.commit()
+        assert runtime_health(db)['status']=='ok'
+        assert runtime_health(db)['failed_tasks']['ai_label_sync']==0
+
+
 def notification_setup(factory, monkeypatch, channel="chatwoot"):
     setup(factory, monkeypatch)
     monkeypatch.setattr(worker, "SessionLocal", factory)
