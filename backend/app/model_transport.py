@@ -8,6 +8,7 @@ _model_tls_lock=threading.Lock()
 _transport=threading.local()
 _primary_lock=threading.Lock()
 _primary_failures={}
+_fallback_failures={}
 
 
 def gemini_endpoint():
@@ -18,6 +19,15 @@ def gemini_endpoint():
 def gemini_available():
     return bool(settings.gemini_fallback_enabled and settings.gemini_api_key
                 and settings.google_gemini_base_url and settings.gemini_model)
+
+
+def _fallback_identity():
+    return (gemini_endpoint(), settings.gemini_api_key, settings.gemini_model)
+
+
+def _fallback_ready():
+    with _primary_lock:
+        return gemini_available() and _fallback_failures.get(_fallback_identity(), 0) <= time.monotonic()
 
 
 def _retryable(exc):
@@ -64,16 +74,22 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
     """One shared deadline, separately metered attempts, no partial reply delivery."""
     from app.model_metering import calls
     deadline = time.monotonic() + timeout
-    available = gemini_available()
+    available = _fallback_ready()
     identity = (settings.deepseek_base_url, settings.deepseek_api_key)
+    fallback_identity = _fallback_identity()
     records = calls.get() or []
-    # Keep a tool conversation on the provider that successfully took it over.
-    sticky = any(r.get('provider') == 'gemini' and r['status'] == 'completed' for r in records)
+    # Continue on the last successful provider, unless its circuit is open.
+    previous = next((r for r in reversed(records) if r['status'] == 'completed'), {})
+    sticky = previous.get('provider') == 'gemini'
     with _primary_lock:
         cooling = _primary_failures.get(identity, 0) > time.monotonic()
     reason = 'turn_continuation' if sticky else 'primary_cooldown' if cooling else None
+    primary_attempted = False
     if not available or not (sticky or cooling):
-        primary_timeout = min(timeout / 2, settings.model_primary_probe_seconds) if available else timeout
+        primary_attempted = True
+        # Normal 30-second call budget gives primary its full 20 seconds and
+        # leaves 10 seconds for fallback. Respect a shorter enclosing deadline.
+        primary_timeout = min(timeout * 2 / 3, settings.model_primary_probe_seconds) if available else timeout
         try:
             response = _metered_attempt(payload, primary_timeout, 'deepseek')
             with _primary_lock:
@@ -87,7 +103,22 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
                 _primary_failures[identity] = time.monotonic() + settings.model_primary_cooldown_seconds
             if deadline <= time.monotonic():
                 raise
-    return _metered_attempt(_gemini_payload(payload), max(0, deadline-time.monotonic()), 'gemini', reason)
+    try:
+        response = _metered_attempt(_gemini_payload(payload), max(0, deadline-time.monotonic()), 'gemini', reason)
+        with _primary_lock:
+            _fallback_failures.pop(fallback_identity, None)
+        return response
+    except Exception as exc:
+        if not _retryable(exc):
+            raise
+        with _primary_lock:
+            _fallback_failures[fallback_identity] = time.monotonic() + settings.model_fallback_cooldown_seconds
+            # An unavailable backup must never keep a recovered primary bypassed.
+            _primary_failures.pop(identity, None)
+        remaining = deadline - time.monotonic()
+        if primary_attempted or remaining <= 0:
+            raise
+        return _metered_attempt(payload, remaining, 'deepseek', 'fallback_unavailable')
 
 
 def _metered_attempt(payload, timeout, provider, fallback_reason=None):
@@ -105,7 +136,7 @@ def _metered_attempt(payload, timeout, provider, fallback_reason=None):
             # Validate here only when this attempt can switch providers.
             # Otherwise leave content repair to the caller's existing bounded
             # protocol retry; an invalid draft is not a transport failure.
-            if (provider == 'deepseek' and gemini_available()
+            if (provider == 'deepseek' and _fallback_ready()
                     and (payload.get('response_format') or {}).get('type') == 'json_object'):
                 from app.model_gateway import _json_object
                 message = body['choices'][0]['message']

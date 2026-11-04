@@ -13,6 +13,7 @@ from app.config import settings
 def gateway(monkeypatch):
     transport.close_deepseek_transport()
     transport._primary_failures.clear()
+    transport._fallback_failures.clear()
     monkeypatch.delenv('MODEL_TEST_COST_LEDGER', raising=False)
     monkeypatch.setattr(settings, 'gemini_fallback_enabled', True)
     monkeypatch.setattr(settings, 'google_gemini_base_url', 'https://fallback.invalid')
@@ -35,6 +36,7 @@ def gateway(monkeypatch):
     meter.calls.reset(token)
     transport.close_deepseek_transport()
     transport._primary_failures.clear()
+    transport._fallback_failures.clear()
 
 
 def success(request):
@@ -218,3 +220,80 @@ def test_gemini_budget_is_supported_and_labelled(gateway, tmp_path, monkeypatch)
     saved = json.loads(path.read_text())['calls'][0]
     assert saved['usage_known'] and saved['cost_basis'] == 'gateway_estimate'
     assert saved['charged_or_reserved_cny'] == pytest.approx(.0011)
+
+
+def test_slow_healthy_primary_is_not_cut_off_at_half_the_budget(gateway):
+    handlers, requests, records = gateway
+    async def healthy_but_slow(request):
+        await asyncio.sleep(.24)
+        return success(request)
+    handlers['primary.invalid'] = healthy_but_slow
+    handlers['fallback.invalid'] = lambda request: httpx.Response(503)
+    result = transport._post_with_deadline(payload(), .4)
+    assert result.extensions['model_provider'] == 'deepseek'
+    assert len(requests) == len(records) == 1
+
+
+@pytest.mark.parametrize('status', [403, 429, 503])
+def test_failed_backup_does_not_poison_next_primary_attempt(gateway, status):
+    handlers, requests, records = gateway
+    handlers['primary.invalid'] = lambda request: httpx.Response(503)
+    handlers['fallback.invalid'] = lambda request: httpx.Response(status)
+    with pytest.raises(httpx.HTTPStatusError):
+        transport._post_with_deadline(payload(), 2)
+    records.clear()
+    handlers['primary.invalid'] = success
+    assert transport._post_with_deadline(payload(), 2).extensions['model_provider'] == 'deepseek'
+    assert [r.url.host for r in requests] == ['primary.invalid', 'fallback.invalid', 'primary.invalid']
+
+
+def test_failed_sticky_backup_returns_to_primary_in_same_turn(gateway):
+    handlers, requests, records = gateway
+    handlers['primary.invalid'] = lambda request: httpx.Response(503)
+    handlers['fallback.invalid'] = success
+    transport._post_with_deadline(payload(), 2)
+    handlers['primary.invalid'] = success
+    handlers['fallback.invalid'] = lambda request: httpx.Response(403)
+    result = transport._post_with_deadline(payload(), 2)
+    assert result.extensions['model_provider'] == 'deepseek'
+    assert result.extensions['fallback_reason'] == 'fallback_unavailable'
+    assert transport._post_with_deadline(payload(), 2).extensions['model_provider'] == 'deepseek'
+    assert [r.url.host for r in requests] == ['primary.invalid', 'fallback.invalid', 'fallback.invalid', 'primary.invalid', 'primary.invalid']
+    assert records[-2]['status'] == records[-1]['status'] == 'completed'
+
+
+def test_backup_cooldown_gives_primary_full_budget_and_can_recover(gateway):
+    handlers, requests, records = gateway
+    handlers['primary.invalid'] = lambda request: httpx.Response(503)
+    handlers['fallback.invalid'] = lambda request: httpx.Response(403)
+    with pytest.raises(httpx.HTTPStatusError):
+        transport._post_with_deadline(payload(), .4)
+    records.clear()
+    async def slow_primary(request):
+        await asyncio.sleep(.3)
+        return success(request)
+    handlers['primary.invalid'] = slow_primary
+    assert transport._post_with_deadline(payload(), .4).extensions['model_provider'] == 'deepseek'
+    assert len(requests) == 3
+    transport._fallback_failures.clear()  # Backup cooldown expires.
+    records.clear()
+    handlers['primary.invalid'] = lambda request: httpx.Response(503)
+    handlers['fallback.invalid'] = success
+    assert transport._post_with_deadline(payload(), .4).extensions['model_provider'] == 'gemini'
+
+
+def test_sticky_backup_and_primary_failure_still_share_one_deadline(gateway):
+    handlers, requests, records = gateway
+    handlers['primary.invalid'] = lambda request: httpx.Response(503)
+    handlers['fallback.invalid'] = success
+    transport._post_with_deadline(payload(), 2)
+    handlers['fallback.invalid'] = lambda request: httpx.Response(403)
+    async def slow_primary(request):
+        await asyncio.sleep(1)
+        return success(request)
+    handlers['primary.invalid'] = slow_primary
+    start = time.monotonic()
+    with pytest.raises(TimeoutError):
+        transport._post_with_deadline(payload(), .2)
+    assert time.monotonic() - start < .4
+    assert [r.url.host for r in requests][-2:] == ['fallback.invalid','primary.invalid']

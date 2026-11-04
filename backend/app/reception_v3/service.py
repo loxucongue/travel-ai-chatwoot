@@ -11,6 +11,7 @@ from app.automation_models import AutomationRun, AutomationSession
 from app.material_library import candidate_materials, resolve_materials, tenant_for_session
 from app.models import utcnow
 from app.model_metering import calls, metrics
+from app.model_transport import _retryable as model_transport_failure
 from app.opening_messages import delivery_items, opening_media_info
 from app.reception_v3 import release_id
 from app.reception_v3.runtime import run_agent
@@ -1117,7 +1118,21 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 # Do not run the same rejected plan through three full model turns.
                 maximum_attempts = 1 if contract_failure(exc) else 3
                 run.trace = {**run.trace, 'failure_kind': 'decision_contract' if maximum_attempts == 1 else 'runtime'}
-                if (maximum_attempts == 1 and event in ('silence_due', 'introduction_completed')
+                optional_transport_failure = (event == 'silence_due' and not context.get('buffered_questions')
+                                              and model_transport_failure(exc))
+                if optional_transport_failure:
+                    # Optional outreach is not an unanswered customer. Preserve
+                    # AI ownership and try the next normal slot, without a retry
+                    # storm or a batch of spurious human handoffs.
+                    value.update(pending_event=None, retry_at=None, next_check_at=None)
+                    value.pop('attempts', None)
+                    value.pop('failed_event', None)
+                    value['silence_step'] = value.get('silence_step', 0) + 1
+                    schedule_followup(value, bundle, row.virtual_now)
+                    value['followup_skip_reason'] = 'model_transport_unavailable'
+                    run.trace['failure_kind'] = 'optional_outreach_transport'
+                    row.due_at = None
+                elif (maximum_attempts == 1 and event in ('silence_due', 'introduction_completed')
                         and not context.get('buffered_questions')):
                     # Optional outreach may wait, while a real unanswered customer
                     # turn must remain visible to an advisor if output cannot be repaired.

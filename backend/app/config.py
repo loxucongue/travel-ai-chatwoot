@@ -36,8 +36,9 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     gemini_temperature: float = Field(default=0.2, ge=0, le=2)
-    model_primary_probe_seconds: float = Field(default=8, gt=0, le=20)
+    model_primary_probe_seconds: float = Field(default=20, gt=0, le=60)
     model_primary_cooldown_seconds: float = Field(default=60, ge=0, le=300)
+    model_fallback_cooldown_seconds: float = Field(default=300, ge=0, le=1800)
     deepseek_vision_model: str = "deepseek-flash"
     customer_image_vision_enabled: bool = False
     reception_repeat_review_enabled: bool = False
@@ -46,7 +47,7 @@ class Settings(BaseSettings):
     customer_sticker_recognition_enabled: bool = False
     customer_image_allowed_hosts: str = "app.chatwoot.com"
     customer_image_storage_hosts: str = "prod-chatwoot-assets.s3.amazonaws.com"
-    deepseek_timeout_seconds: int = 20
+    deepseek_timeout_seconds: int = 30
     deepseek_max_input_characters: int = 300000
     evaluation_poll_interval_seconds: float = 1
     evaluation_inbox_id: int = 128859
