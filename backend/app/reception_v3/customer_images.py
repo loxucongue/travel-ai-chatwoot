@@ -4,7 +4,7 @@ import base64
 from io import BytesIO
 import time
 import httpx
-from PIL import Image
+from PIL import Image, ImageOps
 from app.config import settings
 
 MAX_IMAGES = 4
@@ -98,6 +98,19 @@ def download_image(url, deadline):
                     raise ValueError('unsupported_image')
                 mime=Image.MIME[img.format]
                 img.verify()
+            # Bound vision upload latency. Keep originals in Chatwoot for the
+            # advisor to scan; model previews do not replace source attachments.
+            if len(data) > 96 * 1024 and mime in ('image/jpeg', 'image/png', 'image/webp'):
+                with Image.open(BytesIO(data)) as source:
+                    oriented = ImageOps.exif_transpose(source).convert('RGBA')
+                    preview = Image.new('RGB', oriented.size, 'white')
+                    preview.paste(oriented, mask=oriented.getchannel('A'))
+                    preview.thumbnail((1024, 1024))
+                    output = BytesIO()
+                    preview.save(output, format='JPEG', quality=80, optimize=True)
+                    if output.tell() < len(data):
+                        data = output.getvalue()
+                        mime = 'image/jpeg'
             return 'data:'+mime+';base64,'+base64.b64encode(data).decode('ascii')
     raise ValueError('too_many_image_redirects')
 

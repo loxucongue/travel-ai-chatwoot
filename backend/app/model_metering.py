@@ -47,11 +47,11 @@ def _update(record, *, reserve=False):
 
 def begin_request(payload):
     model = payload.get('model')
-    if _ledger_path() is not None and model not in {'deepseek-flash', 'deepseek-v4-flash', 'gemini-2.5-flash'}:
+    if _ledger_path() is not None and model not in {'deepseek-flash', 'deepseek-v4-flash', 'gemini-2.5-flash', 'qwen-plus', 'qwen3.5-flash'}:
         raise RuntimeError('model_test_requires_supported_flash_model')
-    # Gemini gateway tariffs are operator-specific. These are budgeting test
+    # Backup tariffs are operator-specific. These are conservative budgeting test
     # estimates, not a claim about the provider's actual invoice or exchange rate.
-    input_rate, cache_rate, output_rate = (10, 10, 80) if model == 'gemini-2.5-flash' else (2, .04, 8)
+    input_rate, cache_rate, output_rate = (10, 10, 80) if model in {'gemini-2.5-flash', 'qwen-plus', 'qwen3.5-flash'} else (2, .04, 8)
     # Byte-level tokenization cannot exceed the serialized request's UTF-8
     # bytes for its visible text. Double that bound and add 64K framing room;
     # cap at the model's 1M input context. Never refund old unknown requests.

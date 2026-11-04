@@ -7,7 +7,7 @@
     "custom_guidance": "新公司业务资料尚未配置，不推荐未发布产品，不承诺价格、服务或库存。"
   },
   "intake": {"enabled": false, "question": "请问您想了解什么？", "options": ["了解产品", "咨询服务"]},
-  "lead_capture": {"enabled": false},
+  "lead_capture": {"enabled": false, "channels": ["LINE", "微信", "Email"]},
   "routing": {"live_inbox_ids": [], "enabled_route_variants": [], "outside_catalog_action": "consult_advisor"},
   "handoff": {"large_group_enabled": false},
   "silence": {"enabled": false, "live_enabled": false, "advisor_reply_followup_enabled": false},

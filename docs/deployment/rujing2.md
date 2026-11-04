@@ -1,5 +1,30 @@
 # 第二家公司拆分与部署
 
+### 2026-11-05 单线路开场、联系方式与图片理解修复
+
+- 会话 #3、#5 的五段开场曾被迟到的标签回调取消。自动启用 AI 后现记录远端已确认的控制版本，旧事件不再取消开场；较新的人工停用仍生效。首次只发送“1”也先展示厦门主线，不猜人数或只追问数字。
+- 业务包 v9 接受 LINE 行动条码、加好友链接、客户自愿提供的 ID、微信及 Email。视觉识别出联络二维码后执行 `contact_image` 交接，要求销售打开原图扫码核验，不再索要 ID。普通照片正常答疑。AI 本身不操作 LINE 添加好友，也不发送邮件。
+- 主模型 `deepseek-v4-flash`；官方阿里云 `qwen-plus` 用于主模型超时、429 或 5xx 后备援；含可读图片的请求直接使用 `qwen3.5-flash`。两次文本请求共享原有总超时，不重试客户消息发送。Claude 未启用，旧 Gemini 线上备用关闭。
+- 大幅 JPEG／PNG／WebP 图片生成最长边 1024 的模型预览，原图仍保存在 Chatwoot 供人工查看。最多读取本轮四张图片、每张源文件上限 8 MiB，沿用可信下载地址、重定向及下载时限校验。过小或模糊条码仍可能需要人工核验。
+- 134 项相关回归通过；新增 PNG／WebP 预览用例另行验证。真实模型演练覆盖首次主线介绍、邮箱、LINE 链接、无聊天 App、拒绝转私、跨年参考价和实际照片。实际会话 #5 图片在无说明文字时两次识别为 LINE 联络条码并交接；普通房间照片不交接。主模型首轮曾出现一次两次返回均不符合 JSON 的异常，后续重测通过，保留原始失败证据，不把有限演练当作第三方持续可用性保证。
+- 仅隔离演练进程注入主模型 503，验证真实 Qwen 备援；报价邀请首次遗漏用途标记，补充协议示例后复测。证据在忽略目录 `output/deploy/rujing2/v9-*.jsonl`，不含生产公开发送操作。
+- 现有人工归属、跟进节奏及渠道发送窗口保持；不重放旧开场。会话 #5 原本已有内部交接通知，本轮保留人工接管，销售实际扫码加好友需由销售完成。
+
+模型环境配置（密钥仅写服务器私有环境文件）：
+
+```dotenv
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_API_KEY=<primary-secret>
+QWEN_FALLBACK_ENABLED=true
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+QWEN_API_KEY=<qwen-secret>
+QWEN_MODEL=qwen-plus
+QWEN_VISION_MODEL=qwen3.5-flash
+CUSTOMER_IMAGE_VISION_ENABLED=true
+GEMINI_FALLBACK_ENABLED=false
+```
+
 日期：2026-10-26。维护分支：`codex/rujing2`。基线：`90cbd6f`。
 
 2026-11-03 状态：账号 `193812` 的 Facebook 收件箱 `150646` 已收到客户消息；测试会话 #1 的真实入站“22”触发了 AI 开场和答复，两条消息均已有已读回执。首次介绍与素材的调整和发布验收见下文。控制台与 [AI 演练场](http://47.82.3.154/#/playground)沿用原管理员。下文保留分阶段历史记录，以最新记录为准。

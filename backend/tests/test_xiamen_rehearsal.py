@@ -40,8 +40,9 @@ def test_prepare_real_company_materials_in_isolated_playground(tmp_path):
     assert not config['intake']['enabled']
     assert not config['lead_capture']['require_party_size']
     assert not config['lead_capture']['require_departure_window']
-    assert len(config['material_rules']) == 11
-    assert sum(r['enabled'] for r in config['material_rules']) == 7
+    assert len(config['material_rules']) == 12
+    assert sum(r['enabled'] for r in config['material_rules']) == 8
+    assert config['lead_capture']['channels'] == ['LINE','微信','Email']
     assert '廈門' in config['reply']['opening_items'][0]['content']
     assert [i['content_type'] for i in config['reply']['opening_items']] == ['text','image','image','image','video']
     assert all(i['media_id'] and i['media_hash'] for i in config['reply']['opening_items'][1:])

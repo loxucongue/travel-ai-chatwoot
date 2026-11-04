@@ -33,8 +33,14 @@ class EvaluationCallError(RuntimeError):
 
 def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
     """Keep both providers inside the caller's deadline; never retry outbound sends."""
+    qwen = bool(settings.qwen_fallback_enabled and settings.qwen_base_url and settings.qwen_api_key)
+    has_images = any(p.get('type') == 'image_url' for m in payload.get('messages', [])
+                     if isinstance(m.get('content'), list) for p in m['content'])
+    if qwen and has_images:
+        return _post_attempt(_qwen_payload(payload, vision=True), timeout,
+            provider=(settings.qwen_base_url.rstrip('/'), settings.qwen_api_key), provider_name='qwen_vision')
     enabled = bool(settings.gemini_fallback_enabled and settings.google_gemini_base_url and settings.gemini_api_key)
-    if not enabled:
+    if not enabled and not qwen:
         return _post_attempt(payload, timeout)
     deadline = time.monotonic() + timeout
     identity = (settings.deepseek_base_url, settings.deepseek_api_key)
@@ -61,6 +67,11 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise TimeoutError('model_fallback_deadline_exceeded')
+    if qwen:
+        response = _post_attempt(_qwen_payload(payload), remaining,
+            provider=(settings.qwen_base_url.rstrip('/'), settings.qwen_api_key), provider_name='qwen_fallback')
+        response.extensions['model_fallback_reason'] = reason
+        return response
     fallback = deepcopy(payload)
     fallback['model'] = settings.gemini_model
     thinking = fallback.pop('thinking', {})
@@ -77,10 +88,21 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
     return response
 
 
-def _post_attempt(payload: dict, timeout: float, provider=None) -> httpx.Response:
+def _qwen_payload(payload, *, vision=False):
+    body = deepcopy(payload)
+    body['model'] = settings.qwen_vision_model if vision else settings.qwen_model
+    body.pop('thinking', None)
+    body.pop('reasoning_effort', None)
+    body['enable_thinking'] = False
+    for message in body.get('messages', []):
+        message.pop('reasoning_content', None)
+    return body
+
+
+def _post_attempt(payload: dict, timeout: float, provider=None, provider_name=None) -> httpx.Response:
     from app.model_metering import begin_request, end_request
     handle = begin_request(payload)
-    handle[0]['provider'] = 'gemini_fallback' if provider else 'deepseek'
+    handle[0]['provider'] = provider_name or ('gemini_fallback' if provider else 'deepseek')
     try:
         response = _post_unmetered(payload, timeout, provider=provider) if provider else _post_unmetered(payload, timeout)
         end_request(handle, response.json())

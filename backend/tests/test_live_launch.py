@@ -13,6 +13,43 @@ from test_runtime_reliability import notification_setup, mock_chatwoot
 from app import notification_dispatch
 
 
+def test_auto_entry_confirmed_revision_preserves_opening_until_real_operator_change(session_factory,monkeypatch):
+    from app.reception_v3 import service
+    from test_reception_v3 import bundle
+    from test_live_audit_fixes import event
+    setup(session_factory,monkeypatch)
+    monkeypatch.setattr(service,'compile_skills',lambda db:bundle())
+    labels=[]
+    class Client:
+        def list_labels(self):return {'payload':[{'title':'ai'}]}
+        def get_conversation(self,cid):
+            return {'id':cid,'inbox_id':128859,'created_at':utcnow(),'can_reply':True,
+                    'updated_at':20 if labels else 10,'labels':list(labels)}
+        def get_conversation_labels(self,cid):return {'payload':list(labels)}
+        def set_conversation_labels(self,cid,value):labels[:]=value
+        def close(self):pass
+    monkeypatch.setattr(live,'client_for',lambda _:Client())
+    with session_factory() as db:
+        conv=db.get(ConversationState,1)
+        conv.labels=[];conv.ai_mode='disabled';conv.ai_label_present=False
+        cutoff=iso(dt(utcnow())-timedelta(minutes=1))
+        save_setting(db,'live_reply',{'armed_at':cutoff,'auto_new_customers_since':cutoff})
+        msg=db.get(MessageEvent,1);msg.content='1'
+        live.enable_new_customer(db,conv,msg)
+        live.accept(db,conv,msg)
+        db.commit()
+        row=live.session_for(db,conv.id)
+        drafts=[m['id'] for m in row.messages if m.get('status')=='draft']
+        assert len(drafts)==2 and conv.chatwoot_control_updated_at==20
+        event(db,'conversation_updated',[],10)
+        event(db,'conversation_updated',['ai'],20)
+        assert row.controls['simulation']['status']=='running'
+        assert [m['id'] for m in row.messages if m.get('status')=='draft']==drafts
+        event(db,'conversation_updated',[],21)
+        assert row.controls['simulation']['status']=='stopped'
+        assert all(m.get('status')!='draft' for m in row.messages)
+
+
 @pytest.mark.parametrize('old,blocked,history,allowed', [
     (False,False,False,True),(True,False,False,False),
     (False,True,False,False),(False,False,True,False)])

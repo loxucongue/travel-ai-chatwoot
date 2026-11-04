@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.5-flash"
     gemini_fallback_primary_timeout_seconds: float = Field(default=15, gt=0)
     gemini_fallback_cooldown_seconds: float = Field(default=60, ge=0)
+    qwen_fallback_enabled: bool = False
+    qwen_base_url: str = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+    qwen_api_key: str = ''
+    qwen_model: str = 'qwen-plus'
+    qwen_vision_model: str = 'qwen3.5-flash'
     deepseek_max_input_characters: int = 300000
     evaluation_poll_interval_seconds: float = 1
     evaluation_inbox_id: int = 0
@@ -89,6 +94,8 @@ class Settings(BaseSettings):
         return values
 
     def validate_runtime(self) -> None:
+        if self.qwen_fallback_enabled and not all((self.qwen_base_url, self.qwen_api_key, self.qwen_model, self.qwen_vision_model)):
+            raise ValueError('qwen_fallback_configuration_incomplete')
         if self.gemini_fallback_enabled and not all((self.google_gemini_base_url, self.gemini_api_key, self.gemini_model)):
             raise ValueError('gemini_fallback_configuration_incomplete')
         if self.outbound_mode not in {"disabled", "record_only", "live"}:

@@ -67,7 +67,9 @@ def configure(args):
         values = dotenv_values(Path(args.model_env).resolve())
         for key in ('DEEPSEEK_API_KEY', 'DEEPSEEK_BASE_URL', 'DEEPSEEK_MODEL',
                     'GEMINI_FALLBACK_ENABLED', 'GOOGLE_GEMINI_BASE_URL', 'GEMINI_API_KEY', 'GEMINI_MODEL',
-                    'GEMINI_FALLBACK_PRIMARY_TIMEOUT_SECONDS', 'GEMINI_FALLBACK_COOLDOWN_SECONDS'):
+                    'GEMINI_FALLBACK_PRIMARY_TIMEOUT_SECONDS', 'GEMINI_FALLBACK_COOLDOWN_SECONDS',
+                    'QWEN_FALLBACK_ENABLED', 'QWEN_BASE_URL', 'QWEN_API_KEY', 'QWEN_MODEL',
+                    'QWEN_VISION_MODEL', 'CUSTOMER_IMAGE_VISION_ENABLED'):
             if values.get(key):
                 os.environ[key] = values[key]
     os.environ.update(BUSINESS_PROFILE='rujing2', APP_PROFILE='evaluation', APP_ENV='development',
@@ -183,6 +185,14 @@ def run(output, ids):
     cases = [{'id': f['id'], 'title': f['name'], 'messages': [f['question']],
               'expected': 'handoff' if f['handling'] == 'handoff' else 'reply'} for f in faqs if f['id'] in selected]
     extra = [
+        {'id':'single_route_entry','title':'只發1仍先收到完整主線圖文', 'messages':['1'],
+            'expected':'reply','opening_count':5,'unexpected_text':['1是指','1是什麼','1」是','不太確定是指']},
+        {'id':'email_contact','title':'Email立即交接', 'messages':['想了解廈門','請寄到 travel.test@example.com'],
+            'expected':'handoff','handoff_type':'contact'},
+        {'id':'line_link','title':'LINE連結立即交接不再要ID', 'messages':['想了解廈門','這是我的LINE加好友連結 https://line.me/ti/p/~test_travel_2026'],
+            'expected':'handoff','handoff_type':'contact'},
+        {'id':'no_apps_email','title':'無LINE微信可使用Email', 'messages':['想了解廈門','沒有LINE和微信，可以用Email嗎？'],
+            'expected':'reply','invite_on_final_turn':True},
         {'id': 'hotel_material', 'title': '酒店圖文', 'messages': ['廈門住什麼飯店？給我看房間照片。'], 'expected': 'reply', 'asset': 'xiamen_hotel'},
         {'id': 'food_video', 'title': '餐食影片', 'messages': ['廈門餐食有影片可以看嗎？'], 'expected': 'reply', 'asset': 'xiamen_meal_video'},
         {'id': 'eight_people', 'title': '8人不套舊公司交接門檻或直接承諾獨團', 'messages': ['我們8位想去廈門，你們一般一團幾人？'], 'expected': 'reply',
@@ -256,13 +266,23 @@ def run(output, ids):
             'unexpected_text':['兩大兩小','兩位大人','2位大人','加完馬上','一定不累']},
         {'id': 'contextual_ack', 'title': '收尾致謝不強行增加留資邀請',
             'messages':['廈門多少錢？','謝謝，先這樣'], 'expected':'reply','no_invitation_after_turn':1},
-        {'id': 'contextual_preference', 'title': '已知LINE偏好只取LINE ID',
+        {'id': 'contextual_preference', 'title': '已知LINE偏好接受條碼或連結',
             'messages':['想了解廈門詳細路線','我用LINE，沒有微信'],
             'expected':'reply','invite_on_final_turn':True},
         {'id': 'contextual_trust_refusal', 'title': '要求在原平台看資質不變相強迫留資',
             'messages':['我想看營業執照、收款戶名和退費規定','我不留私人聯絡，就在這裡給我看資料','那你們有購物站嗎？'],
             'expected':'reply','no_invitation_after_turn':1},
     ]
+    if os.environ.get('REHEARSAL_LINE_QR_URL'):
+        extra.append({'id':'actual_line_qr','title':'真實LINE條碼照片無文字直接交接',
+            'messages':['想了解廈門四天，兩位，12/29到1/1',
+                {'text':'[客户发送附件]','attachments':[{'id':103851896,'file_type':'image',
+                    'data_url':os.environ['REHEARSAL_LINE_QR_URL']}]}],
+            'expected':'handoff','handoff_type':'contact_image','vision':True})
+    if os.environ.get('REHEARSAL_ROOM_IMAGE_URL'):
+        extra.append({'id':'actual_room_photo','title':'真實房間照片答疑不誤判留資',
+            'messages':['想了解廈門住宿',{'text':'這種房間有床嗎？','attachments':[{'id':90003,'file_type':'image',
+                'data_url':os.environ['REHEARSAL_ROOM_IMAGE_URL']}]}], 'expected':'reply','vision':True})
     cases.extend(case for case in extra if not ids or case['id'] in selected)
     for case in cases:
         started = time.monotonic()
@@ -315,6 +335,10 @@ def run(output, ids):
                 issues.append(f'expected_{case["expected"]}_got_{actual}')
             if case.get('handoff_type') and state.get('handoff_type') != case['handoff_type']:
                 issues.append('wrong_handoff_type')
+            if case.get('opening_count') and len([m for m in delivered if m.get('v3_kind')=='opening']) != case['opening_count']:
+                issues.append('opening_missing_or_repeated')
+            if case.get('vision') and not any(log.get('vision_image_count',0)>0 for run in runs for log in (run.trace.get('logs') or [])):
+                issues.append('image_not_actually_read')
             if case.get('no_introduction_queue') and any(m.get('v3_kind') == 'introduction' for m in reply):
                 issues.append('unnecessary_introduction_queue')
             invitations = [m for m in reply if m.get('contact_invitation')]
@@ -366,7 +390,7 @@ def run(output, ids):
                     issues.append('repeated_material')
                 if state.get('next_check_at'):
                     issues.append('followup_not_stopped_after_seven_days')
-            if case.get('asset') and not any(m.get('asset_key') == case['asset'] for m in reply):
+            if case.get('asset') and not any(m.get('asset_key') == case['asset'] for m in delivered):
                 issues.append('expected_asset_missing')
             text = '\n'.join(m.get('content', '') for m in reply)
             if any(word in text for word in case.get('unexpected_text', [])):

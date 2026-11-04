@@ -452,6 +452,17 @@ def enable_new_customer(db, conversation, message):
             labels = labels.get('payload') if isinstance(labels, dict) else labels
         if not isinstance(labels, list) or not has_ai_label(labels):
             raise ValueError('new_customer_ai_label_not_confirmed')
+        # An older assignment/creation webhook can arrive after we queue the
+        # opening. Pin the confirmed control revision so it cannot remove ai,
+        # cancel the opening and misclassify our own label echo as a hand-back.
+        from app.conversation_mirror import control_revision
+        confirmed = payload_dict(client.get_conversation(conversation.chatwoot_conversation_id))
+        if isinstance(confirmed.get('labels'), list):
+            labels = confirmed['labels']
+            if not has_ai_label(labels) or set(labels).intersection(blocking_labels(db)):
+                raise ValueError('new_customer_control_changed')
+        conversation.chatwoot_control_updated_at = max(conversation.chatwoot_control_updated_at or 0,
+                                                       control_revision(confirmed))
         conversation.labels = labels
         observe_ai_label(conversation, labels, 'chatwoot')
         conversation.effective_ai_state, conversation.effective_state_reason = compute_state(

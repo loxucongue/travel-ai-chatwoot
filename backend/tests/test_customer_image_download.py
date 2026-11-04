@@ -35,3 +35,17 @@ def test_expired_deadline_prevents_network_request():
     with respx.mock() as router:
         with pytest.raises(TimeoutError):download_image(SOURCE,time.monotonic()-1)
         assert len(router.calls)==0
+
+
+@pytest.mark.parametrize('format',['JPEG','PNG','WEBP'])
+def test_large_photo_preview_is_bounded_without_replacing_original(format):
+    source=BytesIO()
+    Image.effect_noise((1200,1600),60).convert('RGB').save(source,format=format,quality=95)
+    original=source.getvalue()
+    with respx.mock() as router:
+        router.get(SOURCE).respond(200,content=original)
+        result=download_image(SOURCE,time.monotonic()+12)
+    preview=base64.b64decode(result.split(',',1)[1])
+    assert len(preview)<len(original)
+    with Image.open(BytesIO(preview)) as img:assert img.size==(768,1024)
+    with Image.open(BytesIO(original)) as img:assert img.size==(1200,1600)
