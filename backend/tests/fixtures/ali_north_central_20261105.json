@@ -1,0 +1,584 @@
+[
+  {
+    "id": "wenbu_lodging",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "文布南村這晚住哪裡？有氧氣嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "那倉卓姆"
+          ],
+          [
+            "氧"
+          ]
+        ],
+        "excludes": [
+          "尼瑪雲天"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "day12_day13",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "第12和第13天分別走哪些景點，住哪？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "文布南村"
+          ],
+          [
+            "那倉卓姆"
+          ],
+          [
+            "班戈"
+          ],
+          [
+            "色林措"
+          ]
+        ],
+        "excludes": [
+          "尼瑪雲天"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "central_not_custom",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "你們的15天有走中線、吳如措和當穹措嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "吳如措"
+          ],
+          [
+            "當穹措"
+          ]
+        ],
+        "excludes": [
+          "尚未發布",
+          "中線還沒",
+          "中線尚未"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gift",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "行程有送阿里禮包嗎？裡面有什麼？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "氧氣瓶"
+          ],
+          [
+            "葡萄糖"
+          ],
+          [
+            "青稞酥"
+          ]
+        ],
+        "excludes": []
+      }
+    ]
+  },
+  {
+    "id": "wildlife",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "可以保證看到藏羚羊嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "不能保證",
+            "無法保證",
+            "不保證",
+            "沒辦法保證"
+          ]
+        ],
+        "excludes": [
+          "一定能看到"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "june_price",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們兩人2027年6月去阿里15天，費用多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "24,800",
+            "24800"
+          ],
+          [
+            "北線＋中線"
+          ]
+        ],
+        "excludes": [
+          "24,600",
+          "24600"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "five_shared",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 5,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們5個朋友想拼團，這樣會是自己一團嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "拼團"
+          ]
+        ],
+        "excludes": [
+          "直接幫您們升級成獨立一團"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "six_private",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 6
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們剛好6位，想看看你們阿里15天的行程。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "獨立",
+            "自己一團"
+          ]
+        ],
+        "excludes": [
+          "官方LINE@"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "negated_wenbu",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我不想去文布南村，也不想轉山，有別的路線嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [],
+        "excludes": [
+          "先給您看阿里15天行程"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "experienced",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們2位，去年去過拉薩和珠峰了，這次想安排13天不同的阿里行程。",
+        "checks": [],
+        "contains_any": [],
+        "excludes": []
+      }
+    ]
+  },
+  {
+    "id": "village_inquiry",
+    "entry": "",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-05T02:00:00+00:00",
+      "route_variant": "",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條是阿里北線＋中線15天，含文布南村。"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "想了解文布南村，有哪條行程會去？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "15天",
+            "15日"
+          ],
+          [
+            "文布南村"
+          ]
+        ],
+        "excludes": [
+          "尚未發布"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "full_intro_2",
+    "entry": "tibet_ali_15d",
+    "known_entry": true,
+    "steps": [
+      {
+        "id": "intro",
+        "text": "我們2位，想看阿里北線加中線15天，請給我們完整行程介紹。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "文布南村"
+          ],
+          [
+            "那倉卓姆"
+          ]
+        ],
+        "excludes": [
+          "尼瑪雲天",
+          "官方LINE@"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "full_intro_6",
+    "entry": "tibet_ali_15d",
+    "known_entry": true,
+    "steps": [
+      {
+        "id": "intro",
+        "text": "我們6位，想看阿里北線加中線15天，請給我們完整行程介紹。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "文布南村"
+          ],
+          [
+            "那倉卓姆"
+          ]
+        ],
+        "excludes": [
+          "尼瑪雲天",
+          "官方LINE@"
+        ]
+      }
+    ]
+  }
+]

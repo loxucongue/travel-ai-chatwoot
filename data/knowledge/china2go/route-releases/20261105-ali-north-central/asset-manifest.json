@@ -1,0 +1,77 @@
+[
+  {
+    "asset_key": "ali15_map",
+    "display_name": "阿里北+中線15日路線海報（換新圖）",
+    "source_archive": "ai阿里更改.zip",
+    "source_filename": "圖R-2_阿里北+中線15日路線海報（換新圖）.png",
+    "sha256": "377943850f882d1e0e9e56ffe9de90f107589ab0dde4c669a7c35f6db4956dac",
+    "byte_size": 2164585,
+    "route_variant": "tibet_ali_15d",
+    "route_variants": [
+      "tibet_ali_15d"
+    ],
+    "content_group_key": "itinerary_overview",
+    "what_it_shows": "阿里北+中線15日路線海報（換新圖）",
+    "source_ref": "2026-11-05 麗麗提供素材"
+  },
+  {
+    "asset_key": "ali15_wenbu_village",
+    "display_name": "文布南村村落與當惹雍措雪山",
+    "source_archive": "ai阿里更改.zip",
+    "source_filename": "圖R-3-1_文布南村村落與當惹雍措雪山.png",
+    "sha256": "c14a700a04b5a5a9e494a0f739e11f8400d664b5b50bac57becdb66981075f5b",
+    "byte_size": 776411,
+    "route_variant": "tibet_ali_15d",
+    "route_variants": [
+      "tibet_ali_15d"
+    ],
+    "content_group_key": "wenbu_village",
+    "what_it_shows": "文布南村村落與當惹雍措雪山",
+    "source_ref": "2026-11-05 麗麗提供素材"
+  },
+  {
+    "asset_key": "ali15_wenbu_manor",
+    "display_name": "那倉卓姆莊園看當惹雍措夕陽",
+    "source_archive": "ai阿里更改.zip",
+    "source_filename": "圖R-3-2_那倉卓姆莊園看當惹雍措夕陽.png",
+    "sha256": "8c2beabf6530892c5cd01b55e83d0e1cb7b406c7d46a5ee9528ad166891442d9",
+    "byte_size": 1960317,
+    "route_variant": "tibet_ali_15d",
+    "route_variants": [
+      "tibet_ali_15d"
+    ],
+    "content_group_key": "wenbu_manor",
+    "what_it_shows": "那倉卓姆莊園看當惹雍措夕陽",
+    "source_ref": "2026-11-05 麗麗提供素材"
+  },
+  {
+    "asset_key": "ali15_dangra_lake",
+    "display_name": "當惹雍措湖景與對岸雪山",
+    "source_archive": "ai阿里更改.zip",
+    "source_filename": "圖R-12b_當惹雍措湖景與對岸雪山.png",
+    "sha256": "f397cc51e4e78b922e2dfad1fb245e11c381a62157c7f6c92b213bdb4620fa4d",
+    "byte_size": 620087,
+    "route_variant": "tibet_ali_15d",
+    "route_variants": [
+      "tibet_ali_15d"
+    ],
+    "content_group_key": "dangra_lake",
+    "what_it_shows": "當惹雍措湖景與對岸雪山",
+    "source_ref": "2026-11-05 麗麗提供素材"
+  },
+  {
+    "asset_key": "ali15_followup_wenbu",
+    "display_name": "文布南村石屋與羊（綠色木門）",
+    "source_archive": "ai阿里更改.zip",
+    "source_filename": "圖洗-8_文布南村石屋與羊（綠色木門）.png",
+    "sha256": "c5f63c2777b3ee7910950e07dc9e25ba4243eb3d12763e22eefe147591a3880f",
+    "byte_size": 2131070,
+    "route_variant": "tibet_ali_15d",
+    "route_variants": [
+      "tibet_ali_15d"
+    ],
+    "content_group_key": "followup_wenbu",
+    "what_it_shows": "文布南村石屋與羊（綠色木門）",
+    "source_ref": "2026-11-05 麗麗提供素材"
+  }
+]

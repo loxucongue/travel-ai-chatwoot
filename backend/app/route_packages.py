@@ -47,6 +47,15 @@ def _validate(package: dict, source: Path) -> dict:
     if package.get("schema_version") != 1:
         raise RoutePackageError(f"route_package_schema_unsupported:{source.name}")
     route_id = _require(package, "route_variant", str, source)
+    if type(package.get('opening_text_in_introduction', False)) is not bool:
+        raise RoutePackageError(f'route_package_opening_flag_invalid:{route_id}')
+    label_rules = package.get('profile_labels', {})
+    if (not isinstance(label_rules, dict) or any(
+            not isinstance(field, str) or not isinstance(values, dict) or any(
+                not isinstance(value, str) or not isinstance(labels, list)
+                or any(not isinstance(label, str) or not 1 <= len(label) <= 80 for label in labels)
+                for value, labels in values.items()) for field, values in label_rules.items())):
+        raise RoutePackageError(f'route_package_profile_labels_invalid:{route_id}')
     _require(package, "package_version", str, source)
     _require(package, "knowledge_version", str, source)
     _require(package, "branch", str, source)
@@ -375,6 +384,8 @@ def reload_route_packages() -> None:
         "seasonal_pricing": deepcopy(package.get("seasonal_pricing")),
         "party_pricing": deepcopy(package.get("party_pricing")),
         "large_party": deepcopy(package.get("large_party")),
+        "profile_labels": deepcopy(package.get("profile_labels", {})),
+        "opening_text_in_introduction": package.get('opening_text_in_introduction', False),
         "departure_availability": deepcopy(package.get("departure_availability")),
         "initial_delivery_interval_seconds": package["initial_delivery_interval_seconds"],
         "required_slots": package["required_slots"],

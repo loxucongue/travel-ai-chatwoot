@@ -84,8 +84,11 @@ def undelivered_parts(row, parts):
 def validate_policy(policy, groups):
     if not isinstance(policy, dict) or type(policy.get('enabled')) is not bool:
         raise ValueError('large_party_invalid')
-    if type(policy.get('minimum')) is not int or policy['minimum'] < 7:
+    if type(policy.get('minimum')) is not int or not 1 <= policy['minimum'] <= 1000:
         raise ValueError('large_party_minimum')
+    for field in ('handoff_label', 'explicit_private_label'):
+        if field in policy and (not isinstance(policy[field], str) or not 1 <= len(policy[field]) <= 80):
+            raise ValueError('large_party_label')
     if 'include_explicit_private' in policy and type(policy['include_explicit_private']) is not bool:
         raise ValueError('large_party_private_flag')
     if 'notify_then_followup' in policy and type(policy['notify_then_followup']) is not bool:
@@ -294,6 +297,9 @@ def finish(db, row):
     value.pop('handoff_after_plan', None)
     bundle = service.compile_skills(db)
     policy = policy_for(bundle,pending['route'],row.memory) or {}
+    label = policy.get('handoff_label', '高價值・獨立成團')
+    if (count(row.memory) or 0) < policy.get('minimum', 7) and row.memory.get('group_type') == 'private':
+        label = policy.get('explicit_private_label', label)
     if policy.get('notify_then_followup'):
         # A notification is not an advisor claim. Existing claim/assignment,
         # manual-stop and human-message gates still take precedence everywhere.
@@ -305,7 +311,6 @@ def finish(db, row):
             value['group_advisor_task_id'] = task.id
             from sqlalchemy import select
             from app.models import ConversationLabelAddition, MessageEvent
-            label = '高價值・獨立成團'
             source = db.scalar(select(MessageEvent.id).where(
                 MessageEvent.conversation_state_id == row.conversation_state_id,
                 MessageEvent.direction == 'incoming', MessageEvent.private.is_(False)
@@ -315,7 +320,7 @@ def finish(db, row):
                     label=label,source_message_id=source))
         else:
             row.controls={**row.controls,'evaluation_labels':list(dict.fromkeys([
-                *row.controls.get('evaluation_labels',[]),'高價值・獨立成團']))}
+                *row.controls.get('evaluation_labels',[]),label]))}
         value.update(group_advisor_pending=True,pending_event=None,
             completed_introductions=list(dict.fromkeys([*value.get('completed_introductions',[]),pending['route']])),
             route_checkpoint='advisor_wait', appointment_pending=True,
@@ -331,7 +336,6 @@ def finish(db, row):
     if row.environment == 'live':
         from sqlalchemy import select
         from app.models import ConversationLabelAddition, MessageEvent
-        label = '高價值・獨立成團'
         key = (row.conversation_state_id, label)
         source = db.scalar(select(MessageEvent.id).where(
             MessageEvent.conversation_state_id == row.conversation_state_id,

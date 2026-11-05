@@ -1,0 +1,873 @@
+{
+  "schema_version": 1,
+  "route_variant": "tibet_ali_15d",
+  "series": "ali",
+  "package_version": "20261105-ali-north-central-v1",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "branch": "西藏阿里",
+  "name": "岡仁波齊精華轉山＋阿里北線＋中線15天",
+  "selection_title": "阿里北線＋中線15天",
+  "selection_aliases": [
+    "阿里大環線＋轉山15天",
+    "阿里15天",
+    "阿里北線",
+    "阿里大北線",
+    "轉山",
+    "岡仁波齊",
+    "羊年轉湖",
+    "三大聖湖",
+    "古格王朝",
+    "物瑪措",
+    "羌塘",
+    "當惹雍措",
+    "文布南村",
+    "吳如措",
+    "洞措",
+    "當穹措",
+    "那倉卓姆莊園",
+    "阿里北＋中線",
+    "北中線",
+    "北線＋中線"
+  ],
+  "match_keywords": [],
+  "default_entry_message": "岡仁波齊精華轉山＋阿里北線＋中線15天",
+  "required_slots": [
+    "party_size",
+    "departure_window"
+  ],
+  "initial_delivery_interval_seconds": 2,
+  "intake": {
+    "enabled": true,
+    "field": "party_size",
+    "question": "您好～想先了解一下，這次預計幾位一起去呢？",
+    "options": [
+      "自己一人",
+      "2-3人",
+      "4-5人",
+      "6人（含）以上"
+    ],
+    "wait_seconds": 30
+  },
+  "ai_guidance": "獨立阿里北線＋中線15天系列，拼團4–6人；6位（含）以上走獨立一團介紹後交接，4–5位不能自動當包團，明確要求包團才走訂製。先問未知人數，再介紹及體能/月分。首次邀請只索取微信或LINE的ID/QR code，不提官方LINE@。團期及價格保持原公布資料；不套普通西藏優惠。詳讀本線Skill。",
+  "routing_guidance": "阿里、轉山、岡仁波齊、轉湖、古格、藏北，以及文布南村、吳如措、洞措、當穹措、那倉卓姆莊園、北中線，均可在本15天北線＋中線產品中介紹，不因中線或這些地名就轉訂製。理解客人完整語意；詢問、比較、否定不等於選線。明確要看本線才開始介紹。只提普通珠峰/拉薩不切阿里；只提納木措/扎西半島先澄清。12/13天、不轉山、自訂路線仍由顧問規劃；只說12天以上不主動推阿里。",
+  "knowledge_facts": [
+    {
+      "id": "tibet_ali_15d.itinerary_overview",
+      "text": "您好~我是China2Go國旅環球！這條是我們最特別的路線【阿里北線＋中線15天】：轉神山、轉阿里、繞三大聖湖，還會住進文布南村！很多人說是一生一次的朝聖旅程",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.holy_lakes",
+      "text": "一路走訪羊卓雍措、瑪旁雍措和納木措三大聖湖。2027羊年轉湖是當地的信仰文化；這條安排車行走訪，不是徒步繞完三座湖。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.kora",
+      "text": "轉山安排兩天精華徒步，前後有接駁車：第一天約13公里到止熱寺；第二天約11公里，翻越海拔5,630米的卓瑪拉山口後接回塔欽。仍需要體能準備，不能把有接駁車理解成輕鬆無風險。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.prayer_flags",
+      "text": "經幡廣場是轉山起點，抬頭能看到神山。這是我們客人掛經幡祈福的照片～",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.trekkers",
+      "text": "導遊會照顧團員的行進狀況；每個人的體能不同，途中身體不適應及時告知。需要背夫或馬匹可由顧問協助了解，費用另計，也不能保證全段可騎馬。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.guge",
+      "text": "轉山之後會去札達土林、古格王朝遺址，看高原上的古城和土林地貌。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.wuma",
+      "text": "一措再措中有很多特色湖，像物瑪措是高原鹽湖，湖水是很漂亮的漸層藍",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.wildlife",
+      "text": "藏北高原人煙稀少，從改則一路到色林措，常常可以看到藏羚羊、藏野驢、野牦牛，運氣好還會遇到黑頸鶴～大家都會一直喊司機停車拍照",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.earth_tree",
+      "text": "大地之樹是河流在荒原留下的紋理，接著經色林措、藏北，再走納木措回拉薩。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.accommodation",
+      "text": "行程安排供氧酒店，日喀則升級一晚希爾頓；珠峰安排有獨立衛浴與供氧的絨布旅館，房源須確認。轉山D7住止熱寺多人間，這一晚沒有供氧，並非全程單間或全程供氧。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.vehicle",
+      "text": "拼團4人成團、最多6人，安排9座VIP制氧車和司機、導遊；車上有供氧設備。獨立包團的車型由顧問依實際人數核對。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.guests",
+      "text": "這是客人轉山後的回饋。高原徒步每個人速度不同，行程仍要依身體狀況、天氣及當地安排調整。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.no_shopping",
+      "text": "我們接待港澳台及海外旅客，純玩無購物，無購物約定及違規賠償人民幣5,000元會寫在合約裡。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.daily_itinerary",
+      "text": "D1\n拉薩接機\n拉薩希爾頓惠庭（彌散式供氧）\nD2\n布達拉宮、大昭寺、八廓街、布宮景觀下午茶、旱地拔蔥影片\n拉薩希爾頓惠庭\nD3\n雅江河谷觀景台、羊卓雍措、卡若拉冰川、白居寺 → 日喀則\n日喀則希爾頓五星（彌散式供氧）\nD4\n加烏拉山口、絨布寺（依政策）、珠峰大本營\n珠峰絨布旅館（獨立衛浴、供氧）；訂不到改帳篷退¥200/人，帳篷拆除改山腳四星\nD5\n希夏邦馬保護區、佩古措（遠觀）→ 薩嘎\n薩嘎木林森酒店（彌散式供氧）\nD6\n五彩沙漠、瑪旁雍措（遠觀納木那尼）、拉昂措（遠觀岡仁波齊）→ 塔欽\n塔欽Kailas萬豪國際酒店（彌散式供氧）\nD7\n轉山D1：接駁車到經幡廣場 → 曲古寺 → 止熱寺，徒步約13公里、坡度和緩\n止熱寺多人間（無供氧）\nD8\n轉山D2：神山北壁日出、天葬台、卓瑪拉山口5,630米 → 不動地丁，徒步約11公里，接駁車回塔欽\n塔欽Kailas萬豪國際酒店\nD9\n札達土林、古格王朝遺址\n札達崗嘎底斯酒店（彌散式供氧）\nD10\n皮央・東嘎遺址、霞義溝 → 獅泉河\n獅泉河維也納國際酒店（房內製氧機）\nD11\n物瑪措（下車停留）；聶爾措、別若則措、達繞措遠觀；藏北沿路可能看到野生動物 → 改則\n改則全季（三鑽、彌散式供氧，當地條件有限）\nD12\n洞措（下車親水）；當穹措、當惹雍措遠觀 → 文布南村（象雄古村）\n那倉卓姆莊園（文布南村，藏式莊園，彌散式供氧）\nD13\n尼瑪 → 達則措（遠觀）→ 大地之樹 → 恰規措 → 吳如措（遠觀）→ 色林措（親水）→ 班戈，藏北星空\n班戈星際星空酒店（彌散式供氧）\nD14\n納木措・扎西半島 → 拉薩\n拉薩希爾頓惠庭\nD15\n拉薩送機或送火車\n—\n",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.inclusions",
+      "text": "包含：入藏函、旅行證、邊防證與軍區件辦理、門票與觀光車、布達拉宮預約、兩段轉山接駁車、9座制氧車、司機、中文導遊、拉薩接送機或火車、酒店早餐、住宿（通常兩人一房，D7止熱寺多人間）、旅行社責任險、車輛座位險、高原保障險。詳細承保範圍以保單條款為準。 另含哈達、礦泉水、布宮景觀下午茶、旱地拔蔥影片、撒隆達、掛經幡；China2Go阿里大禮包（隨身氧氣瓶、葡萄糖、鼻吸管、濕紙巾、青稞酥、特色零食）。",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.exclusions",
+      "text": "不含往返拉薩機票或火車票、午晚餐、小費（建議每人每天人民幣60元）、轉山馬匹、背夫、行李托運、單人房差、個人消費與醫療費。入藏相關辦理列包含，個人證件費與具體費用歸屬由顧問依合約核對，不說所有證件費都包含或都不含。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.rooming",
+      "text": "一人可報名且可申請拼房；未拼成仍須補房差，不能保證配房。5/10、6/10房差5,100元，7/10至10/10房差6,000元；D7止熱寺是無供氧多人間，不保證加房差能改單間。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.fitness",
+      "text": "兩天徒步共約24公里、最高5,630米。詢問平時爬山或健走習慣、同行是否有65歲以上長輩；個人高原適宜性需醫師評估。沒有運動習慣可請顧問評估，不承諾騎馬或氧氣可保證安全。65歲以上台胞證旅客依公司報名流程核對健康資料；75歲以上交顧問確認證件及可接待安排，不把原稿敘述說成任何國籍一律不能辦入藏函的法律結論。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.seasons",
+      "text": "2027已公布5/10、6/10、7/10、8/10、9/10、10/10。五月初可能下雪封山，5/10先確認至少4位；1–3位建議了解6/10，但不能未經同意改客人日期或保證成團。10/10先說可能下雪封山、確認是否仍選這天再報價，可提出9/10供選擇。未知名額仍需顧問確認。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.equipment",
+      "text": "可介紹10–20L登山背包、保暖防風衣物、羽絨外套、登山杖、墨鏡、防曬、保溫瓶及高熱量零食。完整裝備清單檔案尚未作為附件提供，只能請顧問補充，不能宣稱已發檔或編下載連結。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.alternatives",
+      "text": "15天已包含北線＋中線及文布南村；不是未發布的13天中線。12天、不轉山版及13天完整腳本仍未發布。客人說去過了，記錄去過哪些地方，了解未知天數、人數後請阿里顧問訂製；不套15天拼團價。只有同意才轉普通10天。",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.followup_kora",
+      "text": "藏族文化裡，轉山是一段很有意義的旅程。分享一張轉山路上的畫面～",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.followup_read",
+      "text": "前面阿里的行程，您有大概看一下嗎？哪一段最想了解呢？",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.followup_murals",
+      "text": "古格王朝遺址保留的壁畫，是這段行程很特別的歷史風景。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.followup_stars",
+      "text": "分享一張藏北星空～偏遠地區光害少，實際觀星還是要看當晚天氣。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.followup_yaks",
+      "text": "走阿里北線跟中線，一路上常常是一整片湖、一大群牦牛跟雪山在同一個畫面裡～這種遼闊真的只有來過才懂",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.followup_equipment",
+      "text": "第一次轉山，衣物、背包和體能準備都可以提早了解；有想問的準備細節，隨時和我們說。",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.followup_alternative",
+      "text": "如果這次時間或體力還在考慮，也可以先了解西藏全覽10天。您有興趣看看嗎？",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)"
+    },
+    {
+      "id": "tibet_ali_15d.private_introduction",
+      "text": "這是阿里北線的物瑪措湖中公路。阿里15天把轉山、三大聖湖與藏北串起來，獨團細節由阿里顧問依你們的需求規劃。 我們是在地的團隊，每一季實際踩線、與導遊優化行程。獨團車型、報價與日期由顧問核對。",
+      "source_ref": "https://china2go.com/8425-2/ (2026-10-27; explicit private scope confirmed 2026-11-01)"
+    },
+    {
+      "id": "tibet_ali_15d.north_central_loop",
+      "text": "從拉薩出發，經過珠峰一路往西到神山岡仁波齊，再把阿里北線跟中線一次走完繞回來～南進北出，完全不走回頭路",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.wenbu_village",
+      "text": "我們這條是【北線＋中線一次走完】，阿里的精華都在裡面！而且還會住進文布南村喔～",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.wenbu_manor",
+      "text": "文布南村這晚我們住的是【那倉卓姆莊園】，都是有供應氧氣的",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.wenbu_sunset",
+      "text": "你看！很有藏式風情，傍晚在莊園前面就能看著夕陽慢慢落在當惹雍措的湖面上，對岸就是達果雪山，是整趟旅程最特別的一晚",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.north_central_lakes",
+      "text": "我們的行程也是坊間比較少見的【轉山＋三大聖湖＋阿里北線＋中線】～",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.dangra_lake",
+      "text": "而阿里中線也是大家很想去但是很難去的，我們會到苯教第一神湖當惹雍措，晚上就住在湖邊的文布南村！",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.followup_wenbu",
+      "text": "文布南村是當惹雍措旁的【象雄古村】，村裡還留著很多石頭砌的老房子，走在裡面常常會遇到羊在門口晃來晃去～這種很生活的藏地村落，因為比較深度，所以一般旅行團比較少會來！",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.wildlife_faq",
+      "text": "野生動物不能保證，但藏北這段遇到藏羚羊、藏野驢的機會很高，司機看到都會幫大家停下來拍。",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.shopping_faq",
+      "text": "保證全程純玩，不安排購物店、不進套路店，也沒有自費項目！如果有違約，我們賠您人民幣5,000元～。此處指無安排自費遊覽項目；馬匹、背夫、個人消費等仍按不含費用清單，不代表所有個人服務免費。",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    },
+    {
+      "id": "tibet_ali_15d.party_intake",
+      "text": "4–5人：我們的拼團是4-6人～擁有西藏最多的新小車資源，車子跟高原司機都能直接幫您們安排好，你們一起來玩最適合了。6人（含）以上：你們人數多其實非常適合走阿里！我們有最新的航空VIP車型可以推薦給您～先給您簡單介紹一下行程，因為自己一團，路線跟天數都可以再依你們調整。訂製客不足4位可問：如果能湊到4位一起，價格會比較划算喔～您身邊有朋友也想一起去嗎？不是不滿4位就拒絕。",
+      "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05"
+    }
+  ],
+  "content_groups": {
+    "itinerary_overview": {
+      "approved_text": "您好~我是China2Go國旅環球！這條是我們最特別的路線【阿里北線＋中線15天】：轉神山、轉阿里、繞三大聖湖，還會住進文布南村！很多人說是一生一次的朝聖旅程",
+      "asset_keys": [
+        "ali15_map"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.itinerary_overview"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "holy_lakes": {
+      "approved_text": "一路走訪羊卓雍措、瑪旁雍措和納木措三大聖湖。2027羊年轉湖是當地的信仰文化；這條安排車行走訪，不是徒步繞完三座湖。",
+      "asset_keys": [
+        "ali15_manasarovar"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.holy_lakes"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "kora": {
+      "approved_text": "轉山安排兩天精華徒步，前後有接駁車：第一天約13公里到止熱寺；第二天約11公里，翻越海拔5,630米的卓瑪拉山口後接回塔欽。仍需要體能準備，不能把有接駁車理解成輕鬆無風險。",
+      "asset_keys": [
+        "ali15_kailash"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.kora"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "prayer_flags": {
+      "approved_text": "經幡廣場是轉山起點，抬頭能看到神山。這是我們客人掛經幡祈福的照片～",
+      "asset_keys": [
+        "ali15_prayer_flags"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.prayer_flags"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "trekkers": {
+      "approved_text": "導遊會照顧團員的行進狀況；每個人的體能不同，途中身體不適應及時告知。需要背夫或馬匹可由顧問協助了解，費用另計，也不能保證全段可騎馬。",
+      "asset_keys": [
+        "ali15_trekkers"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.trekkers"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "guge": {
+      "approved_text": "轉山之後會去札達土林、古格王朝遺址，看高原上的古城和土林地貌。",
+      "asset_keys": [
+        "ali15_guge"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.guge"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "wuma": {
+      "approved_text": "一措再措中有很多特色湖，像物瑪措是高原鹽湖，湖水是很漂亮的漸層藍",
+      "asset_keys": [
+        "ali15_wuma"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.wuma"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "wildlife": {
+      "approved_text": "藏北高原人煙稀少，從改則一路到色林措，常常可以看到藏羚羊、藏野驢、野牦牛，運氣好還會遇到黑頸鶴～大家都會一直喊司機停車拍照",
+      "asset_keys": [
+        "ali15_wildlife"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.wildlife"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "earth_tree": {
+      "approved_text": "大地之樹是河流在荒原留下的紋理，接著經色林措、藏北，再走納木措回拉薩。",
+      "asset_keys": [
+        "ali15_earth_tree",
+        "ali15_namtso"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.earth_tree"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "accommodation": {
+      "approved_text": "行程安排供氧酒店，日喀則升級一晚希爾頓；珠峰安排有獨立衛浴與供氧的絨布旅館，房源須確認。轉山D7住止熱寺多人間，這一晚沒有供氧，並非全程單間或全程供氧。",
+      "asset_keys": [
+        "ali15_rongbuk"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.accommodation"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "vehicle": {
+      "approved_text": "拼團4人成團、最多6人，安排9座VIP制氧車和司機、導遊；車上有供氧設備。獨立包團的車型由顧問依實際人數核對。",
+      "asset_keys": [
+        "ali15_vehicle",
+        "ali15_oxygen"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.vehicle"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "guests": {
+      "approved_text": "這是客人轉山後的回饋。高原徒步每個人速度不同，行程仍要依身體狀況、天氣及當地安排調整。",
+      "asset_keys": [
+        "ali15_guest_review"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.guests"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "no_shopping": {
+      "approved_text": "我們接待港澳台及海外旅客，純玩無購物，無購物約定及違規賠償人民幣5,000元會寫在合約裡。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.no_shopping"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_only"
+    },
+    "followup_kora": {
+      "approved_text": "藏族文化裡，轉山是一段很有意義的旅程。分享一張轉山路上的畫面～",
+      "asset_keys": [
+        "ali15_followup_kora"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_kora"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_read": {
+      "approved_text": "前面阿里的行程，您有大概看一下嗎？哪一段最想了解呢？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_read"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "followup_murals": {
+      "approved_text": "古格王朝遺址保留的壁畫，是這段行程很特別的歷史風景。",
+      "asset_keys": [
+        "ali15_followup_murals"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_murals"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_stars": {
+      "approved_text": "分享一張藏北星空～偏遠地區光害少，實際觀星還是要看當晚天氣。",
+      "asset_keys": [
+        "ali15_followup_stars"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_stars"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_yaks": {
+      "approved_text": "走阿里北線跟中線，一路上常常是一整片湖、一大群牦牛跟雪山在同一個畫面裡～這種遼闊真的只有來過才懂",
+      "asset_keys": [
+        "ali15_followup_yaks"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_yaks"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_equipment": {
+      "approved_text": "第一次轉山，衣物、背包和體能準備都可以提早了解；有想問的準備細節，隨時和我們說。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_equipment"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "followup_alternative": {
+      "approved_text": "如果這次時間或體力還在考慮，也可以先了解西藏全覽10天。您有興趣看看嗎？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_alternative"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "private_highlight": {
+      "approved_text": "這是阿里北線的物瑪措湖中公路。阿里15天把轉山、三大聖湖與藏北串起來，獨團細節由阿里顧問依你們的需求規劃。",
+      "asset_keys": [
+        "private_ali_wuma"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.private_introduction"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "assets_then_text"
+    },
+    "private_guests": {
+      "approved_text": "分享我們客人的旅遊照片～你們自己一團，可以用基本路線延伸討論；我們會依實際日期、人數與需求核對安排。",
+      "asset_keys": [
+        "private_guests"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.private_introduction"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "assets_then_text"
+    },
+    "private_advantage": {
+      "approved_text": "我們是在地的團隊，每一季都會實際踩線，和導遊一起優化行程與酒店。日期、天數和想加的景點，可以請顧問與你們一起規劃。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.private_introduction"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "north_central_loop": {
+      "approved_text": "從拉薩出發，經過珠峰一路往西到神山岡仁波齊，再把阿里北線跟中線一次走完繞回來～南進北出，完全不走回頭路",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.north_central_loop"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_only"
+    },
+    "wenbu_village": {
+      "approved_text": "我們這條是【北線＋中線一次走完】，阿里的精華都在裡面！而且還會住進文布南村喔～",
+      "asset_keys": [
+        "ali15_wenbu_village"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.wenbu_village"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "wenbu_manor": {
+      "approved_text": "文布南村這晚我們住的是【那倉卓姆莊園】，都是有供應氧氣的",
+      "asset_keys": [
+        "ali15_wenbu_manor"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.wenbu_manor"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "wenbu_sunset": {
+      "approved_text": "你看！很有藏式風情，傍晚在莊園前面就能看著夕陽慢慢落在當惹雍措的湖面上，對岸就是達果雪山，是整趟旅程最特別的一晚",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.wenbu_sunset"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_only"
+    },
+    "north_central_lakes": {
+      "approved_text": "我們的行程也是坊間比較少見的【轉山＋三大聖湖＋阿里北線＋中線】～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "tibet_ali_15d.north_central_lakes"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_only"
+    },
+    "dangra_lake": {
+      "approved_text": "而阿里中線也是大家很想去但是很難去的，我們會到苯教第一神湖當惹雍措，晚上就住在湖邊的文布南村！",
+      "asset_keys": [
+        "ali15_dangra_lake"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.dangra_lake"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_wenbu": {
+      "approved_text": "文布南村是當惹雍措旁的【象雄古村】，村裡還留著很多石頭砌的老房子，走在裡面常常會遇到羊在門口晃來晃去～這種很生活的藏地村落，因為比較深度，所以一般旅行團比較少會來！",
+      "asset_keys": [
+        "ali15_followup_wenbu"
+      ],
+      "evidence_refs": [
+        "tibet_ali_15d.followup_wenbu"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    }
+  },
+  "content_sequence": [
+    "itinerary_overview",
+    "north_central_loop",
+    "wenbu_village",
+    "wenbu_manor",
+    "wenbu_sunset",
+    "holy_lakes",
+    "kora",
+    "prayer_flags",
+    "trekkers",
+    "guge",
+    "north_central_lakes",
+    "wuma",
+    "dangra_lake",
+    "wildlife",
+    "earth_tree",
+    "accommodation",
+    "vehicle",
+    "guests",
+    "no_shopping"
+  ],
+  "fixed_answers": [
+    {
+      "id": "price_05",
+      "name": "5月阿里15天報價",
+      "answer_text": "【岡仁波齊精華轉山＋阿里北線＋中線15天】\n出發日：2027/5/10\n4–6人精緻小團：人民幣¥24,800/人（2人一間；轉山當晚為多人房）\n包含：入藏相關文件、9座制氧車、司機、導遊、保險、住宿、門票、轉山接駁車、酒店早餐\n不含：機票、午晚餐、小費、轉山馬匹與背夫、單人房差及個人花費",
+      "asset_ids": [],
+      "topics": [
+        "price"
+      ],
+      "status": "active",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)",
+      "content_group_key": "itinerary_overview",
+      "fact_ids": [],
+      "positive_examples": [
+        "客人詢問此團期費用且工具已核對"
+      ],
+      "negative_examples": [
+        "日期未確定",
+        "包團詢價"
+      ],
+      "usage_note": "只有團期工具quoted才引用，不加普通西藏多人折扣或早鳥。單人補充未拼成房差條件；不用一次報所有月份。",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "price_06",
+      "name": "6月阿里15天報價",
+      "answer_text": "【岡仁波齊精華轉山＋阿里北線＋中線15天】\n出發日：2027/6/10\n4–6人精緻小團：人民幣¥24,800/人（2人一間；轉山當晚為多人房）\n包含：入藏相關文件、9座制氧車、司機、導遊、保險、住宿、門票、轉山接駁車、酒店早餐\n不含：機票、午晚餐、小費、轉山馬匹與背夫、單人房差及個人花費",
+      "asset_ids": [],
+      "topics": [
+        "price"
+      ],
+      "status": "active",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)",
+      "content_group_key": "itinerary_overview",
+      "fact_ids": [],
+      "positive_examples": [
+        "客人詢問此團期費用且工具已核對"
+      ],
+      "negative_examples": [
+        "日期未確定",
+        "包團詢價"
+      ],
+      "usage_note": "只有團期工具quoted才引用，不加普通西藏多人折扣或早鳥。單人補充未拼成房差條件；不用一次報所有月份。",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "price_07",
+      "name": "7月阿里15天報價",
+      "answer_text": "【岡仁波齊精華轉山＋阿里北線＋中線15天】\n出發日：2027/7/10\n4–6人精緻小團：人民幣¥26,800/人（2人一間；轉山當晚為多人房）\n包含：入藏相關文件、9座制氧車、司機、導遊、保險、住宿、門票、轉山接駁車、酒店早餐\n不含：機票、午晚餐、小費、轉山馬匹與背夫、單人房差及個人花費",
+      "asset_ids": [],
+      "topics": [
+        "price"
+      ],
+      "status": "active",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)",
+      "content_group_key": "itinerary_overview",
+      "fact_ids": [],
+      "positive_examples": [
+        "客人詢問此團期費用且工具已核對"
+      ],
+      "negative_examples": [
+        "日期未確定",
+        "包團詢價"
+      ],
+      "usage_note": "只有團期工具quoted才引用，不加普通西藏多人折扣或早鳥。單人補充未拼成房差條件；不用一次報所有月份。",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "price_08",
+      "name": "8月阿里15天報價",
+      "answer_text": "【岡仁波齊精華轉山＋阿里北線＋中線15天】\n出發日：2027/8/10\n4–6人精緻小團：人民幣¥26,800/人（2人一間；轉山當晚為多人房）\n包含：入藏相關文件、9座制氧車、司機、導遊、保險、住宿、門票、轉山接駁車、酒店早餐\n不含：機票、午晚餐、小費、轉山馬匹與背夫、單人房差及個人花費",
+      "asset_ids": [],
+      "topics": [
+        "price"
+      ],
+      "status": "active",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)",
+      "content_group_key": "itinerary_overview",
+      "fact_ids": [],
+      "positive_examples": [
+        "客人詢問此團期費用且工具已核對"
+      ],
+      "negative_examples": [
+        "日期未確定",
+        "包團詢價"
+      ],
+      "usage_note": "只有團期工具quoted才引用，不加普通西藏多人折扣或早鳥。單人補充未拼成房差條件；不用一次報所有月份。",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "price_09",
+      "name": "9月阿里15天報價",
+      "answer_text": "【岡仁波齊精華轉山＋阿里北線＋中線15天】\n出發日：2027/9/10\n4–6人精緻小團：人民幣¥26,800/人（2人一間；轉山當晚為多人房）\n包含：入藏相關文件、9座制氧車、司機、導遊、保險、住宿、門票、轉山接駁車、酒店早餐\n不含：機票、午晚餐、小費、轉山馬匹與背夫、單人房差及個人花費",
+      "asset_ids": [],
+      "topics": [
+        "price"
+      ],
+      "status": "active",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)",
+      "content_group_key": "itinerary_overview",
+      "fact_ids": [],
+      "positive_examples": [
+        "客人詢問此團期費用且工具已核對"
+      ],
+      "negative_examples": [
+        "日期未確定",
+        "包團詢價"
+      ],
+      "usage_note": "只有團期工具quoted才引用，不加普通西藏多人折扣或早鳥。單人補充未拼成房差條件；不用一次報所有月份。",
+      "answer_origin": "operator_approved"
+    },
+    {
+      "id": "price_10",
+      "name": "10月阿里15天報價",
+      "answer_text": "【岡仁波齊精華轉山＋阿里北線＋中線15天】\n出發日：2027/10/10\n4–6人精緻小團：人民幣¥26,800/人（2人一間；轉山當晚為多人房）\n包含：入藏相關文件、9座制氧車、司機、導遊、保險、住宿、門票、轉山接駁車、酒店早餐\n不含：機票、午晚餐、小費、轉山馬匹與背夫、單人房差及個人花費",
+      "asset_ids": [],
+      "topics": [
+        "price"
+      ],
+      "status": "active",
+      "source_ref": "https://china2go.com/0808-2/ (2026-10-26 business version)",
+      "content_group_key": "itinerary_overview",
+      "fact_ids": [],
+      "positive_examples": [
+        "客人詢問此團期費用且工具已核對"
+      ],
+      "negative_examples": [
+        "日期未確定",
+        "包團詢價"
+      ],
+      "usage_note": "只有團期工具quoted才引用，不加普通西藏多人折扣或早鳥。單人補充未拼成房差條件；不用一次報所有月份。",
+      "answer_origin": "operator_approved"
+    }
+  ],
+  "seasonal_pricing": {
+    "schedule_mode": "fixed_dates",
+    "years": [
+      2027
+    ],
+    "minimum_notice_days": 30,
+    "departures": [
+      {
+        "date": "2027-05-10",
+        "price_cny": 24800,
+        "single_supplement_cny": 5100,
+        "script_id": "price_05",
+        "minimum_party_size": 4,
+        "advisory": ""
+      },
+      {
+        "date": "2027-06-10",
+        "price_cny": 24800,
+        "single_supplement_cny": 5100,
+        "script_id": "price_06",
+        "minimum_party_size": 1,
+        "advisory": ""
+      },
+      {
+        "date": "2027-07-10",
+        "price_cny": 26800,
+        "single_supplement_cny": 6000,
+        "script_id": "price_07",
+        "minimum_party_size": 1,
+        "advisory": ""
+      },
+      {
+        "date": "2027-08-10",
+        "price_cny": 26800,
+        "single_supplement_cny": 6000,
+        "script_id": "price_08",
+        "minimum_party_size": 1,
+        "advisory": ""
+      },
+      {
+        "date": "2027-09-10",
+        "price_cny": 26800,
+        "single_supplement_cny": 6000,
+        "script_id": "price_09",
+        "minimum_party_size": 1,
+        "advisory": ""
+      },
+      {
+        "date": "2027-10-10",
+        "price_cny": 26800,
+        "single_supplement_cny": 6000,
+        "script_id": "price_10",
+        "minimum_party_size": 1,
+        "advisory": "可能下雪封山，先確認客人仍選這個日期再報價。"
+      }
+    ]
+  },
+  "followup_policy": {
+    "enabled": true,
+    "lead_priority_override": true,
+    "checkpoints": {
+      "fitness_wait": 5,
+      "fitness_read_check": 30,
+      "fitness_unread_wait": 60,
+      "fitness_next_day": 1440,
+      "month_wait": 1440,
+      "quote_wait": 180,
+      "contact_wait": 720,
+      "daily": 1440
+    },
+    "daily_sequence": [
+      "followup_kora",
+      "followup_read",
+      "followup_murals",
+      "followup_stars",
+      "followup_yaks",
+      "followup_equipment",
+      "followup_alternative",
+      "followup_wenbu"
+    ],
+    "guidance": "模型按對話選檢查點。體能問題依5分鐘、再30分鐘、已讀才繼續；無已讀證據不假設已讀，再等60分鐘/次日。報價後3小時再輕邀；聯系邀請後半天未回開始每天一則，最多八則且仍受渠道窗口與停用保護。未回不等於同意，不重複催聯絡方式；已留資或顧問接手停止洗單。"
+  },
+  "large_party": {
+    "enabled": true,
+    "minimum": 6,
+    "include_explicit_private": true,
+    "source_ref": "阿里轉山線_AI腳本修改清單（北線＋中線）.docx / 2026-11-05",
+    "introduction_sequence": [
+      "itinerary_overview",
+      "north_central_loop",
+      "wenbu_village",
+      "wenbu_manor",
+      "wenbu_sunset",
+      "private_highlight",
+      "private_guests",
+      "private_advantage"
+    ],
+    "brief_sequence": [
+      "itinerary_overview",
+      "north_central_loop",
+      "wenbu_village",
+      "wenbu_manor",
+      "wenbu_sunset",
+      "private_highlight",
+      "private_guests",
+      "private_advantage"
+    ],
+    "group_text_overrides": {
+      "itinerary_overview": "先給您看基本行程圖～你們自己一團，日期、天數與想去的景點可以再和顧問討論。"
+    },
+    "opening_text": "您們{party_description}自己一團，我們有最新的航空VIP車型可以推薦給您～先給您簡單介紹一下行程，路線跟天數都可以再依你們調整。",
+    "completed_text": "剛剛看的是基本行程，你們自己一團，出發日期、天數、要不要每個人都轉山都可以再調整～我們有最新的航空VIP車型可以推薦給您，細節由阿里顧問一起確認。",
+    "contact_text": "剛剛看的是基本行程，出發日期、天數、要不要每個人都轉山都可以再調整～這部分細節比較多，在這裡來來回回不太好討論，方便給我您微信或LINE的QR code或ID嗎？這樣傳送行程、圖片跟轉山裝備資料，資料不會被洗掉也不會傳不出去～加入後記得跟我說一下您是誰～前面的問題就不用再問一次啦～",
+    "unknown_route_text": "您們可以安排自己獨立一團～請問這次規劃幾天，或有特別想去的地方嗎？",
+    "unknown_preference_text": "您們有特別想去的地方，或想避開的景點嗎？",
+    "notify_then_followup": true,
+    "followup_policy": {
+      "enabled": true,
+      "lead_priority_override": true,
+      "checkpoints": {
+        "peach_interest_wait": 5,
+        "preference_wait": 720,
+        "advisor_wait": 720,
+        "daily": 1440
+      },
+      "reference_preview_checkpoints": [
+        "peach_interest_wait",
+        "preference_wait"
+      ],
+      "daily_sequence": [
+        "private_guests",
+        "private_highlight"
+      ],
+      "guidance": "3–4月但未表達桃花意向先問，peach_interest_wait五分鐘後只推薦相符參考行程，不能視為同意選線。未知天數/偏好用preference_wait半天後推薦，不因12天以上推阿里。介紹後已通知顧問、未認領且仍有AI權限時advisor_wait半天後分享未發客人照；邀請最多一次，不重複催留資。之後每日符合需求的新素材；人工接手立即停止。"
+    },
+    "handoff_label": "高價值・阿里獨立成團",
+    "explicit_private_label": "高價值・阿里訂製"
+  },
+  "opening_text_in_introduction": true,
+  "profile_labels": {
+    "guest_segment": {
+      "experienced": [
+        "高價值・深度玩家",
+        "高價值・阿里訂製"
+      ],
+      "custom": [
+        "高價值・阿里訂製"
+      ]
+    }
+  }
+}

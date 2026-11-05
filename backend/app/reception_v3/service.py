@@ -539,6 +539,8 @@ def apply_decision(db, row, run, bundle, decision):
         if (row.memory.get('_departure_check') or {}).get('route') not in (None, decision['route_variant']):
             row.memory = {k:v for k,v in row.memory.items() if k != '_departure_check'}
     route_policy = bundle['routes'].get(decision['route_variant'] or row.controls.get('route_variant', ''), {})
+    from app.reception_v3.profile_labels import apply as apply_profile_labels
+    apply_profile_labels(db, row, route_policy)
     from app.reception_v3.large_party import begin as begin_large_party
     save(row, value)
     if begin_large_party(db, row, run, bundle, decision):
@@ -629,7 +631,10 @@ def apply_decision(db, row, run, bundle, decision):
         value['introduction_route'] = route
         value.update(intake_status='done', intake_deadline=None)
         if not value.get('opening_started'):
-            parts = opening_parts(db, row, bundle) + parts
+            opening = opening_parts(db, row, bundle)
+            if route_policy.get('opening_text_in_introduction'):
+                opening = [p for p in opening if p['content_type'] != 'text']
+            parts = opening + parts
             value['opening_started'] = True
         elif value.pop('opening_media_pending', False):
             parts = [p for p in opening_parts(db, row, bundle) if p['content_type'] != 'text'] + parts

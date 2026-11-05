@@ -67,6 +67,8 @@ def compile_skills(db, now=None):
             'seasonal_pricing': deepcopy(route.get('seasonal_pricing')),
             'departure_availability': deepcopy(route.get('departure_availability')),
             'large_party': deepcopy(route.get('large_party')),
+            'profile_labels': deepcopy(route.get('profile_labels', {})),
+            'opening_text_in_introduction': route.get('opening_text_in_introduction', False),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
                          'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
                          'topics', 'usage_note', 'status', 'quote_offer') if k in s}
