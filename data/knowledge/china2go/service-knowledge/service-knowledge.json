@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "knowledge_version": "2026-11-01.shared-trip-travel-days",
+  "knowledge_version": "2026-11-05.taiwan-flight-qa",
   "sources": [
     {
       "id": "business.feedback.20261101",
@@ -40,6 +40,13 @@
       "snapshot_path": "sources/tibet-altitude-sickness-guide.md",
       "snapshot_sha256": "74695c37f00363004232b21025924b626f624efce44e6138e9621d828163c1b0",
       "fetched_at": "2026-09-09T08:04:42+00:00"
+    },
+    {
+      "id": "business.pdf.taiwan_flights.20261105",
+      "description": "麗麗提供《台灣飛西藏・機票指南》2026.11版，三頁；AI整理稿，航班表非即時資料。",
+      "url": "https://china2go.com/33-2/",
+      "snapshot_path": "sources/20261105/taiwan-flight-qa.txt",
+      "snapshot_sha256": "de707838e6904fde8ef8dfa7644df968483238166a3c612502185c791f73265f"
     }
   ],
   "facts": [
@@ -104,6 +111,30 @@
       "id": "service.age_requirements",
       "text": "台灣旅客65–75歲（含75歲）可報名並提供健康證明；超過75歲不建議參加，需個案確認。65歲是健康證明條件，不是最低參加年齡。沒有提供其他年齡的文件豁免或健康證明辦理流程。",
       "source_ref": "AI(2).docx#第21段；业务2026-09-30确认"
+    },
+    {
+      "id": "service.taiwan_flights.booking",
+      "text": "台灣赴西藏機票問答（業務2026.11版）：一般建議先飛成都住一晚，次日早班進西藏；行程最後一天由西藏飛成都住一晚，隔天回台灣。台灣至成都段可自行訂票，也可請合作票務協助；拼團入藏段有指定航班，先確認行程、入藏函及指定航班後再買，不能把查到的任意航班當作已適合本團。公司可協助查詢／代訂，不代表已訂妥或保證有位。成都安排專人交付入藏函並協助值機；產品D1仍在其原定林芝或拉薩接機。 按客人本輪問題回答一兩個重點；只問出發方式不附上費用、交函、機場等整套QA，除非客人一起問到。",
+      "details": "客人問能否自行購票，直接說台灣至成都可自行買、入藏段先與我們核對指定班次。不把一般訂票網站難查到解釋為法律禁止自行購票，也不泛稱買錯航班一定無法入藏。",
+      "source_ref": "business.pdf.taiwan_flights.20261105"
+    },
+    {
+      "id": "service.taiwan_flights.costs",
+      "text": "機票及成都前後兩晚住宿不包含在西藏團費內；成都住宿可推薦或協助代訂，不能說贈送、已含或已預訂。前後交通日沿用service.shared_trip_travel_days：N天拼團一般至少留N+2個日曆日，不保證所有實際航班兩天可銜接。包團依實際安排核對，不硬套拼團指定班次。",
+      "details": "不要把最後一天從西藏飛成都誤加成行程結束後再多一天；9天行程通常留11天，10天留12天，15天留17天。",
+      "source_ref": "business.pdf.taiwan_flights.20261105"
+    },
+    {
+      "id": "service.taiwan_flights.airports",
+      "text": "台灣出發地不同，應先按客人所在地與日期說適合的方向：北部可核對桃園／松山至成都；中部可核對台中至成都；南部可比較經香港／澳門轉機，或先到台中／桃園出發。成都雙流CTU與天府TFU是不同機場，國際段和入藏段須逐段確認機場及住宿接送，不能假定同一機場或保證跨機場短時間趕得上。 未取得兩段實際時刻、機場及交通安排，即使隔天轉機也不先判斷「通常夠」「趕得上」。不自行推斷所有進藏段多半從雙流出發。",
+      "details": "PDF 2026.11示例為北部航班抵雙流、台中航班抵天府；這不是所有日期及航班的永久規則。不要主動把所有城市與航空公司清單一次塞給客人。",
+      "source_ref": "business.pdf.taiwan_flights.20261105"
+    },
+    {
+      "id": "service.taiwan_flights.reference_scope",
+      "text": "機票指南中的航班號、星期、時刻、直飛／無直飛與共享航班描述只是2026.11參考資料，未核實即時航班，不當作當前可訂、已確認、有票或保證銜接。客人問具體某天航班／票價，可先說已有交通建議，再交由顧問按日期核對；資料沒有即時票價，不編數字。PDF不覆蓋當前產品的起訖地、團期或報價。阿里「團期不固定」按沒有固定每週出發星期理解，仍查已公布具體團期，不能承諾任意日期出發。 客人詢問航班票價或余位是正常交通諮詢，先直接簡短說明需依日期核對、可以請顧問協助查詢，不只靜默轉人工讓客人收不到答覆。不會即時查票不影響回答已知交通問題。",
+      "details": "航班時刻表留在來源供人工查核，不直接作為即時售票資訊。客人只問怎麼飛，簡短說成都前後各住一晚即可；追問早班／過夜原因再說進出藏航班可能延誤，預留時間方便處理銜接及入藏函。不主動長篇解釋。此PDF為內部問答來源，不因問機票就自動發整份PDF。",
+      "source_ref": "business.pdf.taiwan_flights.20261105"
     }
   ],
   "fixed_answers": [
@@ -111,23 +142,50 @@
       "id": "everest_shared_availability",
       "name": "当季珠峰拼团名额说明",
       "status": "active",
-      "topics": ["accommodation", "availability"],
+      "topics": [
+        "accommodation",
+        "availability"
+      ],
       "answer_text": "因為我們拼團一團就六人，而且珠峰大本營是升級「有獨立廁所跟氧氣的絨布旅館」，房間數超少的！所以名額要幫您確認看看。",
-      "fact_ids": ["service.everest_availability_wording"],
+      "fact_ids": [
+        "service.everest_availability_wording"
+      ],
       "source_ref": "business.feedback.20261031#麗麗00:29",
-      "positive_examples": ["已知出发日期完全位于3/20–10/19，含珠峰过夜拼团首次说明名额或住宿；精华8天、全览10天和桃花11天均适用"],
-      "negative_examples": ["10/20–次年3/19（含首尾）", "日期未知或仅知三月、十月、跨边界", "独团或7人以上", "不含珠峰过夜", "前文已经解释过", "只问其他事项无需说明名额"]
+      "positive_examples": [
+        "已知出发日期完全位于3/20–10/19，含珠峰过夜拼团首次说明名额或住宿；精华8天、全览10天和桃花11天均适用"
+      ],
+      "negative_examples": [
+        "10/20–次年3/19（含首尾）",
+        "日期未知或仅知三月、十月、跨边界",
+        "独团或7人以上",
+        "不含珠峰过夜",
+        "前文已经解释过",
+        "只问其他事项无需说明名额"
+      ]
     },
     {
       "id": "rongbuk_reservation_reassurance",
       "name": "绒布旅馆房源与入住顾虑",
       "status": "active",
-      "topics": ["accommodation"],
+      "topics": [
+        "accommodation"
+      ],
       "answer_text": "可以安排的，我們有先拿一些絨布旅館的房間，但您也知道我們是小團，預留數量不多，太晚確定就可能會住不到。天氣、徵用等因素也可能影響安排；這些我們在行程跟合約裡都會說明清楚喔。您選的出發日期是否還有房，還需要再確認。",
-      "fact_ids": ["service.rongbuk_reservation_scope"],
+      "fact_ids": [
+        "service.rongbuk_reservation_scope"
+      ],
       "source_ref": "business.feedback.20261027#麗麗19:00",
-      "positive_examples": ["已知非冬季且含珠峰并安排绒布的线路，客户怀疑是否真的住得到绒布", "客户询问团队是否提前预留绒布房间"],
-      "negative_examples": ["12–2月绒布关闭", "出发月份未知，应先问月份并有条件说明", "线路不含珠峰", "要求保证指定日期有房、锁房或合同退款条款", "只问房间设施，不重复整段房源解释"]
+      "positive_examples": [
+        "已知非冬季且含珠峰并安排绒布的线路，客户怀疑是否真的住得到绒布",
+        "客户询问团队是否提前预留绒布房间"
+      ],
+      "negative_examples": [
+        "12–2月绒布关闭",
+        "出发月份未知，应先问月份并有条件说明",
+        "线路不含珠峰",
+        "要求保证指定日期有房、锁房或合同退款条款",
+        "只问房间设施，不重复整段房源解释"
+      ]
     },
     {
       "id": "bomi_hilton_short",
