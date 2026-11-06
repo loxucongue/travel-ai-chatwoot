@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>11月6日接待故障修复：670 / 644</title>
 <style>body{max-width:1020px;margin:40px auto;padding:0 24px;font:16px/1.7 system-ui;color:#172b43}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ced8e4;text-align:left}th{background:#edf4fb}code{background:#f1f4f7;padding:2px 5px}.note{background:#fff4db;padding:16px}a{color:#1161a5}</style>
 <h1>China2Go 接待故障修复 · 2026年11月6日</h1>
-<p id="release-status">状态：候选修复验收完成，等待部署及恢复核验。仅涉及 China2Go，未修改 rujing2。</p>
+<p id="release-status">状态：2026年11月6日10:29上线，10:36确认670恢复完成。仅涉及 China2Go，未修改 rujing2。修复代码0455298，生产引擎 reception-v3-3ac4b36a806ca1a4。</p>
 <table><tr><th>会话</th><th>实际原因</th><th>修复及恢复边界</th></tr>
 <tr><td>#670 Rosa Ng</td><td>06:44 的问候、说明及行程图均已读，无发送失败。带括号及全角数字的单线路广告入口未进入配置入口，语义节点把它判断为仅询问；主模型只发参考图，未安排人数等待或后续介绍。</td><td>由现有语义模型理解首次单产品入口，识别为介绍主线，不等于确认报名；不增加关键字正则。沿用人数询问及90秒等待。恢复前复查人工接管与新消息，保留已发内容，不重复问候及行程图。</td></tr>
 <tr><td>#644 Sky Wei</td><td>客户先后点击10天、11日两条线路。09:02—09:03，模型三次生成跟进，但执行层因正在讨论另一条线路，清空全部可用图片，报 invalid_silence_followup_materials，三次后转人工。</td><td>模型候选和执行校验共用适用范围，只允许配置与图片均适用两线的内容。不能使用旧线路专属素材。可选触达素材协议错误延期并保留故障记录；真实未答客户仍按原有重试与人工兜底处理。已分配 van，不强制交回AI。</td></tr></table>
@@ -14,5 +14,11 @@
 </ul>
 <p class="note">全量测试不是全部通过：候选首轮1566通过、80失败。其中79项在原上线代码测试中同样失败，多为历史模型强制改写/拦截预期；另1项为本地源文档换行哈希，规范换行后复测通过。并行窗口修改机票知识期间，基线测试另出现1项知识断言失败，不能算本修复回归。本次不恢复这些旧语义限制，也不把既有失败包装成全部验收通过。</p>
 <h2>发布隔离</h2><p>以线上 bb36895 为代码基础，在独立工作区修改 service.py、material_rules.py、live.py、route_understanding.py。与另一窗口已协调：其维护知识和Skill，本修复不覆盖它的资料。发布必须持 deploy.lock，逐文件核对当前线上基线，备份后仅替换4文件；不覆盖数据库、渠道开关、价格或顾问指派。最终健康检查和客户恢复状态补记于本页。</p>
+<h2>上线及恢复结果</h2><ul>
+<li>三个服务健康检查通过。4个文件按基线校验后发布；配置和环境变量校验一致，保留回滚备份。</li>
+<li>#670：确认无顾问指派/公开回复、无新增客户消息后，重评原入口事件，未伪造客户回复或延长七天期限。10:34:20发出人数询问，10:35:50到期后继续剩余介绍，10:36完成；5194/5195/5196三个运行均完成，剩余草稿0，下一次普通跟进11月7日09:00。新消息平台状态sent，不能等同客户已读。</li>
+<li>#644：保持van接待。09:29后顾问三次尝试发消息均遭Facebook #551拒收，业务10:21添加“拉黑”标签；该错误仅说明当前不可发送，不能据此断言用户拉黑。本轮没有交回AI、没有重发。</li>
+<li>main原有3个未上线实验提交已完整保留在 archive/china2go-unreleased-pilots-20261101 及合并历史；main以02dd578对齐已验收生产树，未将未通过的实验混入线上。另一窗口gemini未提交资料保持原样。GitHub推送初次连接重置，最终结果另以任务回复为准。</li>
+</ul>
 <h2>本地证据</h2><p>output/stuck-20261106/：acceptance.json、execution-replay.json、preflight.json、targeted.xml、source-checks.xml、full.xml、baseline.xml、cost.json。原始私有会话快照存放于原工作区 ignored output/stuck-20261106/，未加入Git。</p>
 </html>
