@@ -17,5 +17,7 @@
 <h2>维护和发布保护</h2>
 <p>预检首次缺少运行线路目录，补齐后又遇到磁盘不足；均发生在替换线上文件之前。已清除本轮临时测试库，压缩四份现有发布数据库备份，逐份校验解压SHA256一致后移除未压缩副本，约释放5.3 GiB。备份仍可恢复，业务数据未删除。</p>
 <p>发布使用deploy.lock、逐文件基线哈希和版本断言、停机备份、配置不变检查及失败回滚。只更新本次代码、四条线路的开场配置与已核验照片说明，保留阿里/机票知识和渠道权限。</p>
-<h2>发布记录</h2><p id="deployment">等待服务器副本预检及发布核验。</p>
+<h2>发布记录</h2><p id="deployment">2026-11-06 11:51（UTC+8）已部署。代码d00b2c8已合入并推送main；release：visual-reception-20261106T035108Z；engine：reception-v3-1d7ac49552c99d3b。服务器副本11项检查（9场景素材解析、2原失败记录重放）通过，19个发布文件哈希回读一致，3服务active、健康接口200、数据库quick_check正常，无回调积压，复核期间无新增正式接待失败。</p>
+<p>素材2张原图对应9条素材目录记录的说明已更新。四条线路intake.enabled=false，原价格和渠道配置一致；#666当时处于顾问处理后的AI_FOLLOWUP，#672为AI_ACTIVE，本次未强制改变权限或重发旧消息。真实模型费用按配置费率估算并计入未知用量预留合计约¥5.62（本轮上限¥8）。</p>
+<p>原始验收证据：隔离开发工作区output/visual-20261106/下的acceptance-core.json、acceptance-boundaries.json、acceptance-photos.json、baseline-comparison.json、preflight.json、deployment.json、verification.json和backup-compression.json。GitHub推送前两次网络失败，第三次成功。</p>
 </html>
