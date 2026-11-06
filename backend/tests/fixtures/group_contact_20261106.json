@@ -1,0 +1,218 @@
+[
+  {
+    "id": "seven",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T16:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 7
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "previous",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是您剛剛看的行程，還有什麼想了解的呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們七位想自己一團，請繼續安排。",
+        "checks": []
+      }
+    ]
+  },
+  {
+    "id": "four_private",
+    "entry": "peach_11d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T16:00:00+00:00",
+      "route_variant": "peach_11d_2027",
+      "profile": {
+        "party_size": 4,
+        "group_type": "private"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_11d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "previous",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是您剛剛看的行程，還有什麼想了解的呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們四位確定自己包團，想接著討論行程。",
+        "checks": []
+      }
+    ]
+  },
+  {
+    "id": "ali",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T16:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 7,
+        "group_type": "private"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "previous",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是您剛剛看的行程，還有什麼想了解的呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們七位想自己一團，請接著安排。",
+        "checks": []
+      }
+    ]
+  },
+  {
+    "id": "declined",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T16:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 7,
+        "contact_capture_declined": true
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "previous",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是您剛剛看的行程，還有什麼想了解的呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們七人想包團，但不留聯絡方式，先在這裡討論。",
+        "checks": []
+      }
+    ]
+  },
+  {
+    "id": "provided",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T16:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 7,
+        "contact_value": "test-id",
+        "contact_channel": "line"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "previous",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是您剛剛看的行程，還有什麼想了解的呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我的LINE已經給了，請不要再問，先在這裡回答就好。",
+        "checks": []
+      }
+    ]
+  },
+  {
+    "id": "already_line",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T16:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 7,
+        "contact_status": "self_reported_added"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "previous",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是您剛剛看的行程，還有什麼想了解的呢？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我已經加了你們的LINE，現在就在LINE跟你聊，先說一下包團安排。",
+        "checks": []
+      }
+    ]
+  }
+]
