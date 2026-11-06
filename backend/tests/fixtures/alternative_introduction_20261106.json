@@ -1,0 +1,318 @@
+[
+  {
+    "id": "657_exact",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "三月中旬開始的話可以接受。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "expected_route": "peach_11d_2027"
+      }
+    ]
+  },
+  {
+    "id": "april",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "四月上旬可以，多一天也可以。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "expected_route": "peach_11d_2027"
+      }
+    ]
+  },
+  {
+    "id": "fixed_date",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "只有3月15日能出發，日期不能改。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ten_days_max",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "三月中旬開始可以，但最多只有10天，不能11天。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "reject_peach",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "三月中旬開始可以，但不想看桃花，不要推薦桃花線。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "no_everest",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "四月上旬可以，但是不去珠峰。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "expected_route": "peach_9d_2027"
+      }
+    ]
+  },
+  {
+    "id": "hotel_only",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "桃花11日住什麼酒店？先回答酒店就好。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "text_only",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T06:44:00.416092+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size_range": "4-6",
+        "party_size_min": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "prior",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這是西藏全覽10天，您有偏好的出發月份嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "answer",
+        "text": "三月中旬開始可以，先用文字說明就好，不要圖片。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "image_count": 0
+      }
+    ]
+  }
+]
