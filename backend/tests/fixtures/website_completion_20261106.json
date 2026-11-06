@@ -1,0 +1,1158 @@
+[
+  {
+    "id": "flight_aug_overview",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "8月走全覽10天，成都到西藏來回機票大概多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "2,980",
+            "2980"
+          ],
+          [
+            "3,280",
+            "3280"
+          ]
+        ],
+        "excludes": [
+          "12,880",
+          "12880",
+          "2,300",
+          "2300"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_aug_essence",
+    "entry": "tibet_essence_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "8月精華8天，成都進出西藏的機票大概多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "3,000",
+            "3000"
+          ],
+          [
+            "3,300",
+            "3300"
+          ]
+        ],
+        "excludes": [
+          "2,980",
+          "2980",
+          "2,300",
+          "2300"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_june_ali",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "阿里15天6月出發，成都到拉薩來回機票大概多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "2,620",
+            "2620"
+          ],
+          [
+            "2,920",
+            "2920"
+          ]
+        ],
+        "excludes": [
+          "24,800",
+          "24800"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_peach_boundary",
+    "entry": "peach_9d_2027",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "peach_9d_2027",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "peach_9d_2027"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "2027年3月20日桃花9天，成都進林芝拉薩出的來回機票大概多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "3,480",
+            "3480"
+          ],
+          [
+            "3,880",
+            "3880"
+          ]
+        ],
+        "excludes": [
+          "2,780",
+          "2780",
+          "2,300",
+          "2300",
+          "未含稅"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_may_holiday",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "五一黃金週成都進林芝、拉薩出，機票大概多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "查",
+            "確認",
+            "核對"
+          ]
+        ],
+        "excludes": [
+          "2,550",
+          "2550",
+          "2,850",
+          "2850"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_spring",
+    "entry": "tibet_essence_8d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_essence_8d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_essence_8d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "春節前10天成都往返拉薩機票多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "查",
+            "確認",
+            "核對"
+          ]
+        ],
+        "excludes": [
+          "2,450",
+          "2450",
+          "2,750",
+          "2750"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_international",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "只問台灣到成都的來回機票，不含進藏，概算多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "2,300",
+            "2300"
+          ],
+          [
+            "4,500",
+            "4500"
+          ],
+          [
+            "提早",
+            "早點",
+            "早一點"
+          ]
+        ],
+        "excludes": [
+          "總共",
+          "含機建燃油",
+          "未含稅"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_tianfu_four",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 4
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們4人都想天府機場飛進西藏，可不可以？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "雙流"
+          ],
+          [
+            "入藏函"
+          ],
+          [
+            "安排",
+            "申請"
+          ]
+        ],
+        "excludes": []
+      }
+    ]
+  },
+  {
+    "id": "flight_tianfu_two",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們2個人台中飛天府，進藏也是買天府嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "雙流"
+          ]
+        ],
+        "excludes": [
+          "額外安排申請一張",
+          "額外申請一張"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_taichung_schedule",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "台中去成都有哪些航班可以參考？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "GJ8302"
+          ],
+          [
+            "MU828"
+          ],
+          [
+            "天府"
+          ],
+          [
+            "公告",
+            "調整",
+            "參考"
+          ]
+        ],
+        "excludes": []
+      }
+    ]
+  },
+  {
+    "id": "flight_north_schedule",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "桃園到成都有什麼航班可參考？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "CI551",
+            "BR765",
+            "CA418"
+          ],
+          [
+            "公告",
+            "調整",
+            "參考"
+          ]
+        ],
+        "excludes": [
+          "GJ8302"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_already_bought",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我已經買了天府到拉薩的機票了，怎麼辦？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "航班"
+          ],
+          [
+            "確認",
+            "核對",
+            "資訊"
+          ]
+        ],
+        "excludes": [
+          "買錯了",
+          "不能入藏"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_general",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "台灣怎麼飛去西藏？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "成都"
+          ],
+          [
+            "自己",
+            "自行",
+            "代訂"
+          ]
+        ],
+        "excludes": [
+          "CI551",
+          "BR765",
+          "2,300",
+          "2300"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_contact_declined",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們只想在這裡聊，不想給LINE。8月全覽10天的進藏來回機票大概多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "2,980",
+            "2980"
+          ],
+          [
+            "3,280",
+            "3280"
+          ]
+        ],
+        "excludes": [
+          "方便給",
+          "QR code",
+          "@china2go",
+          "2,300",
+          "2300"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flight_malaysia",
+    "entry": "tibet_overview_10d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_overview_10d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_overview_10d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我是馬來西亞吉隆坡出發，去成都機票大概多少？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [],
+        "excludes": [
+          "2,300",
+          "2300",
+          "4,500",
+          "4500",
+          "桃園"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_village",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "文布南村有包含在你們15天嗎？住哪間，有氧氣嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "那倉卓姆"
+          ],
+          [
+            "氧"
+          ]
+        ],
+        "excludes": [
+          "未開放",
+          "另行訂製"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_thirteen",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "去過西藏，這次我們2位想13天中線不上珠峰，不想轉山。",
+        "checks": [],
+        "contains_any": [],
+        "excludes": [
+          "28,800",
+          "28800",
+          "29,800",
+          "29800",
+          "2027/6/15"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_surcharge",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "你們說無自費，那轉山馬匹背夫都免費嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "另計",
+            "另付",
+            "自費",
+            "不包含",
+            "自理"
+          ]
+        ],
+        "excludes": [
+          "都免費"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_oxygen",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "是不是每一晚都有供氧？轉山那晚也是嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "止熱寺"
+          ],
+          [
+            "無供氧",
+            "沒有供氧",
+            "不供氧"
+          ]
+        ],
+        "excludes": [
+          "全程都有供氧"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_five_shared",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 5,
+        "group_type": "shared"
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們5個人只想拼團，不想包團，正常介紹就好。",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [],
+        "excludes": [
+          "直接幫您們升級",
+          "已安排獨立一團"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_fitness",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們2個人，不太運動，體力沒有很好，這條可以嗎？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "評估",
+            "馬匹",
+            "背夫"
+          ]
+        ],
+        "excludes": [
+          "一定可以"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ali_price_label",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "阿里15天2027年6月兩人參加多少錢？",
+        "checks": [
+          "send",
+          "no_duplicate_messages"
+        ],
+        "contains_any": [
+          [
+            "24,800",
+            "24800"
+          ]
+        ],
+        "excludes": []
+      }
+    ]
+  },
+  {
+    "id": "ali_four_private",
+    "entry": "tibet_ali_15d",
+    "known_entry": false,
+    "replay_context": {
+      "event": "customer_message",
+      "now": "2026-11-06T02:00:00+00:00",
+      "route_variant": "tibet_ali_15d",
+      "profile": {
+        "party_size": 2
+      },
+      "state": {
+        "opening_started": true,
+        "intake_status": "done",
+        "completed_introductions": [
+          "tibet_ali_15d"
+        ]
+      },
+      "messages": [
+        {
+          "id": "old",
+          "direction": "outgoing",
+          "status": "sent",
+          "content": "這條行程已介紹完，您還有什麼想了解的嗎？"
+        }
+      ]
+    },
+    "steps": [
+      {
+        "id": "reply",
+        "text": "我們4人想自己一團，都40歲且有健走習慣，想請你們安排阿里15天。",
+        "checks": [],
+        "contains_any": [],
+        "excludes": []
+      }
+    ]
+  }
+]
