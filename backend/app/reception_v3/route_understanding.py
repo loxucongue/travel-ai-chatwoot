@@ -10,7 +10,7 @@ from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.model_transport import _post_with_deadline, _call_log, EvaluationCallError
 
 DELIVERED = {'simulated_delivered', 'submitted', 'sent', 'delivered', 'read'}
-VERSION = 'route-understanding-v2-travel-scope'
+VERSION = 'route-understanding-v3-entry-scope'
 
 
 class DecisionContractError(ValueError):
@@ -145,6 +145,7 @@ PROMPT = '''你理解客戶本輪選線語義與旅行時間的範圍，不報�
 依公開對話、當前合併消息及目錄，輸出指定JSON。客戶最新糾正優先；legacy_recommendation_hint只是一條舊記錄，不能當作全部選項或客戶選擇。
 intent為select/inquire/compare/decline/acknowledge/other/ambiguous。只有select填selected_route。
 select是客戶已決定以某個具體產品作為後續接待主線，不是僅僅對它有興趣，也不是訂位或保證可售。不要求固定動詞；回答上一輪選項的產品簡稱、序號、指代都應結合上下文理解。
+首次進線的單一產品廣告標題／選項，本身就是請我們接待這條線的入口：當整輪只指向一個明確產品、沒有另外提問或比較／猶豫，按select識別介紹主線，沿用該線的開場詢問與後續介紹。無須客戶再說一次「我選這條」，也不代表確認報名。閱讀整輪語義，不依固定標點、數字形式或某個關鍵詞；接連點兩條產品或詢問差異是compare，只問價格／住宿仍是inquire；曾有其他對話時依當輪真實意願判斷，不能把產品名稱一律當作新入口。
 客戶看過參考行程圖後，明確說「就上面這張行程圖的路線，先給我介紹一下」是要以那條作為接下來完整介紹的主線，使用select；這不代表確認報名。只問「這條多少錢／住宿如何／差在哪」仍是inquire，不因問題涉及圖片就選線。
 排除一個產品不等於接受剩餘產品：客戶只有拒絕、沒有表達替代選擇時用decline，selected_route留空，discussed_routes只填被拒絕的產品；不能用二選一的排除法替他選線。若客戶同時明確指定另一條，才按那個正向選擇處理。
 先區分查詢信息與改變選擇：即使上一輪問了選哪條，客戶只追問某產品費用、住宿、可否安排，也仍是inquire，提到產品名只是指出問題對象，selected_route留空。只有同時表達選定該產品的意願才select並has_question=true。比較兩產品差異、優缺點用compare，而不是一般inquire。

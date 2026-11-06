@@ -21,7 +21,7 @@ from app.reception_v3.message_chunks import split_parts
 from app.reception_v3.seasonal_quotes import mentions_departure_time
 from app.reception_v3.followup_window import FOLLOWUP_WINDOW, deadline
 from app.reception_v3.route_choice import rejects_current_route
-from app.reception_v3.route_understanding import from_run as route_understanding_from_run, contract_failure
+from app.reception_v3.route_understanding import from_run as route_understanding_from_run, contract_failure, DecisionContractError
 from app.web_knowledge import active_web_facts
 
 
@@ -61,9 +61,9 @@ def followup_response(messages):
 
 def followup_materials(materials, messages, route, profile=None):
     """Offer new route photos, including deduplication across catalog aliases."""
-    if (rejects_current_route(route, profile or {})
-            or (profile or {}).get('discussion_route') not in (None, '', route)):
+    if rejects_current_route(route, profile or {}):
         return []
+    discussion = (profile or {}).get('discussion_route')
     by_key = {m['key']: m for m in materials}
     sent_keys, sent_hashes, sent_ids = set(), set(), set()
     for message in messages:
@@ -83,6 +83,7 @@ def followup_materials(materials, messages, route, profile=None):
     for material in sorted(materials, key=lambda m: bool(m.get('what_it_shows')), reverse=True):
         identity = material.get('media_hash') or material.get('media_id') or material['key']
         if (route not in material.get('routes', []) or material.get('content_type') != 'image'
+                or discussion and discussion != route and discussion not in material.get('routes', [])
                 or material['key'] in sent_keys or material.get('media_hash') in sent_hashes
                 or material.get('media_id') in sent_ids or identity in offered):
             continue
@@ -332,8 +333,10 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     tenant_id = tenant_for_session(db, row)
     materials = {m['key']: m for m in candidate_materials(db, tenant_id)}
     from app.reception_v3.material_rules import eligible_rules, selected_asset, conversation_labels, rule_digest
-    rules = {r['id']: r for r in eligible_rules(bundle, list(materials.values()), route,
-        conversation_labels(db, row), 'silence_due' if followup else 'customer_message', row.messages)}
+    allowed_materials = (followup_materials(list(materials.values()), row.messages, route, row.memory)
+                         if followup else list(materials.values()))
+    rules = {r['id']: r for r in eligible_rules(bundle, allowed_materials, route,
+        conversation_labels(db, row), 'silence_due' if followup else 'customer_message', row.messages, row.memory)}
     decision = deepcopy(decision)
     from app.reception_v3.route_followup import reference_preview_allowed
     reference_preview = followup and reference_preview_allowed({
@@ -345,16 +348,17 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         rule_id = message.get('material_rule_id')
         if not rule_id:
             if configured_only and message['asset_keys']:
-                raise ValueError('followup_requires_material_rule')
+                raise DecisionContractError('followup_requires_material_rule')
             continue
         if rule_id not in rules or message['asset_keys']:
-            raise ValueError('material_rule_not_eligible')
+            raise DecisionContractError('material_rule_not_eligible')
         rule = rules[rule_id]
         message['asset_keys'] = selected_asset(rule, row.id, row.generation)
         message['text'] = message['text'] or rule['approved_text']
     if followup:
-        # Route comparison is valid during a customer answer, not unsolicited outreach.
-        allowed = {m['key'] for m in followup_materials(list(materials.values()), row.messages, route, row.memory)}
+        # Outreach may use configured assets shared by the current discussion,
+        # but cannot switch products or launch an introduction on its own.
+        allowed = {m['key'] for m in allowed_materials}
         if reference_preview:
             from app.reception_v3.material_rules import itinerary_previews
             preview = itinerary_previews(bundle,list(materials.values()),row.messages,row.memory).get(content_route,{})
@@ -362,7 +366,7 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         keys = [key for message in decision['messages'] for key in message['asset_keys']]
         if (route != row.controls.get('route_variant', '') or decision['start_introduction']
                 or len(keys) > 1 or any(key not in allowed for key in keys)):
-            raise ValueError('invalid_silence_followup_materials')
+            raise DecisionContractError('invalid_silence_followup_materials')
     groups = bundle['routes'].get(content_route, {}).get('groups', {})
     effective_groups = {key: seasonal_group(group, row.memory or {}) for key, group in groups.items()}
     blocked_assets = {asset for key, group in groups.items() for asset in group.get('assets', [])
@@ -928,8 +932,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             context['followup_materials'] = followup_materials(
                 context['available_materials'], row.messages, context['route_variant'], row.memory)
         from app.reception_v3.material_rules import eligible_rules, conversation_labels
-        context['material_rules'] = eligible_rules(bundle, context['available_materials'],
-            context['route_variant'], conversation_labels(db, row), event, context['messages'])
+        context['material_rules'] = eligible_rules(bundle,
+            context['followup_materials'] if event == 'silence_due' else context['available_materials'],
+            context['route_variant'], conversation_labels(db, row), event, context['messages'], row.memory)
         if event == 'silence_due' and bundle['silence'].get('material_selection') == 'configured_rules':
             context['followup_materials'] = []
             context['skills'] = deepcopy(bundle)
@@ -1090,6 +1095,9 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                     # Optional outreach may wait, while a real unanswered customer
                     # turn must remain visible to an advisor if output cannot be repaired.
                     value.update(pending_event=None, retry_at=None, next_check_at=None)
+                    value.pop('attempts', None)
+                    value.pop('failed_event', None)
+                    value['silence_step'] = value.get('silence_step', 0) + int(event == 'silence_due')
                     schedule_followup(value, bundle, row.virtual_now)
                     value['followup_skip_reason'] = 'decision_contract_failed'
                     row.due_at = None

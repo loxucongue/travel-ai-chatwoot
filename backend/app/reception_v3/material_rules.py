@@ -35,9 +35,13 @@ def rule_digest(rule):
     return hashlib.sha256(json.dumps(rule, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
-def eligible_rules(bundle, materials, route, labels, event, messages):
+def eligible_rules(bundle, materials, route, labels, event, messages, profile=None):
     purpose = 'followup' if event == 'silence_due' else 'reply'
     if event not in ('silence_due', 'customer_message'):
+        return []
+    from app.reception_v3.route_choice import rejects_current_route
+    discussion = (profile or {}).get('discussion_route') if event == 'silence_due' else None
+    if event == 'silence_due' and rejects_current_route(route, profile or {}):
         return []
     sent = [m for m in messages if m.get('direction') == 'outgoing' and m.get('status') in
             ('simulated_delivered', 'submitted', 'sent', 'delivered', 'read')]
@@ -50,6 +54,7 @@ def eligible_rules(bundle, materials, route, labels, event, messages):
     result = []
     for rule in bundle.get('material_rules', []):
         if (not rule['enabled'] or route not in rule['route_variants']
+                or discussion and discussion != route and discussion not in rule['route_variants']
                 or rule['purpose'] not in (purpose, 'both')
                 or rule['any_labels'] and not set(rule['any_labels']).intersection(labels)):
             continue

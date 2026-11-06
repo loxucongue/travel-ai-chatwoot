@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>11月6日接待故障修复：670 / 644</title>
+<style>body{max-width:1020px;margin:40px auto;padding:0 24px;font:16px/1.7 system-ui;color:#172b43}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ced8e4;text-align:left}th{background:#edf4fb}code{background:#f1f4f7;padding:2px 5px}.note{background:#fff4db;padding:16px}a{color:#1161a5}</style>
+<h1>China2Go 接待故障修复 · 2026年11月6日</h1>
+<p id="release-status">状态：候选修复验收完成，等待部署及恢复核验。仅涉及 China2Go，未修改 rujing2。</p>
+<table><tr><th>会话</th><th>实际原因</th><th>修复及恢复边界</th></tr>
+<tr><td>#670 Rosa Ng</td><td>06:44 的问候、说明及行程图均已读，无发送失败。带括号及全角数字的单线路广告入口未进入配置入口，语义节点把它判断为仅询问；主模型只发参考图，未安排人数等待或后续介绍。</td><td>由现有语义模型理解首次单产品入口，识别为介绍主线，不等于确认报名；不增加关键字正则。沿用人数询问及90秒等待。恢复前复查人工接管与新消息，保留已发内容，不重复问候及行程图。</td></tr>
+<tr><td>#644 Sky Wei</td><td>客户先后点击10天、11日两条线路。09:02—09:03，模型三次生成跟进，但执行层因正在讨论另一条线路，清空全部可用图片，报 invalid_silence_followup_materials，三次后转人工。</td><td>模型候选和执行校验共用适用范围，只允许配置与图片均适用两线的内容。不能使用旧线路专属素材。可选触达素材协议错误延期并保留故障记录；真实未答客户仍按原有重试与人工兜底处理。已分配 van，不强制交回AI。</td></tr></table>
+<h2>验证证据</h2><ul>
+<li>78项专项测试通过，含新增10项：共用图片、专属素材排除、去重、标签/启停、模型菜单与执行一致、可选触达失败、真实问题保留重试。</li>
+<li>21项日期与机票资料回归通过；本地源码副本的一处 CRLF 换行被规范为原始 LF 后，来源哈希校验通过，业务资料未改变。</li>
+<li>8个真实模型场景通过：原广告、标点变体、口语选择、住宿询问、两线比较、尚未决定、644跟进、670恢复。费用按配置估算约人民币0.28元，账本留存全部调用。</li>
+<li>原644两次共用星空决策回放可执行，第三次旧线路专属规则仍被排除；服务器只读生产库预检确认实际图片可解析。</li>
+<li>670完整执行回放通过：人数询问实际交付→90秒等待→15条剩余介绍内容；未重复问候和行程图。网络阻断，没有客户测试消息。</li>
+</ul>
+<p class="note">全量测试不是全部通过：候选首轮1566通过、80失败。其中79项在原上线代码测试中同样失败，多为历史模型强制改写/拦截预期；另1项为本地源文档换行哈希，规范换行后复测通过。并行窗口修改机票知识期间，基线测试另出现1项知识断言失败，不能算本修复回归。本次不恢复这些旧语义限制，也不把既有失败包装成全部验收通过。</p>
+<h2>发布隔离</h2><p>以线上 bb36895 为代码基础，在独立工作区修改 service.py、material_rules.py、live.py、route_understanding.py。与另一窗口已协调：其维护知识和Skill，本修复不覆盖它的资料。发布必须持 deploy.lock，逐文件核对当前线上基线，备份后仅替换4文件；不覆盖数据库、渠道开关、价格或顾问指派。最终健康检查和客户恢复状态补记于本页。</p>
+<h2>本地证据</h2><p>output/stuck-20261106/：acceptance.json、execution-replay.json、preflight.json、targeted.xml、source-checks.xml、full.xml、baseline.xml、cost.json。原始私有会话快照存放于原工作区 ignored output/stuck-20261106/，未加入Git。</p>
+</html>

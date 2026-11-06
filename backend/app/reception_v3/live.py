@@ -533,7 +533,7 @@ def deliver_one(db, row):
         from app.reception_v3.material_rules import eligible_rules, conversation_labels, rule_digest
         current_bundle = compile_skills(db)
         rules = eligible_rules(current_bundle, [], row.controls.get('route_variant', ''),
-            conversation_labels(db, row), 'silence_due' if part.get('proactive') else 'customer_message', [])
+            conversation_labels(db, row), 'silence_due' if part.get('proactive') else 'customer_message', [], row.memory)
         allowed_ids = {rule['id'] for rule in rules}
         current = next((r for r in current_bundle.get('material_rules', []) if r['id'] == part.get('material_rule_id')), None)
         revoked = bool(part.get('material_rule_id')) and (not current or current['id'] not in allowed_ids
