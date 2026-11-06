@@ -112,8 +112,9 @@ SKILL_ROOT = Path(__file__).with_name('skills')
 class SkillRegistry:
     """Standard SKILL.md index; current configuration is attached only on load."""
 
-    def __init__(self, bundle, materials=(), root=SKILL_ROOT):
+    def __init__(self, bundle, materials=(), root=SKILL_ROOT, profile=None):
         self.bundle, self.materials = bundle, materials
+        self.profile = profile or {}
         self.skills = {}
         for path in sorted(root.glob('*/SKILL.md')):
             text = path.read_text(encoding='utf-8')
@@ -188,7 +189,8 @@ class SkillRegistry:
                 body += '\n优先适用的独立成团介绍后交接规则（人数门槛及明确包团是否适用均以配置为准，覆盖旧直接交接句）：' + json.dumps(route['large_party'], ensure_ascii=False)
             body += f"\n\n## 完整介绍原文\n逐条间隔：{route['interval_seconds']} 秒\n"
             for index, key in enumerate(route['introduction_sequence'], 1):
-                group = route['groups'][key]
+                from app.reception_v3.seasonal_quotes import seasonal_group
+                group = seasonal_group(route['groups'][key], self.profile)
                 body += (f"\n### {index}. {key}\n{group['text']}\n"
                          f"素材：{json.dumps(group.get('assets', []), ensure_ascii=False)}\n"
                          f"图文顺序：{group.get('delivery_mode', 'assets_then_text')}\n")

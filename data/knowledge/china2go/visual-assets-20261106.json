@@ -1,0 +1,16 @@
+{
+  "version": "2026-11-06.visual-equipment",
+  "source": "Existing business-provided photos, visually reviewed 2026-11-06; descriptions do not establish equipment specifications or extend route eligibility.",
+  "assets": {
+    "f3a8572a1d90d99333bab716a20cc78b54665e69947b19a7d56187a075eb9814": {
+      "what_it_shows": "車廂側壁固定安裝的供氧設備近照，可見流量計與接口；不是手持便攜氧氣罐或整個醫用鋼瓶的照片。",
+      "feature_points": ["車內固定設備的位置", "供氧接口近照"],
+      "recommended_caption": "這張是車內固定的供氧設備，能看到設備和接口的位置～"
+    },
+    "3d4e15e05510a587666179318649053faedca9721c2077fab1d193b32c940091": {
+      "what_it_shows": "客房床頭旁的供氧設備已用紅框標示，可與一般客房全景照區分；用於展示房內設備位置。",
+      "feature_points": ["紅框標示的客房供氧設備", "設備與床的位置"],
+      "recommended_caption": "照片紅框圈出的就是房內供氧設備的位置，給您參考～"
+    }
+  }
+}

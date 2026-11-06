@@ -3,6 +3,30 @@ import hashlib
 import json
 
 
+def answer_visuals(bundle, materials, messages, profile=None):
+    """Small, scoped equipment/accommodation index; the model decides relevance."""
+    from app.reception_v3.seasonal_quotes import seasonal_group
+    sent = [m for m in messages if m.get('direction') == 'outgoing' and m.get('status') in
+            ('simulated_delivered', 'submitted', 'sent', 'delivered', 'read')]
+    keys = {m.get('asset_key') for m in sent}
+    hashes = {m.get('media_hash') for m in sent} - {None, ''}
+    ids = {m.get('media_id') for m in sent} - {None}
+    result = {}
+    roles = {'oxygen', 'vehicle_oxygen', 'vehicle_reference', 'hotel', 'hotel_reference'}
+    for route, spec in bundle['routes'].items():
+        linked = {a for key, g in spec.get('groups', {}).items()
+                  if key in roles or g.get('purpose') in roles
+                  for a in seasonal_group(g, profile or {}).get('assets', [])}
+        items = [dict(key=m['key'], name=m.get('name', ''), topic=m.get('content_group_key', ''),
+                      what_it_shows=m.get('what_it_shows', ''),
+                      already_delivered=m['key'] in keys or m.get('media_hash') in hashes or m.get('media_id') in ids)
+                 for m in materials if m['key'] in linked and route in m.get('routes', [])
+                 and m.get('content_type') == 'image']
+        if items:
+            result[route] = items
+    return result
+
+
 def itinerary_previews(bundle, materials, messages, profile=None):
     """Expose approved route-map references even before a route Skill is loaded.
 

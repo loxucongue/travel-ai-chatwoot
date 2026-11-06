@@ -18,6 +18,7 @@ from app.reception_v3.runtime import run_agent
 from app.reception_v3.skills import compile_skills
 from app.reception_v3.quotes import personalize_quotes, reserve_quoted_offers
 from app.reception_v3.message_chunks import split_parts
+from app.reception_v3.message_references import scripts, message_route
 from app.reception_v3.seasonal_quotes import mentions_departure_time
 from app.reception_v3.followup_window import FOLLOWUP_WINDOW, deadline
 from app.reception_v3.route_choice import rejects_current_route
@@ -311,16 +312,6 @@ def append_plan(row, value, parts, kind, interval, run_id=None):
     value['delivery_due_at'] = row.virtual_now
 
 
-def scripts(bundle, route):
-    result = {s['id']: {'text': s['text'], 'assets': []}
-              for s in bundle['common_scripts'] if s.get('enabled', True)}
-    result.update({s['id']: {'text': s['answer_text'], 'assets': s.get('asset_ids', [])}
-                   for s in bundle['routes'].get(route, {}).get('scripts', []) if s.get('status') == 'active'})
-    for key, group in bundle['routes'].get(route, {}).get('groups', {}).items():
-        result.setdefault(key, {'text': group['text'], 'assets': group['assets']})
-    return result
-
-
 def parts_for(db, row, bundle, decision, *, followup=False):
     from app.reception_v3.seasonal_quotes import seasonal_group
     from app.reception_v3.party_quotes import comparison_text
@@ -367,10 +358,6 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         if (route != row.controls.get('route_variant', '') or decision['start_introduction']
                 or len(keys) > 1 or any(key not in allowed for key in keys)):
             raise DecisionContractError('invalid_silence_followup_materials')
-    groups = bundle['routes'].get(content_route, {}).get('groups', {})
-    effective_groups = {key: seasonal_group(group, row.memory or {}) for key, group in groups.items()}
-    blocked_assets = {asset for key, group in groups.items() for asset in group.get('assets', [])
-                      if asset not in effective_groups[key].get('assets', [])}
     delivered = [m for m in row.messages if m.get('direction') == 'outgoing'
                  and m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')]
     seen_keys = {m.get('asset_key') for m in delivered} - {None}
@@ -378,15 +365,20 @@ def parts_for(db, row, bundle, decision, *, followup=False):
                    for m in delivered} - {None}
     seen_ids = {m.get('media_id') for m in delivered} - {None}
 
-    def add(text, keys, mode='text_then_assets', deduplicate=False):
+    def add(text, keys, mode='text_then_assets', deduplicate=False, route_hint=None):
         media = []
         for key in keys:
-            if key in blocked_assets:
-                continue
             # Comparing routes may reference a different route's image without
             # changing the customer's selected route.
             asset_routes = [r for r in materials.get(key, {}).get('routes', []) if r in bundle['routes']]
-            asset_route = route if route in asset_routes or not asset_routes else asset_routes[0]
+            if route_hint and asset_routes and route_hint not in asset_routes:
+                raise DecisionContractError('message_asset_route_mismatch')
+            asset_route = route_hint or (route if route in asset_routes or not asset_routes else asset_routes[0])
+            scoped_groups = bundle['routes'].get(asset_route, {}).get('groups', {})
+            excluded = {a for group in scoped_groups.values() for a in group.get('assets', [])
+                        if a not in seasonal_group(group, row.memory or {}).get('assets', [])}
+            if key in excluded:
+                continue
             resolved = resolve_materials(db, [key], asset_route, tenant_id)
             for item in resolved:
                 if deduplicate and (key in seen_keys or item.get('media_hash') in seen_hashes
@@ -401,19 +393,30 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         media_parts = [{**m, 'content': ''} for m in media]
         text_parts = [{'content': text, 'content_type': 'text'}] if text else []
         parts.extend(media_parts + text_parts if mode == 'assets_then_text' else text_parts + media_parts)
-    available = scripts(bundle, content_route)
-    for key, group in effective_groups.items():
-        if groups[key].get('seasonal_override'):
-            available[key] = {'text': group['text'], 'assets': group['assets']}
+    from app.reception_v3.material_rules import itinerary_previews
+    previews = itinerary_previews(bundle, list(materials.values()), row.messages, row.memory)
+    automatic_maps = set()
     for message in decision['messages']:
+        scoped_route = message_route(bundle, message, content_route)
+        available = scripts(bundle, scoped_route)
+        for key, group in bundle['routes'].get(scoped_route, {}).get('groups', {}).items():
+            if group.get('seasonal_override'):
+                effective = seasonal_group(group, row.memory or {})
+                available[key] = {'text': effective['text'], 'assets': effective['assets']}
         script = available.get(message['script_id']) if message['script_id'] else None
-        if message['script_id'] and not message['text'] and script is None:
-            raise ValueError('v3_unknown_script')
+        # Presentation order follows a real catalog quote, never customer keywords.
+        full_quote = bool(message.get('quote_options') or
+                          (message.get('script_id') or '').startswith('price') and not message.get('text'))
+        if full_quote and not followup and message.get('include_itinerary', True):
+            maps = [m['key'] for m in previews.get(scoped_route, {}).get('assets', []) if not m['already_delivered']]
+            if maps:
+                add('', maps[:1], deduplicate=True, route_hint=scoped_route)
+                automatic_maps.update(maps[:1])
         offset = len(parts)
-        text = (comparison_text(bundle['routes'][content_route], message['quote_options'])
+        text = (comparison_text(bundle['routes'][scoped_route], message['quote_options'])
                 if message.get('quote_options') else message['text'] or (script['text'] if script else ''))
-        add(text,
-            message['asset_keys'])
+        add(text, [k for k in message['asset_keys'] if k not in automatic_maps],
+            route_hint=message.get('route') or None)
         if message.get('purpose') == 'contact_invitation' or message.get('script_id') == 'contact_request':
             for part in parts[offset:]:
                 if part.get('content'):

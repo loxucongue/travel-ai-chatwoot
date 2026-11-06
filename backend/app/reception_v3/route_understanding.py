@@ -209,10 +209,11 @@ def interpret(context, deadline):
     messages = [{'role': 'system', 'content': PROMPT + '\n' + json.dumps(schema_for(data), ensure_ascii=False)},
                 {'role': 'user', 'content': json.dumps(data, ensure_ascii=False)}]
     logs, hashes = [], []
+    output_limit = 2400
     for attempt in range(2):
         payload = {'model': settings.reception_route_understanding_model or settings.deepseek_model,
                    'messages': messages, 'response_format': {'type': 'json_object'},
-                   'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': 2400,
+                   'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,
                    'stream': True, 'stream_options': {'include_usage': True}}
         digest = _request_hash(payload); hashes.append(digest)
         started = time.monotonic(); body = {}; raw = None
@@ -229,6 +230,8 @@ def interpret(context, deadline):
                          'interpretation': result, 'customer_message_ids': data['current_message_ids']})
             return result, logs, combine_digests(*hashes)
         except (ValueError, KeyError, TypeError) as exc:
+            if str(exc) == 'deepseek_output_token_limit':
+                output_limit = 4800
             logs.append({**_call_log(attempt + 1, started, body, 'invalid_contract', str(exc)),
                          'node': 'route_understanding', 'rejected_interpretation': raw})
             if attempt:

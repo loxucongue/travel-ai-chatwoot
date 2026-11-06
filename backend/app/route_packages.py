@@ -108,6 +108,8 @@ def _validate(package: dict, source: Path) -> dict:
             raise RoutePackageError(f"route_package_entry_comparison_invalid:{route_id}")
     intake = package.get("intake")
     if intake is not None:
+        if 'enabled' in intake and type(intake['enabled']) is not bool:
+            raise RoutePackageError(f'route_package_intake_enabled_invalid:{route_id}')
         if (not isinstance(intake, dict) or intake.get("field") not in ("party_size", "departure_window")
                 or not isinstance(intake.get("question"), str) or not 1 <= len(intake['question']) <= 300
                 or type(intake.get('wait_seconds')) is not int or not 10 <= intake['wait_seconds'] <= 600
