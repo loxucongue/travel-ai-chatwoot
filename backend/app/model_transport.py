@@ -31,9 +31,8 @@ def _fallback_ready():
 
 
 def _retryable(exc):
-    if isinstance(exc, httpx.HTTPStatusError):
-        return exc.response.status_code in {401, 403, 408, 429} or exc.response.status_code >= 500
-    return isinstance(exc, (httpx.TransportError, TimeoutError))
+    """Classify provider outages for scheduling; switching is not gated by this."""
+    return isinstance(exc, (httpx.HTTPError, TimeoutError))
 
 
 def _gemini_payload(payload):
@@ -102,7 +101,7 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
                 _primary_failures.pop(identity, None)
             return response
         except Exception as exc:
-            if not available or not _retryable(exc):
+            if not available:
                 raise
             reason = 'http_' + str(exc.response.status_code) if isinstance(exc, httpx.HTTPStatusError) else type(exc).__name__
             with _primary_lock:
@@ -115,8 +114,6 @@ def _post_with_deadline(payload: dict, timeout: float) -> httpx.Response:
             _fallback_failures.pop(fallback_identity, None)
         return response
     except Exception as exc:
-        if not _retryable(exc):
-            raise
         with _primary_lock:
             _fallback_failures[fallback_identity] = time.monotonic() + settings.model_fallback_cooldown_seconds
             # An unavailable backup must never keep a recovered primary bypassed.
@@ -139,6 +136,21 @@ def _metered_attempt(payload, timeout, provider, fallback_reason=None):
         response.extensions.setdefault('call_timing', {}).update(provider=provider, fallback_reason=fallback_reason)
         try:
             body = response.json()
+            # Check transport/protocol usability, never business wording or facts.
+            message = body['choices'][0]['message']
+            finish = body['choices'][0].get('finish_reason')
+            if finish == 'length':
+                raise ValueError('model_output_token_limit')
+            if finish not in (None, 'stop', 'tool_calls'):
+                raise ValueError('incomplete_model_response')
+            tools = message.get('tool_calls')
+            if tools:
+                for tool in tools:
+                    fn = tool['function']
+                    if not tool.get('id') or not fn.get('name') or not isinstance(json.loads(fn['arguments']), dict):
+                        raise ValueError('invalid_model_tool_call')
+            elif not isinstance(message.get('content'), str) or not message['content'].strip():
+                raise ValueError('empty_model_response')
             # Validate here only when this attempt can switch providers.
             # Otherwise leave content repair to the caller's existing bounded
             # protocol retry; an invalid draft is not a transport failure.

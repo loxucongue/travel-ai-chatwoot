@@ -134,7 +134,7 @@ def test_bailian_failure_never_keeps_recovered_primary_bypassed(gateway, monkeyp
     assert [r.url.host for r in requests] == ['primary.invalid', 'fallback.invalid', 'primary.invalid']
 
 
-@pytest.mark.parametrize('status', [401, 403, 408, 429, 500, 502, 503, 504])
+@pytest.mark.parametrize('status', [400, 401, 402, 403, 404, 408, 413, 422, 429, 500, 502, 503, 504])
 def test_provider_failure_falls_back_and_accounts_both(gateway, status):
     handlers, requests, records = gateway
     handlers['primary.invalid'] = lambda r: httpx.Response(status)
@@ -148,15 +148,6 @@ def test_provider_failure_falls_back_and_accounts_both(gateway, status):
     assert [r['status'] for r in records] == ['failed', 'completed']
     assert records[0]['http_status'] == status and records[1]['cost_basis'] == 'gateway_estimate'
     assert 'test-secret' not in json.dumps(records)
-
-
-@pytest.mark.parametrize('status', [400, 404, 413, 422])
-def test_invalid_payload_is_not_hidden_by_fallback(gateway, status):
-    handlers, requests, records = gateway
-    handlers['primary.invalid'] = lambda r: httpx.Response(status)
-    with pytest.raises(httpx.HTTPStatusError):
-        transport._post_with_deadline(payload(), 2)
-    assert len(requests) == len(records) == 1
 
 
 @pytest.mark.parametrize('setting,value', [('gemini_fallback_enabled', False), ('gemini_api_key', '')])
@@ -374,3 +365,32 @@ def test_sticky_backup_and_primary_failure_still_share_one_deadline(gateway):
         transport._post_with_deadline(payload(), .2)
     assert time.monotonic() - start < .4
     assert [r.url.host for r in requests][-2:] == ['fallback.invalid','primary.invalid']
+
+
+@pytest.mark.parametrize('body', [
+    {}, {'choices': []}, {'choices': [{'message': {'content': ''}}]},
+    {'choices': [{'message': {'content': '  '}}]},
+    {'choices': [{'message': {'content': '{"partial":'}, 'finish_reason': 'length'}]},
+    {'choices': [{'message': {'tool_calls': [{'id':'x','function':{'name':'lookup','arguments':'{'}}]}}]},
+])
+def test_unusable_primary_response_tries_backup(gateway, body):
+    handlers, requests, records = gateway
+    handlers['primary.invalid'] = lambda r: httpx.Response(200, json=body)
+    handlers['fallback.invalid'] = success
+    response = transport._post_with_deadline(payload(), 2)
+    assert response.extensions['model_provider'] == settings.model_fallback_provider
+    assert [r.url.host for r in requests] == ['primary.invalid', 'fallback.invalid']
+    assert [r['status'] for r in records] == ['failed', 'completed']
+
+
+def test_primary_non_http_failure_also_tries_backup(gateway, monkeypatch):
+    handlers, requests, records = gateway
+    handlers['fallback.invalid'] = success
+    original = transport._post_unmetered
+    def failed_primary(payload, timeout, **kwargs):
+        if not kwargs: raise ValueError('deepseek_output_token_limit')
+        return original(payload, timeout, **kwargs)
+    monkeypatch.setattr(transport, '_post_unmetered', failed_primary)
+    response = transport._post_with_deadline(payload(), 2)
+    assert response.extensions['model_provider'] == settings.model_fallback_provider
+    assert [r['status'] for r in records] == ['failed', 'completed']
