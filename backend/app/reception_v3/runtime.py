@@ -114,8 +114,20 @@ def run_agent(context: dict):
     deadline = time.monotonic() + 60
     understanding_logs, understanding_hash = [], None
     if settings.reception_route_understanding_enabled and context.get('event') == 'customer_message':
-        understanding, understanding_logs, understanding_hash = interpret(
-            context, min(deadline, time.monotonic() + settings.deepseek_timeout_seconds))
+        # The auxiliary interpreter must leave time for the customer-facing model.
+        try:
+            understanding, understanding_logs, understanding_hash = interpret(
+                context, min(deadline - 25, time.monotonic() + settings.deepseek_timeout_seconds))
+        except EvaluationCallError as exc:
+            understanding = None
+            understanding_logs = exc.logs + [{'node': 'route_understanding', 'status': 'degraded',
+                'error_code': exc.code, 'generation_continues': True}]
+            understanding_hash = exc.digest
+        if understanding is None:
+            context = {k: v for k, v in context.items() if k != 'route_understanding'}
+            context['route_understanding_fallback'] = (
+                '前置理解未完成；直接根據真實歷史、最新客戶消息和產品資料理解並答覆。'
+                '不要因前置引用校驗失敗而轉人工，不採用失敗分析中的推測。')
         if understanding:
             context = {**context, 'route_understanding': understanding}
             if understanding['intent'] == 'ambiguous':

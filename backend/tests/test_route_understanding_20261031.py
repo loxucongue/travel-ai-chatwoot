@@ -177,20 +177,21 @@ def test_context_keeps_multiple_offers_and_merged_corrections_and_omits_private(
     assert len(semantic.validate(r, semantic.task(ctx()))['offered_options']) == 2
 
 
-def test_execution_reuses_verified_inference_and_rejects_stale_input(monkeypatch):
+def test_execution_reuses_verified_inference_and_ignores_stale_auxiliary_input(monkeypatch):
     c = ctx(); semantic_model(monkeypatch, [result(c)])
     value, logs, _ = semantic.interpret(c, time.monotonic() + 20)
     run = SimpleNamespace(input_snapshot=c, trace={'logs': logs})
     assert semantic.from_run(run) == value
     run.input_snapshot = deepcopy(c)
     run.input_snapshot['messages'].append({'id': 'new', 'direction': 'incoming', 'content': '不換了'})
-    with pytest.raises(semantic.DecisionContractError): semantic.from_run(run)
+    assert semantic.from_run(run) is None
 
 
-def test_schema_repair_is_bounded_and_classified_as_nonretryable(monkeypatch):
-    c = ctx(); requests = semantic_model(monkeypatch, [{}, {}])
-    with pytest.raises(EvaluationCallError) as error: semantic.interpret(c, time.monotonic() + 20)
-    assert len(requests) == 2 and semantic.contract_failure(error.value)
+def test_schema_repair_is_bounded_and_degrades_to_generation(monkeypatch):
+    c = ctx(); requests = semantic_model(monkeypatch, [{}, {}, {}])
+    value, logs, _ = semantic.interpret(c, time.monotonic() + 20)
+    assert len(requests) == 3 and value is None
+    assert logs[-1]['status'] == 'degraded' and logs[-1]['generation_continues']
 
 
 def test_semantic_schema_uses_live_catalog_and_repairs_actual_invalid_value(monkeypatch):
@@ -335,3 +336,61 @@ def test_operator_retry_keeps_incident_and_does_not_notify_again(session_factory
         assert service.state(row)['handoff']
         tasks=list(db.scalars(select(HandoffTask).order_by(HandoffTask.id)))
         assert tasks[0].status=='cancelled' and tasks[-1].status=='pending'
+
+
+def test_empty_quote_is_valid_only_for_delivered_route_image():
+    c = ctx('3月適合嗎？'); r = result(c, 'inquire')
+    c['messages'].insert(0, {'id': 'map', 'direction': 'outgoing', 'status': 'sent',
+        'content': '', 'content_type': 'image', 'asset_key': 'map', 'route_variant': NINE})
+    r['offered_options'] = [{'message_id': 'map', 'quote': '', 'route': NINE}]
+    assert semantic.validate(r, semantic.task(c))['offered_options'][0]['quote'] == ''
+    c['messages'][0]['status'] = 'draft'
+    with pytest.raises(ValueError): semantic.validate(r, semantic.task(c))
+
+
+def test_three_invalid_interpretations_still_generate_customer_reply(monkeypatch):
+    c = ctx('3月適合嗎？')
+    bad = result(c, 'inquire'); bad['evidence'][0]['quote'] = '3月适合吗？'
+    semantic_requests = semantic_model(monkeypatch, [bad, bad, bad])
+    requests = model(monkeypatch, [final(messages=[{'text': '三月的安排可以依這條行程來看。'}])])
+    decision, logs, _ = runtime.run_agent(c)
+    assert len(semantic_requests) == 3 and len(requests) == 1
+    assert decision['action'] == 'reply' and decision['messages'][0]['text']
+    assert any(l.get('status') == 'degraded' for l in logs)
+    assert '3月適合嗎？' in json.dumps(requests[0], ensure_ascii=False)
+    assert 'rejected_interpretation' not in json.dumps(requests[0])
+    assert 'shown_route' in semantic_requests[-1]['messages'][-1]['content'] or '圖片' in semantic_requests[-1]['messages'][-1]['content']
+
+
+def test_auxiliary_transport_failure_does_not_skip_reply_model(monkeypatch):
+    semantic_model(monkeypatch, [httpx.ReadTimeout('auxiliary unavailable')])
+    requests = model(monkeypatch, [final(messages=[{'text': '先回答您三月份的問題。'}])])
+    decision, logs, _ = runtime.run_agent(ctx('3月適合嗎？'))
+    assert len(requests) == 1 and decision['action'] == 'reply'
+    assert any(l.get('status') == 'degraded' for l in logs)
+
+
+def test_actual_reply_transport_failure_is_still_reported(monkeypatch):
+    semantic_model(monkeypatch, [{}, {}, {}])
+    def unavailable(*args): raise httpx.ReadTimeout('both reply providers unavailable')
+    monkeypatch.setattr(runtime, '_post_with_deadline', unavailable)
+    with pytest.raises(EvaluationCallError): runtime.run_agent(ctx())
+
+
+def test_degraded_interpreter_reply_is_delivered_without_handoff(session_factory, monkeypatch):
+    from test_reception_v3 import create, step, delivered
+    c = ctx('3月適合嗎？')
+    semantic_model(monkeypatch, [{}, {}, {}])
+    model(monkeypatch, [final(messages=[{'text': '先回答您三月份的問題。'}], interrupt=True)])
+    monkeypatch.setattr(service, 'run_agent', lambda context: runtime.run_agent(c))
+    with session_factory() as db:
+        row = create(db, monkeypatch)
+        value = service.state(row)
+        row.messages = [m for m in row.messages if m.get('direction') == 'incoming']
+        value.update(opening_started=True, intake_status='done', pending_event='customer_message',
+                     delivery_kind=None, delivery_due_at=None, model_not_before=None,
+                     buffered_questions=[row.messages[0]['id']])
+        service.save(row, value); db.commit()
+        step(db, row); step(db, row)
+        assert '先回答您三月份的問題。' in delivered(row)
+        assert not service.state(row).get('handoff')
