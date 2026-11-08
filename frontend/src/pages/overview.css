@@ -64,3 +64,14 @@
 .bi-page button:focus-visible,.bi-drawer button:focus-visible { outline:3px solid #59a99c; outline-offset:3px; }
 @media(max-width:1100px) { .bi-grid{grid-template-columns:1fr}.bi-tabs{margin-left:0} }
 @media(max-width:650px) { .bi-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.bi-progress{grid-template-columns:repeat(2,minmax(0,1fr))}.bi-mini{grid-template-columns:repeat(2,minmax(0,1fr))}.bi-filters{gap:10px}.bi-filters label{max-width:100%}.bi-tabs{width:100%}.bi-tabs button{flex:1}.bi-card{padding:14px}.bi-card strong{font-size:27px}.bi-bars>div{grid-template-columns:120px 1fr 25px}.bi-definitions dl{grid-template-columns:1fr;gap:3px}.bi-definitions dd{margin-bottom:10px} }
+
+.bi-technical { margin-top:24px; }
+.bi-technical h2 { margin:0; font-size:17px; }
+.bi-tech-cards { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.bi-tech-cards .bi-card { cursor:default; }
+.bi-tech-table { overflow-x:auto; margin-top:16px; }
+.bi-tech-table table { width:100%; border-collapse:collapse; text-align:left; font-size:13px; }
+.bi-tech-table th,.bi-tech-table td { padding:10px; border-bottom:1px solid #e0e8ec; white-space:nowrap; }
+.bi-tech-table small { display:block; color:#617180; }
+@media(max-width:760px) { .bi-tech-cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:420px) { .bi-tech-cards { grid-template-columns:1fr; } }

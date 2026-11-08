@@ -247,3 +247,11 @@ def customers(metric: str='new', start: str | None=None, end: str | None=None, i
                         **{k:v for k,v in e.evidence.items() if k != 'reason'}} for e in evidence[:8]],
                       'next_followup_at':p.snapshot.get('next_followup_at') if p else None})
     return {'items':items,'total':len(subjects),'page':page,'page_size':page_size,'metric':metric,'label':LABELS[metric]}
+
+
+@router.get('/technical')
+def technical(start: str | None=None, end: str | None=None, inbox_id: int | None=None,
+              user=Depends(manager), db=Depends(get_db)):
+    from app.bi_technical import read_technical
+    with db.no_autoflush:
+        return read_technical(db, user, start, end, inbox_id)
