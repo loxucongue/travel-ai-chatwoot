@@ -282,6 +282,17 @@ def _unavailable_result(bundle, route, days, today, reason, code, party_size=Non
 
 
 def validate_pricing(policy):
+    group = policy.get('group_pricing') if isinstance(policy, dict) else None
+    if group is not None:
+        if (not isinstance(group, dict) or not group.get('source_ref')
+                or type(group.get('private_from')) is not int or group['private_from'] < 1):
+            raise ValueError('seasonal_group_pricing_invalid')
+        for key in ('discounts_per_person', 'private_supplements_per_person'):
+            rates = group.get(key)
+            if not isinstance(rates, dict) or not rates or any(
+                    not isinstance(n, str) or not n.isdigit() or int(n) < 1 or type(v) is not int or v < 0
+                    for n, v in rates.items()):
+                raise ValueError('seasonal_group_pricing_rates_invalid')
     if isinstance(policy, dict) and policy.get('schedule_mode') == 'fixed_dates':
         from app.reception_v3.scheduled_departures import validate
         return validate(policy)
@@ -315,6 +326,8 @@ def validate_pricing(policy):
         ids.add(band['script_id'])
         if any(type(band.get(k)) is not int or band[k] <= 0 for k in ('price_cny', 'single_supplement_cny')):
             raise ValueError('seasonal_pricing_amount_invalid')
+        if group and any(v >= band['price_cny'] for v in group['discounts_per_person'].values()):
+            raise ValueError('seasonal_group_discount_exceeds_price')
         groups.append(band['ranges'])
     for ranges in groups:
         if not isinstance(ranges, list): raise ValueError('seasonal_pricing_range_invalid')
@@ -334,6 +347,9 @@ def departure_quote(bundle, route, start, end, now, *, party_size=None, group_ty
     policy = seasonal or spec.get('departure_availability')
     if not policy:
         return {'status':'not_seasonal', 'reason':'請使用該線路當前報價資料'}
+    group_policy = policy.get('group_pricing')
+    if group_policy and party_size is not None and party_size >= group_policy['private_from']:
+        group_type = 'private'
     try:
         begin, finish = date.fromisoformat(start), date.fromisoformat(end or start)
         today = datetime.fromisoformat(now.replace('Z', '+00:00')).astimezone(ZoneInfo('Asia/Taipei')).date()
@@ -394,14 +410,129 @@ def departure_quote(bundle, route, start, end, now, *, party_size=None, group_ty
     matches = [b for b in policy['bands'] if all(any(lo <= d.strftime('%m-%d') <= hi for lo,hi in b['ranges']) for d in days)]
     if len(matches) != 1:
         return {'status':'ask_date', 'reason':'日期跨季或缺價，先縮小出發範圍，不能自行選最低價'}
-    departures = [d for d in days if d.weekday() == policy['weekday']]
+    private_dates = (group_policy and group_type == 'private'
+                     and _can_choose_date(policy, party_size, group_type))
+    departures = [d for d in days if private_dates or d.weekday() == policy['weekday']]
     if not departures:
         return _non_scheduled_result(spec, days, today, party_size, group_type)
     band = matches[0]
-    return {'status':'quoted', 'route_variant':route, 'script_id':band['script_id'],
+    result = {'status':'quoted', 'route_variant':route, 'script_id':band['script_id'],
             'departure_start':begin.isoformat(), 'departure_end':finish.isoformat(),
             'departure_examples':[d.isoformat() for d in departures[:3]], 'price_cny':band['price_cny'],
             'single_supplement_cny':band['single_supplement_cny']}
+    if group_policy:
+        return group_quote(result, group_policy, party_size, group_type)
+    return result
+
+
+def group_quote(result, policy, count, group):
+    """Compute configured seasonal group prices before generation, never rewrite replies."""
+    base = result['price_cny']
+    result = {**result, 'script_id': '', 'base_price_cny': base, 'currency': 'CNY',
+              'party_size': count, 'source_ref': policy['source_ref'],
+              'early_booking_discount_cny': 0,
+              'usage': '按本次工具最終每人價用text答覆，不引用未扣優惠的季節模板；'
+                       '金額已含多人優惠，不再扣一次，不稱原價。人數或日期變更須重新核價。'
+                       '不疊加未確認早鳥。六人獨團說明完全不拼其他人、可另選出發日期，'
+                       '新日期仍需重新核價並確認名額及辦證時間。'}
+    if count is None:
+        result.update(price_kind='reference', reason='這是季節參考價，尚未按人數及團型核價。')
+        return result
+    discount = policy['discounts_per_person'].get(str(count))
+    supplement = policy['private_supplements_per_person'].get(str(count))
+    if discount is None or (group == 'private' and supplement is None):
+        result.pop('price_cny')
+        result.update(status='advisor', group_type=group,
+                      reason='獨團安排可以承接；本人數的完整費用尚未配置，請顧問核價，不用季節基準價冒充最終價。')
+        return result
+    kinds = ['shared', 'private'] if group == 'undecided' and supplement is not None else [
+        'shared' if group == 'undecided' else group]
+    options = []
+    for kind in kinds:
+        extra = supplement if kind == 'private' else 0
+        amount = base + extra - discount
+        if amount <= 0:
+            raise ValueError('seasonal_group_price_nonpositive')
+        options.append({'group_type': kind, 'party_size': count, 'base_price_cny': base,
+                        'private_supplement_per_person_cny': extra,
+                        'discount_per_person_cny': discount, 'price_cny': amount,
+                        'total_price_cny': amount * count,
+                        'exclusive_group': kind == 'private',
+                        'can_choose_departure_date': kind == 'private'})
+        options[-1]['quote_summary'] = (
+            f'{count}位' + ('獨立包團' if kind == 'private' else '拼團')
+            + f'優惠價：人民幣{amount:,}元／人（兩人一房），{count}人合計{amount * count:,}元。'
+            + (f'每人已扣多人優惠{discount:,}元。' if discount else '')
+            + ('這個價格就是不拼其他旅客的獨立包團方案；出發日期可另選，新日期須重新核價及確認名額。'
+               if kind == 'private' else ''))
+    result['options'] = options
+    if len(options) == 1:
+        result.update(options[0], price_kind='final')
+    else:
+        result.pop('price_cny')
+        result.update(price_kind='comparison', reason='直接列出拼團與獨團兩種最終每人價，不必先追問團型。')
+    return result
+
+
+def prepared_group_quotes(context):
+    """Price normalized model date fields before reply generation, without parsing customer prose."""
+    route = context.get('route_variant')
+    spec = context['skills']['routes'].get(route, {})
+    policy = spec.get('seasonal_pricing') or {}
+    group = policy.get('group_pricing')
+    if not group:
+        return None
+    travel = (context.get('route_understanding') or {}).get('travel_time') or {}
+    prior = context.get('profile', {}).get('_departure_check') or {}
+    date_source = 'current_understanding'
+    if not travel.get('start') and prior.get('route') == route:
+        travel = prior
+        date_source = 'latest_checked_window'
+    def normalized(value, finish=False):
+        if len(value) == 7:
+            first = date.fromisoformat(value + '-01')
+            return first.replace(day=calendar.monthrange(first.year, first.month)[1]) if finish else first
+        return date.fromisoformat(value)
+    try:
+        begin = normalized(travel.get('start', ''))
+        end = normalized(travel.get('end') or travel.get('start', ''), True)
+    except (ValueError, TypeError):
+        return None
+    if end < begin or (end - begin).days > 366:
+        return None
+    boundaries = {begin, end + timedelta(days=1)}
+    ranges = [pair for band in policy['bands'] for pair in band['ranges']]
+    ranges += policy.get('holiday_ranges', []) + policy.get('unavailable_ranges', [])
+    for year in range(begin.year, end.year + 1):
+        for month in range(1, 13):
+            boundaries.add(date(year, month, 1))
+        for lo, hi in ranges:
+            boundaries.update((date.fromisoformat(f'{year}-{lo}'),
+                               date.fromisoformat(f'{year}-{hi}') + timedelta(days=1)))
+    boundaries = sorted(d for d in boundaries if begin <= d <= end + timedelta(days=1))
+    requested_group = travel.get('group_type', 'undecided')
+    if requested_group not in ('shared', 'private'):
+        requested_group = 'undecided'
+    periods = []
+    for lo, stop in zip(boundaries, boundaries[1:]):
+        hi = stop - timedelta(days=1)
+        options = []
+        checks = []
+        for count in group['discounts_per_person']:
+            check = departure_quote(context['skills'], route, lo.isoformat(), hi.isoformat(),
+                                    context['now'], party_size=int(count), group_type=requested_group)
+            checks.append(check)
+            if check['status'] == 'quoted':
+                options.extend(check.get('options', []))
+        periods.append({'start': lo.isoformat(), 'end': hi.isoformat(), 'options': options,
+                        'status': 'quoted' if options else checks[0]['status'],
+                        'reason': '' if options else checks[0].get('reason', '')})
+    return {'route': route, 'start': begin.isoformat(), 'end': end.isoformat(), 'periods': periods,
+            'date_source': date_source,
+            'usage': '這是按本輪已知時間逐段調用核價工具的結果。只選客人詢問人數的options，'
+                     '不同月份分開報價；沒有options的期間不能報普通團費。'
+                     'latest_checked_window表示本輪沒有新日期，沿用最近一次核價區間，不倒退到更早討論的月份。'
+                     '這些是比較方案，並未確認報名人數、團型或名額。'}
 
 
 def trip_quote_amounts(text):

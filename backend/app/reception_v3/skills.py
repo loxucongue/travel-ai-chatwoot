@@ -176,6 +176,13 @@ class SkillRegistry:
                 body += '\n同时询问配对线路时的默认展示顺序（明确偏好、天数和日期优先）：' + json.dumps(route['entry_comparison'], ensure_ascii=False)
             if route.get('seasonal_pricing'):
                 body += '\n分季报价规则：' + json.dumps(route['seasonal_pricing'], ensure_ascii=False)
+                if route['seasonal_pricing'].get('group_pricing'):
+                    body += '\n本線已啟用季節＋人數＋團型核價，優先於舊版模板與不疊加多人優惠的說明。'
+                    body += '每次問價或改問人數（包括假設六人、比較四人六人），都重新調用get_departure_quote並明確傳party_size與group_type；不能沿用歷史金額或以同價省略核價。'
+                    body += '未定團型傳undecided，工具可返回拼團與獨團options，直接比較，不逼問先選。六人起按獨團介紹優勢；七人以上完整費用未配置須顧問核價。'
+                    body += '只按工具price_cny或options的最終價用text答覆，script_id與quote_options留空，不能引用未扣優惠的price_low等季節模板。'
+                    body += '金額已含優惠，不再相減，不稱原價；六人說明不拼其他人、可另選出發日期，新日期仍須核價及確認名額。'
+                    body += '假設人數僅為比較，不更新已確認報名人數。歷史錯價不能當已承諾優惠沿用。早鳥未啟用，不自行疊加。'
             if route.get('party_pricing'):
                 body += '\n人數報價已由系統計算，單一人數用對應price_*模板，多種人數比較用quote_options；比較的最終每人價不同時可另用text按pricing_evidence解釋每人優惠及已包含在最終價，不要求先確定報名人數。未選團型按明示拼團價提供參考，不據此標記客人已選拼團。未配置人數不猜折扣；不展示早鳥或限時文案。對客稱優惠價，不稱原價；同價只承接上述優惠價，不重複金額、不主動展開其他檔位，歷史已報過且仍適用時不重發整套報價。'
                 body += '\n單人報價或單人確認接受拼房，按通用Skill補充未拼成需補單房差及有依據的本線金額；這是未問房差通常不主動提的例外，不代表必須單住或保證拼房成功。多人未問房型不問分房。必要說明放在輕鬆收尾問句前。客人變更人數／團型只記錄諮詢意向，不代表訂位或實際改團。人數未定時可以先比較有依據的方案，最終安排等客人確認，不能說幫客人保留名額、已改好團，也不能自行給確認期限（例如四月初前、幾天內）。未問期限不新增日期；只有工具公布的團期可以引用。'
@@ -203,7 +210,9 @@ class SkillRegistry:
                 + '\n使用条件：' + json.dumps({k: s[k] for k in
                     ('party_size_min', 'party_size_max', 'topics', 'usage_note') if k in s}, ensure_ascii=False)
                 + '\n' + s['answer_text'] + '\n素材：' + json.dumps(s.get('asset_ids', []), ensure_ascii=False)
-                for s in route.get('scripts', []))
+                for s in route.get('scripts', [])
+                if not ((route.get('seasonal_pricing') or {}).get('group_pricing')
+                        and s['id'] in {b['script_id'] for b in route['seasonal_pricing']['bands']}))
             body += '\n\n## 线路事实\n' + '\n'.join(
                 f"- [{f.get('id', '')}] {f.get('text', '')}" for f in route.get('facts', []))
             body += '\n\n## 可用素材\n' + json.dumps(

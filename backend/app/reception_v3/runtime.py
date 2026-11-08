@@ -167,6 +167,10 @@ def run_agent(context: dict):
             '選線不等於報名，日期與報價仍須工具核對。歷史單一推薦不能覆蓋本輪選擇。')
     from app.reception_v3.party_quotes import pricing_evidence
     current['pricing_evidence'] = pricing_evidence(context['skills'])
+    from app.reception_v3.seasonal_quotes import prepared_group_quotes
+    prepared_quotes = prepared_group_quotes(context)
+    if prepared_quotes:
+        current['pricing_evidence'][prepared_quotes['route']] = prepared_quotes
     # Delivery metadata and earlier model reasons are not customer dialogue.
     # Send actual speech with chat roles so repeated invitations are visible.
     current['state'] = {key: value for key, value in current.get('state', {}).items()
@@ -396,6 +400,56 @@ def run_agent(context: dict):
             # Keep their order after recurring reminders, without duplicating
             # the rejected draft or obscuring the specific correction request.
             request_messages = request_messages + messages[task_message_count:]
+            pricing_instruction_start = len(request_messages)
+            seasonal_group_quotes = {r: v for r, v in availability_results.items()
+                                     if v.get('price_kind') in ('final', 'comparison', 'reference')}
+            discussed_routes = set((context.get('route_understanding') or {}).get('discussed_routes', []))
+            discussed_routes.update((context.get('route_variant'),
+                                     (context.get('profile') or {}).get('discussion_route')))
+            group_priced_routes = [r for r, spec in context['skills']['routes'].items()
+                                   if r in discussed_routes and (spec.get('seasonal_pricing') or {}).get('group_pricing')]
+            if group_priced_routes:
+                request_messages = request_messages + [{'role': 'system', 'content':
+                    '以下線路已更新多人核價政策：' + ','.join(group_priced_routes) + '。'
+                    '如果本輪詢問這些線路的價格、比較人數或團型，使用已核驗periods；沒有periods才調用get_departure_quote核價，'
+                    '傳入本輪詢問的人數與團型，不沿用歷史_departure_check或季節模板金額。'
+                    '月份已知時用已知年份月份核價；跨季先核對整個範圍，再對其中可售的季節分別核價並比較。'
+                    '不可只因跨季而選一個季節價或逼客人先選月份。未知團型傳undecided，'
+                    '六人工具會直接返回獨團方案。不得使用price_low/price_peak等未扣人數優惠的模板答覆，'
+                    '必須按工具最終價以text答覆，script_id及quote_options留空。其他非價格問題照常答覆。'
+                    '下面每個ranges與該檔per_person_prices一一對應；客人跨兩個月份且價格不同，'
+                    '必須分開說明兩段日期的價格，不把較低價寫成整個詢問期間同價；'
+                    '不能把某一季節的價格寫成整個跨季期間通用價。四人未選團型時拼團、獨團都可直接列出，'
+                    '六人只有獨團。以下由程序事先計算，禁止從其他線路取金額：\n'
+                    + json.dumps({r: current['pricing_evidence'].get(r) for r in group_priced_routes}, ensure_ascii=False)}]
+            if prepared_quotes:
+                request_messages = request_messages + [{'role': 'system', 'content':
+                    '上面的periods已在你生成答覆前逐段完成日期與人數核價，無須重複調工具。'
+                    '客人問跨月價格時，從每個quoted期間選該人數的全部團型options，逐段報價，'
+                    '不要只報其中較便宜或較貴的一段。未選團型的四人直接列拼團與獨團兩種價格；'
+                    '六人僅列獨團，說清不拼其他人及可另選日期。非quoted期間不宣稱有普通團期。'
+                    '已明說獨團或拼團就只回答該方案，不再問是否想自己一團，不為湊收尾問句重問已知需求。'
+                    '以text自然回答，script_id及quote_options留空；比較不代表客人已確定人數。'}]
+            if seasonal_group_quotes:
+                request_messages = request_messages + [{'role': 'system', 'content':
+                    '本輪已完成季節、人數、團型聯合核價，以下結果優先於舊季節模板與通用quote_options規則。'
+                    '必須用text明確報出本次最終每人價；script_id=""、quote_options=[]。'
+                    'price_low/price_peak等只是未扣人數優惠的舊季節模板，不能用它們交付本次報價；'
+                    'price_shared_6等也不是本線模板。不要把「已經算進上述價格」當作新價格，'
+                    '也不要只說減額而漏掉最終金額。options有兩種團型時直接各報最終每人價。'
+                    'options是本次全部可報方案：只有一項private就只報該獨團方案，'
+                    '不得另造shared方案或把base_price_cny當拼團參考價。'
+                    'group_type=private就是本次獨立包團方案，不是建議客人另外付錢考慮獨團；'
+                    '直接說六人特別優惠安排獨立包團，不說「也可以考慮自己一團」。'
+                    '說清不拼其他人、可另選出發日期，改日期仍須核價與確認名額。'
+                    '工具party_size只是本次核價參數；客人說「如果六人」是比較假設，不把profile.party_size改成六人。'
+                    '這些是生成前的已核實資料，仍由你自然組織答覆：\n'
+                    + json.dumps(seasonal_group_quotes, ensure_ascii=False)}]
+            if len(request_messages) > pricing_instruction_start:
+                pricing_instructions = '\n\n'.join(m['content'] for m in request_messages[pricing_instruction_start:])
+                request_messages = [{**request_messages[0], 'content': request_messages[0]['content']
+                                     + '\n\n本輪季節團型報價專項指引（優先於前文舊報價模板）：\n'
+                                     + pricing_instructions}, *request_messages[1:pricing_instruction_start]]
             payload = {'model': settings.deepseek_vision_model if images else settings.deepseek_model, 'messages': request_messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
                        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,

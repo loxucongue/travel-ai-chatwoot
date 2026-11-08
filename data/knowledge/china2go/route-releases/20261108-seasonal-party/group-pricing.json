@@ -1,0 +1,9 @@
+{
+  "route_variant": "tibet_overview_10d",
+  "group_pricing": {
+    "source_ref": "麗麗 2026-11-08 11:06：4人獨團10480+400-200；6人獨團10480+0-400；4人拼團10480-200。奇數沿用2026-10-26已確認達檔優惠；早鳥不在本次啟用。",
+    "private_from": 6,
+    "discounts_per_person": {"1": 0, "2": 0, "3": 0, "4": 200, "5": 200, "6": 400},
+    "private_supplements_per_person": {"4": 400, "6": 0}
+  }
+}

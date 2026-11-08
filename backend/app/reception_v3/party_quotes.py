@@ -108,6 +108,26 @@ def pricing_evidence(bundle):
     """Expose comparisons from the same configured arithmetic as quote scripts."""
     result = {}
     for key, spec in bundle['routes'].items():
+        seasonal = spec.get('seasonal_pricing') or {}
+        if seasonal.get('group_pricing'):
+            from app.reception_v3.seasonal_quotes import group_quote
+            policy = seasonal['group_pricing']
+            bands = []
+            for band in seasonal['bands']:
+                prices = []
+                for n in policy['discounts_per_person']:
+                    quote = group_quote({'price_cny': band['price_cny'], 'status': 'quoted'},
+                                        policy, int(n), 'private' if int(n) >= policy['private_from'] else 'undecided')
+                    prices.extend({k: option[k] for k in (
+                        'party_size', 'group_type', 'price_cny', 'total_price_cny',
+                        'discount_per_person_cny', 'private_supplement_per_person_cny')}
+                        for option in quote.get('options', []))
+                bands.append({'ranges': band['ranges'], 'per_person_prices': prices})
+            result[key] = {'source_ref': policy['source_ref'], 'seasonal_prices': bands,
+                           'usage': '本線季節與人數團型最終價，已扣多人優惠，不套其他線路價格。'
+                                    '先用get_departure_quote核對日期，跨季分別核價；以text報本線最終價，'
+                                    '不使用季節基準價模板，不再扣優惠。六人僅提供獨團，不另造拼團方案。'}
+            continue
         policy = spec.get('party_pricing')
         if not policy:
             continue
