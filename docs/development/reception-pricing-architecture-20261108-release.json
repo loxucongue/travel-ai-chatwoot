@@ -1,0 +1,69 @@
+{
+  "release": {
+    "release": "reception-pricing-c2fe0b8-20261108",
+    "git_commit": "c2fe0b88e4d4275602e22aaea10c80e7091d069d",
+    "engine": "reception-v3-654806ca37487832",
+    "engine_release": "reception-v3-654806ca37487832",
+    "healthy": true,
+    "at": "2026-11-08T09:49:48.659923+00:00",
+    "digest": "453ad7c15bda9afca0e86a41823acc3ff1baf5d3decac7c103a1896071ca356b",
+    "customer_test_sends": 0,
+    "backup": "/opt/china2go-ai/backups/reception-pricing-c2fe0b8-20261108",
+    "previous_release": "case732-seasonal-party-20261108",
+    "patch_files": [
+      "backend/app/reception_v3/service.py",
+      "backend/app/reception_v3/runtime.py",
+      "backend/app/reception_v3/party_quotes.py",
+      "backend/app/reception_v3/seasonal_quotes.py",
+      "backend/app/reception_v3/skills.py",
+      "backend/app/reception_v3/route_understanding.py",
+      "backend/app/reception_v3/prompt.py",
+      "backend/app/reception_v3/skills/tibet-overview-10d/SKILL.md",
+      "backend/app/reception_v3/skills/tibet-reception/SKILL.md",
+      "backend/data/route-packages/tibet_overview_10d/route-package.json"
+    ],
+    "knowledge_preserved": "2026-11-06.website-flight-ali-complete",
+    "ali_preserved": "20261106-ali-website-complete-v1",
+    "protected_runtime_unchanged": true,
+    "configuration_changes": {
+      "route_package": "tibet_overview_10d presentation and confirmed early-booking exception"
+    },
+    "database_changes": "v3 engine release identifiers only",
+    "backup_scope": "replaced files, previous release metadata and engine identifiers; no history replay"
+  },
+  "services": {
+    "china2go-worker": "active",
+    "china2go-api": "active",
+    "china2go-playground": "active"
+  },
+  "quick_check": "ok",
+  "post_release_runs": [],
+  "case732": [
+    [
+      "disabled",
+      "HUMAN_HANDOFF"
+    ]
+  ],
+  "free_bytes": 3144572928,
+  "files_verified": 10,
+  "protected_verified": 6,
+  "tests": {
+    "core_passed": 286,
+    "adjacent_passed": 157,
+    "boundary_passed": 78,
+    "existing_baseline_failures": 6,
+    "critical_model_checks": 30,
+    "known_limitations": [
+      "Occasional verbosity/duplicate wording remains.",
+      "Outside-catalog intake not accepted as completed."
+    ],
+    "baseline_failure_names": [
+      "tests.test_route_understanding_20261031::test_choice_repair_contains_rejected_candidate_and_authority_after_product_tools",
+      "tests.test_route_understanding_20261031::test_contract_failure_ends_once_while_transport_keeps_retry",
+      "tests.test_route_understanding_20261031::test_inquiry_then_explicit_selection_are_separate_turns",
+      "tests.test_route_understanding_20261031::test_operator_retry_keeps_incident_and_does_not_notify_again",
+      "tests.test_route_understanding_20261031::test_optional_failed_outreach_waits_but_does_not_hide_customer_question[introduction_completed-True]",
+      "tests.test_party_quotes_20261025::test_delivery_guard_and_new_quote_do_not_create_expiry"
+    ]
+  }
+}
