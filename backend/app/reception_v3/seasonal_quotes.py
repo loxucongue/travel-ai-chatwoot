@@ -293,6 +293,11 @@ def validate_pricing(policy):
                     not isinstance(n, str) or not n.isdigit() or int(n) < 1 or type(v) is not int or v < 0
                     for n, v in rates.items()):
                 raise ValueError('seasonal_group_pricing_rates_invalid')
+        exceptions = group.get('no_additional_early_booking', [])
+        if not isinstance(exceptions, list) or any(
+                not isinstance(rule, dict) or any(type(rule.get(k)) is not int or rule[k] <= 0
+                    for k in ('base_price_cny', 'party_size')) for rule in exceptions):
+            raise ValueError('seasonal_early_booking_exceptions_invalid')
     if isinstance(policy, dict) and policy.get('schedule_mode') == 'fixed_dates':
         from app.reception_v3.scheduled_departures import validate
         return validate(policy)
@@ -430,11 +435,19 @@ def group_quote(result, policy, count, group):
     base = result['price_cny']
     result = {**result, 'script_id': '', 'base_price_cny': base, 'currency': 'CNY',
               'party_size': count, 'source_ref': policy['source_ref'],
+              'tax_status': 'not_specified',
               'early_booking_discount_cny': 0,
-              'usage': '按本次工具最終每人價用text答覆，不引用未扣優惠的季節模板；'
-                       '金額已含多人優惠，不再扣一次，不稱原價。人數或日期變更須重新核價。'
-                       '不疊加未確認早鳥。六人獨團說明完全不拼其他人、可另選出發日期，'
+              'early_booking_status': 'requires_confirmation',
+              'early_booking_note': '0僅表示本次未計入早鳥，不代表不適用；能否另減須確認基礎價是否已包含及當期活動條件。',
+              'usage': '按本次options的quote_script_id引用短報價，單方案script_id、多方案quote_options，日期條件另用text，不引用未扣優惠的季節模板；'
+                       '金額已含多人優惠，不再扣一次，不稱原價。稅費口徑未提供，不能自行標為含稅或另加稅。加價為0不描述為另有加價。人數或日期變更須重新核價。'
+                       '未確認早鳥不能先扣，也不能說公司沒有或不適用；客人問時說需核對能否再享優惠。六人獨團說明完全不拼其他人、可另選出發日期，'
                        '新日期仍需重新核價並確認名額及辦證時間。'}
+    if any(rule['base_price_cny'] == base and rule['party_size'] == count
+           for rule in policy.get('no_additional_early_booking', [])):
+        result.update(early_booking_status='no_additional_discount',
+                      early_booking_note='此檔位與人數已確認最終優惠價，不再額外扣早鳥。')
+        result['usage'] += ' 本次early_booking_status已確認不再額外扣早鳥，按最終價回答，不再說需確認早鳥。'
     if count is None:
         result.update(price_kind='reference', reason='這是季節參考價，尚未按人數及團型核價。')
         return result
@@ -453,18 +466,13 @@ def group_quote(result, policy, count, group):
         amount = base + extra - discount
         if amount <= 0:
             raise ValueError('seasonal_group_price_nonpositive')
-        options.append({'group_type': kind, 'party_size': count, 'base_price_cny': base,
+        options.append({'quote_script_id': f'price_group_{base}_{kind}_{count}', 'group_type': kind, 'party_size': count, 'base_price_cny': base,
+                        'tax_status': 'not_specified',
                         'private_supplement_per_person_cny': extra,
                         'discount_per_person_cny': discount, 'price_cny': amount,
                         'total_price_cny': amount * count,
                         'exclusive_group': kind == 'private',
                         'can_choose_departure_date': kind == 'private'})
-        options[-1]['quote_summary'] = (
-            f'{count}位' + ('獨立包團' if kind == 'private' else '拼團')
-            + f'優惠價：人民幣{amount:,}元／人（兩人一房），{count}人合計{amount * count:,}元。'
-            + (f'每人已扣多人優惠{discount:,}元。' if discount else '')
-            + ('這個價格就是不拼其他旅客的獨立包團方案；出發日期可另選，新日期須重新核價及確認名額。'
-               if kind == 'private' else ''))
     result['options'] = options
     if len(options) == 1:
         result.update(options[0], price_kind='final')
@@ -513,24 +521,48 @@ def prepared_group_quotes(context):
     requested_group = travel.get('group_type', 'undecided')
     if requested_group not in ('shared', 'private'):
         requested_group = 'undecided'
+    requested_counts = (context.get('route_understanding') or {}).get('travel_time', {}).get('quote_party_sizes', [])
+    counts = list(dict.fromkeys(n for n in requested_counts if type(n) is int and n > 0))
+    if not counts:
+        counts = [int(n) for n in group['discounts_per_person']]
     periods = []
     for lo, stop in zip(boundaries, boundaries[1:]):
         hi = stop - timedelta(days=1)
         options = []
         checks = []
-        for count in group['discounts_per_person']:
+        unquoted = []
+        for count in counts:
             check = departure_quote(context['skills'], route, lo.isoformat(), hi.isoformat(),
                                     context['now'], party_size=int(count), group_type=requested_group)
             checks.append(check)
             if check['status'] == 'quoted':
                 options.extend(check.get('options', []))
-        periods.append({'start': lo.isoformat(), 'end': hi.isoformat(), 'options': options,
+            else:
+                unquoted.append({'party_size': int(count), 'group_type': requested_group,
+                                 'status': check['status'], 'reason': check.get('reason', '')})
+        periods.append({'start': lo.isoformat(), 'end': hi.isoformat(), 'options': options, 'unquoted': unquoted,
+                        'early_booking': [{'party_size': c.get('party_size'),
+                                          'status': c.get('early_booking_status'),
+                                          'note': c.get('early_booking_note')} for c in checks if c.get('early_booking_status')],
                         'status': 'quoted' if options else checks[0]['status'],
                         'reason': '' if options else checks[0].get('reason', '')})
+    # Keep alternative seasons on the same party basis. Otherwise an unquoted
+    # holiday leaves only old, undiscounted historical prices for a comparison.
+    reference_seasons = []
+    for band in spec['seasonal_pricing']['bands']:
+        options = []
+        for count in counts:
+            options.extend(group_quote({'price_cny': band['price_cny'], 'status': 'quoted'},
+                                       group, count, requested_group).get('options', []))
+        reference_seasons.append({'ranges': band['ranges'], 'options': options})
     return {'route': route, 'start': begin.isoformat(), 'end': end.isoformat(), 'periods': periods,
+            'other_season_reference_prices': reference_seasons,
+            'reference_scope': '其他季節參考也已按同一詢價人數和團型計算；不適用於本輪假期或未核實日期。僅比較改期費用時使用，具體新日期另核對，不能把基準價當多人最終價。',
             'date_source': date_source,
             'usage': '這是按本輪已知時間逐段調用核價工具的結果。只選客人詢問人數的options，'
                      '不同月份分開報價；沒有options的期間不能報普通團費。'
+                     'unquoted明列尚不能報價的人數；客人問五人獨團，不能拿四人或六人的價代答，也不能插值。'
+                     '未列人數或團型一律缺少核准價格，需顧問核對。early_booking逐人數提供早鳥判斷，no_additional_discount表示這筆已確認最終價、不再額外扣；requires_confirmation才需核實，不等於公司沒有早鳥優惠。'
                      'latest_checked_window表示本輪沒有新日期，沿用最近一次核價區間，不倒退到更早討論的月份。'
                      '這些是比較方案，並未確認報名人數、團型或名額。'}
 
@@ -607,3 +639,27 @@ def quote_error(decision, bundle, checked, availability=None, *, require_interru
         elif contains_trip_quote(message.get('text', '')):
             return '常規線團費不能自由改寫或跳過日期核對；先呼叫get_departure_quote，再以price_* script_id引用完整模板。'
     return None
+
+
+def apply_group_price_scripts(spec):
+    """Prepare short, calculated quote references before model generation."""
+    seasonal = spec.get('seasonal_pricing') or {}
+    policy = seasonal.get('group_pricing')
+    if not policy:
+        return
+    scripts = {}
+    for band in seasonal['bands']:
+        for n in policy['discounts_per_person']:
+            count = int(n)
+            quote = group_quote({'price_cny': band['price_cny'], 'status': 'quoted'}, policy, count,
+                                'private' if count >= policy['private_from'] else 'undecided')
+            for option in quote.get('options', []):
+                kind = option['group_type']
+                scripts[option['quote_script_id']] = {
+                    'id': option['quote_script_id'], 'status': 'active', 'asset_ids': [], 'topics': ['price'],
+                    'name': f"{count}位已核算的季節團型優惠價",
+                    'answer_text': f"{count}位{'獨立包團' if kind == 'private' else '拼團'}優惠價：人民幣{option['price_cny']:,}元／人（兩人一房）。",
+                    'price_cny': option['price_cny'], 'quote_group_type': kind,
+                    'party_size_min': count, 'party_size_max': count,
+                    'usage_note': '只在本輪核價options列出此quote_script_id時引用；日期條件由核價結果另行說明。這是短報價，不自動重發包含不含。'}
+    spec['scripts'] = [s for s in spec.get('scripts', []) if not s['id'].startswith('price_group_')] + list(scripts.values())

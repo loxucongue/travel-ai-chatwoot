@@ -413,8 +413,11 @@ def parts_for(db, row, bundle, decision, *, followup=False):
                 add('', maps[:1], deduplicate=True, route_hint=scoped_route)
                 automatic_maps.update(maps[:1])
         offset = len(parts)
-        text = (comparison_text(bundle['routes'][scoped_route], message['quote_options'])
-                if message.get('quote_options') else message['text'] or (script['text'] if script else ''))
+        # A model-authored reply can contain date qualifications and answers to
+        # other questions. References must never silently replace that reply.
+        text = message['text'] or (
+            comparison_text(bundle['routes'][scoped_route], message['quote_options'])
+            if message.get('quote_options') else (script['text'] if script else ''))
         add(text, [k for k in message['asset_keys'] if k not in automatic_maps],
             route_hint=message.get('route') or None)
         if message.get('purpose') == 'contact_invitation' or message.get('script_id') == 'contact_request':

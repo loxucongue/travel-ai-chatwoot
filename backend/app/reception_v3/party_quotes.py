@@ -119,13 +119,13 @@ def pricing_evidence(bundle):
                     quote = group_quote({'price_cny': band['price_cny'], 'status': 'quoted'},
                                         policy, int(n), 'private' if int(n) >= policy['private_from'] else 'undecided')
                     prices.extend({k: option[k] for k in (
-                        'party_size', 'group_type', 'price_cny', 'total_price_cny',
+                        'quote_script_id', 'party_size', 'group_type', 'price_cny', 'total_price_cny',
                         'discount_per_person_cny', 'private_supplement_per_person_cny')}
                         for option in quote.get('options', []))
                 bands.append({'ranges': band['ranges'], 'per_person_prices': prices})
             result[key] = {'source_ref': policy['source_ref'], 'seasonal_prices': bands,
                            'usage': '本線季節與人數團型最終價，已扣多人優惠，不套其他線路價格。'
-                                    '先用get_departure_quote核對日期，跨季分別核價；以text報本線最終價，'
+                                    '先用get_departure_quote核對日期，跨季分別核價；用返回的quote_script_id引用本線最終價，'
                                     '不使用季節基準價模板，不再扣優惠。六人僅提供獨團，不另造拼團方案。'}
             continue
         policy = spec.get('party_pricing')
@@ -260,6 +260,17 @@ def comparison_text(spec, ids):
     """
     scripts = {s['id']: s for s in spec['scripts']}
     selected = [scripts[key] for key in ids]
+    if (spec.get('seasonal_pricing') or {}).get('group_pricing'):
+        # The model selected these precomputed references. No text is inspected
+        # or rewritten; equal-price alternatives share one displayed price.
+        grouped = {}
+        for script in selected:
+            grouped.setdefault((script['quote_group_type'], script['price_cny']), []).append(script['party_size_min'])
+        return '\n'.join(
+            '／'.join(f'{n}位' for n in dict.fromkeys(counts))
+            + ('獨立包團' if kind == 'private' else '拼團')
+            + f'優惠價：人民幣{amount:,}元／人（兩人一房）。'
+            for (kind, amount), counts in grouped.items())
     template = spec['party_pricing'][selected[0]['quote_group_type'] + '_template']
     before, after = template.split('{amount}')
     header, _, price_prefix = before.rpartition('\n')

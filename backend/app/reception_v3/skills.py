@@ -71,7 +71,7 @@ def compile_skills(db, now=None):
             'opening_text_in_introduction': route.get('opening_text_in_introduction', False),
             'scripts': [{k: deepcopy(s[k]) for k in ('id', 'name', 'answer_text', 'asset_ids',
                          'positive_examples', 'negative_examples', 'party_size_min', 'party_size_max',
-                         'topics', 'usage_note', 'status', 'quote_offer') if k in s}
+                         'topics', 'usage_note', 'status', 'quote_offer', 'answer_scope') if k in s}
                         for s in effective_price_scripts(route.get('fixed_answers', []), now) if s.get('status') == 'active'],
             'groups': deepcopy(route['groups']),
             'introduction_sequence': [k for k in route['introduction_sequence']
@@ -82,6 +82,8 @@ def compile_skills(db, now=None):
             'quote_policy': next((deepcopy(s) for s in route.get('fixed_answers', [])
                                   if s.get('id') == 'price' and s.get('valid_for_days') and s.get('status') == 'active'), None),
         }
+        from app.reception_v3.seasonal_quotes import apply_group_price_scripts
+        apply_group_price_scripts(routes[key])
         if route.get('party_pricing'):
             from app.reception_v3.party_quotes import apply_price_scripts
             routes[key]['party_pricing'] = deepcopy(route['party_pricing'])
@@ -180,9 +182,9 @@ class SkillRegistry:
                     body += '\n本線已啟用季節＋人數＋團型核價，優先於舊版模板與不疊加多人優惠的說明。'
                     body += '每次問價或改問人數（包括假設六人、比較四人六人），都重新調用get_departure_quote並明確傳party_size與group_type；不能沿用歷史金額或以同價省略核價。'
                     body += '未定團型傳undecided，工具可返回拼團與獨團options，直接比較，不逼問先選。六人起按獨團介紹優勢；七人以上完整費用未配置須顧問核價。'
-                    body += '只按工具price_cny或options的最終價用text答覆，script_id與quote_options留空，不能引用未扣優惠的price_low等季節模板。'
+                    body += '只引用本輪核價options中的quote_script_id，單方案script_id、多方案quote_options，text留空；日期條件另用text，不能引用未扣優惠的price_low等季節模板。'
                     body += '金額已含優惠，不再相減，不稱原價；六人說明不拼其他人、可另選出發日期，新日期仍須核價及確認名額。'
-                    body += '假設人數僅為比較，不更新已確認報名人數。歷史錯價不能當已承諾優惠沿用。早鳥未啟用，不自行疊加。'
+                    body += '假設人數僅為比較，不更新已確認報名人數。歷史錯價不能當已承諾優惠沿用。早鳥按本輪工具狀態判斷，未確認不得自行疊加，也不說公司沒有優惠。'
             if route.get('party_pricing'):
                 body += '\n人數報價已由系統計算，單一人數用對應price_*模板，多種人數比較用quote_options；比較的最終每人價不同時可另用text按pricing_evidence解釋每人優惠及已包含在最終價，不要求先確定報名人數。未選團型按明示拼團價提供參考，不據此標記客人已選拼團。未配置人數不猜折扣；不展示早鳥或限時文案。對客稱優惠價，不稱原價；同價只承接上述優惠價，不重複金額、不主動展開其他檔位，歷史已報過且仍適用時不重發整套報價。'
                 body += '\n單人報價或單人確認接受拼房，按通用Skill補充未拼成需補單房差及有依據的本線金額；這是未問房差通常不主動提的例外，不代表必須單住或保證拼房成功。多人未問房型不問分房。必要說明放在輕鬆收尾問句前。客人變更人數／團型只記錄諮詢意向，不代表訂位或實際改團。人數未定時可以先比較有依據的方案，最終安排等客人確認，不能說幫客人保留名額、已改好團，也不能自行給確認期限（例如四月初前、幾天內）。未問期限不新增日期；只有工具公布的團期可以引用。'
@@ -219,5 +221,14 @@ class SkillRegistry:
                 [m for m in self.materials if route_id in m.get('routes', [])], ensure_ascii=False)
         else:
             raise ValueError(f'skill_route_configuration_missing:{name}')
+        if route and (route.get('seasonal_pricing') or {}).get('group_pricing'):
+            body += ('\n\n## 本輪答覆範圍（取代舊完整報價及收尾問句慣例）\n'
+                     '依本輪問題選用一種版式，不是全部輸出：首次報價列短行價格及共同包含／不含；'
+                     '只追問另一人數時，直接給新每人價、該人數優惠與獨團優勢，約兩三句即可，'
+                     '不要重發完整包含／不含、交通清單、房型設施或小費。客人只問交通就只答交通。'
+                     '同時問價格與交通就價格列表加交通短段。不要抄前面完整報價來湊答案。'
+                     '未核准人數或團型的價格不能用其他人數代答；不額外推薦其他人數。'
+                     '早鳥尚無核准計算條件時說需要確認，不說公司沒有、不說一定不能優惠。'
+                     '說完即可，不強制問句；只在總價被問到時列整團合計。')
         return {'name': name, 'description': item['description'], 'instructions': body,
                 'digest': hashlib.sha256(body.encode()).hexdigest()}

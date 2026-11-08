@@ -10,7 +10,7 @@ from app.config import settings
 from app.model_transport import _post_with_deadline, _call_log, EvaluationCallError
 from app.model_gateway import _json_object, _request_hash, combine_digests
 from app.reception_v3.skills import SkillRegistry
-from app.reception_v3.prompt import SYSTEM_PROMPT, TRAVEL_WINDOW_INSTRUCTION, CONTACT_CONTINUITY_INSTRUCTION, CONSULTATIVE_INSTRUCTION
+from app.reception_v3.prompt import SYSTEM_PROMPT, TRAVEL_WINDOW_INSTRUCTION, CONTACT_CONTINUITY_INSTRUCTION, CONSULTATIVE_INSTRUCTION, ANSWER_SCOPE_INSTRUCTION
 from app.reception_v3.lead_priority import LeadReview, task as lead_priority_task
 from app.reception_v3.seasonal_quotes import departure_quote, month_answer_window, mentions_departure_time, explicit_date_window
 from app.reception_v3.route_choice import PEACH_ROUTES
@@ -134,6 +134,9 @@ def run_agent(context: dict):
                 return (Decision(messages=[{'text': understanding['clarification']}], interrupt=True,
                                  reason='本輪選線存在歧義，先確認一次，不當作技術故障。').model_dump(),
                         understanding_logs, understanding_hash)
+    from app.reception_v3.seasonal_quotes import apply_group_price_scripts
+    for spec in context['skills']['routes'].values():
+        apply_group_price_scripts(spec)
     registry = SkillRegistry(context['skills'], context.get('available_materials', []), profile=context.get('profile'))
     loaded = {}
     def load(name):
@@ -346,6 +349,7 @@ def run_agent(context: dict):
     logs = understanding_logs + ([{'node': 'customer_reactions', 'recognized': reactions, 'status': 'verified'}] if reactions else [])
     hashes = [understanding_hash] if understanding_hash else []
     repaired = False
+    protocol_retries = 0
     # A retry with the same limit repeats an avoidable truncation. Keep normal
     # calls small; give the existing bounded retry more room after this error.
     output_limit = 8000 if context.get('state', {}).get('last_error') == 'deepseek_output_token_limit' else 4000
@@ -416,7 +420,7 @@ def run_agent(context: dict):
                     '月份已知時用已知年份月份核價；跨季先核對整個範圍，再對其中可售的季節分別核價並比較。'
                     '不可只因跨季而選一個季節價或逼客人先選月份。未知團型傳undecided，'
                     '六人工具會直接返回獨團方案。不得使用price_low/price_peak等未扣人數優惠的模板答覆，'
-                    '必須按工具最終價以text答覆，script_id及quote_options留空。其他非價格問題照常答覆。'
+                    '引用工具options中的quote_script_id，以script_id或quote_options輸出短報價，text留空。其他非價格問題照常答覆。'
                     '下面每個ranges與該檔per_person_prices一一對應；客人跨兩個月份且價格不同，'
                     '必須分開說明兩段日期的價格，不把較低價寫成整個詢問期間同價；'
                     '不能把某一季節的價格寫成整個跨季期間通用價。四人未選團型時拼團、獨團都可直接列出，'
@@ -429,11 +433,11 @@ def run_agent(context: dict):
                     '不要只報其中較便宜或較貴的一段。未選團型的四人直接列拼團與獨團兩種價格；'
                     '六人僅列獨團，說清不拼其他人及可另選日期。非quoted期間不宣稱有普通團期。'
                     '已明說獨團或拼團就只回答該方案，不再問是否想自己一團，不為湊收尾問句重問已知需求。'
-                    '以text自然回答，script_id及quote_options留空；比較不代表客人已確定人數。'}]
+                    '以quote_script_id引用本次短報價，必要條件另用text；比較不代表客人已確定人數。'}]
             if seasonal_group_quotes:
                 request_messages = request_messages + [{'role': 'system', 'content':
                     '本輪已完成季節、人數、團型聯合核價，以下結果優先於舊季節模板與通用quote_options規則。'
-                    '必須用text明確報出本次最終每人價；script_id=""、quote_options=[]。'
+                    '用options中的quote_script_id引用本次最終每人價，單方案script_id、多方案quote_options；必要條件另用text。'
                     'price_low/price_peak等只是未扣人數優惠的舊季節模板，不能用它們交付本次報價；'
                     'price_shared_6等也不是本線模板。不要把「已經算進上述價格」當作新價格，'
                     '也不要只說減額而漏掉最終金額。options有兩種團型時直接各報最終每人價。'
@@ -450,6 +454,35 @@ def run_agent(context: dict):
                 request_messages = [{**request_messages[0], 'content': request_messages[0]['content']
                                      + '\n\n本輪季節團型報價專項指引（優先於前文舊報價模板）：\n'
                                      + pricing_instructions}, *request_messages[1:pricing_instruction_start]]
+            request_messages.append({'role': 'system', 'content': ANSWER_SCOPE_INSTRUCTION})
+            if group_priced_routes:
+                request_messages.append({'role': 'system', 'content':
+                    '季節團型報價輸出契約：只引用本輪核價options中的quote_script_id，單方案填script_id、多方案填quote_options，該條text留空；日期範圍及必要條件另以text說明。模板已含最終每人價和兩人一房，不再抄一次金額、不附歷史長清單。缺少quoted結果時不引用任何價格模板；只問交通不發報價模板。六人獨團優勢可另用一句話說不拼其他人、可另選日期。未問總價不報合計。'})
+            if context.get('event') == 'customer_message':
+                pending = [m.get('content', '') for m in context.get('buffered_questions', []) if m.get('content')]
+                if not pending and latest.get('content'):
+                    pending = [latest['content']]
+                if pending:
+                    # Keep short approved answers beside the actual question,
+                    # not only buried in the full route and historical scripts.
+                    scoped = set(understanding.get('discussed_routes', [])) | {
+                        context.get('route_variant'), understanding.get('selected_route')}
+                    short_answers = [{ 'route': route, 'script_id': s['id'],
+                        'text': s['answer_text'], 'topics': s.get('topics', [])}
+                        for route, spec in context['skills']['routes'].items() if route in scoped
+                        for s in spec.get('scripts', []) if s.get('answer_scope') == 'single_topic'
+                        and set(s.get('topics', [])) & set(understanding.get('answer_topics', []))]
+                    request_messages.append({'role': 'user', 'content':
+                        '本轮待回答的客户原话（重列以便对照，不是新的第二次发言）：\n'
+                        + '\n'.join(pending)
+                        + '\n可直接引用的单项短答（仅回答对应问题；不从历史综合答复补其他项目）：'
+                        + json.dumps(short_answers, ensure_ascii=False)
+                        + '\n产品目录事实：只有以下产品已收录正式行程：'
+                        + json.dumps([r['name'] for r in catalog], ensure_ascii=False)
+                        + '。其他中国目的地可承接咨询，但没有已核准的具体行程、团期或价格；'
+                        '欢迎并继续了解尚未知的天数/偏好，不声称已有该地行程或要求换目的地。'
+                        + '\n请只解决这些问题，返回完整JSON决策。'})
+
             payload = {'model': settings.deepseek_vision_model if images else settings.deepseek_model, 'messages': request_messages, 'tools': tools,
                        'tool_choice': 'auto', 'response_format': {'type': 'json_object'},
                        'thinking': {'type': 'enabled'}, 'reasoning_effort': 'low', 'max_tokens': output_limit,
@@ -465,6 +498,19 @@ def run_agent(context: dict):
             started = time.monotonic()
             try:
                 response = _post_with_deadline(payload, min(remaining, settings.deepseek_timeout_seconds))
+            except httpx.ReadError as exc:
+                if str(exc) != 'invalid_model_response_format' or protocol_retries >= 2 or deadline <= time.monotonic():
+                    raise
+                protocol_retries += 1
+                output_limit = max(output_limit, 8000)
+                logs.append({'node': 'reception_v3', 'status': 'protocol_retry',
+                             'attempt': protocol_retries, 'error_code': str(exc)})
+                # No customer text has been delivered. Preserve tool evidence and
+                # retry generation; transport selects the available provider.
+                messages.append({'role': 'user', 'content':
+                    '上次模型调用未返回完整可用的协议，未发送任何答复。请依据原问题与已有工具事实继续，'
+                    '返回完整JSON决策；客户答复写在messages内，不复述技术错误。'})
+                continue
             except httpx.HTTPStatusError as exc:
                 if not images or exc.response.status_code not in (400, 413, 422):
                     raise
