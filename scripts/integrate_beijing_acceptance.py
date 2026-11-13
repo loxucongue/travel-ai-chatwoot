@@ -91,6 +91,10 @@ def main():
         row.memory = {'reception_status': 'sensitive'}
         labels(db, row, bundle['routes']['beijing_micro_5d'])
         assert '敏感・轉真人' in row.controls['evaluation_labels']
+        for kind, label in [('urgent', '急件'), ('custom', '北京訂製'), ('large', '高價值・北京包團')]:
+            row.memory = {'beijing_request_kind': kind}
+            labels(db, row, bundle['routes']['beijing_micro_5d'])
+            assert label in row.controls['evaluation_labels'], kind
         row.memory = {'party_size': 2}
         followup_checks = []
         for n in range(1, 6):
@@ -101,7 +105,7 @@ def main():
             followup_checks.append(n)
         checks = []
         latest = {}
-        for name in ('model-results.json', 'boundary.json', 'revision2.json', 'final-revision.json', 'child-final.json', 'release-model.json'):
+        for name in ('model-results.json', 'boundary.json', 'revision2.json', 'final-revision.json', 'child-final.json', 'release-model.json', 'multiround.json', 'extended.json', 'extended-revision.json', 'precision-final.json', 'optimized-final.json', 'switch-final.json'):
             if (OUT / name).exists():
                 latest.update({c['id']: c for c in json.loads((OUT / name).read_text(encoding='utf8'))})
         for case in latest.values():
@@ -109,9 +113,36 @@ def main():
                 checks.append({'case': case['id'], 'error': 'no_model_decision'})
                 continue
             try:
+                row.controls = {**row.controls, 'route_variant': case.get('initial_route', 'beijing_micro_5d')}
                 decision = Decision.model_validate(case['decision']).model_dump()
                 route, parts = service.parts_for(db, row, bundle, decision)
                 checks.append({'case': case['id'], 'parts': parts})
+                if case.get('expected_profile'):
+                    probe = AutomationSession(owner_id=1, inbox_binding_id=1, environment='playground',
+                        memory=decision['profile'], controls={'route_variant': ''}, messages=[])
+                    policy = bundle['routes'].get(decision['route_variant'] or probe.controls['route_variant'], {})
+                    labels(db, probe, policy, routes=bundle['routes'], updates=decision['profile'])
+                    expected_label = '急件' if case['expected_profile'].get('beijing_request_kind') == 'urgent' else None
+                    if expected_label and expected_label not in probe.controls.get('evaluation_labels', []):
+                        checks[-1]['execution_gap'] = 'urgent_profile_present_but_no_route_policy_for_label'
+                    if expected_label:
+                        from app.automation_models import AutomationRun
+                        probe.engine_version = 'beijing-test'
+                        probe.mode = 'journey'
+                        probe.virtual_now = row.virtual_now
+                        probe.generation = 1
+                        probe.memory = {}
+                        db.add(probe)
+                        db.flush()
+                        run = AutomationRun(session_id=probe.id, generation=1, module='journey', idempotency_key=f'urgent-probe-{probe.id}', status='running', trace={})
+                        db.add(run)
+                        db.flush()
+                        service.apply_decision(db, probe, run, bundle, decision)
+                        assert expected_label in probe.controls.get('evaluation_labels', [])
+                        assert probe.controls['route_variant'] == ''
+                        assert service.state(probe)['handoff'] is True
+                        assert not probe.messages
+                        checks[-1]['custom_handoff_label_execution_verified'] = True
             except Exception as exc:
                 checks.append({'case': case['id'], 'error': type(exc).__name__ + ':' + str(exc)})
         report = {**result, 'idempotent': True, 'other_configuration_preserved': True,
@@ -119,7 +150,9 @@ def main():
                   'followup_rules_rendered': followup_checks, 'permission_stops_verified': True,
                   'rendering': checks, 'production_modified': False}
         (OUT / 'integration.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf8')
-        print(json.dumps({**result, 'render_errors': [c for c in checks if 'error' in c]}, ensure_ascii=False))
+        print(json.dumps({**result, 'render_errors': [c for c in checks if 'error' in c],
+                          'execution_gaps': [{'case': c['case'], 'gap': c['execution_gap']}
+                                             for c in checks if 'execution_gap' in c]}, ensure_ascii=False))
 
 
 if __name__ == '__main__':

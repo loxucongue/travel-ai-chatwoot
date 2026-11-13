@@ -42,7 +42,10 @@ def mentions_departure_time(text):
 
 def explicit_date_window(text):
     """Only one unambiguous, fully dated customer proposal may bypass inference."""
-    matches=list(re.finditer(r'(?<!\d)(20\d{2})(?:年|[-/])(\d{1,2})(?:月|[-/])(\d{1,2})(?:日|號|号)?(?!\d)',text))
+    # A number after 月 can be a party size or duration, not a day.
+    # In Chinese notation require an explicit day marker; ambiguous shorthand
+    # remains available in the original customer message for model inference.
+    matches=list(re.finditer(r'(?<!\d)(20\d{2})(?:年|[-/])(\d{1,2})(?:月(?=\d{1,2}[日號号])|[-/])(\d{1,2})(?:日|號|号)?(?!\d)',text))
     if len(matches)!=1:
         return None
     match=matches[0]

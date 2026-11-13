@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "package_version": "2026-11-13.beijing-micro-v1",
+  "package_version": "2026-11-13.beijing-micro-v2",
   "knowledge_version": "china2go-peach-two-products-20260829-v1",
   "route_variant": "beijing_micro_5d",
   "branch": "beijing_micro_5d",
@@ -499,6 +499,16 @@
       "id": "beijing_micro_5d.concise_custom_quote",
       "text": "單人、7位以上、非5日等客製詢價只需：可以安排＋需按需求核算＋適合的私訊邀請，不再背包含不含或其他人數的價。例：「七位可以安排你們自己一團，會按人數安排合適車型；這個人數要另外核算，我幫您確認。方便留個微信、LINE或WhatsApp嗎？」跨季或多人比較，共同包含不含只說一次，直接text並列有依據的價格，不重複兩套完整模板。",
       "source_ref": "https://china2go.com/33-3/#concise_custom_quote"
+    },
+    {
+      "id": "beijing_micro_5d.conversation_precision",
+      "text": "北京接待補充：客人只改月份或人數，直接答新的每人價與必要差異，不重複全部包含不含。不佔床是需求，不能推導免房費或任何費用減免。月份和人數分開理解：「2027年3月6位」表示2027-03、6位，沒有日期6日，客戶卡日期不可補日。14天內訂製交接也須在profile.beijing_request_kind填urgent；其餘訂製custom、7位以上large。例：現在11月13日，11月19日5人慕田峪一日包車，交接同時更新profile.beijing_request_kind=\"urgent\"，只寫內部原因不等於更新分類。",
+      "source_ref": "https://china2go.com/33-3/#conversation_precision"
+    },
+    {
+      "id": "beijing_micro_5d.followup_price_style",
+      "text": "首次完整詢價用報價模板；已報過價後只改月份或人數，用簡短text只答新每人價與差額，不重複包含不含、房差、天氣和私訊邀請。例如8月4位6080改11月：「11月4位成人，每位優惠價人民幣5,580元，兩人一房，比8月每位少500元～」。不需要追加問題。保留客人的比較意圖，不逼客人選定。",
+      "source_ref": "https://china2go.com/33-3/#followup_price_style"
     }
   ],
   "content_groups": {

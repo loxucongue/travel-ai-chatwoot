@@ -547,7 +547,7 @@ def apply_decision(db, row, run, bundle, decision):
             row.memory = {k:v for k,v in row.memory.items() if k != '_departure_check'}
     route_policy = bundle['routes'].get(decision['route_variant'] or row.controls.get('route_variant', ''), {})
     from app.reception_v3.profile_labels import apply as apply_profile_labels
-    apply_profile_labels(db, row, route_policy)
+    apply_profile_labels(db, row, route_policy, routes=bundle['routes'], updates=decision.get('profile'))
     from app.reception_v3.large_party import begin as begin_large_party
     save(row, value)
     if begin_large_party(db, row, run, bundle, decision):
