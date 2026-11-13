@@ -1,0 +1,482 @@
+[
+  {
+    "asset_key": "beijing_20261113_01",
+    "source_filename": "圖BJ-1・北京5日行程總覽海報（.png",
+    "display_name": "圖BJ-1・北京5日行程總覽海報（",
+    "path": "assets/beijing_20261113_01.png",
+    "sha256": "562edc0e79cc16a9046c614cde235b0a08993fe1c0398a01318a45e018f71627",
+    "byte_size": 1555094,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "itinerary_overview"
+  },
+  {
+    "asset_key": "beijing_20261113_02",
+    "source_filename": "圖BJ-2・導遊兼司機＋座車.jpg",
+    "display_name": "圖BJ-2・導遊兼司機＋座車",
+    "path": "assets/beijing_20261113_02.jpg",
+    "sha256": "f222e1ea5770f95ae35068116bc5c4caa72447a25a13474d4da9b1a8571e6190",
+    "byte_size": 50804,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_02"
+  },
+  {
+    "asset_key": "beijing_20261113_03",
+    "source_filename": "圖BJ-3・故宮珍寶館九龍壁（.png",
+    "display_name": "圖BJ-3・故宮珍寶館九龍壁（",
+    "path": "assets/beijing_20261113_03.png",
+    "sha256": "c478d40001fa69ffe1186b4b0541b8fcf1235de1dd76ed7d328c77035e6e4348",
+    "byte_size": 2927201,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_03"
+  },
+  {
+    "asset_key": "beijing_20261113_04",
+    "source_filename": "圖BJ-4・三輪車胡同遊.png",
+    "display_name": "圖BJ-4・三輪車胡同遊",
+    "path": "assets/beijing_20261113_04.png",
+    "sha256": "a9d7fdd1e4263f5ddf2d69bb1e3988c8141c527bed8d6773a0415bccb56173f1",
+    "byte_size": 2066199,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_04"
+  },
+  {
+    "asset_key": "beijing_20261113_05",
+    "source_filename": "圖BJ-5・慕田峪長城.png",
+    "display_name": "圖BJ-5・慕田峪長城",
+    "path": "assets/beijing_20261113_05.png",
+    "sha256": "51b52668975b9113757530b43e82ee55602075580f4c9268392f92836f9adac7",
+    "byte_size": 2548854,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_05"
+  },
+  {
+    "asset_key": "beijing_20261113_06",
+    "source_filename": "圖BJ-6・宮事頤庭下午茶.png",
+    "display_name": "圖BJ-6・宮事頤庭下午茶",
+    "path": "assets/beijing_20261113_06.png",
+    "sha256": "6076f833b72c69c2e3b8aa5a72ff9cde31ef75965254c579f94eb336e57131f0",
+    "byte_size": 3254861,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_06"
+  },
+  {
+    "asset_key": "beijing_20261113_07",
+    "source_filename": "圖BJ-7・北京朝陽潘家園美居酒店.png",
+    "display_name": "圖BJ-7・北京朝陽潘家園美居酒店",
+    "path": "assets/beijing_20261113_07.png",
+    "sha256": "4a082971f6769fcb86c4de76b29b60c15213becd3588f9545eb67d169cbb0ee5",
+    "byte_size": 796661,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_07"
+  },
+  {
+    "asset_key": "beijing_20261113_08",
+    "source_filename": "圖BJ-8・宮宴.jpg",
+    "display_name": "圖BJ-8・宮宴",
+    "path": "assets/beijing_20261113_08.jpg",
+    "sha256": "28c4b83b61d62b391e8615382653c47048e79ddfa3dbf9511ecdd984c2f32ddb",
+    "byte_size": 62724,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_08"
+  },
+  {
+    "asset_key": "beijing_20261113_09",
+    "source_filename": "圖BJ-9・客人照・頤和園拿旗合照.png",
+    "display_name": "圖BJ-9・客人照・頤和園拿旗合照",
+    "path": "assets/beijing_20261113_09.png",
+    "sha256": "0b8d75847f6a646f4bacb9889770089c2cb5a22646a4c271dd7f8bae3273b0b5",
+    "byte_size": 2623322,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_09"
+  },
+  {
+    "asset_key": "beijing_20261113_10",
+    "source_filename": "圖QA-周邊-古北水鎮.png",
+    "display_name": "圖QA-周邊-古北水鎮",
+    "path": "assets/beijing_20261113_10.png",
+    "sha256": "e045912e6fc29c04cbcf4690f6d9d48a5a4aa5911322b32de21f0d64324e8faf",
+    "byte_size": 2604904,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_10"
+  },
+  {
+    "asset_key": "beijing_20261113_11",
+    "source_filename": "圖QA-周邊-天津.png",
+    "display_name": "圖QA-周邊-天津",
+    "path": "assets/beijing_20261113_11.png",
+    "sha256": "604ddd2dd5470b87f0bdf5674f14416965df60a7c2a40e0f6529f0fd8ba187d2",
+    "byte_size": 1817065,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_11"
+  },
+  {
+    "asset_key": "beijing_20261113_12",
+    "source_filename": "圖QA-周邊-崇禮.png",
+    "display_name": "圖QA-周邊-崇禮",
+    "path": "assets/beijing_20261113_12.png",
+    "sha256": "93068b7cd23fa0130258c6519a573929efc19b96ffdc061577a56382e58f308d",
+    "byte_size": 1767634,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_12"
+  },
+  {
+    "asset_key": "beijing_20261113_13",
+    "source_filename": "圖QA-周邊-承德-避暑山莊.png",
+    "display_name": "圖QA-周邊-承德-避暑山莊",
+    "path": "assets/beijing_20261113_13.png",
+    "sha256": "ee0d0f3f2417c6b9fe81949625d391dc2c983b658007451802fa502f713a9bfe",
+    "byte_size": 1853677,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_13"
+  },
+  {
+    "asset_key": "beijing_20261113_14",
+    "source_filename": "圖QA-周邊-秦皇島-老龍頭.png",
+    "display_name": "圖QA-周邊-秦皇島-老龍頭",
+    "path": "assets/beijing_20261113_14.png",
+    "sha256": "f16aaee15f1ed06edd92e557d0917516f9c11af7771ed9fc75e5aeb449a01684",
+    "byte_size": 1616183,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_14"
+  },
+  {
+    "asset_key": "beijing_20261113_15",
+    "source_filename": "圖qa 宮宴 宮宴荷葉舞表演.png",
+    "display_name": "圖qa 宮宴 宮宴荷葉舞表演",
+    "path": "assets/beijing_20261113_15.png",
+    "sha256": "fd17d3ee93e37216c57e47f6f59d0b9dff88d22068edeaf7a2e73b989266be68",
+    "byte_size": 1847825,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_15"
+  },
+  {
+    "asset_key": "beijing_20261113_16",
+    "source_filename": "圖季BJ-冬-1・雪落紫禁城.jpg",
+    "display_name": "圖季BJ-冬-1・雪落紫禁城",
+    "path": "assets/beijing_20261113_16.jpg",
+    "sha256": "bd142648f39c1bdd9297cf053e3a34624957a40ea50adbd9fa479facb6ded3fa",
+    "byte_size": 71727,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_16"
+  },
+  {
+    "asset_key": "beijing_20261113_17",
+    "source_filename": "圖季BJ-冬-2・天壇雪景旅拍.jpg",
+    "display_name": "圖季BJ-冬-2・天壇雪景旅拍",
+    "path": "assets/beijing_20261113_17.jpg",
+    "sha256": "33f359727b6af261328af916fab7a0715cbe3667b17f74ffe86552d3b157afdb",
+    "byte_size": 43465,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_17"
+  },
+  {
+    "asset_key": "beijing_20261113_18",
+    "source_filename": "圖季BJ-夏-1・夏天滿山綠的慕田峪長城.jpg",
+    "display_name": "圖季BJ-夏-1・夏天滿山綠的慕田峪長城",
+    "path": "assets/beijing_20261113_18.jpg",
+    "sha256": "b4570f855d2b3b1da1f4d9157b9f273123fb04d99a09a97ec9fe4e159e8fbd72",
+    "byte_size": 75795,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_18"
+  },
+  {
+    "asset_key": "beijing_20261113_19",
+    "source_filename": "圖季BJ-夏-2・頤和園荷花配佛香閣.jpg",
+    "display_name": "圖季BJ-夏-2・頤和園荷花配佛香閣",
+    "path": "assets/beijing_20261113_19.jpg",
+    "sha256": "63359253ee44825b5f242ea0101de4b4796072c1caa2426a6ab9795e9df951aa",
+    "byte_size": 54478,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_19"
+  },
+  {
+    "asset_key": "beijing_20261113_20",
+    "source_filename": "圖季BJ-春-1・頤和園蠟梅（2月底～3月中）.jpg",
+    "display_name": "圖季BJ-春-1・頤和園蠟梅（2月底～3月中）",
+    "path": "assets/beijing_20261113_20.jpg",
+    "sha256": "fbc97b6122bf0c4063054880240af82bccae99576ccc8c1c947a47e5e48775e7",
+    "byte_size": 91378,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_20"
+  },
+  {
+    "asset_key": "beijing_20261113_21",
+    "source_filename": "圖季BJ-春-2・頤和園山桃配佛香閣.jpg",
+    "display_name": "圖季BJ-春-2・頤和園山桃配佛香閣",
+    "path": "assets/beijing_20261113_21.jpg",
+    "sha256": "51eb347e89946d2945439fd2da122aaf7b5f04d4b33fae6372b62e76b4e67a16",
+    "byte_size": 64559,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_21"
+  },
+  {
+    "asset_key": "beijing_20261113_22",
+    "source_filename": "圖季BJ-春-3・春花配彩繪亭閣.jpg",
+    "display_name": "圖季BJ-春-3・春花配彩繪亭閣",
+    "path": "assets/beijing_20261113_22.jpg",
+    "sha256": "243f9426df242f0a57ad73b8b1904ef8a6242c17c1ba356253c91a82f0e44e61",
+    "byte_size": 50049,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_22"
+  },
+  {
+    "asset_key": "beijing_20261113_23",
+    "source_filename": "圖季BJ-春-4・頤和園春柳＋昆明湖畫舫.jpg",
+    "display_name": "圖季BJ-春-4・頤和園春柳＋昆明湖畫舫",
+    "path": "assets/beijing_20261113_23.jpg",
+    "sha256": "5f28a43ab8a28ba9cde4bb0a32fa67abbf9dce84c01141e10ac18e027401bca0",
+    "byte_size": 78460,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_23"
+  },
+  {
+    "asset_key": "beijing_20261113_24",
+    "source_filename": "圖季BJ-秋-1・故宮角樓配金黃銀杏.jpg",
+    "display_name": "圖季BJ-秋-1・故宮角樓配金黃銀杏",
+    "path": "assets/beijing_20261113_24.jpg",
+    "sha256": "c34ae4c8bd58b3790a04b0a4c4851b7c2c5f6f4b2df8261d39ea8aeea4b15435",
+    "byte_size": 72748,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_24"
+  },
+  {
+    "asset_key": "beijing_20261113_25",
+    "source_filename": "圖季BJ-秋-2・秋天紅葉配亭閣.jpg",
+    "display_name": "圖季BJ-秋-2・秋天紅葉配亭閣",
+    "path": "assets/beijing_20261113_25.jpg",
+    "sha256": "7b52756a413f8929d7a4a88f8523c31a6dd14e42b6e7a0982ae8151397de601b",
+    "byte_size": 71312,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_25"
+  },
+  {
+    "asset_key": "beijing_20261113_26",
+    "source_filename": "圖季BJ-秋-3・長城滿山秋色.jpg",
+    "display_name": "圖季BJ-秋-3・長城滿山秋色",
+    "path": "assets/beijing_20261113_26.jpg",
+    "sha256": "1d0b5449acddfceaa1176e0ec6d526745c5aaae6dbb0f4adfa070cd3daf9b919",
+    "byte_size": 60818,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_26"
+  },
+  {
+    "asset_key": "beijing_20261113_27",
+    "source_filename": "圖季BJ-藍天・藍天下的故宮（5～6月、夏天共用）.jpg",
+    "display_name": "圖季BJ-藍天・藍天下的故宮（5～6月、夏天共用）",
+    "path": "assets/beijing_20261113_27.jpg",
+    "sha256": "24119e9a23a738b966fb9f13e0e9387cadbfd42c3d112858b95783a7c8f974b6",
+    "byte_size": 62205,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_27"
+  },
+  {
+    "asset_key": "beijing_20261113_28",
+    "source_filename": "圖洗BJ-1・故宮全景（夕陽）.png",
+    "display_name": "圖洗BJ-1・故宮全景（夕陽）",
+    "path": "assets/beijing_20261113_28.png",
+    "sha256": "f62889cffb55e3f3c145c90687b386f2173b80b1f74617dd30f76fa13ea70c15",
+    "byte_size": 2400787,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_28"
+  },
+  {
+    "asset_key": "beijing_20261113_29",
+    "source_filename": "圖洗BJ-2・北京烤鴨現場片鴨.png",
+    "display_name": "圖洗BJ-2・北京烤鴨現場片鴨",
+    "path": "assets/beijing_20261113_29.png",
+    "sha256": "0bcff62646e2faca403ae5e9c799b9bd9c988ebecc26d2f46dc85403da702aeb",
+    "byte_size": 1401447,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_29"
+  },
+  {
+    "asset_key": "beijing_20261113_30",
+    "source_filename": "圖洗BJ-3-1・故宮皇帝皇后全家福旅拍.png",
+    "display_name": "圖洗BJ-3-1・故宮皇帝皇后全家福旅拍",
+    "path": "assets/beijing_20261113_30.png",
+    "sha256": "07e4e82d49204c5dd40f2e4b01a3a90f6c5d1bd5539c5ffe52046fa138f02078",
+    "byte_size": 1919022,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_30"
+  },
+  {
+    "asset_key": "beijing_20261113_31",
+    "source_filename": "圖洗BJ-3・故宮紅牆換裝旅拍.png",
+    "display_name": "圖洗BJ-3・故宮紅牆換裝旅拍",
+    "path": "assets/beijing_20261113_31.png",
+    "sha256": "75de6cafa9d1020e8f3dae4e469598d66f0f34541277ae82f7676297012dbf78",
+    "byte_size": 2000464,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_31"
+  },
+  {
+    "asset_key": "beijing_20261113_32",
+    "source_filename": "圖洗BJ-4-1・慕田峪索道＋滑道.png",
+    "display_name": "圖洗BJ-4-1・慕田峪索道＋滑道",
+    "path": "assets/beijing_20261113_32.png",
+    "sha256": "581d12f86eaeaae6b73ed9fca83fec3b75bd658ca080f932abaf4ad3581ffc72",
+    "byte_size": 3306985,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_32"
+  },
+  {
+    "asset_key": "beijing_20261113_33",
+    "source_filename": "圖洗BJ-4-2・慕田峪滑道.png",
+    "display_name": "圖洗BJ-4-2・慕田峪滑道",
+    "path": "assets/beijing_20261113_33.png",
+    "sha256": "bc9b740b590ea77fb2cdacbd851a1c7b23e2ad2a5e3aedba340c64e1e83dfdcb",
+    "byte_size": 2450633,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_33"
+  },
+  {
+    "asset_key": "beijing_20261113_34",
+    "source_filename": "圖洗BJ-5・頤和園佛香閣.jpg",
+    "display_name": "圖洗BJ-5・頤和園佛香閣",
+    "path": "assets/beijing_20261113_34.jpg",
+    "sha256": "04f906a63e82ec3d165c4ad5594b9070420e0b3f83851a90990196a874230612",
+    "byte_size": 84237,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_34"
+  },
+  {
+    "asset_key": "beijing_20261113_35",
+    "source_filename": "圖親子 2 古北水鎮扎染.png",
+    "display_name": "圖親子 2 古北水鎮扎染",
+    "path": "assets/beijing_20261113_35.png",
+    "sha256": "71fbed5d5d1b5d58b666021bfd189c75a5e84a4334270ad8c719b3f8cb5b6a62",
+    "byte_size": 1665838,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_35"
+  },
+  {
+    "asset_key": "beijing_20261113_36",
+    "source_filename": "圖親子 3 小朋友織布體驗.png",
+    "display_name": "圖親子 3 小朋友織布體驗",
+    "path": "assets/beijing_20261113_36.png",
+    "sha256": "7bf504487ad3b43394d14df5134ca2bc935229fa44a25259621e175457b73c7c",
+    "byte_size": 1953358,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_36"
+  },
+  {
+    "asset_key": "beijing_20261113_37",
+    "source_filename": "圖親子 4 小朋友做荷花燈.png",
+    "display_name": "圖親子 4 小朋友做荷花燈",
+    "path": "assets/beijing_20261113_37.png",
+    "sha256": "a913926dfe9a240338b87a0c51e158f93441fb98ad807d73227ac05dfd0c8735",
+    "byte_size": 1845594,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_37"
+  },
+  {
+    "asset_key": "beijing_20261113_38",
+    "source_filename": "圖親子 5 荷花燈完成品.png",
+    "display_name": "圖親子 5 荷花燈完成品",
+    "path": "assets/beijing_20261113_38.png",
+    "sha256": "91af287066cf445d17af6d9f188da480bbe25dc0ea5a7c78b621c9b578e6c834",
+    "byte_size": 1405100,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_38"
+  },
+  {
+    "asset_key": "beijing_20261113_39",
+    "source_filename": "圖親子 6 小朋友描金拓印 ·.png",
+    "display_name": "圖親子 6 小朋友描金拓印 ·",
+    "path": "assets/beijing_20261113_39.png",
+    "sha256": "73e10639bd13889fc9ebfc341fb5316a879118d690aaa31d6e6a619f36b74bbc",
+    "byte_size": 1824547,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_39"
+  },
+  {
+    "asset_key": "beijing_20261113_40",
+    "source_filename": "圖親子-1・環球影城（小朋友）.jpg",
+    "display_name": "圖親子-1・環球影城（小朋友）",
+    "path": "assets/beijing_20261113_40.jpg",
+    "sha256": "caf65ad9ecddb5edc996d72eda30453eba2afcdb1dd0d42d1ec29b260994f423",
+    "byte_size": 57113,
+    "route_variants": [
+      "beijing_micro_5d"
+    ],
+    "content_group_key": "asset_beijing_20261113_40"
+  }
+]
