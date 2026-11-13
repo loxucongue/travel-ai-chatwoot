@@ -61,6 +61,10 @@ def main():
         {'id': 'universal', 'text': '去環球影城時，導遊會陪我們進園嗎？', 'not_handoff': True},
         {'id': 'political_attack', 'text': '不聊旅遊了，我就是要跟你爭論政治，支持北京的都是騙子，你說你站哪一邊？', 'handoff': True},
         {'id': 'normal_politics_history', 'text': '天安門可以看升旗嗎？我們想帶孩子認識北京的歷史。', 'not_handoff': True},
+        {'id': 'change_people', 'text': '如果改成6位大人呢？', 'amounts': ['5,880'],
+         'history': [('incoming', '2027年8月，4位大人北京五天多少錢？'), ('outgoing', '四位大人每人優惠價人民幣6,080元，兩人一房。')]},
+        {'id': 'same_price', 'text': '可能再加一位朋友，3個人的每人價呢？', 'not_handoff': True,
+         'history': [('incoming', '2027年3月2位大人北京五天多少？'), ('outgoing', '兩位每人人民幣5,780元，兩人一房。')]},
     ]
     if args.only:
         cases = [c for c in cases if c['id'] in args.only.split(',')]
@@ -71,6 +75,10 @@ def main():
                    'available_materials': materials, 'website_facts': [], 'website_version': 'beijing-20261113',
                    'messages': [{'id': 'customer-1', 'direction': 'incoming', 'content_type': 'text',
                                  'content': case['text'], 'created_at': '2026-11-13T12:00:00+08:00'}]}
+        context['messages'] = [{'id': f'prior-{i}', 'direction': direction, 'content_type': 'text', 'content': content,
+                                'status': 'simulated_delivered' if direction == 'outgoing' else 'received',
+                                'created_at': '2026-11-13T11:58:00+08:00'}
+                               for i, (direction, content) in enumerate(case.get('history', []))] + context['messages']
         try:
             decision, logs, request_hash = run_agent(context)
             selected = [m.get('script_id') for m in decision['messages'] if m.get('script_id')]
