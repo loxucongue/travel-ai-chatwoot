@@ -1,0 +1,14 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>11月14日回调中断应急恢复</title>
+<style>body{max-width:1000px;margin:40px auto;font:16px/1.8 system-ui;color:#243144}code{background:#eef1f6;padding:3px}td,th{padding:8px;border:1px solid #ccd3dd}table{border-collapse:collapse}</style>
+<h1>China2Go 回调中断：受限 API 补漏</h1>
+<p>2026-11-14 13:41（UTC+8）后 Chatwoot 新消息未抵达中转。Chatwoot Business 订阅及 API/Webhook 权限有效，配置地址与连接密钥一致，旧事件入口验证返回 202/duplicate=true。中转健康且无积压，业务服务正常。云端具体投递失败原因尚待官方日志，不能声称根因已修复。</p>
+<h2>已上线的临时恢复</h2>
+<p>17:34 启用主动扫描。使用现有 Chatwoot API、消息镜像、接待权限及 AI 执行流程；不修改模型提示词、业务知识或 ru jing2 分支。不伪造原始消息时间。观察事件在同一事务保存为 live_observed，并使用既有消息 ID 幂等键，回调迟到不重复触发。</p>
+<ul><li>每轮最多恢复 2 个会话，检查最多 8 个变化会话；最多扫描 8 页列表。轮次完成后等待 60 秒。</li><li>历史分页最多 12 页；资料不完整或读取失败不发送，单会话失败不阻断后续检查。</li><li>仅处理本次中断后、23 小时内仍可回复且未被答复的入站消息。人工或身份未知的外发、暂停、保护标签、渠道关闭、已有处理记录均跳过。</li><li>恢复前重新读取会话及末条消息；发送每条回复前检查未同步客户消息及顾问回复，检查失败不发。</li><li>模型并发沿用已有调度器。已有 2 个处理任务或主机 1 分钟负载超过 4 时，本轮延后。</li></ul>
+<h2>资源与验证</h2><p>主机 2 核，恢复前负载约 2.6，可用内存约 2.3 GiB。补漏进程 Nice=10，CPUQuota=25%（单核），MemoryMax=256M，单轮超时 240 秒。首轮实际约 26 秒、CPU 累计 2.025 秒、内存峰值 69.3 MiB。</p>
+<p>37 项测试通过：补漏/发送保护 15 项、既有接待审计 8 项、外发身份竞态 14 项。首批 #1012、#1011 已恢复，Chatwoot 回读回复状态 sent，不能视为客户已读。未向客户发送测试消息，发送的是获授权恢复后的正式接待回复。</p>
+<h2>部署及维护</h2><p>持 <code>/opt/china2go-ai/deploy.lock</code> 并逐文件核对线上基线。仅新增 app/webhook_recovery.py、在现有 reception_v3/live.py 插入发送前保护，并安装独立 oneshot service/timer。线上 live.py 与本地存在其他差异，发布基于线上原文件追加 3 行，不覆盖其他功能。重启了 china2go-worker，API 与 playground 未重启。</p>
+<p>备份：<code>/opt/china2go-ai/backups/webhook-recovery-20261114/live.py</code>；回执：<code>/opt/china2go-ai/evaluations/webhook-recovery-20261114/receipt.json</code>。开关：backend/data/webhook-recovery.enabled；游标缓存：backend/data/webhook-recovery-state.json。日志：journalctl -u china2go-webhook-recovery。</p>
+<p>回调自然恢复后先观察消息 ID 去重和端到端接待，再停用 timer 并移除 enabled 文件。不要立即清除游标或重放历史。若回滚代码，应确认部署后未有其他修改，不能用旧 live.py 覆盖后续发布。此实现是本次中断的临时补漏，不是永久完整事件同步；被跳过的人工/未知身份、超长历史和超时窗口会话仍需顾问审核。</p>
+<h2>业务通知话术</h2><blockquote>今天聊天平台向 AI 传递新消息的链路出现异常，导致部分客户未能及时收到自动回复。目前已启用备用接收方式，并验证 AI 已恢复回复；此前遗漏的咨询正在分批检查补接。顾问已经接待或标记人工处理的会话会继续由顾问负责，AI 不会抢回。若还有客户一直未回复，请提供会话编号，我们会优先核查。</blockquote>
+</html>

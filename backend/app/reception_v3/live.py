@@ -563,6 +563,9 @@ def deliver_one(db, row):
     submission_started = False
     try:
         # Refresh channel controls before the external side effect.
+        from app.webhook_recovery import before_send
+        if not before_send(db, client, conversation, row):
+            return
         remote = payload_dict(client.get_conversation(conversation.chatwoot_conversation_id))
         labels = client.get_conversation_labels(conversation.chatwoot_conversation_id)
         labels = labels.get('payload') if isinstance(labels, dict) else labels

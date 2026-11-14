@@ -1,0 +1,8 @@
+[Unit]
+Description=China2Go webhook recovery every minute
+[Timer]
+OnBootSec=60
+OnUnitInactiveSec=60
+Unit=china2go-webhook-recovery.service
+[Install]
+WantedBy=timers.target

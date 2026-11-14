@@ -1,0 +1,13 @@
+[Unit]
+Description=China2Go bounded webhook outage recovery
+After=network-online.target china2go-worker.service
+[Service]
+Type=oneshot
+User=china2go
+Group=china2go
+WorkingDirectory=/opt/china2go-ai/backend
+ExecStart=/opt/china2go-ai/venv/bin/python -m app.webhook_recovery --apply
+Nice=10
+CPUQuota=25%
+MemoryMax=256M
+TimeoutStartSec=240
