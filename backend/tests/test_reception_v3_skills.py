@@ -156,7 +156,7 @@ def test_unselected_then_model_loads_both_for_comparison(monkeypatch):
 
 
 def test_active_website_facts_are_visible_before_a_tool_call(monkeypatch):
-    requests = model(monkeypatch, [{'content': '', 'tool_calls': [tool('get_service_facts', {})]}, final()])
+    requests = model(monkeypatch, [{'content': '', 'tool_calls': [tool('get_service_facts', {})]}, final(action='wait')])
     runtime.run_agent(context('peach_11d_2027'))
     current = json.loads(requests[0]['messages'][1]['content'])
     assert current['service_knowledge'] == {'version': 'site-2', 'facts': [{'text': 'WEB_ONLY'}]}
@@ -196,7 +196,7 @@ def test_common_scenario_and_only_v3_reasoning_settings_reach_model(monkeypatch)
         'scenario': '客户询问证件交付方式', 'text': '当前通用原话', 'enabled': True}]
     c['skills']['reply'] = {'tone_guidance': '当前语气', 'opening_message': '开场由发送层执行'}
     c['skills']['lead_capture'] = {'enabled': False, 'channels': ['微信'], 'ask_after_answered_topics': 2}
-    requests = model(monkeypatch, [final()])
+    requests = model(monkeypatch, [final(action='wait')])
     runtime.run_agent(c)
     prompt = requests[0]['messages'][0]['content']
     assert '客户询问证件交付方式' in prompt and '当前通用原话' in prompt

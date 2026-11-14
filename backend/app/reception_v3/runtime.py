@@ -461,6 +461,8 @@ def run_agent(context: dict):
                 continue
             try:
                 decision = Decision.model_validate(_json_object(message.get('content') or '')).model_dump()
+                from app.reception_v3.action_output import validate_reply_output
+                validate_reply_output(decision, context)
             except (ValueError, TypeError) as exc:
                 if repaired:
                     raise
