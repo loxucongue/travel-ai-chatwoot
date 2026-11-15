@@ -19,6 +19,7 @@ from app.history_sync import fetch_message_history, message_direction, message_t
 from app.conversation_mirror import upsert_mirrors
 from app.reception_v3 import live
 from app.runtime_settings import blocking_labels
+from app.conversation_policy import has_ai_label
 
 MARKER = Path('data/webhook-recovery.enabled')
 STATE = Path('data/webhook-recovery-state.json')
@@ -41,7 +42,8 @@ def candidate(remote, messages, known_outgoing, blocked, now):
     last = history[-1]
     if message_direction(last.get('message_type')) != 'incoming':
         return 'already_answered'
-    if any(message_direction(m.get('message_type')) == 'outgoing' and m['id'] not in known_outgoing for m in history):
+    if (not has_ai_label(remote.get('labels') or []) and
+            any(message_direction(m.get('message_type')) == 'outgoing' and m['id'] not in known_outgoing for m in history)):
         return 'human_or_unknown_sender'
     at = datetime.fromisoformat(message_timestamp(last.get('created_at')).replace('Z', '+00:00')).timestamp()
     if at < CUTOFF or not -30 <= now - at < 23 * 3600:
@@ -60,12 +62,24 @@ def before_send(db, client, conversation, row):
             return False
         known = set(db.scalars(select(OutboundMessage.chatwoot_message_id).where(
             OutboundMessage.conversation_state_id == conversation.id)))
-        # Unknown outgoing messages include advisors and unconfirmed sends.
-        if any(message_direction(m.get('message_type')) == 'outgoing' and m['id'] not in known for m in history):
-            live.cancel(db, conversation.id, 'recovery_advisor_or_unknown_reply')
+        seen = {str(m.get('chatwoot_message_id') or str(m.get('id', '')).removeprefix('cw-')) for m in row.messages}
+        # Only new contributions invalidate a plan. Historical advisor replies
+        # already supplied to the model do not permanently disable reception.
+        unseen = [m for m in history if message_direction(m.get('message_type')) == 'outgoing'
+                  and m['id'] not in known and str(m['id']) not in seen]
+        if unseen:
+            remote = payload_dict(client.get_conversation(conversation.chatwoot_conversation_id))
+            connection = db.scalar(select(ChatwootConnection).where(
+                ChatwootConnection.tenant_id == conversation.tenant_id))
+            fresh, _, _, _ = upsert_mirrors(db, snapshot_event(connection, remote), side_effects=False)
+            for message in unseen:
+                _, stored, _, _ = upsert_mirrors(db, snapshot_event(connection, remote, message),
+                                                side_effects=False, update_controls=False)
+                db.flush()
+                if not fresh or not stored or not live.record_advisor_supplement(db, fresh, stored):
+                    live.cancel(db, conversation.id, 'recovery_advisor_or_unknown_reply')
             db.commit()
             return False
-        seen = {str(m.get('chatwoot_message_id') or str(m.get('id', '')).removeprefix('cw-')) for m in row.messages}
         if any(message_direction(m.get('message_type')) == 'incoming' and str(m['id']) not in seen for m in history):
             return False
         return True

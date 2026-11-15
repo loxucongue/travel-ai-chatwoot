@@ -38,10 +38,27 @@ def test_private_note_is_not_customer_question():
 def test_presend_guard(tmp_path,monkeypatch,messages,known,seen,allowed,cancelled):
     marker=tmp_path/'enabled';marker.touch();monkeypatch.setattr(r,'MARKER',marker)
     cancel=Mock();monkeypatch.setattr(r.live,'cancel',cancel)
+    monkeypatch.setattr(r, 'upsert_mirrors', lambda *a, **kw: (None, None, None, None))
     db=Mock();db.scalars.return_value=known
     client=Mock();client.get_messages.return_value={'payload':messages}
-    assert r.before_send(db,client,SimpleNamespace(id=1,chatwoot_conversation_id=909),SimpleNamespace(messages=seen)) is allowed
+    client.get_conversation.return_value = remote(id=909)
+    assert r.before_send(db,client,SimpleNamespace(id=1,tenant_id=1,chatwoot_conversation_id=909),SimpleNamespace(messages=seen)) is allowed
     assert cancel.called is cancelled
+
+
+def test_old_advisor_is_allowed_only_with_explicit_ai():
+    c = remote(); c['labels'] = ['ai']
+    assert r.candidate(c, [msg(1, 1), msg(2)], set(), set(), r.CUTOFF+3600) == 'candidate'
+    c['labels'].append('human')
+    assert r.candidate(c, [msg(1, 1), msg(2)], set(), {'human'}, r.CUTOFF+3600) == 'blocked_label'
+
+
+def test_presend_allows_advisor_already_in_model_context(tmp_path, monkeypatch):
+    marker = tmp_path/'enabled'; marker.touch(); monkeypatch.setattr(r, 'MARKER', marker)
+    db = Mock(); db.scalars.return_value = []
+    client = Mock(); client.get_messages.return_value = {'payload': [msg(1, 1), msg(2)]}
+    row = SimpleNamespace(messages=[{'id': 'cw-1', 'attribution': 'human'}, {'id': 'cw-2'}])
+    assert r.before_send(db, client, SimpleNamespace(id=1, chatwoot_conversation_id=909), row)
 
 def test_presend_failure_closed(tmp_path,monkeypatch):
     marker=tmp_path/'enabled';marker.touch();monkeypatch.setattr(r,'MARKER',marker)

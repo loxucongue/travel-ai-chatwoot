@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>顾问补充与人工接管验收</title>
+<style>body{font:16px/1.7 system-ui;max-width:960px;margin:40px auto;color:#172331}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:10px;text-align:left}</style>
+<h1>顾问补充与人工接管</h1>
+<p>业务诉求：顾问偶尔补充一句，保留 ai 开启时，客户下一次提问仍由 AI 接待。人工明确接管、关闭 AI、已有阻断任务时，AI 保持停止。</p>
+<table><tr><th>场景</th><th>原行为</th><th>修复行为</th></tr>
+<tr><td>正常回调收到顾问公开回复</td><td>一律转为人工拥有并停止 AI</td><td>检查明确 AI 标签及现有权限；允许补充时取消旧草稿、同步顾问上下文，等待客户新问题</td></tr>
+<tr><td>回调故障时 API 补漏</td><td>历史上出现未匹配 AI 发件记录的公开回复便跳过</td><td>明确开启 AI 时允许历史顾问上下文；仍检查人工任务、关闭状态、标签及最新消息</td></tr>
+<tr><td>发送前顾问新插话</td><td>永久停止当前会话</td><td>停止本次旧计划，同步新消息；保留允许的接待状态，不发送旧回复</td></tr>
+<tr><td>顾问回调晚于客户新问题</td><td>可能取消新问题待办</td><td>保留最新未回答的客户问题；相同顾问事件不重复取消计划</td></tr>
+<tr><td>已转人工或人工已回答</td><td>不自动介入</td><td>保持此边界；不批量重开旧会话</td></tr></table>
+<p>所有控制判断依据会话授权与消息先后关系，不根据“稍等”“补充”等措辞猜测接管。模型接收顾问身份、原消息与时间；本次未修改模型提示词。</p>
+<h2>验证</h2><ul>
+<li>相关回归：79 通过；排除 5 个旧措辞参数用例，其中 3 个在未修改主分支同样失败，另 2 个通过。</li>
+<li>实际线上文件应用精确补丁后的覆盖测试：55 通过。保留线上 channel_return_requested 等已有差异。</li>
+<li>真实 webhook 镜像及补漏发送前检查均使用隔离数据库测试；未向客户发送测试消息。</li>
+<li>#1063 已由 vicky 接待，不恢复、不补发。此修复不代表 Chatwoot 原始回调已经恢复。</li>
+</ul>
+<p>发布仅包含 reception_v3/live.py 与 webhook_recovery.py；持 deploy.lock、断言基线哈希、备份并原子替换；未修改 rujing2 或其他窗口的提示词、业务配置。</p>
+</html>

@@ -121,6 +121,9 @@ def test_label_refresh_and_contact_updates_preserve_human_ownership_without_task
     setup(session_factory,monkeypatch)
     with session_factory() as db:
         row=session(db)
+        # Explicit ownership persists; an advisor supplement alone no longer
+        # establishes ownership while AI is enabled.
+        row.controls = {**row.controls, 'human': True}
         event(db,'message_created',['ai'],1,106,'outgoing')
         conv=db.get(ConversationState,1)
         assert not db.scalar(select(HandoffTask.id))

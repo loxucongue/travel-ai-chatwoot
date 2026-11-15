@@ -58,6 +58,42 @@ def human_owned(db, conversation):
     return False
 
 
+def record_advisor_supplement(db, conversation, message):
+    """An explicitly enabled AI may continue after an advisor's contribution.
+
+    Ownership is determined by controls, never by the wording of the message.
+    Invalidate work based on the old history before accepting another question.
+    """
+    row = session_for(db, conversation.id)
+    if (not has_ai_label(conversation.labels or []) or not permitted(db, conversation)
+            or row and row.controls.get('simulation', {}).get('status') != 'running'):
+        return False
+    if row:
+        from app.reception_v3.human_followup import sync_history
+        previous = service.state(row)
+        service.control(row, 'stop')
+        sync_history(db, row)
+        service.control(row, 'resume')
+        row.controls = {**row.controls, 'last_advisor_event_id': max(
+            row.controls.get('last_advisor_event_id', 0), message.chatwoot_message_id)}
+        value = service.state(row)
+        value.update(last_reason='advisor_supplement', buffered_questions=[],
+                     next_check_at=previous.get('next_check_at'))
+        # A delayed advisor webhook must not swallow a newer customer question.
+        newer = db.scalar(select(MessageEvent).where(
+            MessageEvent.conversation_state_id == conversation.id,
+            MessageEvent.private.is_(False),
+            MessageEvent.direction.in_(['incoming', 'outgoing']),
+            MessageEvent.chatwoot_message_id > message.chatwoot_message_id)
+            .order_by(MessageEvent.chatwoot_message_id.desc()))
+        if newer and newer.direction == 'incoming':
+            value.update(pending_event='customer_message',
+                         buffered_questions=[f'cw-{newer.chatwoot_message_id}'])
+            row.due_at = utcnow()
+        service.save(row, value)
+    return True
+
+
 def record_human_reply(db, conversation, message):
     """A real public advisor reply acknowledges the local handoff too."""
     from app.operations import audit
@@ -67,6 +103,10 @@ def record_human_reply(db, conversation, message):
         return
     if row:
         row.controls = {**row.controls, 'last_advisor_event_id': message.chatwoot_message_id}
+    if record_advisor_supplement(db, conversation, message):
+        audit(db, None, 'reception.advisor_supplement', 'conversation', conversation.chatwoot_conversation_id,
+              {'message_id': message.chatwoot_message_id})
+        return
     if advisor_replied(db, conversation, session_for(db, conversation.id), message):
         audit(db, None, 'handoff.followup_timer_reset', 'conversation', conversation.chatwoot_conversation_id,
               {'message_id': message.chatwoot_message_id})
@@ -454,7 +494,8 @@ def accept(db, conversation, message):
         from app.reception_v3.customer_images import attachment_metadata
         row.messages = [{'id': f'cw-{m.chatwoot_message_id}', 'direction': m.direction, 'content': m.content,
                          'status': 'submitted' if m.direction == 'outgoing' else m.status, 'created_at': m.created_at,
-                         'content_type': m.content_type, 'attachments': attachment_metadata(m.attachments)}
+                         'content_type': m.content_type, 'attribution': m.attribution,
+                         'attachments': attachment_metadata(m.attachments)}
                         for m in history if m.direction in ('incoming','outgoing')]
         now=utcnow()
         row.controls = {'simulation': {'status':'running', 'last_wall_at':now, 'start_virtual_at':now},
