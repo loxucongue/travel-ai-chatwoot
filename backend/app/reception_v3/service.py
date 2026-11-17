@@ -26,6 +26,7 @@ from app.reception_v3.route_understanding import from_run as route_understanding
 from app.web_knowledge import active_web_facts
 from app.reception_v3 import undecided_followup
 from app.reception_v3 import post_quote
+from app.reception_v3 import consultation
 
 
 def date(value):
@@ -422,6 +423,10 @@ def parts_for(db, row, bundle, decision, *, followup=False):
             if message.get('quote_options') else (script['text'] if script else ''))
         add(text, [k for k in message['asset_keys'] if k not in automatic_maps],
             route_hint=message.get('route') or None)
+        if message.get('question_topic'):
+            for part in parts[offset:]:
+                if part.get('content'):
+                    part['question_topic'] = message['question_topic']
         lead = bundle.get('lead_capture', {})
         if (full_quote or message.get('is_trip_quote')) and not followup and lead.get('enabled') and lead.get('post_quote_invitation_minutes'):
             for part in parts[offset:]:
@@ -475,6 +480,8 @@ def update_profile(db, row, run, decision):
             and profile['discussion_route']!=(row.memory or {}).get('discussion_route')):
         profile.pop('discussion_route')
     memory = {**(row.memory or {}), **profile}
+    if any(decision.get(k) for k in ('party_evidence', 'need_evidence', 'asked_evidence')):
+        memory.update(consultation.memory_updates(decision, row.messages, memory))
     understanding = route_understanding_from_run(run)
     if understanding:
         memory['_route_dialogue'] = {**understanding, 'updated_at': row.virtual_now,

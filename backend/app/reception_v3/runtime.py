@@ -16,6 +16,7 @@ from app.reception_v3.seasonal_quotes import departure_quote, month_answer_windo
 from app.reception_v3.route_choice import PEACH_ROUTES
 from app.reception_v3.route_understanding import interpret, generation_instruction
 from app.reception_v3.travel_dates import calculate_travel_window
+from app.reception_v3 import consultation
 
 
 class Message(BaseModel):
@@ -28,6 +29,7 @@ class Message(BaseModel):
     asset_keys: list[str] = Field(default_factory=list)
     material_rule_id: str = ''
     purpose: Literal['reply', 'contact_invitation'] = 'reply'
+    question_topic: Literal['', 'departure', 'party', 'companions', 'concern'] = ''
     is_trip_quote: bool = Field(default=False, description='本条实际给出线路团费或有依据的起价为true；机票、单房差、小费等单项费用或只说待核价为false。')
 
 
@@ -53,6 +55,9 @@ class Decision(BaseModel):
                           'party_size', 'trip_days', 'custom', 'knowledge'] = 'other'
     reason: str = ''
     lead_review: LeadReview | None = None
+    party_evidence: consultation.PartyEvidence | None = None
+    need_evidence: list[consultation.NeedEvidence] = Field(default_factory=list, max_length=8)
+    asked_evidence: list[consultation.AskedEvidence] = Field(default_factory=list, max_length=12)
 
     @field_validator('profile')
     @classmethod
@@ -253,6 +258,7 @@ def run_agent(context: dict):
               + '\n\n' + SYSTEM_PROMPT + '\n\n' + CONTACT_CONTINUITY_INSTRUCTION)
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
+    current['consultation'] = consultation.task(context)
     if context.get('route_understanding'):
         current['route_understanding_instruction'] = (
             'route_understanding是本輪專用語義節點結合真實對話的結果。依其理解處理選線，'
@@ -666,6 +672,9 @@ def run_agent(context: dict):
                 continue
             try:
                 decision = Decision.model_validate(_json_object(message.get('content') or '')).model_dump()
+                error = consultation.validation_error(decision, context)
+                if error:
+                    raise ValueError(error)
                 from app.reception_v3.action_output import validate_reply_output
                 validate_reply_output(decision, context)
                 from app.reception_v3.undecided_followup import validation_error as undecided_error
