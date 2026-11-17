@@ -402,6 +402,13 @@ def _non_scheduled_result(spec, days, today, party_size, group_type):
 
     policy = spec.get('seasonal_pricing') or spec.get('departure_availability')
 
+    if (policy.get('private_departure_min_party_size') == 4 and type(party_size) is int
+            and party_size >= 4 and (group_type == 'shared' or party_size == 4 and group_type == 'undecided')):
+        return {'status':'shared_departure_request','departure_examples':[d.isoformat() for d in days[:3]],
+                'minimum_party_size':4,'group_type':'shared',
+                'reason':'4位起可在本产品可安排区间内协助申请自选开新拼团，不等于独立包团；实际车辆名额与费用仍须核对。',
+                'guidance':'先承接日期与人数，不能要求必须改到定班日，不将group_type改成private；此结果不授权套固定拼团日期的价格。可自然邀请联系方式由顾问进一步核对。'}
+
     if _can_choose_date(policy, party_size, group_type):
 
         return {'status': 'private_departure', 'departure_examples': [d.isoformat() for d in days[:3]],
