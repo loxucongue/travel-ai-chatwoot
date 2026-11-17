@@ -56,7 +56,7 @@ def test_customer_reply_uses_three_hours_and_no_first_hour_override():
 def test_actual_night_first_hour_sends_four_times_and_then_skips(session_factory,monkeypatch):
     events=[]
     with session_factory() as db:
-        row=create(db,monkeypatch,entry='先看資料',model=lambda c: (events.append(c['event']) or answer(messages=[{'text':'看看這段沿途風景～'}])))
+        row=create(db,monkeypatch,entry='先看資料',model=lambda c: (events.append(c['event']) or answer(messages=[{'text':f'沿途風景新內容{len(events)}'}])))
         monkeypatch.setattr(service,'compile_skills',lambda db:spec())
         row.virtual_now='2026-10-13T02:00:00+08:00'
         row.messages=[{'id':'entry','direction':'incoming','created_at':row.virtual_now,'content':'先看資料'}]

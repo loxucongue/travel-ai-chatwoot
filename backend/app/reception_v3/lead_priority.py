@@ -29,6 +29,9 @@ def local_day(value):
 
 
 def task(context):
+    from app.reception_v3.alternative_followup import task as alternative_task
+    if alternative_task(context):
+        return None
     from app.reception_v3.route_followup import policy_for
     from app.reception_v3.post_quote import due
     post_quote = due(context)

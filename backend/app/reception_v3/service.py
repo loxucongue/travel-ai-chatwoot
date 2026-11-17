@@ -27,6 +27,7 @@ from app.web_knowledge import active_web_facts
 from app.reception_v3 import undecided_followup
 from app.reception_v3 import post_quote
 from app.reception_v3 import consultation
+from app.reception_v3 import alternative_followup
 
 
 def date(value):
@@ -271,7 +272,7 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
     value['next_check_minutes'] = None
     value['silence_step'] = 0
     value['followup_last_customer_at'] = row.virtual_now
-    for key in ('followup_anchor', 'followup_until', 'appointment_pending', 'post_quote_pending'):
+    for key in ('followup_anchor', 'followup_until', 'appointment_pending', 'post_quote_pending', 'alternative_pending'):
         value.pop(key, None)
     if value.get('intake_status') in ('sending', 'waiting'):
         value.update(intake_status='done', intake_deadline=None, intake_answered=True)
@@ -329,13 +330,15 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     from app.reception_v3.material_rules import eligible_rules, selected_asset, conversation_labels, rule_digest
     allowed_materials = (followup_materials(list(materials.values()), row.messages, route, row.memory)
                          if followup else list(materials.values()))
-    rules = {r['id']: r for r in eligible_rules(bundle, allowed_materials, route,
+    rules = {r['id']: r for r in eligible_rules(bundle, list(materials.values()), route,
         conversation_labels(db, row), 'silence_due' if followup else 'customer_message', row.messages, row.memory)}
     decision = deepcopy(decision)
     from app.reception_v3.route_followup import reference_preview_allowed
+    alternative_task = alternative_followup.task({'state':state(row),'profile':row.memory or {},
+        'messages':row.messages,'event':'silence_due' if followup else 'customer_message','now':row.virtual_now})
     reference_preview = followup and reference_preview_allowed({
         'skills':bundle,'route_variant':row.controls.get('route_variant',''),
-        'profile':row.memory or {},'state':state(row),'event':'silence_due'},decision)
+        'profile':row.memory or {},'state':state(row),'event':'silence_due','now':row.virtual_now,'messages':row.messages},decision)
     configured_only = (followup and not reference_preview
                        and bundle.get('silence', {}).get('material_selection') == 'configured_rules')
     for message in decision['messages']:
@@ -357,9 +360,13 @@ def parts_for(db, row, bundle, decision, *, followup=False):
             from app.reception_v3.material_rules import itinerary_previews
             preview = itinerary_previews(bundle,list(materials.values()),row.messages,row.memory).get(content_route,{})
             allowed = {m['key'] for m in preview.get('assets',[]) if not m['already_delivered']}
+        if alternative_task:
+            spec = bundle['routes'][alternative_task['route']]
+            allowed = {a for k in spec['introduction_sequence'] for a in
+                       seasonal_group(spec['groups'][k],row.memory or {}).get('assets',[])}
         keys = [key for message in decision['messages'] for key in message['asset_keys']]
         if (route != row.controls.get('route_variant', '') or decision['start_introduction']
-                or len(keys) > 1 or any(key not in allowed for key in keys)):
+                or len(keys) > 1 and not alternative_task or any(key not in allowed for key in keys)):
             raise DecisionContractError('invalid_silence_followup_materials')
     delivered = [m for m in row.messages if m.get('direction') == 'outgoing'
                  and m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')]
@@ -367,8 +374,12 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     seen_hashes = {m.get('media_hash') or materials.get(m.get('asset_key'), {}).get('media_hash')
                    for m in delivered} - {None}
     seen_ids = {m.get('media_id') for m in delivered} - {None}
+    seen_texts = {m.get('content','').strip() for m in delivered if m.get('content')}
 
     def add(text, keys, mode='text_then_assets', deduplicate=False, route_hint=None):
+        deduplicate = deduplicate or followup
+        if followup and text.strip() in seen_texts:
+            text = ''
         media = []
         for key in keys:
             # Comparing routes may reference a different route's image without
@@ -396,6 +407,8 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         media_parts = [{**m, 'content': ''} for m in media]
         text_parts = [{'content': text, 'content_type': 'text'}] if text else []
         parts.extend(media_parts + text_parts if mode == 'assets_then_text' else text_parts + media_parts)
+        if text:
+            seen_texts.add(text.strip())
     from app.reception_v3.material_rules import itinerary_previews
     previews = itinerary_previews(bundle, list(materials.values()), row.messages, row.memory)
     automatic_maps = set()
@@ -427,6 +440,11 @@ def parts_for(db, row, bundle, decision, *, followup=False):
             for part in parts[offset:]:
                 if part.get('content'):
                     part['question_topic'] = message['question_topic']
+        if message.get('alternative_offer_route') and not followup:
+            for part in parts[offset:]:
+                if part.get('content'):
+                    part.update(alternative_offer_route=message['alternative_offer_route'],
+                                alternative_source_message_id=message['alternative_source_message_id'])
         lead = bundle.get('lead_capture', {})
         if (full_quote or message.get('is_trip_quote')) and not followup and lead.get('enabled') and lead.get('post_quote_invitation_minutes'):
             for part in parts[offset:]:
@@ -446,6 +464,20 @@ def parts_for(db, row, bundle, decision, *, followup=False):
             original = next(r for r in bundle['material_rules'] if r['id'] == message['material_rule_id'])
             for part in parts[offset:]:
                 part.update(material_rule_id=original['id'], material_rule_digest=rule_digest(original))
+    if alternative_task and decision['action'] == 'reply':
+        target = alternative_task['route']
+        spec = bundle['routes'][target]
+        excluded = {'advisor_greeting','entry_question','read_check','contact_request','contact_transition',
+                    'price_reference','price_deferral','party_question','departure_question','travel_companions'}
+        for key in spec['introduction_sequence']:
+            if key in excluded:
+                continue
+            group = seasonal_group(spec['groups'][key],row.memory or {})
+            offset = len(parts)
+            add(group['text'],group['assets'],group.get('delivery_mode','assets_then_text'),
+                deduplicate=True,route_hint=target)
+            for part in parts[offset:]:
+                part.update(reference_introduction_route=target,reference_group=key)
     if decision['start_introduction']:
         if not route:
             raise ValueError('v3_introduction_requires_route')
@@ -475,7 +507,8 @@ def parts_for(db, row, bundle, decision, *, followup=False):
 
 def update_profile(db, row, run, decision):
     previous_memory = row.memory
-    profile = {k:v for k,v in decision['profile'].items() if k not in ('_route_offer', '_route_dialogue')}
+    profile = {k:v for k,v in decision['profile'].items() if k not in (
+        '_route_offer', '_route_dialogue', '_consultation_needs', '_consultation_asked', '_party_evidence')}
     if (decision.get('route_choice','unchanged')!='recommend' and profile.get('discussion_route')
             and profile['discussion_route']!=(row.memory or {}).get('discussion_route')):
         profile.pop('discussion_route')
@@ -530,6 +563,7 @@ def update_profile(db, row, run, decision):
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
     post_quote_review = run.input_snapshot.get('event') == 'silence_due' and bool(value.get('post_quote_pending'))
+    alternative_review = run.input_snapshot.get('event') == 'silence_due' and not post_quote_review and bool(value.get('alternative_pending'))
     if run.input_snapshot.get('event') == 'customer_message' and decision.get('substantive_reply') is not None:
         buffered = set(value.get('buffered_questions', []))
         row.messages = [{**m, 'substantive_customer': decision['substantive_reply']}
@@ -546,6 +580,8 @@ def apply_decision(db, row, run, bundle, decision):
                      last_reason='followup_review_wait', followup_settings=deepcopy(bundle['silence']))
         if post_quote_review:
             post_quote.consume(value)
+        if alternative_review:
+            alternative_followup.consume(value)
         schedule_followup(value, bundle, row.virtual_now)
         save(row, value)
         row.due_at = None
@@ -660,6 +696,10 @@ def apply_decision(db, row, run, bundle, decision):
         post_quote.consume(value)
         value.pop('route_checkpoint', None)
         checkpoint_delay = None
+    if alternative_review:
+        alternative_followup.consume(value)
+        value.pop('route_checkpoint', None)
+        checkpoint_delay = None
     if checkpoint_delay:
         appointment = checkpoint_delay
     if decision.get('stop_followup') and (checkpoint_delay or route_policy.get('followup_policy') or
@@ -685,7 +725,8 @@ def apply_decision(db, row, run, bundle, decision):
     append_plan(row, value, parts, kind, interval, run.id)
     if run.input_snapshot.get('event') == 'silence_due':
         initial = bundle['silence'].get('initial_checkpoints_minutes')
-        first_hour = initial is not None and not value.get('followup_customer_replied') and step <= len(initial)
+        first_hour = (initial is not None and not value.get('followup_customer_replied') and step <= len(initial)
+                      and not post_quote_review and not alternative_review)
         row.messages = [{**m, 'proactive': True, 'first_hour_followup': first_hour,
                          'followup_topic': decision.get('followup_topic', '')} if m.get('run_id') == run.id else m for m in row.messages]
     if not parts and value['next_check_minutes']:
@@ -734,6 +775,10 @@ def complete_delivery(row, target, status):
     undecided_followup.enforce(row, value, value.get('followup_settings', {}))
     if not any(m.get('status') == 'draft' for m in row.messages) and value.get('next_check_minutes'):
         post_quote.arm(value, row.memory or {}, row.messages, part.get('plan_id'), row.virtual_now)
+        alternative_followup.arm(value, row.memory or {}, row.messages, part.get('plan_id'), row.virtual_now)
+        if value.get('alternative_pending') and not alternative_followup.eligible(value,row.memory or {},row.messages):
+            alternative_followup.consume(value)
+        alternative_followup.schedule(value)
     save(row, value)
 
 
@@ -851,6 +896,7 @@ def control(row, action):
         value = state(row)
         value.pop('handoff_after_plan', None)
         value.pop('post_quote_pending', None)
+        value.pop('alternative_pending', None)
         value.update(pending_event=None, delivery_kind=None, delivery_due_at=None, next_check_at=None, intake_deadline=None)
         save(row, value)
 
@@ -917,6 +963,14 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             continue
         if event == 'silence_due':
             silence = bundle['silence']
+            if value.get('alternative_pending') and not alternative_followup.eligible(value,row.memory or {},row.messages):
+                alternative_followup.consume(value)
+                value.update(pending_event=None,next_check_at=None,followup_skip_reason='alternative_no_longer_eligible')
+                schedule_followup(value,bundle,row.virtual_now)
+                save(row,value)
+                row.due_at=None
+                db.commit()
+                continue
             if value.get('post_quote_pending') and (
                     not bundle.get('lead_capture', {}).get('enabled')
                     or not bundle.get('lead_capture', {}).get('post_quote_invitation_minutes')
@@ -1028,7 +1082,7 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
                 context['available_materials'], row.messages, context['route_variant'], row.memory)
         from app.reception_v3.material_rules import eligible_rules, conversation_labels
         context['material_rules'] = eligible_rules(bundle,
-            context['followup_materials'] if event == 'silence_due' else context['available_materials'],
+            context['available_materials'],
             context['route_variant'], conversation_labels(db, row), event, context['messages'], row.memory)
         if event == 'silence_due' and bundle['silence'].get('material_selection') == 'configured_rules':
             context['followup_materials'] = []

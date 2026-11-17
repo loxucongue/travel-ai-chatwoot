@@ -32,6 +32,7 @@ def policy(silence, route='', controls=None, profile=None):
             or controls.get('human_followup', {}).get('enabled')
             or state.get('handoff') or state.get('lead_assist')
             or state.get('opt_out') or state.get('appointment_pending')
+            or state.get('alternative_pending') or state.get('post_quote_pending')
             or profile.get('reception_status') == 'abusive'):
         return None
     return value

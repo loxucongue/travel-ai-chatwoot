@@ -17,6 +17,7 @@ from app.reception_v3.route_choice import PEACH_ROUTES
 from app.reception_v3.route_understanding import interpret, generation_instruction
 from app.reception_v3.travel_dates import calculate_travel_window
 from app.reception_v3 import consultation
+from app.reception_v3 import alternative_followup
 
 
 class Message(BaseModel):
@@ -30,6 +31,8 @@ class Message(BaseModel):
     material_rule_id: str = ''
     purpose: Literal['reply', 'contact_invitation'] = 'reply'
     question_topic: Literal['', 'departure', 'party', 'companions', 'concern'] = ''
+    alternative_offer_route: str = ''
+    alternative_source_message_id: str = ''
     is_trip_quote: bool = Field(default=False, description='本条实际给出线路团费或有依据的起价为true；机票、单房差、小费等单项费用或只说待核价为false。')
 
 
@@ -244,6 +247,9 @@ def run_agent(context: dict):
     understanding = context.get('route_understanding') or {}
     routes = [context.get('route_variant', ''), understanding.get('selected_route'),
               (context.get('profile') or {}).get('discussion_route')]
+    alternative_task = alternative_followup.task(context)
+    if alternative_task:
+        routes.append(alternative_task['route'])
     for route in routes:
         selected = registry.route_skill(route or '')
         if selected and selected not in loaded:
@@ -259,6 +265,9 @@ def run_agent(context: dict):
     current = {key: value for key, value in context.items()
                if key not in ('skills', 'website_facts', 'website_version', 'available_materials', 'messages')}
     current['consultation'] = consultation.task(context)
+    current['alternative_followup'] = alternative_task
+    current['alternative_offer_instruction'] = ('客户明确问桃花而本轮询问是否想了解或珠峰偏好时，在该邀请文字上填alternative_offer_route和alternative_source_message_id。'
+        '未知偏好默认peach_11d_2027；明确不去珠峰或适合9日用peach_9d_2027，不违背已知天数日期。不因单纯三四月就建立任务。程序从成功发送起等60分钟；不要自行设5分钟或其它计时。')
     if context.get('route_understanding'):
         current['route_understanding_instruction'] = (
             'route_understanding是本輪專用語義節點結合真實對話的結果。依其理解處理選線，'
@@ -267,6 +276,11 @@ def run_agent(context: dict):
             '選線不等於報名，日期與報價仍須工具核對。歷史單一推薦不能覆蓋本輪選擇。')
     from app.reception_v3.party_quotes import pricing_evidence
     current['pricing_evidence'] = pricing_evidence(context['skills'])
+    if context.get('now') and context.get('event') == 'customer_message':
+        from app.reception_v3.starting_prices import reference as starting_price
+        relevant = set(routes) | set(understanding.get('discussed_routes', []))
+        current['starting_price_evidence'] = {r: starting_price(context['skills'],r,context['now'],context.get('profile',{}))
+            for r in relevant if r in context['skills']['routes']}
     from app.reception_v3.seasonal_quotes import prepared_group_quotes
     prepared_quotes = prepared_group_quotes(context)
     if prepared_quotes:
@@ -476,10 +490,8 @@ def run_agent(context: dict):
                         '不是再问要不要看照片；answer_visuals给出真实key。无需图像解释或已看过则不添图。'
                         '注意消息时序：介绍之前说「想先看看行程」是在索取行程，不是介绍后的考虑收尾。'
                         'introduction_completed事件没有新的客户发言，按当前线路Skill接续缺少的问题，不能把旧请求重新当作客户刚说考虑。'
-                        '客户本轮在看过资料之后表示考虑、先看看时，按当前线路及通用Skill检查首次私讯邀请机会：符合条件就保留简短承接、'
-                        '一项真实资料用途和一个轻量邀请（purpose=contact_invitation）；不把首次邀请当作重复推销删除。'
-                        '首次邀请要说清能提供哪项已有资料及用途，例如详细行程供比较，不能仅说以后有问题再问或协助安排。'
-                        '这次考虑收尾若历史已邀请、已留资、拒绝留资、预约稍后联系或停联，只短答、不再索取；'
+                        '客户介绍后说再看看时，按consultation任务先回答问题，再补一个适合的未知需求；已知或明确未定不重问。'
+                        '不默认立刻索资，不机械回答慢慢看。资料已足够或客户主动希望联系时才自然邀请。'
                         '本轮最新表达同样优先：「只在这里聊」是选择当前渠道、拒绝转到其他私讯，不是首次邀请机会；'
                         '记录contact_capture_declined=true及当前渠道偏好，用一句话确认继续在这里即可，不能再问LINE、微信、Email。'
                         '沉默没有实质新增内容用wait；客户明确重问则正常回答。'
@@ -672,7 +684,7 @@ def run_agent(context: dict):
                 continue
             try:
                 decision = Decision.model_validate(_json_object(message.get('content') or '')).model_dump()
-                error = consultation.validation_error(decision, context)
+                error = consultation.validation_error(decision, context) or alternative_followup.validation_error(decision, context)
                 if error:
                     raise ValueError(error)
                 from app.reception_v3.action_output import validate_reply_output

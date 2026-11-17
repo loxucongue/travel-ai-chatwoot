@@ -90,6 +90,8 @@ def record_advisor_supplement(db, conversation, message):
         # Explicit takeover still cancels it through service.control(stop).
         if previous.get('post_quote_pending'):
             value['post_quote_pending'] = previous['post_quote_pending']
+        if previous.get('alternative_pending'):
+            value['alternative_pending'] = previous['alternative_pending']
         # A delayed advisor webhook must not swallow a newer customer question.
         newer = db.scalar(select(MessageEvent).where(
             MessageEvent.conversation_state_id == conversation.id,
@@ -656,7 +658,10 @@ def deliver_one(db, row):
         current = next((r for r in current_bundle.get('material_rules', []) if r['id'] == part.get('material_rule_id')), None)
         revoked = bool(part.get('material_rule_id')) and (not current or current['id'] not in allowed_ids
                 or rule_digest(current) != part.get('material_rule_digest'))
-        unmanaged_image = (part.get('proactive') and part.get('content_type') == 'image'
+        from app.reception_v3.alternative_followup import reference_part_allowed
+        reference_allowed = reference_part_allowed(part,current_bundle,row.memory or {})
+        revoked = revoked or bool(part.get('reference_introduction_route') and not reference_allowed)
+        unmanaged_image = (part.get('proactive') and part.get('content_type') == 'image' and not reference_allowed
             and not part.get('material_rule_id') and current_bundle['silence'].get('material_selection') == 'configured_rules')
         if revoked or unmanaged_image:
             row.messages = [{**m, 'status':'cancelled'} if m.get('plan_id') == part.get('plan_id')

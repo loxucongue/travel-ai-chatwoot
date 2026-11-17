@@ -32,7 +32,7 @@ def test_seven_daily_touches_then_stop_without_customer_reply(session_factory, m
         row = create(db, monkeypatch)
         monkeypatch.setattr(service, 'compile_skills', lambda db: spec())
         calls = []
-        monkeypatch.setattr(service, 'run_agent', lambda c: (calls.append(c) or answer(messages=[{'text': '一則跟進'}])))
+        monkeypatch.setattr(service, 'run_agent', lambda c: (calls.append(c) or answer(messages=[{'text': f'不同的跟進內容{len(calls)}'}])))
         row.virtual_now = '2026-10-18T20:00:00+08:00'
         row.messages = [{'id':'customer', 'direction':'incoming', 'content':'先看看', 'created_at':row.virtual_now}]
         value = {'opening_started': True, 'followup_last_customer_at':row.virtual_now, 'followup_settings':spec()['silence']}

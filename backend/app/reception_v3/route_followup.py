@@ -25,10 +25,19 @@ def policy_for(bundle, route, profile):
     if not route:
         large = next((p for key in bundle.get('routes', {}) if (p := group_policy(bundle,key,profile))), None)
     policy = (large or {}).get('followup_policy') or bundle.get('routes',{}).get(route,{}).get('followup_policy')
-    return deepcopy(policy) if policy and policy.get('enabled') else None
+    if not policy or not policy.get('enabled'):
+        return None
+    policy = deepcopy(policy)
+    if 'peach_interest_wait' in policy.get('checkpoints',{}):
+        policy['checkpoints']['peach_interest_wait'] = 60
+        policy['guidance'] = policy.get('guidance','').replace('五分鐘','一小時').replace('5分鐘','60分鐘')
+    return policy
 
 
 def task(context):
+    from app.reception_v3.alternative_followup import task as alternative_task
+    if alternative_task(context):
+        return None
     from app.reception_v3.post_quote import due
     if due(context):
         return None
@@ -47,6 +56,11 @@ def task(context):
 
 def reference_preview_allowed(context, decision=None):
     """A configured follow-up may offer a map, but cannot select a product."""
+    from app.reception_v3.alternative_followup import task as alternative_task
+    pending = alternative_task(context)
+    if pending:
+        return decision is None or (decision.get('route_choice') == 'recommend'
+            and not decision.get('start_introduction') and decision.get('profile',{}).get('discussion_route') == pending['route'])
     policy = policy_for(context['skills'],context.get('route_variant',''),context.get('profile',{}))
     permitted = (context.get('event') == 'silence_due' and policy
         and context.get('state',{}).get('route_checkpoint') in policy.get('reference_preview_checkpoints',[]))
@@ -57,6 +71,9 @@ def reference_preview_allowed(context, decision=None):
 
 
 def validation_error(decision, context):
+    from app.reception_v3.alternative_followup import task as alternative_task
+    if alternative_task(context):
+        return '一小时参考介绍不另建线路节点。' if decision.get('followup_checkpoint') else None
     from app.reception_v3.post_quote import due
     if due(context):
         return '报价后私讯审核不另建线路跟进节点，followup_checkpoint留空。' if decision.get('followup_checkpoint') else None
