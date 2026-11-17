@@ -1,0 +1,68 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>全线路接待优化 · 2026-11-17</title>
+<style>body{font:16px/1.7 system-ui,sans-serif;background:#f4f7fa;color:#183047;margin:0}main{max-width:1180px;margin:auto;padding:36px 28px}h1{font-size:30px}h2{margin-top:36px}table{border-collapse:collapse;width:100%;background:white;margin:16px 0;font-size:14px}td,th{padding:12px;border:1px solid #dce3ea;text-align:left;vertical-align:top}th{background:#e7eef5}.card{background:white;padding:20px;border-radius:12px;margin:20px 0}.note{border-left:4px solid #d38c1e;padding:12px 18px;background:#fff8e8}code{overflow-wrap:anywhere}details{background:white;padding:16px}a{color:#165dba}</style><main>
+<h1>全线路接待优化、验证与发布报告</h1><p>已发布，完成部署后检查 · 更新 2026-11-17T23:39:36（Asia/Shanghai）</p>
+<div class="card"><b>范围：</b>八项接待改动，八条已启用线路。基于发布前实际线上文件与配置建立隔离分支；保留其他任务已发布功能。<br>
+<b>发布：</b><code>reception-consultation-20261117</code><br><b>引擎：</b><code>reception-v3-1cf9088b1947c620</code><br>
+<b>代码：</b><a href="https://github.com/loxucongue/travel-ai-chatwoot/tree/codex/reception-20261117">codex/reception-20261117</a> · 报告生成时提交 9882dd0</div>
+<h2>业务行为对照</h2><table><thead><tr><th>项目</th><th>原行为/风险</th><th>改动</th><th>新效果与边界</th></tr></thead><tbody><tr><td>广告人数</td><td>把“6人小团”当作客户6位，进入独团</td><td>按产品容量、假设询价、实际同行人数区分；人数更新引用客户消息</td><td>广告仍识别线路；只有实际人数进入画像、报价及独团判断</td></tr><tr><td>参考起价</td><td>未定日期时仅追问月份，或引用不适用的历史价</td><td>由本线现行价格引擎计算未来有效团期的每人起价</td><td>先回答预算，再问一个缺少的时间信息；独团无价时不套拼团</td></tr><tr><td>4–6人承接</td><td>4人指定发团与包团混淆；5人补充日期被忽略</td><td>区分shared_departure_request与private_departure；保留同轮补充</td><td>4人可按产品条件申请新开拼团，5–6人或明确包团说明适用方案；申请不等于库存或价格确认</td></tr><tr><td>介绍后推进</td><td>“再看看”直接索资，或固定问家人朋友</td><td>统一选择未知时间、人数/构成、顾虑之一；已发送问题及未定/拒答记忆</td><td>保留自然答疑和产品优势；阿里保留体能年龄要求；明确暂停则给空间</td></tr><tr><td>一小时替代介绍</td><td>邀请后等待或旧五分钟节点，缺少统一持久化任务</td><td>客户明确桃花兴趣、邀请实际发送成功后建立60分钟任务</td><td>未拒绝珠峰且无冲突时参考11日；避开珠峰/适合短线用9日；不替客户选线</td></tr><tr><td>联系方式</td><td>渠道、二维码/ID口径不一致</td><td>统一任选LINE/WhatsApp/微信的二维码或ID；尊重客户自选渠道</td><td>说明真实资料与沟通用途；不固定声称平台传大文件卡顿</td></tr><tr><td>调度去重</td><td>不同跟进机制可能争抢同一次到期事件</td><td>沿用next_check_at；五分钟报价邀请优先，其次一小时替代，再到线路/每日</td><td>遵守静默时段、每日上限、渠道权限；客户新回复、接管、留资等使旧任务失效</td></tr><tr><td>阿里追单</td><td>初次介绍素材可能在追单重发</td><td>按素材ID/哈希、主题和已发文字去重</td><td>保留首次介绍与原追单顺序，已展示主题跳过，无新内容等待</td></tr></tbody></table>
+<h2>原始业务会话核对与回放</h2><p>已提取上述会话的完整消息、决策输入与结果、发送状态，核对姓名与编号；不根据截图时间推断故障。原始会话含客户信息，仅保存在本地忽略目录 output/reception-20261117，不提交公开仓库。</p><table><thead><tr><th>会话</th><th>决策记录</th><th>复现关注点</th><th>验证结果</th></tr></thead><tbody><tr><td>#1135（怡安陈）</td><td>9032</td><td>真实广告入口“阿里环线15日6人小团”</td><td>回放未写客户人数；按广告识别阿里线路进入介绍</td></tr><tr><td>#1095</td><td>8707、8709</td><td>实际5人；连续补充2月20日以后</td><td>分离人数与日期信息；独团/拼团条件按实际产品范围；连续补充与修改另有确定性测试</td></tr><tr><td>#1022</td><td>7990</td><td>普通线进入后询问桃花</td><td>单点与虚拟时间覆盖59/60分钟、目标线路、取消及恢复；一小时图文不改变已选主线</td></tr><tr><td>#1125</td><td>9000</td><td>询问大概费用，日期未知</td><td>真实回放给2027年每人CNY8,280起并标识报价，继续了解时间；金额来自该回放价格配置</td></tr><tr><td>Ruby #1117</td><td>8979、8980</td><td>阿里首次介绍和考虑回复</td><td>保留初次介绍；追单主题按实际素材标识与已发内容跳过</td></tr></tbody></table>
+<h2>单点验证</h2><table><thead><tr><th>测试模块</th><th>用例数</th><th>通过</th><th>失败</th></tr></thead><tbody><tr><td>test_consultation_evidence</td><td>13</td><td>13</td><td>0</td></tr><tr><td>test_starting_prices</td><td>4</td><td>4</td><td>0</td></tr><tr><td>test_small_party_reception</td><td>7</td><td>7</td><td>0</td></tr><tr><td>test_alternative_followup</td><td>12</td><td>12</td><td>0</td></tr><tr><td>test_reception_delivery_integration</td><td>7</td><td>7</td><td>0</td></tr><tr><td>test_reception_package_upgrade</td><td>9</td><td>9</td><td>0</td></tr></tbody></table>
+<p>覆盖广告容量/真实人数/混合消息、需求变更及人工已问、发送失败不计已问、不同日期与团型起价、4人新开拼团、60分钟任务持久化与取消、每日上限/静默边界、模型运行期间客户插话、实际素材去重与八条线路配置升级。单项提交记录保留在该分支历史中。</p>
+<h2>完整回归</h2><table><thead><tr><th>版本</th><th>用例数</th><th>通过</th><th>失败</th></tr></thead><tbody><tr><td>发布前实际线上配置基线</td><td>1724</td><td>1594</td><td>130</td></tr><tr><td>最终候选版本</td><td>1776</td><td>1647</td><td>129</td></tr></tbody></table>
+<div class="note">新增失败 0 项。既有失败没有隐去，不能将本次结果表述为“全测试通过”。基线与候选均使用当时八条实际运行线路包；未以只有两条线路的旧默认配置作为最终基线。慢主模型预算测试曾表现出时序波动，不作为本次业务修复成果。</div>
+<p>失败主要分布在既有人工跟进/人工补话边界、旧路由目录和旧话术断言等模块，逐项以测试ID对照；本次有意改变的4人申请拼团、重复追单跳过等断言已随需求更新，未将这些测试禁用。</p>
+<details><summary>既有失败按测试模块分布</summary><table><thead><tr><th>模块</th><th>失败数</th></tr></thead><tbody><tr><td>tests.test_advisor_followup_boundaries_20261029</td><td>6</td></tr><tr><td>tests.test_auto_advisor_followup_20261017</td><td>3</td></tr><tr><td>tests.test_bi_dashboard</td><td>1</td></tr><tr><td>tests.test_business_feedback_20261015</td><td>2</td></tr><tr><td>tests.test_business_feedback_20261019</td><td>14</td></tr><tr><td>tests.test_business_feedback_20261025</td><td>3</td></tr><tr><td>tests.test_conversation_controls</td><td>1</td></tr><tr><td>tests.test_daily_followup_20261014</td><td>1</td></tr><tr><td>tests.test_empty_reply_20261114</td><td>1</td></tr><tr><td>tests.test_followup_offer_20261013</td><td>1</td></tr><tr><td>tests.test_itinerary_preview_20261025</td><td>1</td></tr><tr><td>tests.test_lead_priority</td><td>2</td></tr><tr><td>tests.test_linger_feedback_20261025</td><td>1</td></tr><tr><td>tests.test_linzhi_route_20261020</td><td>5</td></tr><tr><td>tests.test_manual_lead_assist</td><td>2</td></tr><tr><td>tests.test_outgoing_identity_race</td><td>3</td></tr><tr><td>tests.test_paid_acceptance_20261015</td><td>2</td></tr><tr><td>tests.test_party_quotes_20261025</td><td>1</td></tr><tr><td>tests.test_preview_quote_20261029</td><td>2</td></tr><tr><td>tests.test_priority_audit_20261027</td><td>1</td></tr><tr><td>tests.test_reception_v3_skills</td><td>3</td></tr><tr><td>tests.test_review_migration</td><td>2</td></tr><tr><td>tests.test_route_packages</td><td>9</td></tr><tr><td>tests.test_route_understanding_20261031</td><td>7</td></tr><tr><td>tests.test_seasonal_runtime_journeys</td><td>11</td></tr><tr><td>tests.test_small_fixes_20261024</td><td>5</td></tr><tr><td>tests.test_spring_route_choice_20261024</td><td>8</td></tr><tr><td>tests.test_sticker_ack_20261022</td><td>16</td></tr><tr><td>tests.test_tibet_release_20261014</td><td>1</td></tr><tr><td>tests.test_tibet_route_drafts_20261014</td><td>2</td></tr><tr><td>tests.test_travel_dates</td><td>1</td></tr><tr><td>tests.test_v3_intake_followup</td><td>9</td></tr><tr><td>tests.test_visual_reception_20261106</td><td>1</td></tr><tr><td>tests.test_winter_spring_20261017</td><td>1</td></tr></tbody></table></details><p><a href="reception-consultation-20261117-results.json">脱敏验证明细</a>包含完整失败ID对照、新增测试计数、模拟长会话输出及部署检查；原始客户会话和详细运行日志仍保留本地。</p>
+<h2>真实模型和长会话</h2><p>首轮31个隔离场景包含7个原始决策回放、八线路普通/独团16个分支及人数、考虑、一小时等场景。发现的北京考虑即索资、旧未选线任务抢占一小时任务等问题已修正；之后复测9组重点场景，包含9轮桃花长对话、6轮报价邀请长对话及人工已问。该批次异常数：0。</p>
+<p>另用实际service状态机和内存数据库运行广告进入→完整介绍→考虑→时间未定→实际4位及长辈→日期/报价→拒绝站外联系→人工交接。最终结果：True；9次模型决策、37条会话记录。所有输出为模拟发送或取消。</p>
+<p>真实模型验证业务语义，虚拟时钟和确定性集成测试验证调度、并发及发送状态。手工构造上下文的长对话不作为真实渠道时间验证。测试均未向真实客户发送消息。</p>
+<h2>发布与兼容</h2><p>不新增公开API；在内部决策与会话JSON中追加可选证据、需求状态及任务字段。旧记录缺字段按未知处理；不批量重置人数、不批量补建历史五分钟/一小时任务。报价邀请仍为5分钟审核、一小时任务为60分钟审核、每日追单20:00，保留现有时段和每日上限。</p>
+<p>部署前按文件哈希、运行线路包内容和接待配置核对漂移；持部署锁、等待在途任务完成、备份并逐文件替换。部署异常恢复本次文件，不回退客户数据库。备份目录：<code>/opt/china2go-ai/backups/reception-consultation-20261117</code>。</p>
+<h2>上线检查</h2><p>当前上线观察窗口尚无新的真实接待任务，五分钟/一小时任务的实际渠道送达尚未由线上新事件验证。</p><pre>{
+  &quot;checked_at&quot;: &quot;2026-11-17T15:38:44.058643+00:00&quot;,
+  &quot;release&quot;: &quot;reception-consultation-20261117&quot;,
+  &quot;engine&quot;: &quot;reception-v3-1cf9088b1947c620&quot;,
+  &quot;deployed_at&quot;: &quot;2026-11-17T15:36:45.525985+00:00&quot;,
+  &quot;services&quot;: [
+    &quot;active&quot;,
+    &quot;active&quot;,
+    &quot;active&quot;
+  ],
+  &quot;changed_files_verified&quot;: 23,
+  &quot;file_hash_errors&quot;: [],
+  &quot;unrelated_file_drift&quot;: [],
+  &quot;config_unchanged&quot;: true,
+  &quot;production_outbound_enabled&quot;: true,
+  &quot;lock_released&quot;: true,
+  &quot;resources&quot;: {
+    &quot;MemTotal_MiB&quot;: 3499,
+    &quot;MemAvailable_MiB&quot;: 2433,
+    &quot;SwapTotal_MiB&quot;: 2048,
+    &quot;SwapFree_MiB&quot;: 2048
+  },
+  &quot;disk_free_GiB&quot;: 10.35,
+  &quot;cpu_process_snapshot&quot;: [
+    &quot;%CPU %MEM   RSS COMMAND&quot;,
+    &quot; 126 11.2 401736 python&quot;,
+    &quot;15.4  2.3 85172 python&quot;,
+    &quot;12.5  2.4 88232 python&quot;,
+    &quot; 9.3  1.1 40256 python&quot;,
+    &quot; 1.5  2.7 98872 python&quot;
+  ],
+  &quot;live_runs_since_release&quot;: [],
+  &quot;failed_run_codes_since_release&quot;: [],
+  &quot;reply_jobs_since_release&quot;: [],
+  &quot;pending_quote_tasks&quot;: 0,
+  &quot;pending_alternative_tasks&quot;: 0,
+  &quot;processing_jobs_older_than_10min&quot;: 0,
+  &quot;failed_parts_since_release&quot;: 0,
+  &quot;journal_error_lines&quot;: 0,
+  &quot;expected_engine&quot;: &quot;reception-v3-1cf9088b1947c620&quot;,
+  &quot;public_health_status&quot;: 200,
+  &quot;public_health&quot;: {
+    &quot;status&quot;: &quot;ok&quot;,
+    &quot;database&quot;: &quot;ok&quot;
+  },
+  &quot;ok&quot;: true
+}</pre>
+<h2>证据边界与后续观察</h2><ul><li>模型措辞存在随机性，回放通过不保证每次逐字一致；实际客户的新任务及渠道回执需上线后继续观察。</li><li>历史没有可靠实际人数依据时，仅在相关接待中核实，不宣称全部历史画像已经修正。</li><li>此发布不宣称已修复所有基线测试失败；完整失败ID、日志和JUnit保留在本地验证目录。</li><li>人数满足门槛不等于库存已确认；“起价”不等于该客户最终成交价，也不等于任意日期有团。</li></ul>
+</main></html>

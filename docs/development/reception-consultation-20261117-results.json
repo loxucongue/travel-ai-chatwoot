@@ -1,0 +1,358 @@
+{
+  "comparison": {
+    "baseline_total": 1724,
+    "baseline_failed": 130,
+    "candidate_total": 1776,
+    "candidate_failed": 129,
+    "new_failures": [],
+    "fixed": [
+      "tests.test_gemini_fallback::test_slow_healthy_primary_is_not_cut_off_at_half_the_budget"
+    ],
+    "same_failures": [
+      "tests.test_advisor_followup_boundaries_20261029::test_followup_review_failure_waits_without_replaying_or_escalating[invalid_ids]",
+      "tests.test_advisor_followup_boundaries_20261029::test_followup_review_failure_waits_without_replaying_or_escalating[malformed]",
+      "tests.test_advisor_followup_boundaries_20261029::test_followup_review_failure_waits_without_replaying_or_escalating[timeout]",
+      "tests.test_advisor_followup_boundaries_20261029::test_novel_followup_allowed_then_repeated_question_is_suppressed",
+      "tests.test_advisor_followup_boundaries_20261029::test_replay_493_followup_roles_and_reprice_suppression",
+      "tests.test_advisor_followup_boundaries_20261029::test_timer_review_wait_has_no_outbound_and_customer_returns_to_advisor",
+      "tests.test_auto_advisor_followup_20261017::test_preference_wording_on_actual_outgoing_plan[\\u4f60\\u6bd4\\u8f83\\u559c\\u6b22\\u54ea\\u4e00\\u6761\\uff1f-\\u4f60\\u559c\\u6b22\\u54ea\\u4e00\\u6761\\uff1f]",
+      "tests.test_auto_advisor_followup_20261017::test_preference_wording_on_actual_outgoing_plan[\\u60a8\\u9019\\u6b21\\u6bd4\\u8f03\\u60f3\\u770b\\u51b0\\u5ddd\\u85cd\\u51b0\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f-\\u60a8\\u9019\\u6b21\\u60f3\\u770b\\u51b0\\u5ddd\\u85cd\\u51b0\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f]",
+      "tests.test_auto_advisor_followup_20261017::test_preference_wording_on_actual_outgoing_plan[\\u60a8\\u9019\\u8d9f\\u6bd4\\u8f03\\u671f\\u5f85\\u7684\\u662f\\u6843\\u82b1\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f-\\u60a8\\u9019\\u8d9f\\u671f\\u5f85\\u7684\\u662f\\u6843\\u82b1\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f]",
+      "tests.test_bi_dashboard::test_projection_no_ad_engagement_and_stable_birth",
+      "tests.test_business_feedback_20261015::test_original_631_tool_call_and_winter_followup_enforcement",
+      "tests.test_business_feedback_20261015::test_quote_failure_keeps_candidate_and_guard_reason",
+      "tests.test_business_feedback_20261019::test_ad_month_prefix_is_still_an_initial_route_option",
+      "tests.test_business_feedback_20261019::test_any_actual_reply_is_an_engagement[2]",
+      "tests.test_business_feedback_20261019::test_any_actual_reply_is_an_engagement[4\\u6708]",
+      "tests.test_business_feedback_20261019::test_any_actual_reply_is_an_engagement[\\U0001f44d]",
+      "tests.test_business_feedback_20261019::test_any_actual_reply_is_an_engagement[\\u597d]",
+      "tests.test_business_feedback_20261019::test_any_actual_reply_is_an_engagement[\\u6211\\u5011\\u56db\\u4f4d\\u60f3\\u81ea\\u5df1\\u5305\\u5718]",
+      "tests.test_business_feedback_20261019::test_any_actual_reply_is_an_engagement[\\u63aa\\u5b97\\u5bfa\\u6709\\u55ce\\uff1f]",
+      "tests.test_business_feedback_20261019::test_followup_customer_reply_tagged_only_after_ai_resume[True]",
+      "tests.test_business_feedback_20261019::test_handoff_race_keeps_new_human_owner[before_http]",
+      "tests.test_business_feedback_20261019::test_handoff_race_keeps_new_human_owner[during_http]",
+      "tests.test_business_feedback_20261019::test_late_intake_option_not_counted_after_timeout_introduction",
+      "tests.test_business_feedback_20261019::test_product_selection_excluded_even_after_introduction",
+      "tests.test_business_feedback_20261019::test_repeated_route_card_after_followup_is_not_wash_return",
+      "tests.test_business_feedback_20261019::test_sync_retry_does_not_pause_ai_and_preserves_labels",
+      "tests.test_business_feedback_20261025::test_known_date_without_tool_evidence_requires_check_for_winter_too",
+      "tests.test_business_feedback_20261025::test_may_winter_recommendation_is_rejected_before_customer_delivery",
+      "tests.test_business_feedback_20261025::test_winter_still_available_when_customer_really_chooses_winter_dates",
+      "tests.test_conversation_controls::test_route_quick_reply_options_are_bounded_for_messenger",
+      "tests.test_daily_followup_20261014::test_public_text_only_not_internal_handoff_reason",
+      "tests.test_empty_reply_20261114::test_1015_empty_reply_is_corrected_within_same_call",
+      "tests.test_followup_offer_20261013::test_stale_concurrent_quote_uses_existing_customer_deadline",
+      "tests.test_itinerary_preview_20261025::test_preview_details_request_cannot_silently_select_route",
+      "tests.test_lead_priority::test_finite_same_day_slots_move_to_next_day_without_exhaustion",
+      "tests.test_lead_priority::test_model_protocol_repairs_priority_without_sending_first_wash",
+      "tests.test_linger_feedback_20261025::test_mid_intro_like_guard_keeps_queue_instead_of_handoff",
+      "tests.test_linzhi_route_20261020::test_candidate_is_complete_and_not_in_default_catalog",
+      "tests.test_linzhi_route_20261020::test_changed_date_cannot_reuse_old_month_evidence",
+      "tests.test_linzhi_route_20261020::test_known_date_rechecked_after_product_change_and_closed_product_never_starts",
+      "tests.test_linzhi_route_20261020::test_new_skill_enabled_only_for_test_catalog",
+      "tests.test_linzhi_route_20261020::test_unaccepted_route_change_is_repaired_and_double_failure_is_not_sendable",
+      "tests.test_manual_lead_assist::test_lead_assistance_stops_on_operator_or_global_control[human_reply]",
+      "tests.test_manual_lead_assist::test_overdue_reminder_does_not_take_back_ai_and_advisor_reply_cancels_reminder",
+      "tests.test_outgoing_identity_race::test_normal_advisor_still_takes_over_immediately",
+      "tests.test_outgoing_identity_race::test_other_conversations_unresolved_send_does_not_delay_advisor",
+      "tests.test_outgoing_identity_race::test_real_advisor_during_ai_post_is_not_swallowed_even_with_same_sender_and_text",
+      "tests.test_paid_acceptance_20261015::test_inflight_winter_introduction_still_requires_cancellation[intake]",
+      "tests.test_paid_acceptance_20261015::test_inflight_winter_introduction_still_requires_cancellation[introduction]",
+      "tests.test_party_quotes_20261025::test_delivery_guard_and_new_quote_do_not_create_expiry",
+      "tests.test_preview_quote_20261029::test_runtime_repairs_wrong_group_for_unselected_recommendation",
+      "tests.test_preview_quote_20261029::test_seasonal_recommendation_cannot_bypass_date_check",
+      "tests.test_priority_audit_20261027::test_channel_refusal_survives_label_return_but_new_input_releases_block",
+      "tests.test_reception_v3_skills::test_dialogue_and_customer_preferences_remain_in_current_context",
+      "tests.test_reception_v3_skills::test_protocol_repair_follows_recurring_context_and_preserves_reply",
+      "tests.test_reception_v3_skills::test_unselected_then_model_loads_both_for_comparison",
+      "tests.test_review_migration::test_duplicate_bindings_abort_before_schema_changes",
+      "tests.test_review_migration::test_upgrade_preserves_personal_reads_and_matches_models",
+      "tests.test_route_packages::test_hotel_copy_matches_the_room_and_oxygen_images_sent_as_one_group",
+      "tests.test_route_packages::test_route_content_can_be_edited_and_republished",
+      "tests.test_route_packages::test_route_content_keeps_mainline_for_cached_older_client",
+      "tests.test_route_packages::test_route_content_rejects_invalid_mainline",
+      "tests.test_route_packages::test_route_packages_are_bound_to_the_saved_website_snapshot",
+      "tests.test_route_packages::test_route_product_api_exposes_complete_read_only_configuration",
+      "tests.test_route_packages::test_route_reference_copy_is_conversational_not_generic_read_check",
+      "tests.test_route_packages::test_website_fixed_answers_are_single_source_verbatim_copy",
+      "tests.test_route_packages::test_website_scripts_are_usable_without_pending_review",
+      "tests.test_route_understanding_20261031::test_choice_repair_contains_rejected_candidate_and_authority_after_product_tools",
+      "tests.test_route_understanding_20261031::test_contract_failure_ends_once_while_transport_keeps_retry",
+      "tests.test_route_understanding_20261031::test_execution_reuses_verified_inference_and_rejects_stale_input",
+      "tests.test_route_understanding_20261031::test_inquiry_then_explicit_selection_are_separate_turns",
+      "tests.test_route_understanding_20261031::test_operator_retry_keeps_incident_and_does_not_notify_again",
+      "tests.test_route_understanding_20261031::test_optional_failed_outreach_waits_but_does_not_hide_customer_question[introduction_completed-True]",
+      "tests.test_route_understanding_20261031::test_schema_repair_is_bounded_and_classified_as_nonretryable",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_failed_repair_never_returns_a_sendable_decision",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check0]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check1]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check2]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check3]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check4]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_new_date_invalidates_previous_quote_permission[second_check5]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_quote_authorization_does_not_cross_routes",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[peach_11d_2027-2027-06-01-2027-06-30]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[tibet_essence_8d-2027-04-21-2027-04-24]",
+      "tests.test_seasonal_runtime_journeys::test_seasonal_runtime_repair_stops_closed_route_and_old_drafts[tibet_overview_10d-2027-03-20-2027-04-10]",
+      "tests.test_small_fixes_20261024::test_advertisement_separator_variants_do_not_tag_engagement[3~4\\u6708\\uff5c\\u897f\\u85cf\\u7cbe\\u83ef-8\\u5929 \\u62c9\\u85a9+\\u73e0\\u5cf0]",
+      "tests.test_small_fixes_20261024::test_advertisement_separator_variants_do_not_tag_engagement[\\u897f\\u85cf\\u7cbe\\u83ef-8\\u5929 \\u62c9\\u85a9+\\u73e0\\u5cf0]",
+      "tests.test_small_fixes_20261024::test_advertisement_separator_variants_do_not_tag_engagement[\\u897f\\u85cf\\u7cbe\\u83ef8\\u5929\\u30fb\\u62c9\\u85a9\\uff0b\\u73e0\\u5cf0]",
+      "tests.test_small_fixes_20261024::test_advertisement_separator_variants_do_not_tag_engagement[\\u897f\\u85cf\\u7cbe\\u83ef8\\u5929\\uff08\\u62c9\\u85a9+\\u73e0\\u5cf0\\uff09]",
+      "tests.test_small_fixes_20261024::test_advertisement_separator_variants_do_not_tag_engagement[\\u897f\\u85cf\\u7cbe\\u83ef\\uff0d8\\u5929 \\u62c9\\u85a9\\uff0b\\u73e0\\u5cf0]",
+      "tests.test_spring_route_choice_20261024::test_failed_correction_does_not_return_sendable_peach_plan",
+      "tests.test_spring_route_choice_20261024::test_first_seasonal_offer_retries_when_display_year_is_missing",
+      "tests.test_spring_route_choice_20261024::test_month_review_checks_both_peach_products_without_selecting_one[\\u4e09\\u6708]",
+      "tests.test_spring_route_choice_20261024::test_month_review_checks_both_peach_products_without_selecting_one[\\u56db\\u6708]",
+      "tests.test_spring_route_choice_20261024::test_no_peach_offer_for_fixed_dates_outside_published_period[2027-03-15]",
+      "tests.test_spring_route_choice_20261024::test_no_peach_offer_for_fixed_dates_outside_published_period[2027-04-20]",
+      "tests.test_spring_route_choice_20261024::test_no_peach_offer_for_fixed_dates_outside_published_period[2028-04-01]",
+      "tests.test_spring_route_choice_20261024::test_unavailable_date_explanation_stops_old_queue_without_model_flag",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad0]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad10]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad11]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad12]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad13]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad14]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad15]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad1]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad2]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad3]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad4]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad5]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad6]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad7]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad8]",
+      "tests.test_sticker_ack_20261022::test_plain_thumb_cannot_trigger_image_question_or_customer_commitment[bad9]",
+      "tests.test_tibet_release_20261014::test_new_route_seven_people_cannot_start_automated_introduction",
+      "tests.test_tibet_route_drafts_20261014::test_map_draft_complete_but_not_activated[tibet-essence-8d-tibet_essence_8d-8-14]",
+      "tests.test_tibet_route_drafts_20261014::test_map_draft_complete_but_not_activated[tibet-overview-10d-tibet_overview_10d-10-18]",
+      "tests.test_travel_dates::test_business_source_is_traceable_and_transfer_details_load_on_request",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-4\\uff5e6\\u4f4d-profile0]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-4\\uff5e6\\u4f4d-profile0]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[90-4\\uff5e6\\u4f4d-profile0]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[90-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests.test_v3_intake_followup::test_any_ordinary_answer_starts_intro_and_keeps_question[90-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests.test_visual_reception_20261106::test_semantic_truncation_retries_with_more_output",
+      "tests.test_winter_spring_20261017::test_april_is_checked_before_first_model_call_and_closed_intro_rejected"
+    ]
+  },
+  "focused_modules": [
+    {
+      "module": "test_consultation_evidence",
+      "total": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "module": "test_starting_prices",
+      "total": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "module": "test_small_party_reception",
+      "total": 7,
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "module": "test_alternative_followup",
+      "total": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "module": "test_reception_delivery_integration",
+      "total": 7,
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "module": "test_reception_package_upgrade",
+      "total": 9,
+      "passed": 9,
+      "failed": 0
+    }
+  ],
+  "synthetic_service_journey": {
+    "ok": true,
+    "runs": 9,
+    "messages": 37,
+    "decisions": [
+      {
+        "event": "customer_message",
+        "status": "completed",
+        "texts": [],
+        "party_size": null,
+        "group_type": null
+      },
+      {
+        "event": "intake_due",
+        "status": "completed",
+        "texts": [],
+        "party_size": null,
+        "group_type": null
+      },
+      {
+        "event": "introduction_completed",
+        "status": "completed",
+        "texts": [
+          "這條桃花＋珠峰11日是2027年3月20日至4月10日出發，每週五、六、日、一都有團。\n\n請問您大概計劃什麼時候出發呢？"
+        ],
+        "party_size": null,
+        "group_type": null
+      },
+      {
+        "event": "customer_message",
+        "status": "completed",
+        "texts": [
+          "好呀～您先慢慢看，行程和照片都可以留著跟同行的人一起比較。之後有想了解的地方，再問我就好～"
+        ],
+        "party_size": null,
+        "group_type": null
+      },
+      {
+        "event": "customer_message",
+        "status": "completed",
+        "texts": [
+          "沒關係～時間還沒定也很正常，您可以先把行程和想看的景點留著，等日期比較明確了，再對照桃花季的團期就好。\n\n想先請教一下，這趟是跟家人還是朋友一起呢？"
+        ],
+        "party_size": null,
+        "group_type": null
+      },
+      {
+        "event": "customer_message",
+        "status": "completed",
+        "texts": [
+          "4位剛好落在這條4–6人小團的人數範圍內～桃花節期間也可以幫您們申請新開一團，不用完全配合固定班期，實際安排再依您們的日期確認。\n\n60歲長輩的部分，行程的車上有供氧設備，車程較長的路段導遊和司機會找合適的地方安排休息。想先問一下，兩位長輩之前有去過高山地區嗎？"
+        ],
+        "party_size": 4,
+        "group_type": null
+      },
+      {
+        "event": "customer_message",
+        "status": "completed",
+        "texts": [
+          "price_shared_4",
+          "2027年3月20日至4月10日都有公布團期，你們4位正好落在4～6人小團的範圍。珠峰那一晚是升級有獨立廁所跟供氧的絨布旅館，房間數很少，名額要幫您們確認看看。"
+        ],
+        "party_size": null,
+        "group_type": null
+      },
+      {
+        "event": "customer_message",
+        "status": "completed",
+        "texts": [
+          "好呀，那我們就都在這裡聊就好～之後有關行程、住宿或團期的問題，直接在這裡問我就好。"
+        ],
+        "party_size": null,
+        "group_type": null
+      },
+      {
+        "event": "customer_message",
+        "status": "completed",
+        "texts": [],
+        "party_size": 4,
+        "group_type": null
+      }
+    ]
+  },
+  "isolated_replays": [
+    {
+      "name": "real_9032",
+      "error": null,
+      "turn_count": 0
+    },
+    {
+      "name": "real_9000",
+      "error": null,
+      "turn_count": 0
+    },
+    {
+      "name": "beijing_micro_5d_undecided",
+      "error": null,
+      "turn_count": 0
+    },
+    {
+      "name": "capacity_2",
+      "error": null,
+      "turn_count": 0
+    },
+    {
+      "name": "hour_peach_11d_2027",
+      "error": null,
+      "turn_count": 0
+    },
+    {
+      "name": "hour_peach_9d_2027",
+      "error": null,
+      "turn_count": 0
+    },
+    {
+      "name": "long_peach",
+      "error": null,
+      "turn_count": 9
+    },
+    {
+      "name": "long_price_invitation",
+      "error": null,
+      "turn_count": 6
+    },
+    {
+      "name": "human_asked",
+      "error": null,
+      "turn_count": 0
+    }
+  ],
+  "production_check": {
+    "checked_at": "2026-11-17T15:38:44.058643+00:00",
+    "release": "reception-consultation-20261117",
+    "engine": "reception-v3-1cf9088b1947c620",
+    "deployed_at": "2026-11-17T15:36:45.525985+00:00",
+    "services": [
+      "active",
+      "active",
+      "active"
+    ],
+    "changed_files_verified": 23,
+    "file_hash_errors": [],
+    "unrelated_file_drift": [],
+    "config_unchanged": true,
+    "production_outbound_enabled": true,
+    "lock_released": true,
+    "resources": {
+      "MemTotal_MiB": 3499,
+      "MemAvailable_MiB": 2433,
+      "SwapTotal_MiB": 2048,
+      "SwapFree_MiB": 2048
+    },
+    "disk_free_GiB": 10.35,
+    "cpu_process_snapshot": [
+      "%CPU %MEM   RSS COMMAND",
+      " 126 11.2 401736 python",
+      "15.4  2.3 85172 python",
+      "12.5  2.4 88232 python",
+      " 9.3  1.1 40256 python",
+      " 1.5  2.7 98872 python"
+    ],
+    "live_runs_since_release": [],
+    "failed_run_codes_since_release": [],
+    "reply_jobs_since_release": [],
+    "pending_quote_tasks": 0,
+    "pending_alternative_tasks": 0,
+    "processing_jobs_older_than_10min": 0,
+    "failed_parts_since_release": 0,
+    "journal_error_lines": 0,
+    "expected_engine": "reception-v3-1cf9088b1947c620",
+    "public_health_status": 200,
+    "public_health": {
+      "status": "ok",
+      "database": "ok"
+    },
+    "ok": true
+  }
+}
