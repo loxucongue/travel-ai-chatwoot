@@ -84,6 +84,9 @@ def validation_error(decision, context):
         return '本轮最多选择一个需求问题，不连问月份、人数、同行构成及顾虑。'
     incoming = [m for m in messages if m.get('direction') == 'incoming']
     if incoming and all(capacity_only(m.get('content','')) for m in incoming) and not evidence:
+        merged={**context.get('profile',{}),**decision.get('profile',{})}
+        if any(merged.get(k) for k in PARTY_FIELDS) or merged.get('group_type')=='private':
+            return '历史人数/独团判断只有广告容量依据，不能继续沿用。将party_size、party_size_min、party_size_range置null，group_type置undecided，再核实实际人数；不批量处理其他会话。'
         for message in decision.get('messages', []):
             if re.search(r'(?:你們|你们|您們|您们|所以)\s*\d+\s*(?:位|人)', message.get('text','')):
                 return '目前只有广告容量，没有客户实际人数。不能对客户说你们几位或推断能否单独成团；按线路介绍并了解真实人数。'

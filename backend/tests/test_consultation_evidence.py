@@ -65,3 +65,13 @@ def test_latest_explicit_need_replaces_undecided_memory():
     messages=[{'id':'new','direction':'incoming','content':'2027年3月底'}]
     assert not c.validation_error(d,{'messages':messages})
     assert c.memory_updates(d,messages,memory)['_consultation_needs']['departure']['status']=='known'
+
+
+def test_legacy_capacity_only_profile_must_be_rechecked_without_bulk_reset():
+    ctx={'profile':{'party_size':6,'group_type':'private'},
+         'messages':[{'id':'ad','direction':'incoming','content':'阿里15日6人小團'}]}
+    d=Decision(start_introduction=True).model_dump()
+    assert c.validation_error(d,ctx)
+    d['profile']={'party_size':None,'party_size_min':None,'party_size_range':None,'group_type':'undecided'}
+    assert not c.validation_error(d,ctx)
+    assert ctx['profile']['party_size']==6
