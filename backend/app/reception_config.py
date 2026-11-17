@@ -57,6 +57,7 @@ class ReplySettings(BaseModel):
 class LeadSettings(BaseModel):
     enabled: bool = True
     next_day_invitation_enabled: bool = False
+    post_quote_invitation_minutes: int = Field(default=0, ge=0, le=1440)
     consultation_turn_threshold: int = Field(default=3, ge=1, le=20)
     after_contact: Literal['handoff', 'assist_until_advisor'] = 'handoff'
     customer_initiated_channels: list[Literal['LINE', '微信', '电话', 'Email', 'WhatsApp']] = Field(default_factory=lambda: ['Email'])

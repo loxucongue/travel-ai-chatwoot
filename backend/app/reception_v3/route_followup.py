@@ -29,6 +29,9 @@ def policy_for(bundle, route, profile):
 
 
 def task(context):
+    from app.reception_v3.post_quote import due
+    if due(context):
+        return None
     policy = policy_for(context['skills'], context.get('route_variant',''), context.get('profile',{}))
     if not policy:
         return None
@@ -54,6 +57,9 @@ def reference_preview_allowed(context, decision=None):
 
 
 def validation_error(decision, context):
+    from app.reception_v3.post_quote import due
+    if due(context):
+        return '报价后私讯审核不另建线路跟进节点，followup_checkpoint留空。' if decision.get('followup_checkpoint') else None
     key = decision.get('followup_checkpoint','')
     profile = {**context.get('profile',{}), **decision.get('profile',{})}
     route = decision.get('route_variant') or context.get('route_variant','')

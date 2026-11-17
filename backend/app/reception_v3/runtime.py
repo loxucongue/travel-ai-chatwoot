@@ -28,6 +28,7 @@ class Message(BaseModel):
     asset_keys: list[str] = Field(default_factory=list)
     material_rule_id: str = ''
     purpose: Literal['reply', 'contact_invitation'] = 'reply'
+    is_trip_quote: bool = Field(default=False, description='本条实际给出线路团费或有依据的起价为true；机票、单房差、小费等单项费用或只说待核价为false。')
 
 
 class Decision(BaseModel):
@@ -671,6 +672,14 @@ def run_agent(context: dict):
                 error = undecided_error(decision, context)
                 if error:
                     raise ValueError(error)
+                from app.reception_v3.post_quote import due as post_quote_due
+                if post_quote_due(context) or (context.get('event') == 'silence_due' and
+                        any(m.get('purpose') == 'contact_invitation' for m in decision['messages'])):
+                    from app.reception_v3.lead_priority import validation_error as contact_error
+                    from app.reception_v3.route_followup import validation_error as checkpoint_error
+                    error = contact_error(decision, context) or (checkpoint_error(decision, context) if post_quote_due(context) else None)
+                    if error:
+                        raise ValueError(error)
             except (ValueError, TypeError) as exc:
                 if repaired:
                     raise

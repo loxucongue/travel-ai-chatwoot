@@ -30,13 +30,15 @@ def local_day(value):
 
 def task(context):
     from app.reception_v3.route_followup import policy_for
+    from app.reception_v3.post_quote import due
+    post_quote = due(context)
     policy = policy_for(context.get('skills',{}),context.get('route_variant',''),context.get('profile',{}))
-    if policy and policy.get('lead_priority_override'):
+    if policy and policy.get('lead_priority_override') and not post_quote:
         return None
     config = context.get('skills', {}).get('lead_capture', {})
     state, profile = context.get('state', {}), context.get('profile', {})
     if (context.get('event') != 'silence_due' or not config.get('enabled')
-            or not config.get('next_day_invitation_enabled')
+            or not (config.get('post_quote_invitation_minutes') if post_quote else config.get('next_day_invitation_enabled'))
             or state.get('human_followup') or state.get('handoff') or state.get('opt_out')
             or profile.get('contact_capture_declined') or profile.get('contact_value')
             or profile.get('contact_status') in ('captured', 'self_reported_added', 'provided', 'attachment_pending_verification')):
@@ -47,23 +49,25 @@ def task(context):
         return None
     if config.get('require_departure_window') and not profile.get('departure_window'):
         return None
-    history = [m for m in context.get('messages', []) if m.get('direction') == 'incoming'
-               or m.get('direction') == 'outgoing' and m.get('status') in DELIVERED]
+    history = [m for m in context.get('messages', []) if not m.get('private') and (m.get('direction') == 'incoming'
+               or m.get('direction') == 'outgoing' and m.get('status') in DELIVERED)]
     if any(m.get('direction') == 'outgoing' and m.get('contact_invitation') for m in history):
         return None
     incoming = [m for m in history if m.get('direction') == 'incoming' and m.get('created_at')]
     if not incoming:
         return None
-    quotes = [m for m in history if m.get('direction') == 'outgoing' and contains_trip_quote(m.get('content', ''))]
+    quotes = [m for m in history if m.get('direction') == 'outgoing' and
+              (m.get('id') in state.get('post_quote_pending', {}).get('quote_ids', []) if post_quote
+               else contains_trip_quote(m.get('content', '')))]
     # A reply delivered after midnight does not become a next-day invitation
     # just because the customer's question arrived the preceding evening.
     anchor = max(local_day(m['created_at']) for m in incoming + quotes if m.get('created_at'))
-    return {'next_day': local_day(context['now']) > anchor,
+    return {'next_day': local_day(context['now']) > anchor, 'post_quote_due': post_quote,
             'question_threshold': config.get('consultation_turn_threshold', 3),
             'quoted_message_ids': [m['id'] for m in quotes if m.get('id')],
             'evidence_messages': [{k: m[k] for k in ('id', 'direction', 'content', 'created_at') if k in m}
                                   for m in history],
-            'instruction': '按通用Skill审核有效咨询与既有留资意愿，返回lead_review，引用此处真实消息ID。'
+            'instruction': ('本轮为报价成功发送后到期的一次私讯审核，优先于次日及线路3小时邀请。审核全部历史（包括人工消息），已邀请、已留资、拒绝或约定稍后时只wait，不发送其他洗单。否则只发一条邀请，客户可选LINE／微信／WhatsApp之一，提供QR Code或ID。' if post_quote else '') + '按通用Skill审核有效咨询与既有留资意愿，返回lead_review，引用此处真实消息ID。'
                            '已实际报价或有效咨询达到阈值时，次日首次触达先邀请私讯；同一轮不发洗单素材。'}
 
 
@@ -87,9 +91,9 @@ def outcome(decision, context):
         direction = 'outgoing' if review.contact_status == 'invited' else 'incoming'
         if not source or source['direction'] != direction:
             raise ValueError('既有邀请、留资、拒绝或预约稍后联系必须引用对应真实消息ID。')
-        return 'ordinary'
+        return 'wait' if review_task.get('post_quote_due') else 'ordinary'
     qualified = bool(review_task['quoted_message_ids']) or len(ids) >= review_task['question_threshold']
-    return ('invite' if review_task['next_day'] else 'wait') if qualified else 'ordinary'
+    return ('invite' if review_task['next_day'] or review_task.get('post_quote_due') else 'wait') if qualified else 'ordinary'
 
 
 def validation_error(decision, context):
@@ -110,12 +114,12 @@ def validation_error(decision, context):
     except ValueError as exc:
         return str(exc)
     if result == 'wait' and (decision['action'] != 'wait' or decision['messages'] or decision['start_introduction']):
-        return '已符合次日私讯优先条件，但今天仍是咨询/报价当天。本轮wait，不提前邀请或洗单。'
+        return '本轮私讯审核要求wait，不发送邀请或洗单（尚未到期，或历史已有邀请/留资/拒绝/延期）。'
     if result == 'invite':
         messages = decision['messages']
         if (decision['action'] != 'reply' or decision['start_introduction'] or len(messages) != 1
                 or messages[0].get('purpose') != 'contact_invitation'
                 or not (messages[0].get('text') or messages[0].get('script_id'))
                 or messages[0].get('asset_keys') or messages[0].get('material_rule_id')):
-            return '次日首轮仅发送一条自然的私讯邀请：purpose=contact_invitation，不附洗单图文或再介绍。'
+            return '本轮仅发送一条自然的私讯邀请：purpose=contact_invitation，不附洗单图文或再介绍。'
     return None

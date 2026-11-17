@@ -86,6 +86,10 @@ def record_advisor_supplement(db, conversation, message):
         value = service.state(row)
         value.update(last_reason='advisor_supplement', buffered_questions=[],
                      next_check_at=previous.get('next_check_at'))
+        # Keep the one-shot review so it can inspect the advisor's actual words.
+        # Explicit takeover still cancels it through service.control(stop).
+        if previous.get('post_quote_pending'):
+            value['post_quote_pending'] = previous['post_quote_pending']
         # A delayed advisor webhook must not swallow a newer customer question.
         newer = db.scalar(select(MessageEvent).where(
             MessageEvent.conversation_state_id == conversation.id,

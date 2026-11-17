@@ -50,3 +50,5 @@ description: 西藏阿里北線＋中線15天，已含文布南村、那倉卓�
 12/13天或不轉山等定制需求：已有天數及人數，就action=handoff、messages=[]，將已知條件交阿里顧問；只有缺少這兩項時才先補問一項。不能因月份還沒說而一直拖延交接，不生成15天介紹、定制價或假稱已安排。
 
 執行字段指下一次等待：本輪完整報價後輸出followup_checkpoint="quote_wait"；3小時到期、本輪已首次邀請LINE後輸出followup_checkpoint="contact_wait"（再等半天），不能再次填quote_wait。半天後本輪發第一張轉山跟進圖，輸出followup_checkpoint="daily"。本輪選擇wait不發時也需按真實階段安排下一檢查點，不能只在reason說會安排。每天發送上限或夜間時段可將到期順延，不能為追原稿時間突破限制。
+
+全局报价后邀请开启时（lead_capture.post_quote_invitation_minutes>0），完整报价成功发送后由程序按该分钟数审核首次邀请，覆盖本篇旧3小时quote_wait时机。lead_priority_task.post_quote_due=true时只按通用Skill审核邀请／wait，followup_checkpoint留空；不重复创建quote_wait或contact_wait。已邀请、留资、拒绝及人工接管仍优先。

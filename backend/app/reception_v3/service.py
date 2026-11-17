@@ -25,6 +25,7 @@ from app.reception_v3.route_choice import rejects_current_route
 from app.reception_v3.route_understanding import from_run as route_understanding_from_run, contract_failure, DecisionContractError
 from app.web_knowledge import active_web_facts
 from app.reception_v3 import undecided_followup
+from app.reception_v3 import post_quote
 
 
 def date(value):
@@ -269,7 +270,7 @@ def add_message(db, row, content, client_key, content_type='text', attachments=N
     value['next_check_minutes'] = None
     value['silence_step'] = 0
     value['followup_last_customer_at'] = row.virtual_now
-    for key in ('followup_anchor', 'followup_until', 'appointment_pending'):
+    for key in ('followup_anchor', 'followup_until', 'appointment_pending', 'post_quote_pending'):
         value.pop(key, None)
     if value.get('intake_status') in ('sending', 'waiting'):
         value.update(intake_status='done', intake_deadline=None, intake_answered=True)
@@ -421,13 +422,21 @@ def parts_for(db, row, bundle, decision, *, followup=False):
             if message.get('quote_options') else (script['text'] if script else ''))
         add(text, [k for k in message['asset_keys'] if k not in automatic_maps],
             route_hint=message.get('route') or None)
+        lead = bundle.get('lead_capture', {})
+        if (full_quote or message.get('is_trip_quote')) and not followup and lead.get('enabled') and lead.get('post_quote_invitation_minutes'):
+            for part in parts[offset:]:
+                if part.get('content'):
+                    part['post_quote_minutes'] = lead['post_quote_invitation_minutes']
         if message.get('purpose') == 'contact_invitation' or message.get('script_id') == 'contact_request':
             for part in parts[offset:]:
                 if part.get('content'):
                     part['contact_invitation'] = True
                     part['contact_channels'] = bundle.get('lead_capture', {}).get('channels', [])
                     if followup:
-                        part['next_day_contact_invitation'] = bool(bundle.get('lead_capture', {}).get('next_day_invitation_enabled'))
+                        if state(row).get('post_quote_pending'):
+                            part['post_quote_contact_invitation'] = True
+                        else:
+                            part['next_day_contact_invitation'] = bool(bundle.get('lead_capture', {}).get('next_day_invitation_enabled'))
         if message.get('material_rule_id'):
             original = next(r for r in bundle['material_rules'] if r['id'] == message['material_rule_id'])
             for part in parts[offset:]:
@@ -513,6 +522,7 @@ def update_profile(db, row, run, decision):
 
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
+    post_quote_review = run.input_snapshot.get('event') == 'silence_due' and bool(value.get('post_quote_pending'))
     if run.input_snapshot.get('event') == 'customer_message' and decision.get('substantive_reply') is not None:
         buffered = set(value.get('buffered_questions', []))
         row.messages = [{**m, 'substantive_customer': decision['substantive_reply']}
@@ -527,6 +537,8 @@ def apply_decision(db, row, run, bundle, decision):
         # apply profile changes after choosing not to communicate this turn.
         value.update(pending_event=None, next_check_at=None, silence_step=value.get('silence_step', 0)+1,
                      last_reason='followup_review_wait', followup_settings=deepcopy(bundle['silence']))
+        if post_quote_review:
+            post_quote.consume(value)
         schedule_followup(value, bundle, row.virtual_now)
         save(row, value)
         row.due_at = None
@@ -637,6 +649,10 @@ def apply_decision(db, row, run, bundle, decision):
     appointment = decision['next_check_minutes'] if run.input_snapshot.get('event') == 'customer_message' else None
     from app.reception_v3.route_followup import apply as apply_checkpoint
     checkpoint_delay = apply_checkpoint(value, decision, bundle, route, row.memory)
+    if post_quote_review:
+        post_quote.consume(value)
+        value.pop('route_checkpoint', None)
+        checkpoint_delay = None
     if checkpoint_delay:
         appointment = checkpoint_delay
     if decision.get('stop_followup') and (checkpoint_delay or route_policy.get('followup_policy') or
@@ -709,6 +725,8 @@ def complete_delivery(row, target, status):
                 schedule_followup(value, {'silence': value.get('followup_settings', {'intervals_minutes': value.get('followup_intervals', [])})},
                                   row.virtual_now, reset=not part.get('proactive'))
     undecided_followup.enforce(row, value, value.get('followup_settings', {}))
+    if not any(m.get('status') == 'draft' for m in row.messages) and value.get('next_check_minutes'):
+        post_quote.arm(value, row.memory or {}, row.messages, part.get('plan_id'), row.virtual_now)
     save(row, value)
 
 
@@ -755,6 +773,7 @@ def skip_revoked_contact(db, row, part):
             and not profile.get('contact_value')
             and profile.get('contact_status') not in ('captured', 'self_reported_added', 'provided', 'attachment_pending_verification')
             and (not part.get('contact_channels') or part['contact_channels'] == config.get('channels', []))
+            and (not part.get('post_quote_contact_invitation') or config.get('post_quote_invitation_minutes'))
             and (not part.get('next_day_contact_invitation') or config.get('next_day_invitation_enabled'))):
         return False
     row.messages = [{**m, 'status': 'cancelled', 'cancel_reason':'contact_permission_revoked'}
@@ -824,6 +843,7 @@ def control(row, action):
         row.messages = [{**m, 'status': 'cancelled'} if m.get('status') == 'draft' else m for m in row.messages]
         value = state(row)
         value.pop('handoff_after_plan', None)
+        value.pop('post_quote_pending', None)
         value.update(pending_event=None, delivery_kind=None, delivery_due_at=None, next_check_at=None, intake_deadline=None)
         save(row, value)
 
@@ -890,6 +910,17 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             continue
         if event == 'silence_due':
             silence = bundle['silence']
+            if value.get('post_quote_pending') and (
+                    not bundle.get('lead_capture', {}).get('enabled')
+                    or not bundle.get('lead_capture', {}).get('post_quote_invitation_minutes')
+                    or not post_quote.eligible(value, row.memory or {}, row.messages)):
+                post_quote.consume(value)
+                value.update(pending_event=None, next_check_at=None, followup_skip_reason='post_quote_no_longer_eligible')
+                schedule_followup(value, bundle, row.virtual_now)
+                save(row, value)
+                row.due_at = None
+                db.commit()
+                continue
             if undecided_followup.enforce(row, value, silence):
                 value['pending_event'] = None
                 row.due_at = None
@@ -941,9 +972,12 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             today = {m.get('run_id') for m in row.messages if m.get('proactive') and m.get('status') in ('simulated_delivered','submitted','sent','delivered','read')
                      and date(m['created_at']).astimezone(ZoneInfo('Asia/Taipei')).date() == local.date()}
             if len(today) >= silence.get('max_proactive_messages_per_day', 6):
+                was_post_quote = bool(value.get('post_quote_pending'))
+                if was_post_quote:
+                    post_quote.consume(value)
                 value.update(pending_event=None, next_check_at=None, followup_skip_reason='daily_limit')
                 from app.reception_v3.route_followup import policy_for as followup_policy
-                if followup_policy(bundle,row.controls.get('route_variant',''),row.memory):
+                if was_post_quote or followup_policy(bundle,row.controls.get('route_variant',''),row.memory):
                     schedule_daily_followup(value,{**silence,'daily_at':silence.get('daily_at') or '09:00'},row.virtual_now)
                 row.due_at = None
                 save(row, value)
