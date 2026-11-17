@@ -763,7 +763,7 @@ def update_reception_config(
         "lead_capture": {"enabled", "channels", "next_day_invitation_enabled", "consultation_turn_threshold", "after_contact", "customer_initiated_channels"},
         "routing": {"enabled_route_variants", "allow_route_switch", "preserve_profile_on_switch", "outside_catalog_action", "live_inbox_ids"},
         "handoff": {"large_group_enabled", "large_group_minimum"},
-        "silence": {"material_selection", "enabled", "live_enabled", "advisor_reply_followup_enabled", "daily_at", "intervals_minutes", "initial_checkpoints_minutes", "recurring_interval_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
+        "silence": {"undecided_followup", "material_selection", "enabled", "live_enabled", "advisor_reply_followup_enabled", "daily_at", "intervals_minutes", "initial_checkpoints_minutes", "recurring_interval_minutes", "max_proactive_messages_per_day", "active_start", "active_end"},
         "common_scripts": None,
         "material_rules": None,
     }

@@ -27,6 +27,8 @@ def runtime_state(row, effective, reason):
     if not row:
         return effective, reason
     value = service.state(row)
+    if row.controls.get('channel_return_requested'):
+        return 'CHANNEL_BLOCKED', 'channel:awaiting_customer_after_ai_return'
     from app.reception_v3.human_followup import waiting
     if waiting(row):
         return 'HUMAN_HANDOFF', 'human:followup_waiting'
@@ -47,6 +49,11 @@ def human_owned(db, conversation):
         ConversationState.inbox_binding_id == conversation.inbox_binding_id,
         ConversationState.contact_id == conversation.contact_id)).all()
     for item in linked:
+        pending_row = session_for(db, item.id)
+        if item.id == conversation.id and pending_row and pending_row.controls.get('channel_return_requested'):
+            tasks = list(db.scalars(select(HandoffTask).where(HandoffTask.conversation_state_id == item.id, HandoffTask.blocks_ai())))
+            if all(t.reason_code == 'channel_send_failed' for t in tasks):
+                continue
         if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == item.id,
                                                 HandoffTask.blocks_ai())):
             return True
@@ -101,6 +108,8 @@ def record_human_reply(db, conversation, message):
     row = session_for(db, conversation.id)
     if row and message.chatwoot_message_id <= row.controls.get('last_advisor_event_id', 0):
         return
+    if row and row.controls.get('channel_return_requested'):
+        row.controls = {**row.controls, 'channel_return_requested': None}
     if row:
         row.controls = {**row.controls, 'last_advisor_event_id': message.chatwoot_message_id}
     if record_advisor_supplement(db, conversation, message):
@@ -230,6 +239,10 @@ def apply_label_change(db, conversation, previous_labels):
     mappings = setting_value(db, 'label_mappings', {})
     handoff_labels = {'人工接管', '客诉', '客訴', *mappings.get('handoff_labels', [])}
     matched = sorted(added & handoff_labels)
+    if not has_ai_label(list(labels)) or labels.intersection(blocking_labels(db)):
+        row = session_for(db, conversation.id)
+        if row and row.controls.get('channel_return_requested'):
+            row.controls = {**row.controls, 'channel_return_requested': None}
     # Echoes of our human-label sync do not represent an operator pause.
     from app.models import ConversationLabelSync
     from app.conversation_labels import desired_labels
@@ -354,6 +367,21 @@ def return_by_ai_label(db, conversation):
     conversation.ai_mode, conversation.ai_sync_status = 'enabled', 'synced'
     blocker = restore_blocker(db, conversation, ignore_current_handoff=True)
     if blocker or not scope_enabled(db, conversation) or not conversation.can_reply:
+        from app.delivery_status import channel_delivery_blocked
+        row = session_for(db, conversation.id)
+        tasks = list(db.scalars(select(HandoffTask).where(HandoffTask.conversation_state_id == conversation.id, HandoffTask.blocks_ai())))
+        # Remember an explicit hand-back, not a channel permission override.
+        # Only channel-failure incidents can be released by this deferred intent.
+        if (row and channel_delivery_blocked(db, conversation.id)
+                and all(t.reason_code == 'channel_send_failed' for t in tasks)
+                and has_ai_label(conversation.labels or [])
+                and not set(conversation.labels or []).intersection(blocking_labels(db))):
+            row.controls = {**row.controls, 'channel_return_requested': utcnow()}
+            conversation.effective_ai_state = 'CHANNEL_BLOCKED'
+            conversation.effective_state_reason = 'channel:awaiting_customer_after_ai_return'
+            audit(db,None,'conversation.ai_return_waiting_channel','conversation',conversation.chatwoot_conversation_id,
+                  {'reason':'channel_send_failed','history_replayed':False})
+            return
         conversation.effective_ai_state = 'AI_PAUSED_CONVERSATION'
         conversation.effective_state_reason = 'label_return_blocked:' + (blocker or 'reception_scope_or_channel')
         audit(db,None,'conversation.ai_label_return_blocked','conversation',conversation.chatwoot_conversation_id,
@@ -379,7 +407,7 @@ def return_by_ai_label(db, conversation):
             virtual_now=now, messages=[], memory={}, controls={})
         db.add(row); db.flush()
     service.control(row, 'stop')  # Cancel in-flight generation and obsolete drafts.
-    row.controls = {**row.controls, 'human':False, 'auto_followup_paused':False, 'human_followup':{'enabled':False}}
+    row.controls = {**row.controls, 'channel_return_requested':None, 'human':False, 'auto_followup_paused':False, 'human_followup':{'enabled':False}}
     history = sync_history(db, row)
     row.controls = {**row.controls, 'last_advisor_event_id': max(
         [row.controls.get('last_advisor_event_id', 0)] + [m.chatwoot_message_id for m in history
@@ -425,6 +453,36 @@ def return_by_ai_label(db, conversation):
         queue_labels(db,conversation,'ai')
     audit(db,None,'conversation.ai_returned_by_label','conversation',conversation.chatwoot_conversation_id,
           {'pending_customer_message_id':latest.chatwoot_message_id if value['pending_event'] else None})
+
+
+def apply_pending_channel_return(db, conversation, message):
+    """A fresh customer message may complete a prior explicit operator hand-back."""
+    row = session_for(db, conversation.id)
+    requested = row.controls.get('channel_return_requested') if row else None
+    if (not requested or message.private or message.direction != 'incoming'
+            or (message.content_attributes or {}).get('external_echo')
+            or dt(message.created_at) <= dt(requested)
+            or not within_window(message.created_at, utcnow())):
+        return
+    if (not has_ai_label(conversation.labels or [])
+            or set(conversation.labels or []).intersection(blocking_labels(db))):
+        row.controls = {**row.controls, 'channel_return_requested': None}
+        return
+    from app.delivery_status import channel_delivery_blocked
+    if channel_delivery_blocked(db, conversation.id):
+        return
+    if db.scalar(select(HandoffTask.id).where(HandoffTask.conversation_state_id == conversation.id,
+            HandoffTask.blocks_ai(), HandoffTask.reason_code != 'channel_send_failed')):
+        row.controls = {**row.controls, 'channel_return_requested': None}
+        return
+    return_by_ai_label(db, conversation)
+    if not row.controls.get('channel_return_requested'):
+        # Earlier unanswered history remains context, not a revived delivery trigger.
+        value = service.state(row)
+        value['buffered_questions'] = [m['id'] for m in row.messages
+            if m.get('id') in value.get('buffered_questions', [])
+            and m.get('created_at') and dt(m['created_at']) > dt(requested)]
+        service.save(row, value)
 
 
 def enable_new_customer(db, conversation, message):
@@ -573,6 +631,21 @@ def deliver_one(db, row):
         from app.reception_v3.skills import compile_skills
         from app.reception_v3.material_rules import eligible_rules, conversation_labels, rule_digest
         current_bundle = compile_skills(db)
+        if service.skip_undecided_delivery(row, part, current_bundle['silence']):
+            db.commit()
+            return
+        from app.reception_v3.undecided_followup import policy as undecided_policy, meta_window_open
+        if (part.get('proactive') and undecided_policy(current_bundle['silence'],
+                row.controls.get('route_variant', ''), row.controls, row.memory)
+                and not meta_window_open(conversation.inbox.channel_type,
+                    message_timestamp(last) if last else None, utcnow())):
+            row.messages = [{**m, 'status': 'cancelled'} if m.get('plan_id') == part.get('plan_id')
+                            and m.get('status') == 'draft' else m for m in row.messages]
+            value.update(delivery_kind=None, delivery_due_at=None, pending_event=None,
+                         next_check_at=None, next_check_minutes=None, followup_skip_reason='automated_channel_window_closed')
+            service.save(row, value)
+            db.commit()
+            return
         rules = eligible_rules(current_bundle, [], row.controls.get('route_variant', ''),
             conversation_labels(db, row), 'silence_due' if part.get('proactive') else 'customer_message', [], row.memory)
         allowed_ids = {rule['id'] for rule in rules}

@@ -139,7 +139,14 @@ class MaterialRule(BaseModel):
         return self
 
 
+class UndecidedFollowupSettings(BaseModel):
+    enabled: bool = False
+    entry_only_max: int = Field(default=1, ge=1, le=3)
+    needs_known_max: int = Field(default=3, ge=1, le=7)
+
+
 class SilenceSettings(BaseModel):
+    undecided_followup: UndecidedFollowupSettings = Field(default_factory=UndecidedFollowupSettings)
     material_selection: Literal['route_catalog', 'configured_rules'] = 'route_catalog'
     advisor_reply_followup_enabled: bool = False
     enabled: bool = True

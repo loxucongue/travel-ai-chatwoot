@@ -24,6 +24,7 @@ from app.reception_v3.followup_window import FOLLOWUP_WINDOW, deadline
 from app.reception_v3.route_choice import rejects_current_route
 from app.reception_v3.route_understanding import from_run as route_understanding_from_run, contract_failure, DecisionContractError
 from app.web_knowledge import active_web_facts
+from app.reception_v3 import undecided_followup
 
 
 def date(value):
@@ -413,8 +414,11 @@ def parts_for(db, row, bundle, decision, *, followup=False):
                 add('', maps[:1], deduplicate=True, route_hint=scoped_route)
                 automatic_maps.update(maps[:1])
         offset = len(parts)
-        text = (comparison_text(bundle['routes'][scoped_route], message['quote_options'])
-                if message.get('quote_options') else message['text'] or (script['text'] if script else ''))
+        # A model-authored reply can contain date qualifications and answers to
+        # other questions. References must never silently replace that reply.
+        text = message['text'] or (
+            comparison_text(bundle['routes'][scoped_route], message['quote_options'])
+            if message.get('quote_options') else (script['text'] if script else ''))
         add(text, [k for k in message['asset_keys'] if k not in automatic_maps],
             route_hint=message.get('route') or None)
         if message.get('purpose') == 'contact_invitation' or message.get('script_id') == 'contact_request':
@@ -447,8 +451,11 @@ def parts_for(db, row, bundle, decision, *, followup=False):
         sequence = spec.get('switch_introduction_sequence') if switching else None
         for key in sequence or spec['introduction_sequence']:
             group = seasonal_group(spec['groups'][key], row.memory or {})
+            intro_offset = len(parts)
             add(group['text'], group['assets'], group.get('delivery_mode', 'assets_then_text'),
                 deduplicate=switching or bool(itinerary_keys.intersection(group['assets'])))
+            for part in parts[intro_offset:]:
+                part['introduction_content'] = True
     return route, parts
 
 
@@ -506,6 +513,11 @@ def update_profile(db, row, run, decision):
 
 def apply_decision(db, row, run, bundle, decision):
     value = state(row)
+    if run.input_snapshot.get('event') == 'customer_message' and decision.get('substantive_reply') is not None:
+        buffered = set(value.get('buffered_questions', []))
+        row.messages = [{**m, 'substantive_customer': decision['substantive_reply']}
+                        if m.get('direction') == 'incoming' and m.get('id') in buffered else m
+                        for m in row.messages]
     if (run.input_snapshot.get('event') == 'silence_due' and not value.get('human_followup')
             and decision['action'] == 'wait' and not decision['messages']
             and any(log.get('node') == 'repetition_review' and log.get('followup_suppressed')
@@ -651,7 +663,8 @@ def apply_decision(db, row, run, bundle, decision):
     if run.input_snapshot.get('event') == 'silence_due':
         initial = bundle['silence'].get('initial_checkpoints_minutes')
         first_hour = initial is not None and not value.get('followup_customer_replied') and step <= len(initial)
-        row.messages = [{**m, 'proactive': True, 'first_hour_followup': first_hour} if m.get('run_id') == run.id else m for m in row.messages]
+        row.messages = [{**m, 'proactive': True, 'first_hour_followup': first_hour,
+                         'followup_topic': decision.get('followup_topic', '')} if m.get('run_id') == run.id else m for m in row.messages]
     if not parts and value['next_check_minutes']:
         if appointment:
             value['next_check_at'] = later(row.virtual_now, appointment * 60)
@@ -659,6 +672,7 @@ def apply_decision(db, row, run, bundle, decision):
             schedule_followup(value, bundle, row.virtual_now, reset=run.input_snapshot.get('event') != 'silence_due')
     value['followup_intervals'] = intervals
     value['followup_settings'] = deepcopy(bundle['silence'])
+    undecided_followup.enforce(row, value, bundle['silence'])
     save(row, value)
     row.due_at = None
 
@@ -694,6 +708,7 @@ def complete_delivery(row, target, status):
             else:
                 schedule_followup(value, {'silence': value.get('followup_settings', {'intervals_minutes': value.get('followup_intervals', [])})},
                                   row.virtual_now, reset=not part.get('proactive'))
+    undecided_followup.enforce(row, value, value.get('followup_settings', {}))
     save(row, value)
 
 
@@ -709,6 +724,23 @@ def skip_quiet_delivery(row, part):
     value.update(delivery_kind=None, delivery_due_at=None, pending_event=None, followup_skip_reason='quiet_hours_before_delivery')
     schedule_followup(value, {'silence': silence}, row.virtual_now)
     save(row, value)
+    return True
+
+
+def skip_undecided_delivery(row, part, silence):
+    if not part.get('proactive'):
+        return False
+    value = state(row)
+    revoked = bool(part.get('followup_topic')) and not silence.get('undecided_followup', {}).get('enabled')
+    if not revoked and not undecided_followup.enforce(row, value, silence, exclude_plan=part.get('plan_id')):
+        return False
+    if revoked:
+        value.update(next_check_at=None, next_check_minutes=None, followup_skip_reason='undecided_followup_disabled')
+    row.messages = [{**m, 'status': 'cancelled'} if m.get('plan_id') == part.get('plan_id')
+                    and m.get('status') == 'draft' else m for m in row.messages]
+    value.update(delivery_kind=None, delivery_due_at=None, pending_event=None)
+    save(row, value)
+    row.due_at = None
     return True
 
 
@@ -764,7 +796,7 @@ def advance(row, wall_now=None, *, deliver=True):
             return True
         if date(value['delivery_due_at']) > date(row.virtual_now):
             return True
-        if skip_quiet_delivery(row, drafts[0]):
+        if skip_undecided_delivery(row, drafts[0], value.get('followup_settings', {})) or skip_quiet_delivery(row, drafts[0]):
             return True
         target = drafts[0]['id']
         complete_delivery(row, target, 'simulated_delivered')
@@ -858,6 +890,25 @@ def tick(db, *, session_id=None, wall_now=None, advance_clock=True, environment=
             continue
         if event == 'silence_due':
             silence = bundle['silence']
+            if undecided_followup.enforce(row, value, silence):
+                value['pending_event'] = None
+                row.due_at = None
+                save(row, value)
+                db.commit()
+                continue
+            if environment == 'live' and undecided_followup.policy(silence,
+                    row.controls.get('route_variant', ''), row.controls, row.memory):
+                conversation = db.get(ConversationState, row.conversation_state_id)
+                from app.history_sync import message_timestamp
+                last = conversation.last_customer_message_at
+                if not undecided_followup.meta_window_open(conversation.inbox.channel_type,
+                        message_timestamp(last) if last else None, utcnow()):
+                    value.update(pending_event=None, next_check_at=None, next_check_minutes=None,
+                                 followup_skip_reason='automated_channel_window_closed')
+                    row.due_at = None
+                    save(row, value)
+                    db.commit()
+                    continue
             if not silence.get('daily_at') and not value.get('appointment_pending') and value.get('followup_anchor'):
                 customer = value.get('followup_last_customer_at') or value.get('followup_entry_at') or value['followup_anchor']
                 value['followup_until'] = deadline(customer).isoformat()
