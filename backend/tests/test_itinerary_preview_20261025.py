@@ -47,7 +47,8 @@ def test_preview_respects_rejected_products_and_hash_history():
 def test_private_group_entry_model_sees_map_without_product_skill(monkeypatch):
     c = preview_context()
     requests = model(monkeypatch,[final(messages=[{'text':'先給您看11日參考行程。','asset_keys':['map-11']}],
-        profile={'party_size_range':'4位以上','party_size_min':4,'group_type':'private'})])
+        profile={'party_size_range':'4位以上','party_size_min':4,'group_type':'private'},
+        party_evidence={'kind':'actual','message_id':'entry','quote':'我人數有4位以上，想自己包團'})])
     decision,logs,_ = runtime.run_agent(c)
     task = task_payload(requests[0])
     assert task['itinerary_previews']['peach_11d_2027']['assets'][0]['key'] == 'map-11'

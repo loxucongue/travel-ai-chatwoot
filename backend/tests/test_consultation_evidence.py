@@ -10,11 +10,13 @@ def test_capacity_cannot_be_customer_size(text):
     assert c.validation_error(d,ctx)
 
 
-@pytest.mark.parametrize('text', ['我們6位', '4–6人小團，我們預計5人', '我們2大1小'])
-def test_actual_party_with_or_without_ad(text):
+@pytest.mark.parametrize('text,count', [('我們6位',6), ('4–6人小團，我們預計5人',5), ('我們2大1小',3)])
+def test_actual_party_with_or_without_ad(text,count):
     ctx={'messages':[{'id':'a','direction':'incoming','content':text}]}
-    d=Decision(profile={'party_size':5},party_evidence={'kind':'actual','message_id':'a','quote':text}).model_dump()
+    d=Decision(profile={'party_size':count},party_evidence={'kind':'actual','message_id':'a','quote':text}).model_dump()
     assert not c.validation_error(d,ctx)
+    d['profile']['party_size']=count+1
+    assert c.validation_error(d,ctx)
 
 
 def test_hypothetical_and_fabricated_source_rejected():
@@ -47,3 +49,19 @@ def test_need_must_have_customer_source_and_one_question():
     assert c.validation_error(d,{'messages':[]})
     d=Decision(messages=[{'text':'幾位','question_topic':'party'},{'text':'幾月','question_topic':'departure'}]).model_dump()
     assert c.validation_error(d,{})
+
+
+def test_capacity_cannot_be_personalized_in_reply_even_without_profile_write():
+    ctx={'messages':[{'id':'ad','direction':'incoming','content':'阿里15天2人成團'}]}
+    d=Decision(messages=[{'text':'所以2位还不能单独成团'}]).model_dump()
+    assert c.validation_error(d,ctx)
+    d['messages'][0]['text']='这条产品按已公布成团规则安排，请问您实际几位同行？'
+    assert not c.validation_error(d,ctx)
+
+
+def test_latest_explicit_need_replaces_undecided_memory():
+    memory={'_consultation_needs':{'departure':{'status':'undecided','message_id':'old'}}}
+    d=Decision(need_evidence=[{'topic':'departure','status':'known','message_id':'new','quote':'2027年3月底'}]).model_dump()
+    messages=[{'id':'new','direction':'incoming','content':'2027年3月底'}]
+    assert not c.validation_error(d,{'messages':messages})
+    assert c.memory_updates(d,messages,memory)['_consultation_needs']['departure']['status']=='known'

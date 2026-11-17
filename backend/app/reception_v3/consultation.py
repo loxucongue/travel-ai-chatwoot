@@ -43,6 +43,21 @@ def source(messages, key, direction):
                  and (direction == 'incoming' or m.get('status') in DELIVERED)), None)
 
 
+def explicit_size(quote):
+    """Check simple, explicit counts only; semantic interpretation stays in the model."""
+    compact = re.sub(r'\s+', '', quote)
+    children = re.search(r'(\d+)大(\d+)小', compact)
+    if children:
+        return sum(map(int, children.groups()))
+    match = re.search(r'(?:我們|我们|我家|一家|一行|同行|報名|报名|預計|预计|共有|共)\D{0,5}?(\d+|[一二兩两三四五六七八九十])(?:位|人)(?!以上|以下|左右|起)', compact)
+    if not match:
+        match = re.fullmatch(r'(\d+|[一二兩两三四五六七八九十])(?:位|人)[。！!~～]*', compact)
+    if match:
+        number = match[1]
+        return int(number) if number.isdigit() else dict(zip('一二兩两三四五六七八九十', (1,2,2,2,3,4,5,6,7,8,9,10)))[number]
+    return None
+
+
 def validation_error(decision, context):
     messages = context.get('messages', [])
     evidence = decision.get('party_evidence')
@@ -51,8 +66,12 @@ def validation_error(decision, context):
     if changed:
         m = source(messages, (evidence or {}).get('message_id'), 'incoming')
         if (not evidence or evidence['kind'] != 'actual' or not m
-                or evidence['quote'] not in m.get('content', '') or capacity_only(evidence['quote'])):
+                or evidence['quote'] not in m.get('content', '') or capacity_only(evidence['quote'])
+                or re.match(r'\s*(如果|假如|假設|假设|若是|要是)', evidence['quote'])):
             return '写入实际同行人数须提供party_evidence：kind=actual、真实客户message_id及逐字原话；广告小团容量和假设询价人数不能写入profile。'
+        count = explicit_size(evidence['quote'])
+        if count is not None and decision['profile'].get('party_size') not in (None, count):
+            return 'party_size与引用的客户实际人数不一致；请使用最新明确原话中的实际同行人数。'
     for item in decision.get('need_evidence', []):
         m = source(messages, item['message_id'], 'incoming')
         if not m or item['quote'] not in m.get('content', ''):
@@ -63,6 +82,11 @@ def validation_error(decision, context):
     questions = [m.get('question_topic') for m in decision.get('messages', []) if m.get('question_topic')]
     if len(questions) > 1:
         return '本轮最多选择一个需求问题，不连问月份、人数、同行构成及顾虑。'
+    incoming = [m for m in messages if m.get('direction') == 'incoming']
+    if incoming and all(capacity_only(m.get('content','')) for m in incoming) and not evidence:
+        for message in decision.get('messages', []):
+            if re.search(r'(?:你們|你们|您們|您们|所以)\s*\d+\s*(?:位|人)', message.get('text','')):
+                return '目前只有广告容量，没有客户实际人数。不能对客户说你们几位或推断能否单独成团；按线路介绍并了解真实人数。'
     return None
 
 
@@ -75,7 +99,7 @@ def memory_updates(decision, messages, memory):
         if source(messages, item['message_id'], 'outgoing'):
             asked[item['topic']] = item['message_id']
     updates = {'_consultation_needs': needs, '_consultation_asked': asked}
-    if decision.get('party_evidence'):
+    if (decision.get('party_evidence') or {}).get('kind') == 'actual':
         updates['_party_evidence'] = dict(decision['party_evidence'])
     return updates
 

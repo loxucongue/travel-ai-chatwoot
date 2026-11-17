@@ -248,10 +248,11 @@ def test_unknown_skill_is_a_tool_error_then_model_can_correct(monkeypatch):
 
 def test_switch_loads_new_route_without_losing_conversation(monkeypatch):
     c = context('peach_9d_2027')
-    c['messages'] = [{'direction': 'incoming', 'content': '改成11日，我们两位'}]
+    c['messages'] = [{'id':'switch','direction': 'incoming', 'content': '改成11日，我们两位'}]
     requests = model(monkeypatch, [
         {'content': None, 'tool_calls': [tool('load_skill', {'name': 'peach-11d-2027'})]},
-        final(route_variant='peach_11d_2027', route_choice='selected', interrupt=True, start_introduction=True, profile={'party_size': 2})])
+        final(route_variant='peach_11d_2027', route_choice='selected', interrupt=True, start_introduction=True, profile={'party_size': 2},
+              party_evidence={'kind':'actual','message_id':'switch','quote':'我们两位'})])
     decision, _, _ = runtime.run_agent(c)
     assert decision['profile']['party_size'] == 2
     assert '改成11日' in requests[1]['messages'][1]['content']
