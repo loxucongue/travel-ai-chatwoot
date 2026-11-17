@@ -83,8 +83,8 @@ def test_followup_photo_delivery_history_and_reselection(session_factory, monkey
         assert images[0]['media_hash'] == photo['hash']
         row.messages = [*row.messages, *[{**p, 'direction':'outgoing', 'status':'delivered'} for p in parts]]
         db.commit(); db.expire_all()
-        _, again = service.parts_for(db, row, spec, decision, followup=True)
-        assert not any(p['content_type'] == 'image' for p in again)
+        with pytest.raises(ValueError,match='material_rule_not_eligible'):
+            service.parts_for(db, row, spec, decision, followup=True)
         rule = next(r for r in spec['material_rules'] if r['id'] == revision.PREFIX + topic)
         rule['enabled'] = False
         with pytest.raises(ValueError, match='material_rule_not_eligible'):

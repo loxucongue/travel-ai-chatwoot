@@ -50,8 +50,9 @@ def test_comparison_allows_only_shared_materials_and_keeps_route(session_factory
         assert route == 'nine' and row.memory == {'discussion_route': 'eleven'}
         assert [p['asset_key'] for p in parts if p['content_type'] == 'image'] == ['shared']
         row.messages += [{**p, 'direction': 'outgoing', 'status': 'read'} for p in parts]
-        _, again = service.parts_for(db, row, spec, decision, followup=True)
-        assert not any(p['content_type'] == 'image' for p in again)
+        assert eligible_rules(spec,catalog(),'nine',[],'silence_due',row.messages,row.memory)==[]
+        with pytest.raises(DecisionContractError,match='material_rule_not_eligible'):
+            service.parts_for(db,row,spec,decision,followup=True)
 
 
 @pytest.mark.parametrize('rule_id', ['old-only', 'new-only', 'unknown'])

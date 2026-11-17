@@ -167,4 +167,4 @@ def test_new_media_import_rules_and_dedup(session_factory,tmp_path):
             photo = next(m for m in materials if m['key']==PHOTOS['golden']['key'])
             history = [{'direction':'outgoing','status':'delivered','media_hash':photo['media_hash']}]
             again = eligible_rules({'material_rules':rules},materials,route,[],'silence_due',history)
-            assert next(r for r in again if r['id'].endswith('golden'))['asset_keys'] == []
+            assert not any(r['id'].endswith('golden') for r in again)

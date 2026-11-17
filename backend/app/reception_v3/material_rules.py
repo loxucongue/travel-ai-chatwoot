@@ -83,6 +83,19 @@ def eligible_rules(bundle, materials, route, labels, event, messages, profile=No
                 or rule['any_labels'] and not set(rule['any_labels']).intersection(labels)):
             continue
         keys = list(dict.fromkeys(key for key in rule['asset_keys'] if key in candidates))
+        if purpose == 'followup':
+            if any(m.get('material_rule_id') == rule['id'] for m in sent):
+                continue
+            if rule.get('approved_text','').strip() and any(
+                    m.get('content','').strip() == rule['approved_text'].strip() for m in sent):
+                continue
+            # A photo-led theme already shown during introduction is exhausted,
+            # even if the follow-up catalog uses a different asset alias.
+            if rule['asset_keys'] and not keys:
+                by_key = {m['key']:m for m in materials}
+                if all(k in used or by_key.get(k,{}).get('media_hash') in hashes
+                       or by_key.get(k,{}).get('media_id') in media_ids for k in rule['asset_keys']):
+                    continue
         # No usable picture: text remains available, without substituting a
         # different route's image or repeating a previously delivered image.
         result.append({**rule, 'asset_keys': keys})
