@@ -1215,13 +1215,13 @@ def quote_error(decision, bundle, checked, availability=None, *, require_interru
 
         return '本線此時段銷售口徑待確認，不開始完整介紹；可推薦已確認且符合客人日期的產品，堅持本線則靜默交顧問核對。'
 
-    if (availability or {}).get(route, {}).get('status') == 'private_departure' and decision['action'] != 'handoff':
+    if (availability or {}).get(route, {}).get('status') in ('private_departure','shared_departure_request') and decision['action'] != 'handoff':
 
         if any(m.get('quote_options') or (m.get('script_id') or '').startswith('price') or contains_trip_quote(m.get('text', ''))
 
                for m in decision['messages']):
 
-            return '自選日期已符合獨團人數門檻，但不是拼團報價授權；不套定班價。只問日期先說可自選；問實際獨團總價則靜默handoff。'
+            return '此自選日期只確認可申請安排，沒有核定費用，不套定班拼團價。依工具區分新開拼團與獨團；只問日期先承接申請，實際總價需顧問核對。'
 
     if (availability or {}).get(route, {}).get('status') == 'unavailable' and decision['action'] != 'handoff':
 

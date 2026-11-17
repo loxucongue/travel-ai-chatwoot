@@ -12,13 +12,13 @@ from test_seasonal_retention import catalog, NOW
     (EIGHT,'2027-08-08'),(TEN,'2027-08-08'),
     ('peach_9d_2027','2027-03-23'),('peach_11d_2027','2027-03-23')])
 @pytest.mark.parametrize('party,group,status',[
-    (3,'undecided','ask_date'),(4,'undecided','private_departure'),
+    (3,'undecided','ask_date'),(4,'undecided','shared_departure_request'),
     (4,'private','private_departure'),(6,'private','private_departure'),
-    (4,'shared','ask_date'),(None,'undecided','ask_date')])
+    (4,'shared','shared_departure_request'),(None,'undecided','ask_date')])
 def test_person_count_and_group_choice_select_schedule(route,day,party,group,status):
     result=departure_quote(catalog(),route,day,day,NOW,party_size=party,group_type=group)
     assert result['status']==status
-    if status=='private_departure':
+    if status in ('private_departure','shared_departure_request'):
         assert result['departure_examples']==[day]
         assert 'price_cny' not in result and 'script_id' not in result
     if party is None:assert result['reason_code']=='party_size_required'
@@ -46,9 +46,9 @@ def test_private_date_cannot_authorize_shared_price_even_with_previous_check():
 def test_runtime_uses_known_party_when_legacy_tool_call_omits_it(monkeypatch):
     c=runtime_context(EIGHT);c['profile']={'party_size':4}
     requests=model(monkeypatch,[check_date(EIGHT,'2027-08-08','2027-08-08'),
-        final(route_variant=EIGHT,messages=[{'text':'您們4位可以自己一團選8/8出發。'}])])
+        final(route_variant=EIGHT,messages=[{'text':'您們4位可以申請8/8新開拼團，安排仍須確認。'}])])
     decision,_,_=runtime.run_agent(c)
-    assert results(requests[1])[-1]['status']=='private_departure'
+    assert results(requests[1])[-1]['status']=='shared_departure_request'
     assert decision['profile']['_departure_check']['party_size']==4
 
 

@@ -146,7 +146,7 @@ def test_full_calendar_prices_do_not_borrow_another_eight_day_product():
 
 def test_private_date_notice_and_room_supplement():
     b = ctx()['skills']
-    assert departure_quote(b,LINZHI,'2027-06-02','',NOW,party_size=4)['status'] == 'private_departure'
+    assert departure_quote(b,LINZHI,'2027-06-02','',NOW,party_size=4)['status'] == 'shared_departure_request'
     assert departure_quote(b,LINZHI,'2027-06-02','',NOW,party_size=2)['status'] == 'ask_date'
     assert departure_quote(b,LINZHI,'2027-06-01','','2027-05-03T12:00:00Z')['status'] == 'advisor'
     r = departure_quote(b,LINZHI,'2027-06-01','','2027-05-02T12:00:00Z')
