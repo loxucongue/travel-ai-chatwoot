@@ -92,10 +92,10 @@ def project(db, conversation, session, messages, labels, additions, tasks, outbo
     # The scheduler increments revision while advancing its clock, even with no
     # business changes. Hash only fields the projection actually consumes.
     part_keys = ('id','direction','private','contact_invitation','v3_kind','proactive','plan_id',
-                 'run_id','human_followup','chatwoot_message_id','client_key')
+                 'run_id','human_followup','chatwoot_message_id','client_key','introduction_content')
     parts = [[p.get(k) for k in part_keys] for p in (session.messages or [])] if session else []
     signature = hashlib.sha256(json.dumps([
-        4, conversation.updated_at, conversation.version, row.source_created_at,
+        5, conversation.updated_at, conversation.version, row.source_created_at,
         snapshot, parts,
         [(m.id, m.status, m.attribution) for m in messages], [(l.id, l.action) for l in labels],
         [(a.label, a.source_message_id, a.status) for a in additions],
@@ -126,7 +126,14 @@ def project(db, conversation, session, messages, labels, additions, tasks, outbo
     born = min(filter(None, [first, row.source_created_at]), default=None)
     if born:
         emit('entry', 'new', born, 'chatwoot_created' if row.source_created_at else 'first_observed_message', historical_incomplete=not bool(row.source_created_at))
-    option_values = set(choices)
+    from app.engagement_rules import boundary, eligible, catalog_texts, ENTRY
+    start = boundary(session, outbounds, catalog_texts(db, session))
+    # Rebuild old engagement projections under the new introduction boundary.
+    for key, event in list(existing.items()):
+        if event.kind == 'engaged':
+            db.delete(event)
+            del existing[key]
+    option_values = set(choices) | {key_text(t) for t in ENTRY}
     for m in messages:
         if m.private:
             continue
@@ -135,7 +142,7 @@ def project(db, conversation, session, messages, labels, additions, tasks, outbo
             emit(f'm:{mid}', 'incoming', m.created_at, 'message', message_id=mid,
                  eligible_reply=bool(m.content.strip() or m.attachments) and not option(m.content, option_values),
                  meaningful=not option(m.content, option_values) and not acknowledgment(m.content))
-            if (m.content.strip() or m.attachments) and not option(m.content, option_values):
+            if eligible(m, start, option(m.content, option_values)):
                 emit(f'engaged:{mid}', 'engaged', m.created_at, 'message_rule', message_id=mid)
         elif m.direction == 'outgoing':
             kind = 'ai' if m.attribution == 'ai' else 'human' if m.attribution in ('human', 'inferred_human') else 'unattributed'
@@ -145,7 +152,7 @@ def project(db, conversation, session, messages, labels, additions, tasks, outbo
     # Engagement is source-message evidence, not the current presence of a tag.
     for a in additions:
         m = by_id.get(a.source_message_id)
-        if a.label == '以開口' and m and not m.private and m.direction == 'incoming' and not option(m.content, option_values):
+        if a.label in ('以開口', '已開口') and m and eligible(m, start, option(m.content, option_values)):
             emit(f'engaged:{m.chatwoot_message_id}', 'engaged', m.created_at, 'business_reply', message_id=m.chatwoot_message_id)
     for l in labels:
         if l.action != 'added':

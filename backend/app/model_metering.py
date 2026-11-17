@@ -46,7 +46,7 @@ def _update(record, *, reserve=False):
 
 
 def begin_request(payload, *, provider='deepseek', fallback_reason=None):
-    if _ledger_path() is not None and payload.get('model') not in {'deepseek-flash', 'deepseek-v4-flash', 'gemini-2.5-flash', 'deepseek-v4.1-flash'}:
+    if _ledger_path() is not None and payload.get('model') not in {'deepseek-flash', 'deepseek-v4-flash', 'gemini-2.5-flash', 'deepseek-v4.1-flash', 'qwen-plus'}:
         raise RuntimeError('model_test_model_not_budgeted')
     # Gateway bills are unavailable here. Gemini amounts are conservative test
     # estimates, explicitly labelled rather than reported as actual charges.
@@ -75,6 +75,18 @@ def end_request(handle, body=None, error=None):
     record.update(duration_ms=round((time.monotonic()-started)*1000),
                   status='failed' if error else 'completed', error=type(error).__name__ if error else None)
     record['http_status'] = getattr(getattr(error, 'response', None), 'status_code', None)
+    # Store only known diagnostic codes; exception text may contain URLs or credentials.
+    known = {'model_output_token_limit', 'deepseek_output_token_limit', 'incomplete_model_response',
+             'invalid_model_tool_call', 'empty_model_response', 'invalid_model_response_format',
+             'incomplete_model_stream', 'incomplete_model_tool_stream'}
+    cause = error
+    codes = []
+    for _ in range(4):
+        if cause is None: break
+        if str(cause) in known: codes.append(str(cause))
+        cause = cause.__cause__
+    record['error_code'] = codes[-1] if codes else None
+
     if isinstance(usage.get('prompt_tokens'), int) and isinstance(usage.get('completion_tokens'), int):
         inp, out = usage['prompt_tokens'], usage['completion_tokens']
         hit = min(inp, max(0, int(usage.get('prompt_cache_hit_tokens') or 0)))

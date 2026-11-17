@@ -49,6 +49,12 @@ def mirror_event(db, event):
     current=bool(policy.get('armed_at') and event.received_at >= policy['armed_at'] and fresh(event.received_at)
                  and (not incoming or payload.get('created_at') and fresh(payload['created_at'])))
     state, message, context, _=upsert_mirrors(db,event,side_effects=False,update_controls=current)
+    if state and current and event.event in ('conversation_created', 'conversation_updated'):
+        from app.business_labels import remote_removed
+        remote_removed(db, state, context.get('previous_labels', []))
+    if state and message and incoming and context.get('new_message'):
+        from app.engagement_labels import observe_reply
+        observe_reply(db, state, message)
     if (state and current and event.event in ('conversation_created', 'conversation_updated')
             and reception_inbox_allowed(db, state.inbox.chatwoot_inbox_id)
             and context.get('previous_labels') != (state.labels or [])):
@@ -72,6 +78,8 @@ def mirror_event(db, event):
                     event.error_code = None
                 record_human_reply(db,state,message)
         if incoming and current:
+            from app.reception_v3.live import apply_pending_channel_return
+            apply_pending_channel_return(db, state, message)
             from app.engagement_labels import observe_reply
             if context.get('new_message'):
                 observe_reply(db, state, message)

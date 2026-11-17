@@ -20,7 +20,15 @@ def heartbeat(worker_id):
         db.commit()
 
 
-def maintenance_tick(receipts_checked, deadlines):
+def reporting_tick(standalone=False):
+    from app.bi_projection import refresh
+    with SessionLocal() as db:
+        refresh(db)
+    if standalone:
+        heartbeat('live-reporting-worker')
+
+
+def maintenance_tick(receipts_checked, deadlines, include_reporting=True):
     from app.conversation_labels import process_label_sync
     from app.engagement_labels import process_label_addition
     from app.notification_dispatch import process_handoff_overdue, process_notification_delivery
@@ -35,12 +43,8 @@ def maintenance_tick(receipts_checked, deadlines):
     if now >= deadlines.get("receipts", 0):
         tasks.append(("receipts", lambda: reconcile_live_delivery(receipts_checked)))
         deadlines["receipts"] = now + 30
-    if now >= deadlines.get('bi', 0):
-        def reporting():
-            from app.bi_projection import refresh
-            with SessionLocal() as db:
-                refresh(db)
-        tasks.append(('bi', reporting))
+    if include_reporting and now >= deadlines.get('bi', 0):
+        tasks.append(('bi', reporting_tick))
         deadlines['bi'] = now + 60
     for name, task in tasks:
         try:
@@ -84,11 +88,17 @@ def run():
     relay_client = RelayClient() if settings.relay_enabled else None
     try:
         logger.info("live_reply_started concurrency=%s", settings.live_reply_concurrency)
-        with ThreadPoolExecutor(max_workers=1, thread_name_prefix="maintenance") as maintenance:
+        with ThreadPoolExecutor(max_workers=1, thread_name_prefix="maintenance") as maintenance, \
+                ThreadPoolExecutor(max_workers=1, thread_name_prefix="business-labels") as labels, \
+                ThreadPoolExecutor(max_workers=1, thread_name_prefix="reporting") as reporting, \
+                ThreadPoolExecutor(max_workers=2, thread_name_prefix="label-sync") as label_sync:
             scheduler = Scheduler('live')
             receipts_checked, deadlines = {}, {}
+            pending_labels = None
+            pending_reporting = None
+            pending_sync = set()
             pending_maintenance = None
-            next_poll, next_maintenance = 0, 0
+            next_poll, next_maintenance, next_reporting, next_sync = 0, 0, 0, 0
             while not lock.closed:
                 try:
                     if settings.relay_enabled and time.monotonic() >= next_poll:
@@ -111,12 +121,42 @@ def run():
                                 event.error_code = type(exc).__name__
                                 db.commit()
                     scheduler.tick()
+                    for future in list(pending_sync):
+                        if future.done():
+                            pending_sync.remove(future)
+                            try:
+                                future.result()
+                            except Exception as exc:
+                                logger.warning('business_label_sync_failed code=%s', type(exc).__name__)
+                    if time.monotonic() >= next_sync:
+                        from app.business_labels import process_sync
+                        while len(pending_sync) < 2:
+                            pending_sync.add(label_sync.submit(process_sync, SessionLocal))
+                        next_sync = time.monotonic() + 1
+                    if pending_labels is not None and pending_labels.done():
+                        finished_labels, pending_labels = pending_labels, None
+                        try:
+                            finished_labels.result()
+                        except Exception as exc:
+                            logger.warning("business_labels_tick_failed code=%s", type(exc).__name__)
+                    if pending_labels is None:
+                        from app.business_labels import tick as labels_tick
+                        pending_labels = labels.submit(labels_tick, SessionLocal)
+                    if pending_reporting is not None and pending_reporting.done():
+                        finished_report, pending_reporting = pending_reporting, None
+                        try:
+                            finished_report.result()
+                        except Exception as exc:
+                            logger.warning('live_reporting_failed code=%s', type(exc).__name__)
+                    if pending_reporting is None and time.monotonic() >= next_reporting:
+                        pending_reporting = reporting.submit(reporting_tick, True)
+                        next_reporting = time.monotonic() + 60
                     if pending_maintenance is not None and pending_maintenance.done():
                         finished = pending_maintenance
                         pending_maintenance = None
                         finished.result()
                     if pending_maintenance is None and time.monotonic() >= next_maintenance:
-                        pending_maintenance = maintenance.submit(maintenance_tick, receipts_checked, deadlines)
+                        pending_maintenance = maintenance.submit(maintenance_tick, receipts_checked, deadlines, False)
                         next_maintenance = time.monotonic() + 1
                     heartbeat("live-reply-worker")
                     time.sleep(0.5)

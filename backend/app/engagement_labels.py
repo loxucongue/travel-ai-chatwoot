@@ -9,7 +9,7 @@ from app.config import settings
 from app.chatwoot_service import client_for
 from app.runtime_settings import dt
 
-ENGAGED_LABEL = '以開口'
+ENGAGED_LABEL = '已開口'
 RETURNED_LABEL = '洗單回'
 # Existing advertisement entry option, also shown in the October 16 feedback.
 ENTRY_OPTIONS = {'我人數有4位以上，想自己包團'}
@@ -84,20 +84,35 @@ def observe_followup_return(db, conversation, message):
 
 def observe_reply(db, conversation, message):
     observe_followup_return(db, conversation, message)
-    from app.reception_v3.live import permitted, session_for
+    from app.engagement_rules import introduction_boundary, eligible
+    from app.business_labels import observe
+    observe(db, conversation, message)
     key = (conversation.id, ENGAGED_LABEL)
-    row = session_for(db, conversation.id)
-    if (message.direction != 'incoming' or message.private
-            or db.get(ConversationLabelAddition, key) or ENGAGED_LABEL in (conversation.labels or [])
-            or row and row.controls.get('simulation', {}).get('status') != 'running'
-            or not permitted(db, conversation, purpose='followup')
-            or not ((message.content or '').strip() or message.attachments)):
+    addition = db.get(ConversationLabelAddition, key)
+    if addition and addition.status != 'retired':
         return
-    if initial_option(db, conversation, message, row):
+    row, start = introduction_boundary(db, conversation.id)
+    if not eligible(message, start) or initial_option(db, conversation, message, row):
         return
-    db.add(ConversationLabelAddition(conversation_state_id=conversation.id,
-        label=ENGAGED_LABEL, source_message_id=message.id))
-    db.flush()
+    if addition and addition.status == 'retired' or not addition and ENGAGED_LABEL not in (conversation.labels or []):
+        addition = addition or ConversationLabelAddition(conversation_state_id=conversation.id, label=ENGAGED_LABEL)
+        addition.source_message_id, addition.due_at = message.id, utcnow()
+        addition.status = 'synced' if ENGAGED_LABEL in (conversation.labels or []) else 'pending'
+        db.add(addition)
+        db.flush()
+    from app.business_label_models import BusinessLabelState
+    evidence = db.get(BusinessLabelState, conversation.id)
+    from app.business_label_config import configuration
+    if not evidence and configuration(db)['enabled']:
+        from app.business_labels import state_for
+        evidence = state_for(db, conversation.id)
+    if evidence:
+        evidence.engagement = {'boundary': start, 'source_message_id': message.id}
+        if addition and addition.status == 'pending':
+            evidence.sync_status, evidence.due_at = 'pending', utcnow()
+        if ENGAGED_LABEL in evidence.remove_labels:
+            evidence.remove_labels = [label for label in evidence.remove_labels if label != ENGAGED_LABEL]
+            evidence.sync_status, evidence.due_at = 'pending', utcnow()
 
 
 def pending_labels(db, conversation_id):
@@ -123,9 +138,29 @@ def process_label_addition(session_factory):
     if not settings.outbound_enabled:
         return False
     with session_factory() as db:
-        job = db.scalar(select(ConversationLabelAddition).where(
+        from app.business_label_config import configuration
+        enabled = configuration(db)['enabled']
+        if enabled:
+            from app.business_label_models import BusinessLabelState
+            from app.business_labels import state_for
+            # Adopt additions queued before rollout (or while classification was
+            # disabled), including rows whose destination labels already synced.
+            waiting = list(db.scalars(select(ConversationLabelAddition).outerjoin(BusinessLabelState,
+                BusinessLabelState.conversation_state_id == ConversationLabelAddition.conversation_state_id).where(
+                    ConversationLabelAddition.label == ENGAGED_LABEL, ConversationLabelAddition.status == 'pending',
+                    ConversationLabelAddition.due_at <= utcnow(),
+                    (BusinessLabelState.conversation_state_id.is_(None)) | (BusinessLabelState.sync_status == 'synced')
+                ).limit(20)))
+            for addition in waiting:
+                state = state_for(db, addition.conversation_state_id)
+                state.sync_status, state.due_at = 'pending', utcnow()
+            if waiting: db.commit()
+        query = select(ConversationLabelAddition).where(
             ConversationLabelAddition.status == 'pending', ConversationLabelAddition.due_at <= utcnow()
-        ).order_by(ConversationLabelAddition.due_at).limit(1))
+        )
+        if enabled:
+            query = query.where(ConversationLabelAddition.label != ENGAGED_LABEL)
+        job = db.scalar(query.order_by(ConversationLabelAddition.due_at).limit(1))
         if not job:
             return False
         cid, label = job.conversation_state_id, job.label

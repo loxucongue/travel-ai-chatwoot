@@ -14,6 +14,8 @@ from app.automation_api import router as automation_router
 from app.advisor_api import router as advisor_router
 from app.bi_api import router as bi_router
 from app.config import settings
+from app.business_label_api import router as business_label_router
+from sqlalchemy.orm.exc import StaleDataError
 
 logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -55,3 +57,9 @@ app.include_router(ops_router)
 app.include_router(automation_router)
 app.include_router(advisor_router)
 app.include_router(bi_router)
+
+app.include_router(business_label_router)
+
+@app.exception_handler(StaleDataError)
+async def stale_write(request: Request, exc: StaleDataError):
+    return JSONResponse(status_code=409, content={"error": {"code": "concurrent_change", "message": "数据已改变，请刷新后重试"}})
