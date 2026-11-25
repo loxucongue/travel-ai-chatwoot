@@ -15,6 +15,7 @@ def atomic(p,data):
 assert socket.gethostname()=='iZt4n729nx7wezpcx0v6z1Z' and str(ROOT.resolve())=='/opt/china2go-ai'
 assert not subprocess.check_output(['git','-C',str(HERE),'status','--porcelain','--untracked-files=no'],text=True).strip(),'dirty release checkout'
 commit=subprocess.check_output(['git','-C',str(HERE),'rev-parse','HEAD'],text=True).strip()
+assert len(sys.argv)>2 and commit==sys.argv[2],'expected pinned Git commit required'
 os.chdir(ROOT/'backend');sys.path.insert(0,str(ROOT/'backend'))
 os.environ.update(APP_PROFILE='evaluation',OUTBOUND_MODE='disabled',CHATWOOT_WRITE_ENABLED='false',LIVE_SOP_ENABLED='false')
 from sqlalchemy import create_engine,select,text
@@ -43,6 +44,9 @@ with (ROOT/'deploy.lock').open('a') as lock:
    d.execute('update material_assets set available=0 where asset_key like ?', (R+'_%',))
   print(json.dumps({'rollback':'disabled only new route/assets; all customer data retained','commit':commit}));sys.exit()
  assert mode in ['preflight','apply']
+ if mode=='apply':
+  accepted=json.loads((ROOT/'releases/yunnan-evidence-20261125/accepted.json').read_text())
+  assert accepted['status']=='passed' and accepted['package_hash']==sha(HERE/'route-package.json') and accepted['skill_hash']==sha(HERE/'SKILL.md'),'candidate has not passed final acceptance'
  assert not PKG.exists() and not SKILL.exists() and R not in rp.load_route_packages(),'route already present'
  assert not query('select id from material_assets where asset_key like ?', (R+'_%',))
  before=inventory();raw=next(s['value'] for s in before['settings'] if s['key']=='route_reception_config');config=json.loads(raw)
