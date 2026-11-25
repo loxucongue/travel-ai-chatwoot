@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.reception_v3 import skills,runtime,service
 from app.material_library import candidate_materials
 from app.automation_models import AutomationSession
-parser=argparse.ArgumentParser();parser.add_argument('--output',required=True);parser.add_argument('--baseline',action='store_true');args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--output',required=True);parser.add_argument('--baseline',action='store_true');parser.add_argument('--only');args=parser.parse_args()
 db=Session(create_engine('sqlite:///file:/opt/china2go-ai/backend/data/app.db?mode=ro&uri=true'));bundle=skills.compile_skills(db);materials=candidate_materials(db,1)
 if not args.baseline:
  class Registry(skills.SkillRegistry):
@@ -36,6 +36,7 @@ add('winter','這條冬遊冰川8天大概多少錢？','tibet_winter_8d',state=
 add('ali','阿里15天費用多少？','tibet_ali_15d',profile={'party_size':4},state={'opening_started':True,'intake_status':'done'})
 add('yunnan','我們2位3月去雲南8天，費用多少？','yunnan_tw_8d',profile={'party_size':2,'departure_window':'2027年3月'})
 add('beijing','北京5天住什麼酒店？','beijing_micro_5d')
+if args.only:cases=[(k,c) for k,c in cases if k in args.only.split(',')]
 result={'status':'running','outbound_requests':0,'cases':[]}
 for key,ctx in cases:
  ctx.update(skills=bundle,available_materials=materials)

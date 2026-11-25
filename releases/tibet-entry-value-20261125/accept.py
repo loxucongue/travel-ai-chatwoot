@@ -8,6 +8,7 @@ for k in ['replay_9999','replay_10002','early_entry']:
  t=text(k);assert '入藏' in t and any(s in t for s in ['不能','沒辦法','不可以','不建議']), (k,t)
  assert any(s in t for s in ['4位','四位','4人','四人']),(k,t)
  assert cases[k]['decision']['profile'].get('group_type')!='private'
+ assert cases[k]['decision']['profile'].get('party_size')!=4,'offered four-person option must not overwrite actual two-to-three people'
 t=text('four');assert '申請' in t and cases['four']['decision']['profile'].get('group_type')!='private',t
 assert '自己一團' not in t and '獨立成團' not in t,t
 assert '成都' in text('chengdu') and any(s in text('chengdu') for s in ['可以','沒問題'])
