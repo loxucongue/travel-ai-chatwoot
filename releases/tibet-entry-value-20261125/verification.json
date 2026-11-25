@@ -1,0 +1,89 @@
+{
+  "status": "published_and_verified",
+  "runtime_commit": "e7e6a57281984e52e4e21f02925544a334e2c042",
+  "scope": "8 hot-loaded Tibet skill files; no engine, route package, pricing, media or database changes",
+  "unit_tests": {
+    "passed": 47,
+    "failed": 0,
+    "suites": [
+      "test_route_packages.py",
+      "test_route_content_groups.py"
+    ]
+  },
+  "real_model_tests": {
+    "status": "passed",
+    "manifest_sha256": "c28c3f98c56ac1130d6871201cf4e740951d2e7ab04b0d4f402318ff8deefe21",
+    "cases": [
+      "replay_9999",
+      "replay_10002",
+      "replay_1291",
+      "early_entry",
+      "chengdu",
+      "four",
+      "direct_price",
+      "already_seen",
+      "winter",
+      "ali",
+      "yunnan",
+      "beijing"
+    ],
+    "plan_order_checked": [
+      "replay_1291",
+      "winter",
+      "ali"
+    ],
+    "outbound_requests": 0,
+    "contract_repair_cases": []
+  },
+  "installed_model_smoke": {
+    "passed": 3,
+    "cases": [
+      "replay_10002",
+      "replay_1291",
+      "four"
+    ],
+    "contract_repairs": []
+  },
+  "public": {
+    "mode": "after",
+    "temporary_identity": 12,
+    "customer_messages_sent": 0,
+    "enabled_routes": [
+      "peach_11d_2027",
+      "peach_9d_2027",
+      "tibet_essence_8d",
+      "tibet_linzhi_8d",
+      "tibet_overview_10d",
+      "tibet_winter_8d",
+      "tibet_ali_15d",
+      "beijing_micro_5d",
+      "yunnan_tw_8d"
+    ],
+    "route_count": 9,
+    "asset_previews": 49,
+    "existing_catalog_unchanged": true,
+    "readiness": {
+      "knowledge_imported": true,
+      "assets_ready": 49,
+      "assets_total": 49,
+      "missing_assets": [],
+      "ai_reply_ready": true,
+      "sop_ready": true
+    },
+    "status": "passed",
+    "temporary_identity_disabled": true
+  },
+  "static_resources_unchanged": true,
+  "processes_unchanged": true,
+  "protected_inventory_count": 785,
+  "changed_files": 8,
+  "remaining_files_unchanged": 777,
+  "limitations": [
+    "Historical wrong promises in conversation 1252 need advisor correction; no retroactive customer sends performed.",
+    "Existing Chatwoot labels POST 422 remains; no new fix or overall channel health claim.",
+    "Tests verify model decisions and actual send-plan ordering, not real customer delivery or conversion.",
+    "No full repository suite rerun; 47 relevant unit tests and isolated real-model regression only."
+  ],
+  "remote_evidence": "/opt/china2go-ai/releases/tibet-entry-evidence-20261125",
+  "backup": "/opt/china2go-ai/backups/tibet-entry-value-20261125"
+}
