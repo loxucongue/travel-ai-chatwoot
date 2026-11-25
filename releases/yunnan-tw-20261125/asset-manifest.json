@@ -8,7 +8,7 @@
     "byte_size": 489788,
     "display_name": "喜洲稻田小火車",
     "content_group_key": "intro_7",
-    "content_family": "yunnan",
+    "content_family": "yunnan:b069cb2c0953b69cf7fe9eb61ba44d2c51e553e24d595abed13f5683963d0c69",
     "what_it_shows": "喜洲稻田小火車",
     "recommended_caption": "喜洲稻田小火車",
     "available": true
@@ -22,7 +22,7 @@
     "byte_size": 252529,
     "display_name": "沙溪玉津橋",
     "content_group_key": "intro_7",
-    "content_family": "yunnan",
+    "content_family": "yunnan:1a189265e1d15f2580860df6177197f7bc1940d58181f55b96ed07252d2d09f0",
     "what_it_shows": "沙溪玉津橋",
     "recommended_caption": "沙溪玉津橋",
     "available": true
@@ -36,7 +36,7 @@
     "byte_size": 386663,
     "display_name": "黑龍潭玉龍雪山",
     "content_group_key": "intro_8",
-    "content_family": "yunnan",
+    "content_family": "yunnan:38320623e8fc9dfcc022575b88bb3c0ad5275be29192a19b0f86eef58bed4d25",
     "what_it_shows": "黑龍潭玉龍雪山",
     "recommended_caption": "黑龍潭玉龍雪山",
     "available": true
@@ -50,7 +50,7 @@
     "byte_size": 697417,
     "display_name": "麗江古城",
     "content_group_key": "intro_8",
-    "content_family": "yunnan",
+    "content_family": "yunnan:b0c7042124034dee31367b7ef55f6ac50c4f181842a66a04eee33194d1c3d211",
     "what_it_shows": "麗江古城",
     "recommended_caption": "麗江古城",
     "available": true
@@ -64,7 +64,7 @@
     "byte_size": 498069,
     "display_name": "印象麗江實景演出",
     "content_group_key": "intro_3",
-    "content_family": "yunnan",
+    "content_family": "yunnan:7db6b70a47343a83924df4e42a8c9771462e180d4b59475a752190d8d8eea553",
     "what_it_shows": "印象麗江實景演出",
     "recommended_caption": "印象麗江實景演出",
     "available": true
@@ -78,7 +78,7 @@
     "byte_size": 180885,
     "display_name": "麗江－昆明動車",
     "content_group_key": "intro_9",
-    "content_family": "yunnan",
+    "content_family": "yunnan:88dbfa31fbd859ec0efce98f38c7fb1913ba1dcaa4a0df95cb5496f07ee5941a",
     "what_it_shows": "麗江－昆明動車",
     "recommended_caption": "麗江－昆明動車",
     "available": true
@@ -92,7 +92,7 @@
     "byte_size": 499319,
     "display_name": "昆明老街",
     "content_group_key": "intro_9",
-    "content_family": "yunnan",
+    "content_family": "yunnan:586c4456bb47cd14bad021fc831cc9cdffeeb6e27b9b1d3bd0bf93443bb382f4",
     "what_it_shows": "昆明老街",
     "recommended_caption": "昆明老街",
     "available": true
@@ -106,7 +106,7 @@
     "byte_size": 89366,
     "display_name": "麗江束河希爾頓歡朋酒店",
     "content_group_key": "intro_10",
-    "content_family": "yunnan",
+    "content_family": "yunnan:355645652ba2214dc65ca445d96b9d3a28a94ce68c66b17bf0e63b9c80100867",
     "what_it_shows": "麗江束河希爾頓歡朋酒店",
     "recommended_caption": "麗江束河希爾頓歡朋酒店",
     "available": true
@@ -120,7 +120,7 @@
     "byte_size": 165291,
     "display_name": "沙溪蘭林閣酒店",
     "content_group_key": "intro_10",
-    "content_family": "yunnan",
+    "content_family": "yunnan:3c15ef428044409931a04a0d6e1ac2190cdb5ba780fe4b58607e51a2ebccd068",
     "what_it_shows": "沙溪蘭林閣酒店",
     "recommended_caption": "沙溪蘭林閣酒店",
     "available": true
@@ -134,7 +134,7 @@
     "byte_size": 43334,
     "display_name": "7座商務車",
     "content_group_key": "intro_11",
-    "content_family": "yunnan",
+    "content_family": "yunnan:e922cfcf25815d627316fbaa50ae35194a0919cab401cb36da1781a672487a9d",
     "what_it_shows": "7座商務車",
     "recommended_caption": "7座商務車",
     "available": true
@@ -148,7 +148,7 @@
     "byte_size": 852856,
     "display_name": "雲南昆大麗瀘沽湖8日行程海報",
     "content_group_key": "library",
-    "content_family": "yunnan",
+    "content_family": "yunnan:70ae6e430f6076c448243ff23e691f6786357ad3e4dabd21cfa86b4230a452f3",
     "what_it_shows": "雲南昆大麗瀘沽湖8日行程海報",
     "recommended_caption": "雲南昆大麗瀘沽湖8日行程海報",
     "available": false,
@@ -164,7 +164,7 @@
     "byte_size": 533206,
     "display_name": "藍月谷",
     "content_group_key": "intro_3",
-    "content_family": "yunnan",
+    "content_family": "yunnan:7b21c2329129f1790608a1ba38b80833995acadd3e1775c80e4fbc06a9191e96",
     "what_it_shows": "藍月谷",
     "recommended_caption": "藍月谷",
     "available": true
@@ -178,7 +178,7 @@
     "byte_size": 624443,
     "display_name": "玉龍雪山",
     "content_group_key": "intro_2",
-    "content_family": "yunnan",
+    "content_family": "yunnan:a043d44d95bcea93ab055873b334e895247dc75a361a082b7f51d28fcd0e00c9",
     "what_it_shows": "玉龍雪山",
     "recommended_caption": "玉龍雪山",
     "available": true
@@ -192,7 +192,7 @@
     "byte_size": 519892,
     "display_name": "玉龍雪山冰川公園4680",
     "content_group_key": "intro_2",
-    "content_family": "yunnan",
+    "content_family": "yunnan:d6aeda1e1cda708ca93e035ec66cb9c64ae748126f50df098398fe1105ff5a8a",
     "what_it_shows": "玉龍雪山冰川公園4680",
     "recommended_caption": "玉龍雪山冰川公園4680",
     "available": true
@@ -206,7 +206,7 @@
     "byte_size": 310328,
     "display_name": "瀘沽湖里格半島",
     "content_group_key": "intro_4",
-    "content_family": "yunnan",
+    "content_family": "yunnan:294b460d845fc4edcbf0a0b24b2c8c31423c6cc0c17e719a178b5387b66f1a19",
     "what_it_shows": "瀘沽湖里格半島",
     "recommended_caption": "瀘沽湖里格半島",
     "available": true
@@ -220,7 +220,7 @@
     "byte_size": 248481,
     "display_name": "湖景房窗景",
     "content_group_key": "intro_4",
-    "content_family": "yunnan",
+    "content_family": "yunnan:4c455d11a034600f3264235e6ac8b84fcc0e5a91a1b7e4daa753858f26bf5cd4",
     "what_it_shows": "湖景房窗景",
     "recommended_caption": "湖景房窗景",
     "available": true
@@ -234,7 +234,7 @@
     "byte_size": 471108,
     "display_name": "瀘沽湖豬槽船",
     "content_group_key": "intro_5",
-    "content_family": "yunnan",
+    "content_family": "yunnan:a775a5fe83e84216ec5a62ab66b7788a609c4746a5bdbbd356efca0d2850ed76",
     "what_it_shows": "瀘沽湖豬槽船",
     "recommended_caption": "瀘沽湖豬槽船",
     "available": true
@@ -248,7 +248,7 @@
     "byte_size": 468397,
     "display_name": "摩梭篝火晚會",
     "content_group_key": "intro_5",
-    "content_family": "yunnan",
+    "content_family": "yunnan:0c85b2358a6a9d29dd6c1b64438d3ebe64aa7caa4fff78579cb564af8a99332e",
     "what_it_shows": "摩梭篝火晚會",
     "recommended_caption": "摩梭篝火晚會",
     "available": true
@@ -262,7 +262,7 @@
     "byte_size": 357305,
     "display_name": "洱海湖畔下午茶",
     "content_group_key": "intro_6",
-    "content_family": "yunnan",
+    "content_family": "yunnan:a8be0514f4cab9062d97e237f701c10ca0466655a8ddad1ad8cf24eb774d87f5",
     "what_it_shows": "洱海湖畔下午茶",
     "recommended_caption": "洱海湖畔下午茶",
     "available": true
@@ -276,7 +276,7 @@
     "byte_size": 547019,
     "display_name": "鳳陽邑",
     "content_group_key": "intro_6",
-    "content_family": "yunnan",
+    "content_family": "yunnan:23639268624fefe1c62f134fe0bc697c2c624d43b626c66332011fd070248190",
     "what_it_shows": "鳳陽邑",
     "recommended_caption": "鳳陽邑",
     "available": true
@@ -290,7 +290,7 @@
     "byte_size": 523289,
     "display_name": "大理古城",
     "content_group_key": "intro_6",
-    "content_family": "yunnan",
+    "content_family": "yunnan:0c3e6de3210382f8c2e85677124ccf278d6f43619cc1c2cd6043308410c4843b",
     "what_it_shows": "大理古城",
     "recommended_caption": "大理古城",
     "available": true
@@ -304,7 +304,7 @@
     "byte_size": 55659,
     "display_name": "純玩無購物保證（行程表截圖）",
     "content_group_key": "faq_8",
-    "content_family": "yunnan",
+    "content_family": "yunnan:cc2d1d923c5f278126670b44390c0f3da9c77e2bc52f24bebfef20aadf02a35c",
     "what_it_shows": "純玩無購物保證（行程表截圖）",
     "recommended_caption": "純玩無購物保證（行程表截圖）",
     "available": true
@@ -318,7 +318,7 @@
     "byte_size": 675456,
     "display_name": "玉龍雪山冰川（5月）",
     "content_group_key": "material_season_yn_10",
-    "content_family": "yunnan",
+    "content_family": "yunnan:22d1042347b9b5293f25aeb584b5741d67544926f17dd1d3ee63ec1decd0dfc4",
     "what_it_shows": "玉龍雪山冰川（5月）",
     "recommended_caption": "玉龍雪山冰川（5月）",
     "available": true
@@ -332,7 +332,7 @@
     "byte_size": 791066,
     "display_name": "麗江古城水道（5-6月）",
     "content_group_key": "material_season_yn_11",
-    "content_family": "yunnan",
+    "content_family": "yunnan:9d2865de0c6ec77d4a605ac693b69e7f2b87ea1ebf465b26032d19bbb649ccca",
     "what_it_shows": "麗江古城水道（5-6月）",
     "recommended_caption": "麗江古城水道（5-6月）",
     "available": true
@@ -346,7 +346,7 @@
     "byte_size": 534110,
     "display_name": "藍月谷（7-9月）",
     "content_group_key": "material_season_yn_12",
-    "content_family": "yunnan",
+    "content_family": "yunnan:32cb2af56b82ea51f0a3d9abd200c389c100ec7156ac4d874225a4ddf6d3a89d",
     "what_it_shows": "藍月谷（7-9月）",
     "recommended_caption": "藍月谷（7-9月）",
     "available": true
@@ -360,7 +360,7 @@
     "byte_size": 572700,
     "display_name": "玉龍雪山棧道（7-9月）",
     "content_group_key": "material_season_yn_13",
-    "content_family": "yunnan",
+    "content_family": "yunnan:76fd21498778264f25b25cd6b9861de7a3999955823d74834239e90b258f12fb",
     "what_it_shows": "玉龍雪山棧道（7-9月）",
     "recommended_caption": "玉龍雪山棧道（7-9月）",
     "available": true
@@ -374,7 +374,7 @@
     "byte_size": 429402,
     "display_name": "黑龍潭日照金山（10月）",
     "content_group_key": "material_season_yn_14",
-    "content_family": "yunnan",
+    "content_family": "yunnan:2cdcbb9514b6470f46475caefb5b283a153597287a2daea8c8b6a71f085245e0",
     "what_it_shows": "黑龍潭日照金山（10月）",
     "recommended_caption": "黑龍潭日照金山（10月）",
     "available": true
@@ -388,7 +388,7 @@
     "byte_size": 468675,
     "display_name": "黑龍潭（11月）",
     "content_group_key": "material_season_yn_15",
-    "content_family": "yunnan",
+    "content_family": "yunnan:370b9f70cf45a684bae9f9ae101731a54d3071dfbb3a2205ea58488dba50a829",
     "what_it_shows": "黑龍潭（11月）",
     "recommended_caption": "黑龍潭（11月）",
     "available": true
@@ -402,7 +402,7 @@
     "byte_size": 828529,
     "display_name": "沙溪銀杏（11月）",
     "content_group_key": "material_season_yn_16",
-    "content_family": "yunnan",
+    "content_family": "yunnan:08575f50192090b1e71cb487cb877c1307e45bdfb7820f3de394f0a946a798ee",
     "what_it_shows": "沙溪銀杏（11月）",
     "recommended_caption": "沙溪銀杏（11月）",
     "available": true
@@ -416,7 +416,7 @@
     "byte_size": 507019,
     "display_name": "沙溪晨霧（1月）",
     "content_group_key": "material_season_yn_17",
-    "content_family": "yunnan",
+    "content_family": "yunnan:2fd41bd601c8569c90f69b8612c36edc14609fbfbc603e40cbd47295a80387b5",
     "what_it_shows": "沙溪晨霧（1月）",
     "recommended_caption": "沙溪晨霧（1月）",
     "available": true
@@ -430,7 +430,7 @@
     "byte_size": 307852,
     "display_name": "喜洲金黃稻田小火車（秋）",
     "content_group_key": "material_season_yn_1",
-    "content_family": "yunnan",
+    "content_family": "yunnan:44c7480fa1d054240b997ad11e9983e2b0b8c7b39e3ff01656142940938b903d",
     "what_it_shows": "喜洲金黃稻田小火車（秋）",
     "recommended_caption": "喜洲金黃稻田小火車（秋）",
     "available": true
@@ -444,7 +444,7 @@
     "byte_size": 310328,
     "display_name": "瀘沽湖里格半島（冬）",
     "content_group_key": "material_season_yn_2",
-    "content_family": "yunnan",
+    "content_family": "yunnan:294b460d845fc4edcbf0a0b24b2c8c31423c6cc0c17e719a178b5387b66f1a19",
     "what_it_shows": "瀘沽湖里格半島（冬）",
     "recommended_caption": "瀘沽湖里格半島（冬）",
     "available": true
@@ -458,7 +458,7 @@
     "byte_size": 279622,
     "display_name": "洱海紅嘴鷗（冬）",
     "content_group_key": "material_season_yn_3",
-    "content_family": "yunnan",
+    "content_family": "yunnan:896138ae485fc688570b9125dd14a946c13785340a3d0b07daf05501dccd9ee2",
     "what_it_shows": "洱海紅嘴鷗（冬）",
     "recommended_caption": "洱海紅嘴鷗（冬）",
     "available": true
@@ -472,7 +472,7 @@
     "byte_size": 408730,
     "display_name": "藍月谷晴天（四季）",
     "content_group_key": "material_season_yn_4",
-    "content_family": "yunnan",
+    "content_family": "yunnan:c10caf74cee17c8b00205d38428c9445d72d5824ac5f9ab704a1867edc38137d",
     "what_it_shows": "藍月谷晴天（四季）",
     "recommended_caption": "藍月谷晴天（四季）",
     "available": true
@@ -486,7 +486,7 @@
     "byte_size": 403874,
     "display_name": "藍月谷下雪（難得）",
     "content_group_key": "material_season_yn_5",
-    "content_family": "yunnan",
+    "content_family": "yunnan:893a6d2b1be85191e9cc6fd2956e28f722b6b9cddcf45d1f956e4ab05a1ed913",
     "what_it_shows": "藍月谷下雪（難得）",
     "recommended_caption": "藍月谷下雪（難得）",
     "available": true
@@ -500,7 +500,7 @@
     "byte_size": 339835,
     "display_name": "藍月谷白水河（1月）",
     "content_group_key": "material_season_yn_6",
-    "content_family": "yunnan",
+    "content_family": "yunnan:f689919aa7bb46ac86d219f7d3a604e7dc26a46d1b3f4fade890d8091e4d6ae2",
     "what_it_shows": "藍月谷白水河（1月）",
     "recommended_caption": "藍月谷白水河（1月）",
     "available": true
@@ -514,7 +514,7 @@
     "byte_size": 466846,
     "display_name": "瀘沽湖冬日",
     "content_group_key": "material_season_yn_7",
-    "content_family": "yunnan",
+    "content_family": "yunnan:1f7bcec24c36458e02d4daef14955e3a04f814c2aa61163ebe367f3d84bf8c08",
     "what_it_shows": "瀘沽湖冬日",
     "recommended_caption": "瀘沽湖冬日",
     "available": true
@@ -528,7 +528,7 @@
     "byte_size": 400279,
     "display_name": "束河古鎮冬天",
     "content_group_key": "material_season_yn_8",
-    "content_family": "yunnan",
+    "content_family": "yunnan:695af1c8d7a10ca031b9cb0a839be5f174159a9f1c1f42f4dbab3ebf3c8b7015",
     "what_it_shows": "束河古鎮冬天",
     "recommended_caption": "束河古鎮冬天",
     "available": true
@@ -542,7 +542,7 @@
     "byte_size": 880180,
     "display_name": "麗江古城花海",
     "content_group_key": "material_season_yn_9",
-    "content_family": "yunnan",
+    "content_family": "yunnan:5453a13710e981352d526fca6b02c6d9e54a020d1ddbe265b6bf8c7a6d9aeb71",
     "what_it_shows": "麗江古城花海",
     "recommended_caption": "麗江古城花海",
     "available": true
@@ -556,7 +556,7 @@
     "byte_size": 330804,
     "display_name": "3月喜洲田野小火車",
     "content_group_key": "material_month_yn_03",
-    "content_family": "yunnan",
+    "content_family": "yunnan:86270237fe57446df7fca790a14f19ac1cb381616556b9dc2578000b771c8c2a",
     "what_it_shows": "3月喜洲田野小火車",
     "recommended_caption": "3月喜洲田野小火車",
     "available": true
@@ -570,7 +570,7 @@
     "byte_size": 670197,
     "display_name": "4月麗江古城花海",
     "content_group_key": "material_month_yn_04",
-    "content_family": "yunnan",
+    "content_family": "yunnan:657b2fdca5cb6cd037991b851c53b1e29e66297fe8f9b070f2f0d46a1733e0b8",
     "what_it_shows": "4月麗江古城花海",
     "recommended_caption": "4月麗江古城花海",
     "available": true
@@ -584,7 +584,7 @@
     "byte_size": 336614,
     "display_name": "5月藍月谷",
     "content_group_key": "material_month_yn_05",
-    "content_family": "yunnan",
+    "content_family": "yunnan:6508e359164e48679f4ce352d11ca29ae989d3329fe739007de7d2cdd318a531",
     "what_it_shows": "5月藍月谷",
     "recommended_caption": "5月藍月谷",
     "available": true
@@ -598,7 +598,7 @@
     "byte_size": 321106,
     "display_name": "6月洱海藍天",
     "content_group_key": "material_month_yn_06",
-    "content_family": "yunnan",
+    "content_family": "yunnan:925c45e6966c686ee074eec61861ea0ee236f5288f96aed226edd27cc82dda7f",
     "what_it_shows": "6月洱海藍天",
     "recommended_caption": "6月洱海藍天",
     "available": true
@@ -612,7 +612,7 @@
     "byte_size": 442532,
     "display_name": "瀘沽湖水性楊花",
     "content_group_key": "followup_1",
-    "content_family": "yunnan",
+    "content_family": "yunnan:7e9ebf58cfa0fa92502e1393c82edc2947593fd16f0a35c4a0109bf5d9f04ea5",
     "what_it_shows": "瀘沽湖水性楊花",
     "recommended_caption": "瀘沽湖水性楊花",
     "available": true
@@ -626,7 +626,7 @@
     "byte_size": 249183,
     "display_name": "大理古城夜景",
     "content_group_key": "followup_2",
-    "content_family": "yunnan",
+    "content_family": "yunnan:bad143878509ea0aaeba199bc23468398a79b405dbe556e8afac67fcfdb0b370",
     "what_it_shows": "大理古城夜景",
     "recommended_caption": "大理古城夜景",
     "available": true
@@ -640,7 +640,7 @@
     "byte_size": 360854,
     "display_name": "束河古鎮",
     "content_group_key": "followup_3",
-    "content_family": "yunnan",
+    "content_family": "yunnan:927acd49ae3fb23bb506870c006b7ea19ca1847ea675cea0a9e75ac808650c41",
     "what_it_shows": "束河古鎮",
     "recommended_caption": "束河古鎮",
     "available": true
@@ -654,7 +654,7 @@
     "byte_size": 151121,
     "display_name": "雪山日照金山",
     "content_group_key": "followup_5",
-    "content_family": "yunnan",
+    "content_family": "yunnan:47ebe11c7c653a81796b9ffa8bb518a10b6a3b57ffcabe0dc3114f89f6fa0f3c",
     "what_it_shows": "雪山日照金山",
     "recommended_caption": "雪山日照金山",
     "available": true
@@ -668,7 +668,7 @@
     "byte_size": 343502,
     "display_name": "過橋米線",
     "content_group_key": "faq_7",
-    "content_family": "yunnan",
+    "content_family": "yunnan:b319117e484729d5c555ce1191cb6e8b7b4d7099cf016f3b538667c12f5d0709",
     "what_it_shows": "過橋米線",
     "recommended_caption": "過橋米線",
     "available": true
@@ -682,7 +682,7 @@
     "byte_size": 322187,
     "display_name": "汽鍋雞",
     "content_group_key": "faq_7",
-    "content_family": "yunnan",
+    "content_family": "yunnan:9e44561e1101514ab985b2cbb079c4781faba0d860bb7bfcfc2c6e4148ff6e38",
     "what_it_shows": "汽鍋雞",
     "recommended_caption": "汽鍋雞",
     "available": true
@@ -696,7 +696,7 @@
     "byte_size": 190324,
     "display_name": "喜洲拉絲乳扇",
     "content_group_key": "faq_7",
-    "content_family": "yunnan",
+    "content_family": "yunnan:03e0c3c778e0bbe8d574899854225aa2075243860b88908f170ad68c777261fb",
     "what_it_shows": "喜洲拉絲乳扇",
     "recommended_caption": "喜洲拉絲乳扇",
     "available": true

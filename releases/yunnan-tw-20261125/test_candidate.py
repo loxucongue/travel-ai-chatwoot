@@ -9,7 +9,7 @@ from sqlalchemy import create_engine,select
 from sqlalchemy.orm import Session
 from app.main import app
 from app.db import Base
-from app.models import Tenant,User,KnowledgeVersion,MaterialAsset
+from app.models import Tenant,User,KnowledgeVersion,MaterialAsset,InboxBinding
 from app import route_packages as rp
 from app.reception_v3 import skills,runtime,service
 from app.reception_config import get_reception_configuration
@@ -32,6 +32,7 @@ def setup():
  skills.get_reception_configuration=lambda db:changed
  engine=create_engine('sqlite://');Base.metadata.create_all(engine);db=Session(engine)
  db.add(Tenant(id=1,name='isolated-yunnan'));db.add(User(id=1,email='isolated@example.invalid',display_name='isolated',password_hash='unused',role='super_admin'));db.add(KnowledgeVersion(id=1,tenant_id=1,version_key=candidate['knowledge_version'],title='isolated',content_hash='test',source_summary={}));db.flush()
+ db.add(InboxBinding(id=1,tenant_id=1,chatwoot_inbox_id=-1,name='isolated'));db.flush()
  manifest=json.loads((PAYLOAD/'asset-manifest.json').read_text());active=[a for a in manifest if a['available']]
  files={a['asset_key']:(PAYLOAD/'media'/(a['sha256']+'.jpg')).read_bytes() for a in active}
  # Hash-addressed candidate files are immutable; install helper uses a temporary media directory.
@@ -58,7 +59,7 @@ def structural(db,bundle,materials,Registry,manifest,temp):
  for n in [1,2,3,4,5,6,7,8]:
   profile={'party_size':n}
   assert bool(policy_for(bundle,ROUTE,profile))==(n>=7)
-  row=AutomationSession(id=-n,owner_id=1,environment='playground',engine_version='v3',mode='journey',messages=[],memory=profile,controls={'route_variant':ROUTE,'v3':{'opening_started':True},'simulation':{'status':'running'}},virtual_now='2026-11-25T13:00:00+00:00')
+  row=AutomationSession(id=-n,owner_id=1,inbox_binding_id=1,environment='playground',engine_version='v3',mode='journey',messages=[],memory=profile,controls={'route_variant':ROUTE,'v3':{'opening_started':True},'simulation':{'status':'running'}},virtual_now='2026-11-25T13:00:00+00:00')
   context={'route_variant':ROUTE,'profile':profile,'skills':bundle,'messages':[],'now':row.virtual_now,'state':row.controls['v3'],'available_materials':materials}
   run=SimpleNamespace(id=-n,input_snapshot=context,trace={'logs':[]})
   service.apply_decision(db,row,run,bundle,runtime.Decision(action='reply',route_variant=ROUTE,route_choice='selected',start_introduction=True).model_dump())
