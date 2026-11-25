@@ -1,0 +1,1218 @@
+{
+  "schema_version": 1,
+  "package_version": "2026-11-25.yunnan-tw-v1",
+  "knowledge_version": "china2go-peach-two-products-20260829-v1",
+  "route_variant": "yunnan_tw_8d",
+  "branch": "yunnan_tw_8d",
+  "name": "七彩雲南・昆大麗＋瀘沽湖8天",
+  "selection_title": "雲南昆大麗瀘沽湖8天",
+  "selection_aliases": [
+    "雲南",
+    "云南",
+    "昆大麗",
+    "昆大丽",
+    "雲南8天",
+    "雲南八天",
+    "昆明",
+    "大理",
+    "麗江",
+    "丽江",
+    "瀘沽湖",
+    "泸沽湖",
+    "沙溪",
+    "喜洲",
+    "玉龍雪山",
+    "玉龙雪山",
+    "洱海",
+    "Yunnan"
+  ],
+  "match_keywords": [
+    "雲南",
+    "云南",
+    "昆大麗",
+    "昆大丽",
+    "瀘沽湖",
+    "泸沽湖",
+    "玉龍雪山",
+    "玉龙雪山",
+    "Yunnan"
+  ],
+  "routing_guidance": "明確詢問雲南/昆大麗/麗江/瀘沽湖可識別本線；單獨提到索道、篝火、雪山不構成換線。指定只去一城、包車或加香格里拉是訂製需求，先澄清，不自動選標準8日。",
+  "default_entry_message": "想了解雲南昆大麗瀘沽湖8天",
+  "required_slots": [
+    "party_size",
+    "departure_window"
+  ],
+  "initial_delivery_interval_seconds": 3,
+  "opening_text_in_introduction": true,
+  "intake": {
+    "enabled": true,
+    "field": "party_size",
+    "question": "您好～歡迎詢問雲南行程！請問這次預計幾位一起去呢？",
+    "wait_seconds": 30,
+    "options": [
+      "1人",
+      "2～3人",
+      "4～6人",
+      "7人以上"
+    ]
+  },
+  "ai_guidance": "台灣市場的七彩雲南昆大麗＋瀘沽湖8天。先讀yunnan-tw-8d。絕不套用西藏入藏函、30天、交通日、早鳥、4人成團或北京包團價格。廣告2人成團/最多6人不是客人同行人數。\n1人拼團拼房需核實；2–3人每週五現有團期，7座商務車、司機兼導遊；4–6人可另開新團期，9座VIP車、司機＋專職導遊；7人以上獨立訂製，不套標準團價。4–6人開新團期不擅自改記成獨立包團。\n先答當輪問題再問一個缺項。已有時間/人數不重問。明確包車、只去麗江或加香格里拉先了解需求，不播放整套標準8日。介紹按R1–R13順序，已介紹不重播。涉及價格先讀price_policy，按月份和實際人數報；無有效年份證據只稱目前參考價，遠期需確認。不自行套用人數折扣。\n索道天氣/停開以景區公告為準，不能保證登頂、無高反或醫療安全。7座照片只作7座參考，不能冒充9座實車。旅拍、供氧房、入藏函不是本產品贈送項。\n聯繫方式可選LINE/微信/WhatsApp的QR Code或ID；首次不發官方帳號，拒絕個人帳號才提供官方LINE @china2go或微信china2go-cits；拒絕轉平台尊重，不反覆索取；wxid_原始ID請補QR Code。不要聲稱已加好友或檔案必定傳不了。\n介紹後考慮/討論不能只說慢慢看：承接後補一個適用缺項或自然邀請。報價後沿用全局5分鐘檢查；覆蓋來源3小時。介紹後未知月份可等待30分鐘，後續一天最多一則新主題；不得重發已展示圖文。六則用完無新內容就等待，不無限循環。人工接管、拒絕、已留資、渠道限制優先；當天再次邀請仍需去重和時段限制。\n同一則訊息避免同時用「中國」和「台灣」，目的地稱大陸/雲南。少數民族只談文化生活；政治宗教爭議或攻擊轉人工。公司辦公室/營業執照沿用全局已核准固定答覆與轉人工。\n舊行程海報寫最多10人，與本版6人上限衝突，禁止發送或借用；用daily_itinerary文字。",
+  "source": {
+    "url": "https://china2go.com/雲南台灣自己/",
+    "archive_sha256": "30ea3efe95e8e3f05663094ba9945afaf8442869afd00e4cca6517bae9826d4a",
+    "website_sha256": "a594d20ca842134fa81892cc6225180cfc7df0f05ca8073776e46da27df1d0f7"
+  },
+  "knowledge_facts": [
+    {
+      "id": "yunnan_tw_8d.intro_1",
+      "text": "我們是China2Go國旅環球！這是我們【七彩雲南・昆大麗＋瀘沽湖8天】，2位就成團出發的拼團小團，一團最多6位，4位以上還可以自己開新團期～\n昆明、大理、喜洲、沙溪、瀘沽湖、麗江一次走完，節奏慢慢玩不趕路，全程純玩不進購物店喔！",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_1"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_2",
+      "text": "這趟最多人問的就是玉龍雪山大索道～\n玉龍雪山有三條索道，只有大索道能直上海拔4,680米的冰川公園，近距離看雪峰跟冰川；名額很少，旺季常常提前好幾週都搶不到。\n我們跟景區長期合作，大索道的名額會先幫您留好，不用自己搶票！ 實際開放以當天天氣和景區公告為準，不能保證一定上山。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_2"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_3",
+      "text": "下了雪山會去藍月谷，湖水是很漂亮的藍綠色；接著看《印象麗江》，在雪山腳下的露天劇場演出，背景就是真的玉龍雪山，好幾百位當地人一起上場，很震撼！門票都包含在團費裡～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_3"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_4",
+      "text": "很多雲南團只走昆明、大理、麗江就結束了，瀘沽湖因為路比較遠，常常不排，就算有排也是當天來回、匆匆看一眼～\n我們是特別加進來，還在湖邊住一晚湖景房！推開窗就是湖跟格姆女神山，早上起來湖面常常有一層薄霧，真的很像仙境～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_4"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_5",
+      "text": "在瀘沽湖會搭豬槽船划到湖中間，晚上參加篝火晚會，跟當地人一起圍著火堆跳舞，不是坐著看表演，是真的一起玩～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_5"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_6",
+      "text": "大理最有名的就是『風花雪月』～\n這段我們特別送一份洱海湖畔下午茶，坐在湖邊看著蒼山慢慢喝；也會走進白族老村子鳳陽邑跟大理古城，感受大理最真實的生活味道！",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_6"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_7",
+      "text": "喜洲跟沙溪是這趟很有味道的兩個古鎮～\n喜洲是保存很完整的白族村子，外面一大片稻田，還有復古小火車穿過田裡，很好拍！\n沙溪比較少團會排，因為不在昆大麗的主線上，要特別繞過去～它是茶馬古道上的老集市，古戲台、老街、玉津橋都還在，被很多人稱為『最不像景區』的古鎮，我們還安排住在古鎮裡！",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_7"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_8",
+      "text": "到麗江會去黑龍潭，天氣好的時候可以拍到玉龍雪山倒映在潭水裡；再到麗江古城跟束河古鎮走走，石板路、小水道、納西族的木房子，晚上燈亮起來特別好看～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_8"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_9",
+      "text": "麗江回昆明開車要大半天，我們改搭動車，大約4小時就到，輕鬆很多～\n最後一晚在昆明老街附近，可以去吃過橋米線、汽鍋雞，悠閒逛一逛再回家！",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_9"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_10",
+      "text": "住宿全程都是精選四鑽、開業或翻新5年內的酒店，麗江住希爾頓歡朋，走路就到束河古鎮；沙溪住在古鎮裡的白族庭院酒店，加上瀘沽湖一晚湖景房～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_10"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_11",
+      "text": "照片為7座商務車參考。2～3位使用7座商務車，由司機兼導遊；4～6位使用9座VIP旅遊車，另配專職導遊。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_11"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_12",
+      "text": "最後跟您說一下我們的承諾～\n很多人對雲南團的印象，是被帶去玉石店、銀器店、茶葉店，或是到了當地才被加收自費項目。我們全程不進任何購物店，印象麗江、豬槽船、篝火晚會、玉龍雪山大索道都已經包含在團費裡，不會到現場再加錢；如果有違約，我們賠您人民幣5,000元！\n我們是70年品牌的CITS中國國旅環球，這條是同事實際踩線排出來的行程，您可以很放心～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_12"
+    },
+    {
+      "id": "yunnan_tw_8d.intro_13",
+      "text": "這樣的行程，目前您想去的地方都有包含到嗎？",
+      "source_ref": "https://china2go.com/雲南台灣自己/#intro_13"
+    },
+    {
+      "id": "yunnan_tw_8d.price_policy",
+      "text": "目前標準8天參考團費（人民幣、每人、2人一間）：1～6月及9～12月¥7,580；7～8月¥8,980。單人房差淡季¥1,350、旺季¥2,150，僅單人或主動問單房才說。春節、五一、十一另核，不報普通季節價。7人以上/訂製/兒童無批准價，另確認；不得把7580當包團價。多人優惠只說有優惠，不自算或公開內部折扣。資料未指定報價有效年份，不對任意年份承諾固定價；報目前參考價後確認具體時間。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#price_policy"
+    },
+    {
+      "id": "yunnan_tw_8d.rules",
+      "text": "台灣市場的七彩雲南昆大麗＋瀘沽湖8天。先讀yunnan-tw-8d。絕不套用西藏入藏函、30天、交通日、早鳥、4人成團或北京包團價格。廣告2人成團/最多6人不是客人同行人數。\n1人拼團拼房需核實；2–3人每週五現有團期，7座商務車、司機兼導遊；4–6人可另開新團期，9座VIP車、司機＋專職導遊；7人以上獨立訂製，不套標準團價。4–6人開新團期不擅自改記成獨立包團。\n先答當輪問題再問一個缺項。已有時間/人數不重問。明確包車、只去麗江或加香格里拉先了解需求，不播放整套標準8日。介紹按R1–R13順序，已介紹不重播。涉及價格先讀price_policy，按月份和實際人數報；無有效年份證據只稱目前參考價，遠期需確認。不自行套用人數折扣。\n索道天氣/停開以景區公告為準，不能保證登頂、無高反或醫療安全。7座照片只作7座參考，不能冒充9座實車。旅拍、供氧房、入藏函不是本產品贈送項。\n聯繫方式可選LINE/微信/WhatsApp的QR Code或ID；首次不發官方帳號，拒絕個人帳號才提供官方LINE @china2go或微信china2go-cits；拒絕轉平台尊重，不反覆索取；wxid_原始ID請補QR Code。不要聲稱已加好友或檔案必定傳不了。\n介紹後考慮/討論不能只說慢慢看：承接後補一個適用缺項或自然邀請。報價後沿用全局5分鐘檢查；覆蓋來源3小時。介紹後未知月份可等待30分鐘，後續一天最多一則新主題；不得重發已展示圖文。六則用完無新內容就等待，不無限循環。人工接管、拒絕、已留資、渠道限制優先；當天再次邀請仍需去重和時段限制。\n同一則訊息避免同時用「中國」和「台灣」，目的地稱大陸/雲南。少數民族只談文化生活；政治宗教爭議或攻擊轉人工。公司辦公室/營業執照沿用全局已核准固定答覆與轉人工。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#rules"
+    },
+    {
+      "id": "yunnan_tw_8d.daily_itinerary",
+      "text": "8天每日安排：D1昆明接機；D2昆明—洱海生態廊道—鳳陽邑—大理古城；D3大理—喜洲—沙溪；D4沙溪—瀘沽湖—篝火晚會；D5瀘沽湖—里格半島—黑龍潭—麗江古城；D6玉龍雪山—藍月谷—印象麗江—束河古鎮；D7麗江搭動車回昆明—昆明老街；D8昆明送機。住宿以對應酒店或同級確認，不把參考圖片當成確定房型。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#daily_itinerary"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_1",
+      "text": "幾個人可以出發？什麼時候有團？\n「2位就可以出發，一團最多6位～我們每週五都有出發；如果你們有4位以上，還可以照你們的時間開一個新團期！您大約想什麼時候去呢？我幫您看一下～」\n回完接【要私訊】",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_1"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_2",
+      "text": "一個人可以報名嗎？要補單人房嗎？\n「可以喔～全程是2人一間，我們可以幫您拼房；如果拼不到或想自己住一間，需要補單人房差，我幫您確認一下～」\n能不能拼到房、有沒有團期可以拼，一律「我幫您確認」＋要私訊",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_2"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_3",
+      "text": "雲南會高反嗎？\n本線有高海拔段，玉龍雪山冰川公園約4,680米，任何人都可能出現高原不適，不能保證不會高反。請依身體狀況量力而為；有心臟、血壓等問題先請醫師評估，協助確認適合的安排。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_3"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_4",
+      "text": "大索道一定上得去嗎？\n「大索道的名額我們會先幫您預留～不過雪山上的天氣變化比較大，如果遇到大風、大雪景區臨時停開，會以景區當天公告為準，我們會第一時間幫您處理！」\n不可以保證一定上得去",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_4"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_5",
+      "text": "機票有含嗎？要飛到哪裡？\n「團費不含機票喔～要飛到昆明，我們可以推薦適合的航班，也可以協助代訂！昆明長水機場有24小時專車接送，不拼車～」\n航班細節不要自己編，一律「我幫您查」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_5"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_6",
+      "text": "台胞證要自己辦嗎？\n「台胞證要麻煩您自己辦理喔，沒有包含在團費裡～我們台北有合作的旅行社可以推薦給您，不過現在也有很多可以直接拍照申辦、或是上門取件的服務，很方便！\n建議提早辦理～像有些熱門景點的門票，要用證件才能預約搶票，證件好了我們才能幫您先卡位喔！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_6"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_7",
+      "text": "餐食有含嗎？\n「行程有含酒店早餐，午餐跟晚餐沒有包含～因為大陸的特色小吃真的很多，與其吃制式的團餐，自己去吃當地的在地餐廳反而更有味道！像過橋米線、汽鍋雞、喜洲的拉絲乳扇都很推薦～\n如果真的想包餐也可以跟我們說，我們會照當地安排有特色的在地餐廳，都會比一般團餐好吃很多；想吃什麼跟我們說，也都可以幫您推薦或訂位！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_7"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_8",
+      "text": "真的不會進購物店嗎？\n「全程純玩，不進任何購物店，也沒有自費行程～如果有違約，我們賠您人民幣5,000元！這些都寫在行程介紹裡，也會附在旅遊合約裡面！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_8"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_9",
+      "text": "每天車程會不會很長？\n「有幾天車程大約3.5～4.5小時，像昆明到大理、沙溪到瀘沽湖～沿途會停下來休息拍照；回昆明那天我們改搭動車，不用再坐長途車，會輕鬆很多！」\n照實講車程，不要說「都很短」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_9"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_10",
+      "text": "有導遊嗎？\n「4位以上會有專職司機加上專職的中文導遊全程陪同～2～3位的話是由很熟雲南的司機兼導遊，一路開車也幫您介紹景點、安排行程，門票跟預約我們都會先處理好，很輕鬆！」\n需要英文或其他語言導遊 → 我幫您確認＋要私訊",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_10"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_11",
+      "text": "長輩可以去嗎？\n可以協助評估長輩的行程節奏；古鎮多石板路，玉龍雪山有高海拔段。需了解同行年齡與活動需求，有慢性病先請醫師評估，不直接保證適合所有長輩。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_11"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_12",
+      "text": "可以帶小朋友嗎？\n「可以喔～瀘沽湖坐船、篝火晚會、古鎮散步，小朋友都會很喜歡！有帶小朋友的話跟我們說，我們會依孩子的狀況幫您調整節奏～」\n回完接【要私訊】",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_12"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_13",
+      "text": "要穿什麼？天氣怎麼樣？\n「雲南日照很強，就算不熱也很容易曬傷，帽子、墨鏡、防曬一定要帶～早晚溫差大，大理、麗江跟瀘沽湖建議多帶一件薄外套，上玉龍雪山要穿厚一點喔！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_13"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_14",
+      "text": "要帶多少現金？可以刷卡嗎？\n「城市裡大多用微信支付、支付寶，建議出發前先綁好～不過畢竟出門旅遊，網路或手機難免會有狀況，還是建議帶一些人民幣現金在身上備用！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_14"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_15",
+      "text": "手機有訊號嗎？\n「城市跟古鎮都有4G～有些山區會短暫沒訊號，建議出發前先買好可以在大陸用的上網卡或漫遊！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_15"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_16",
+      "text": "吃素或不吃牛羊可以嗎？\n「可以的，報名時先跟我們說，我們會提前跟餐廳溝通～雲南的菌菇、野菜料理很多，吃素的選擇其實不少！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_16"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_17",
+      "text": "雲南的菌菇可以吃嗎？\n請選擇正規餐廳，不採食不明野生菌。部分毒素不能靠煮熟去除，不以網路評價保證食用安全。",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_17"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_18",
+      "text": "小費怎麼算？\n「小費沒有包含在團費裡～4位以上有司機跟導遊，建議每人每天共¥60（司機¥30＋導遊¥30）；2～3位是司機兼導遊，建議每人每天¥30～」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_18"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_19",
+      "text": "拍照有什麼要注意的嗎？\n「風景都可以拍～雲南有很多少數民族，要拍當地人、攤販或寺廟裡面，記得先問過對方喔！」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_19"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_20",
+      "text": "遇到下雨、封路怎麼辦？\n「如果遇到天氣或道路管制，我們會以安全為優先，調整行程順序或安排替代景點，我們會第一時間跟大家說明～」",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_20"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_21",
+      "text": "可以加香格里拉、西雙版納或其他地方嗎？\n「可以喔！人數夠的話也可以自己開團，行程都能依您的需求再延伸～我幫您排看看！」\n走【要私訊】，客戶卡標記【雲南訂製】",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_21"
+    },
+    {
+      "id": "yunnan_tw_8d.faq_22",
+      "text": "我們人比較多，可以自己包團嗎？\n「當然可以～4～6位可以直接自己開一個團期，7位以上就幫您安排獨立成團，出發日期、住宿、景點都能照你們的需求調整！」\n不報價，走【要私訊】，客戶卡標記【高價值・雲南包團】\n圖片",
+      "source_ref": "https://china2go.com/雲南台灣自己/#faq_22"
+    },
+    {
+      "id": "yunnan_tw_8d.followup_1",
+      "text": "瀘沽湖夏天的時候，湖面會開滿一種白色的小花，叫『水性楊花』，是只長在乾淨水裡的水草花～坐豬槽船划過去的時候，花就在船邊，很夢幻！\n您之前有去過雲南嗎？",
+      "source_ref": "https://china2go.com/雲南台灣自己/#followup_1"
+    },
+    {
+      "id": "yunnan_tw_8d.followup_2",
+      "text": "大理有一句話叫『風花雪月』：下關的風、上關的花、蒼山的雪、洱海的月～我們會在大理古城待到晚上，城門亮燈的時候特別好看！",
+      "source_ref": "https://china2go.com/雲南台灣自己/#followup_2"
+    },
+    {
+      "id": "yunnan_tw_8d.followup_3",
+      "text": "束河古鎮是納西族最早的聚落之一，比麗江古城安靜很多～我們住的酒店走路就到，晚上吃完飯可以慢慢散步回去！",
+      "source_ref": "https://china2go.com/雲南台灣自己/#followup_3"
+    },
+    {
+      "id": "yunnan_tw_8d.followup_4",
+      "text": "瀘沽湖的里格半島三面環水，是看湖最漂亮的地方～這裡住的是摩梭人，到現在還保留由祖母當家的大家庭，所以瀘沽湖又被叫做『女兒國』！",
+      "source_ref": "https://china2go.com/雲南台灣自己/#followup_4"
+    },
+    {
+      "id": "yunnan_tw_8d.followup_5",
+      "text": "玉龍雪山冰川公園約4,680米，需注意高原適應，不能保證不會高反。您這邊同行成員大約幾歲呢？我幫您了解合適的行程節奏～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#followup_5"
+    },
+    {
+      "id": "yunnan_tw_8d.followup_6",
+      "text": "我們是70年品牌的中國國旅，雲南這條是同事實際踩線排出來的行程，全程純玩0購物，有違約我們賠您人民幣5,000元～\n您對雲南行程目前有什麼想法呢？",
+      "source_ref": "https://china2go.com/雲南台灣自己/#followup_6"
+    },
+    {
+      "id": "yunnan_tw_8d.season_1_2",
+      "text": "1～2月去雲南很棒喔！\n1、2月是雲南的乾季，大多是晴天，天空特別藍～藍月谷常常是藍綠色的湖水配上白頭雪山，洱海邊有成群的紅嘴鷗，沙溪早上河邊會起一層薄霧，很有意境！春節前後人會比較多，出發日期我們可以幫您一起抓～早晚比較冷，帶件厚外套就好！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#season_1_2"
+    },
+    {
+      "id": "yunnan_tw_8d.season_3_4",
+      "text": "3～4月去雲南很棒喔！\n3、4月是雲南的春天，喜洲的田野一片綠油油，復古小火車穿過田間，背後就是蒼山；麗江古城裡到處是花，抬頭就看得到玉龍雪山，隨手拍都是明信片～\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#season_3_4"
+    },
+    {
+      "id": "yunnan_tw_8d.season_5_6",
+      "text": "5～6月去雲南很棒喔！\n5、6月天氣不冷不熱，很適合上玉龍雪山；藍月谷的水色正漂亮，麗江古城的水道邊綠意滿滿，洱海也常常是藍天白雲～這時候還沒到暑假，人也比較少！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#season_5_6"
+    },
+    {
+      "id": "yunnan_tw_8d.season_7_8",
+      "text": "7～8月去雲南很棒喔！\n7、8月是雲南最適合避暑的時候！麗江、瀘沽湖白天大約二十幾度，瀘沽湖湖面開滿白色的水性楊花，坐豬槽船划過去，花就在船邊；藍月谷、玉龍雪山也一片清涼，很適合暑假帶家人來～偶爾有午後陣雨，下完很快就放晴，行程我們也會彈性調整！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#season_7_8"
+    },
+    {
+      "id": "yunnan_tw_8d.season_9_10",
+      "text": "9～10月去雲南很棒喔！\n9、10月雨季結束，天空變得特別藍；喜洲的稻田慢慢轉金黃，小火車從金色稻田穿過去超好拍；晴天多，在黑龍潭看到玉龍雪山『日照金山』的機會也比較高～十一長假前後人比較多，避開那幾天最舒服！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#season_9_10"
+    },
+    {
+      "id": "yunnan_tw_8d.season_11_12",
+      "text": "11～12月去雲南很棒喔！\n11、12月是雲南的秋冬，晴天多、天空很藍；沙溪古鎮的老銀杏轉成一整片金黃，黑龍潭的雪山倒影常常很清楚，洱海的紅嘴鷗也飛回來了～人少又安靜，很適合想慢慢玩的人！早晚比較冷，帶件外套就好～\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "source_ref": "https://china2go.com/雲南台灣自己/#season_11_12"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_10",
+      "text": "玉龍雪山冰川（5月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_10"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_11",
+      "text": "麗江古城水道（5-6月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_11"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_12",
+      "text": "藍月谷（7-9月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_12"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_13",
+      "text": "玉龍雪山棧道（7-9月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_13"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_14",
+      "text": "黑龍潭日照金山（10月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_14"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_15",
+      "text": "黑龍潭（11月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_15"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_16",
+      "text": "沙溪銀杏（11月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_16"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_17",
+      "text": "沙溪晨霧（1月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_17"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_1",
+      "text": "喜洲金黃稻田小火車（秋）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_1"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_2",
+      "text": "瀘沽湖里格半島（冬）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_2"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_3",
+      "text": "洱海紅嘴鷗（冬）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_3"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_4",
+      "text": "藍月谷晴天（四季）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_4"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_5",
+      "text": "藍月谷下雪（難得）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_5"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_6",
+      "text": "藍月谷白水河（1月）（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_6"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_7",
+      "text": "瀘沽湖冬日（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_7"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_8",
+      "text": "束河古鎮冬天（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_8"
+    },
+    {
+      "id": "yunnan_tw_8d.material_season_yn_9",
+      "text": "麗江古城花海（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_season_yn_9"
+    },
+    {
+      "id": "yunnan_tw_8d.material_month_yn_03",
+      "text": "3月喜洲田野小火車（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_month_yn_03"
+    },
+    {
+      "id": "yunnan_tw_8d.material_month_yn_04",
+      "text": "4月麗江古城花海（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_month_yn_04"
+    },
+    {
+      "id": "yunnan_tw_8d.material_month_yn_05",
+      "text": "5月藍月谷（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_month_yn_05"
+    },
+    {
+      "id": "yunnan_tw_8d.material_month_yn_06",
+      "text": "6月洱海藍天（季節/實景參考，不保證指定日期景色相同）",
+      "source_ref": "https://china2go.com/雲南台灣自己/#material_month_yn_06"
+    }
+  ],
+  "content_groups": {
+    "intro_1": {
+      "approved_text": "我們是China2Go國旅環球！這是我們【七彩雲南・昆大麗＋瀘沽湖8天】，2位就成團出發的拼團小團，一團最多6位，4位以上還可以自己開新團期～\n昆明、大理、喜洲、沙溪、瀘沽湖、麗江一次走完，節奏慢慢玩不趕路，全程純玩不進購物店喔！",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_1"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_only"
+    },
+    "intro_2": {
+      "approved_text": "這趟最多人問的就是玉龍雪山大索道～\n玉龍雪山有三條索道，只有大索道能直上海拔4,680米的冰川公園，近距離看雪峰跟冰川；名額很少，旺季常常提前好幾週都搶不到。\n我們跟景區長期合作，大索道的名額會先幫您留好，不用自己搶票！ 實際開放以當天天氣和景區公告為準，不能保證一定上山。",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_3",
+        "yunnan_tw_8d_yn_3_2"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_2"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_3": {
+      "approved_text": "下了雪山會去藍月谷，湖水是很漂亮的藍綠色；接著看《印象麗江》，在雪山腳下的露天劇場演出，背景就是真的玉龍雪山，好幾百位當地人一起上場，很震撼！門票都包含在團費裡～",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_2",
+        "yunnan_tw_8d_yn_14"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_3"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_4": {
+      "approved_text": "很多雲南團只走昆明、大理、麗江就結束了，瀘沽湖因為路比較遠，常常不排，就算有排也是當天來回、匆匆看一眼～\n我們是特別加進來，還在湖邊住一晚湖景房！推開窗就是湖跟格姆女神山，早上起來湖面常常有一層薄霧，真的很像仙境～",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_4",
+        "yunnan_tw_8d_yn_5"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_4"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_5": {
+      "approved_text": "在瀘沽湖會搭豬槽船划到湖中間，晚上參加篝火晚會，跟當地人一起圍著火堆跳舞，不是坐著看表演，是真的一起玩～",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_6",
+        "yunnan_tw_8d_yn_7"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_5"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_6": {
+      "approved_text": "大理最有名的就是『風花雪月』～\n這段我們特別送一份洱海湖畔下午茶，坐在湖邊看著蒼山慢慢喝；也會走進白族老村子鳳陽邑跟大理古城，感受大理最真實的生活味道！",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_8",
+        "yunnan_tw_8d_yn_9_2",
+        "yunnan_tw_8d_yn_9"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_6"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_7": {
+      "approved_text": "喜洲跟沙溪是這趟很有味道的兩個古鎮～\n喜洲是保存很完整的白族村子，外面一大片稻田，還有復古小火車穿過田裡，很好拍！\n沙溪比較少團會排，因為不在昆大麗的主線上，要特別繞過去～它是茶馬古道上的老集市，古戲台、老街、玉津橋都還在，被很多人稱為『最不像景區』的古鎮，我們還安排住在古鎮裡！",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_10",
+        "yunnan_tw_8d_yn_11"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_7"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_8": {
+      "approved_text": "到麗江會去黑龍潭，天氣好的時候可以拍到玉龍雪山倒映在潭水裡；再到麗江古城跟束河古鎮走走，石板路、小水道、納西族的木房子，晚上燈亮起來特別好看～",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_12",
+        "yunnan_tw_8d_yn_13"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_8"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_9": {
+      "approved_text": "麗江回昆明開車要大半天，我們改搭動車，大約4小時就到，輕鬆很多～\n最後一晚在昆明老街附近，可以去吃過橋米線、汽鍋雞，悠閒逛一逛再回家！",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_15",
+        "yunnan_tw_8d_yn_16"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_9"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_10": {
+      "approved_text": "住宿全程都是精選四鑽、開業或翻新5年內的酒店，麗江住希爾頓歡朋，走路就到束河古鎮；沙溪住在古鎮裡的白族庭院酒店，加上瀘沽湖一晚湖景房～",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_17",
+        "yunnan_tw_8d_yn_18"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_10"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_11": {
+      "approved_text": "照片為7座商務車參考。2～3位使用7座商務車，由司機兼導遊；4～6位使用9座VIP旅遊車，另配專職導遊。",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_19"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_11"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_then_assets"
+    },
+    "intro_12": {
+      "approved_text": "最後跟您說一下我們的承諾～\n很多人對雲南團的印象，是被帶去玉石店、銀器店、茶葉店，或是到了當地才被加收自費項目。我們全程不進任何購物店，印象麗江、豬槽船、篝火晚會、玉龍雪山大索道都已經包含在團費裡，不會到現場再加錢；如果有違約，我們賠您人民幣5,000元！\n我們是70年品牌的CITS中國國旅環球，這條是同事實際踩線排出來的行程，您可以很放心～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_12"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_only"
+    },
+    "intro_13": {
+      "approved_text": "這樣的行程，目前您想去的地方都有包含到嗎？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.intro_13"
+      ],
+      "initial_delivery": true,
+      "delivery_mode": "text_only"
+    },
+    "price_policy": {
+      "approved_text": "目前標準8天參考團費（人民幣、每人、2人一間）：1～6月及9～12月¥7,580；7～8月¥8,980。單人房差淡季¥1,350、旺季¥2,150，僅單人或主動問單房才說。春節、五一、十一另核，不報普通季節價。7人以上/訂製/兒童無批准價，另確認；不得把7580當包團價。多人優惠只說有優惠，不自算或公開內部折扣。資料未指定報價有效年份，不對任意年份承諾固定價；報目前參考價後確認具體時間。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.price_policy"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "rules": {
+      "approved_text": "台灣市場的七彩雲南昆大麗＋瀘沽湖8天。先讀yunnan-tw-8d。絕不套用西藏入藏函、30天、交通日、早鳥、4人成團或北京包團價格。廣告2人成團/最多6人不是客人同行人數。\n1人拼團拼房需核實；2–3人每週五現有團期，7座商務車、司機兼導遊；4–6人可另開新團期，9座VIP車、司機＋專職導遊；7人以上獨立訂製，不套標準團價。4–6人開新團期不擅自改記成獨立包團。\n先答當輪問題再問一個缺項。已有時間/人數不重問。明確包車、只去麗江或加香格里拉先了解需求，不播放整套標準8日。介紹按R1–R13順序，已介紹不重播。涉及價格先讀price_policy，按月份和實際人數報；無有效年份證據只稱目前參考價，遠期需確認。不自行套用人數折扣。\n索道天氣/停開以景區公告為準，不能保證登頂、無高反或醫療安全。7座照片只作7座參考，不能冒充9座實車。旅拍、供氧房、入藏函不是本產品贈送項。\n聯繫方式可選LINE/微信/WhatsApp的QR Code或ID；首次不發官方帳號，拒絕個人帳號才提供官方LINE @china2go或微信china2go-cits；拒絕轉平台尊重，不反覆索取；wxid_原始ID請補QR Code。不要聲稱已加好友或檔案必定傳不了。\n介紹後考慮/討論不能只說慢慢看：承接後補一個適用缺項或自然邀請。報價後沿用全局5分鐘檢查；覆蓋來源3小時。介紹後未知月份可等待30分鐘，後續一天最多一則新主題；不得重發已展示圖文。六則用完無新內容就等待，不無限循環。人工接管、拒絕、已留資、渠道限制優先；當天再次邀請仍需去重和時段限制。\n同一則訊息避免同時用「中國」和「台灣」，目的地稱大陸/雲南。少數民族只談文化生活；政治宗教爭議或攻擊轉人工。公司辦公室/營業執照沿用全局已核准固定答覆與轉人工。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.rules"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "daily_itinerary": {
+      "approved_text": "8天每日安排：D1昆明接機；D2昆明—洱海生態廊道—鳳陽邑—大理古城；D3大理—喜洲—沙溪；D4沙溪—瀘沽湖—篝火晚會；D5瀘沽湖—里格半島—黑龍潭—麗江古城；D6玉龍雪山—藍月谷—印象麗江—束河古鎮；D7麗江搭動車回昆明—昆明老街；D8昆明送機。住宿以對應酒店或同級確認，不把參考圖片當成確定房型。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.daily_itinerary"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_1": {
+      "approved_text": "幾個人可以出發？什麼時候有團？\n「2位就可以出發，一團最多6位～我們每週五都有出發；如果你們有4位以上，還可以照你們的時間開一個新團期！您大約想什麼時候去呢？我幫您看一下～」\n回完接【要私訊】",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_1"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_2": {
+      "approved_text": "一個人可以報名嗎？要補單人房嗎？\n「可以喔～全程是2人一間，我們可以幫您拼房；如果拼不到或想自己住一間，需要補單人房差，我幫您確認一下～」\n能不能拼到房、有沒有團期可以拼，一律「我幫您確認」＋要私訊",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_2"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_3": {
+      "approved_text": "雲南會高反嗎？\n本線有高海拔段，玉龍雪山冰川公園約4,680米，任何人都可能出現高原不適，不能保證不會高反。請依身體狀況量力而為；有心臟、血壓等問題先請醫師評估，協助確認適合的安排。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_3"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_4": {
+      "approved_text": "大索道一定上得去嗎？\n「大索道的名額我們會先幫您預留～不過雪山上的天氣變化比較大，如果遇到大風、大雪景區臨時停開，會以景區當天公告為準，我們會第一時間幫您處理！」\n不可以保證一定上得去",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_4"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_5": {
+      "approved_text": "機票有含嗎？要飛到哪裡？\n「團費不含機票喔～要飛到昆明，我們可以推薦適合的航班，也可以協助代訂！昆明長水機場有24小時專車接送，不拼車～」\n航班細節不要自己編，一律「我幫您查」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_5"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_6": {
+      "approved_text": "台胞證要自己辦嗎？\n「台胞證要麻煩您自己辦理喔，沒有包含在團費裡～我們台北有合作的旅行社可以推薦給您，不過現在也有很多可以直接拍照申辦、或是上門取件的服務，很方便！\n建議提早辦理～像有些熱門景點的門票，要用證件才能預約搶票，證件好了我們才能幫您先卡位喔！」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_6"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_7": {
+      "approved_text": "餐食有含嗎？\n「行程有含酒店早餐，午餐跟晚餐沒有包含～因為大陸的特色小吃真的很多，與其吃制式的團餐，自己去吃當地的在地餐廳反而更有味道！像過橋米線、汽鍋雞、喜洲的拉絲乳扇都很推薦～\n如果真的想包餐也可以跟我們說，我們會照當地安排有特色的在地餐廳，都會比一般團餐好吃很多；想吃什麼跟我們說，也都可以幫您推薦或訂位！」",
+      "asset_keys": [
+        "yunnan_tw_8d_food_yn_1",
+        "yunnan_tw_8d_food_yn_2",
+        "yunnan_tw_8d_food_yn_3"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_7"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "faq_8": {
+      "approved_text": "真的不會進購物店嗎？\n「全程純玩，不進任何購物店，也沒有自費行程～如果有違約，我們賠您人民幣5,000元！這些都寫在行程介紹裡，也會附在旅遊合約裡面！」",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_guarantee"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_8"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "faq_9": {
+      "approved_text": "每天車程會不會很長？\n「有幾天車程大約3.5～4.5小時，像昆明到大理、沙溪到瀘沽湖～沿途會停下來休息拍照；回昆明那天我們改搭動車，不用再坐長途車，會輕鬆很多！」\n照實講車程，不要說「都很短」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_9"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_10": {
+      "approved_text": "有導遊嗎？\n「4位以上會有專職司機加上專職的中文導遊全程陪同～2～3位的話是由很熟雲南的司機兼導遊，一路開車也幫您介紹景點、安排行程，門票跟預約我們都會先處理好，很輕鬆！」\n需要英文或其他語言導遊 → 我幫您確認＋要私訊",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_10"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_11": {
+      "approved_text": "長輩可以去嗎？\n可以協助評估長輩的行程節奏；古鎮多石板路，玉龍雪山有高海拔段。需了解同行年齡與活動需求，有慢性病先請醫師評估，不直接保證適合所有長輩。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_11"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_12": {
+      "approved_text": "可以帶小朋友嗎？\n「可以喔～瀘沽湖坐船、篝火晚會、古鎮散步，小朋友都會很喜歡！有帶小朋友的話跟我們說，我們會依孩子的狀況幫您調整節奏～」\n回完接【要私訊】",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_12"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_13": {
+      "approved_text": "要穿什麼？天氣怎麼樣？\n「雲南日照很強，就算不熱也很容易曬傷，帽子、墨鏡、防曬一定要帶～早晚溫差大，大理、麗江跟瀘沽湖建議多帶一件薄外套，上玉龍雪山要穿厚一點喔！」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_13"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_14": {
+      "approved_text": "要帶多少現金？可以刷卡嗎？\n「城市裡大多用微信支付、支付寶，建議出發前先綁好～不過畢竟出門旅遊，網路或手機難免會有狀況，還是建議帶一些人民幣現金在身上備用！」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_14"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_15": {
+      "approved_text": "手機有訊號嗎？\n「城市跟古鎮都有4G～有些山區會短暫沒訊號，建議出發前先買好可以在大陸用的上網卡或漫遊！」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_15"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_16": {
+      "approved_text": "吃素或不吃牛羊可以嗎？\n「可以的，報名時先跟我們說，我們會提前跟餐廳溝通～雲南的菌菇、野菜料理很多，吃素的選擇其實不少！」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_16"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_17": {
+      "approved_text": "雲南的菌菇可以吃嗎？\n請選擇正規餐廳，不採食不明野生菌。部分毒素不能靠煮熟去除，不以網路評價保證食用安全。",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_17"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_18": {
+      "approved_text": "小費怎麼算？\n「小費沒有包含在團費裡～4位以上有司機跟導遊，建議每人每天共¥60（司機¥30＋導遊¥30）；2～3位是司機兼導遊，建議每人每天¥30～」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_18"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_19": {
+      "approved_text": "拍照有什麼要注意的嗎？\n「風景都可以拍～雲南有很多少數民族，要拍當地人、攤販或寺廟裡面，記得先問過對方喔！」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_19"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_20": {
+      "approved_text": "遇到下雨、封路怎麼辦？\n「如果遇到天氣或道路管制，我們會以安全為優先，調整行程順序或安排替代景點，我們會第一時間跟大家說明～」",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_20"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_21": {
+      "approved_text": "可以加香格里拉、西雙版納或其他地方嗎？\n「可以喔！人數夠的話也可以自己開團，行程都能依您的需求再延伸～我幫您排看看！」\n走【要私訊】，客戶卡標記【雲南訂製】",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_21"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "faq_22": {
+      "approved_text": "我們人比較多，可以自己包團嗎？\n「當然可以～4～6位可以直接自己開一個團期，7位以上就幫您安排獨立成團，出發日期、住宿、景點都能照你們的需求調整！」\n不報價，走【要私訊】，客戶卡標記【高價值・雲南包團】\n圖片",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.faq_22"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "followup_1": {
+      "approved_text": "瀘沽湖夏天的時候，湖面會開滿一種白色的小花，叫『水性楊花』，是只長在乾淨水裡的水草花～坐豬槽船划過去的時候，花就在船邊，很夢幻！\n您之前有去過雲南嗎？",
+      "asset_keys": [
+        "yunnan_tw_8d_follow_yn_1"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.followup_1"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_2": {
+      "approved_text": "大理有一句話叫『風花雪月』：下關的風、上關的花、蒼山的雪、洱海的月～我們會在大理古城待到晚上，城門亮燈的時候特別好看！",
+      "asset_keys": [
+        "yunnan_tw_8d_follow_yn_2"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.followup_2"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_3": {
+      "approved_text": "束河古鎮是納西族最早的聚落之一，比麗江古城安靜很多～我們住的酒店走路就到，晚上吃完飯可以慢慢散步回去！",
+      "asset_keys": [
+        "yunnan_tw_8d_follow_yn_3"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.followup_3"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_4": {
+      "approved_text": "瀘沽湖的里格半島三面環水，是看湖最漂亮的地方～這裡住的是摩梭人，到現在還保留由祖母當家的大家庭，所以瀘沽湖又被叫做『女兒國』！",
+      "asset_keys": [
+        "yunnan_tw_8d_yn_4"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.followup_4"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_5": {
+      "approved_text": "玉龍雪山冰川公園約4,680米，需注意高原適應，不能保證不會高反。您這邊同行成員大約幾歲呢？我幫您了解合適的行程節奏～",
+      "asset_keys": [
+        "yunnan_tw_8d_follow_yn_5"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.followup_5"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "followup_6": {
+      "approved_text": "我們是70年品牌的中國國旅，雲南這條是同事實際踩線排出來的行程，全程純玩0購物，有違約我們賠您人民幣5,000元～\n您對雲南行程目前有什麼想法呢？",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.followup_6"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "season_1_2": {
+      "approved_text": "1～2月去雲南很棒喔！\n1、2月是雲南的乾季，大多是晴天，天空特別藍～藍月谷常常是藍綠色的湖水配上白頭雪山，洱海邊有成群的紅嘴鷗，沙溪早上河邊會起一層薄霧，很有意境！春節前後人會比較多，出發日期我們可以幫您一起抓～早晚比較冷，帶件厚外套就好！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.season_1_2"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "season_3_4": {
+      "approved_text": "3～4月去雲南很棒喔！\n3、4月是雲南的春天，喜洲的田野一片綠油油，復古小火車穿過田間，背後就是蒼山；麗江古城裡到處是花，抬頭就看得到玉龍雪山，隨手拍都是明信片～\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.season_3_4"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "season_5_6": {
+      "approved_text": "5～6月去雲南很棒喔！\n5、6月天氣不冷不熱，很適合上玉龍雪山；藍月谷的水色正漂亮，麗江古城的水道邊綠意滿滿，洱海也常常是藍天白雲～這時候還沒到暑假，人也比較少！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.season_5_6"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "season_7_8": {
+      "approved_text": "7～8月去雲南很棒喔！\n7、8月是雲南最適合避暑的時候！麗江、瀘沽湖白天大約二十幾度，瀘沽湖湖面開滿白色的水性楊花，坐豬槽船划過去，花就在船邊；藍月谷、玉龍雪山也一片清涼，很適合暑假帶家人來～偶爾有午後陣雨，下完很快就放晴，行程我們也會彈性調整！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.season_7_8"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "season_9_10": {
+      "approved_text": "9～10月去雲南很棒喔！\n9、10月雨季結束，天空變得特別藍；喜洲的稻田慢慢轉金黃，小火車從金色稻田穿過去超好拍；晴天多，在黑龍潭看到玉龍雪山『日照金山』的機會也比較高～十一長假前後人比較多，避開那幾天最舒服！\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.season_9_10"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "season_11_12": {
+      "approved_text": "11～12月去雲南很棒喔！\n11、12月是雲南的秋冬，晴天多、天空很藍；沙溪古鎮的老銀杏轉成一整片金黃，黑龍潭的雪山倒影常常很清楚，洱海的紅嘴鷗也飛回來了～人少又安靜，很適合想慢慢玩的人！早晚比較冷，帶件外套就好～\n不管什麼時候來，都是2位就出發的小團、精選四鑽酒店加一晚瀘沽湖湖景房，玉龍雪山大索道的名額也會先幫您留好，您只要好好享受就好～",
+      "asset_keys": [],
+      "evidence_refs": [
+        "yunnan_tw_8d.season_11_12"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_only"
+    },
+    "material_season_yn_10": {
+      "approved_text": "玉龍雪山冰川（5月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_10"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_10"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_11": {
+      "approved_text": "麗江古城水道（5-6月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_11"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_11"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_12": {
+      "approved_text": "藍月谷（7-9月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_12"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_12"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_13": {
+      "approved_text": "玉龍雪山棧道（7-9月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_13"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_13"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_14": {
+      "approved_text": "黑龍潭日照金山（10月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_14"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_14"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_15": {
+      "approved_text": "黑龍潭（11月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_15"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_15"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_16": {
+      "approved_text": "沙溪銀杏（11月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_16"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_16"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_17": {
+      "approved_text": "沙溪晨霧（1月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_17"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_17"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_1": {
+      "approved_text": "喜洲金黃稻田小火車（秋）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_1"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_1"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_2": {
+      "approved_text": "瀘沽湖里格半島（冬）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_2"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_2"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_3": {
+      "approved_text": "洱海紅嘴鷗（冬）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_3"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_3"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_4": {
+      "approved_text": "藍月谷晴天（四季）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_4"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_4"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_5": {
+      "approved_text": "藍月谷下雪（難得）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_5"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_5"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_6": {
+      "approved_text": "藍月谷白水河（1月）（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_6"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_6"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_7": {
+      "approved_text": "瀘沽湖冬日（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_7"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_7"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_8": {
+      "approved_text": "束河古鎮冬天（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_8"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_8"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_season_yn_9": {
+      "approved_text": "麗江古城花海（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_season_yn_9"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_season_yn_9"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_month_yn_03": {
+      "approved_text": "3月喜洲田野小火車（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_month_yn_03"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_month_yn_03"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_month_yn_04": {
+      "approved_text": "4月麗江古城花海（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_month_yn_04"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_month_yn_04"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_month_yn_05": {
+      "approved_text": "5月藍月谷（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_month_yn_05"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_month_yn_05"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    },
+    "material_month_yn_06": {
+      "approved_text": "6月洱海藍天（季節/實景參考，不保證指定日期景色相同）",
+      "asset_keys": [
+        "yunnan_tw_8d_month_yn_06"
+      ],
+      "evidence_refs": [
+        "yunnan_tw_8d.material_month_yn_06"
+      ],
+      "initial_delivery": false,
+      "delivery_mode": "text_then_assets"
+    }
+  },
+  "content_sequence": [
+    "intro_1",
+    "intro_2",
+    "intro_3",
+    "intro_4",
+    "intro_5",
+    "intro_6",
+    "intro_7",
+    "intro_8",
+    "intro_9",
+    "intro_10",
+    "intro_11",
+    "intro_12",
+    "intro_13"
+  ],
+  "fixed_answers": [],
+  "followup_policy": {
+    "enabled": true,
+    "checkpoints": {
+      "intro_wait": 30,
+      "quote_wait": 5,
+      "daily_wait": 1440
+    },
+    "daily_sequence": [
+      "followup_1",
+      "followup_2",
+      "followup_3",
+      "followup_4",
+      "followup_5",
+      "followup_6"
+    ],
+    "allow_repeat_invitation": false
+  },
+  "large_party": {
+    "enabled": true,
+    "minimum": 7,
+    "source_ref": "https://china2go.com/雲南台灣自己/",
+    "introduction_sequence": [
+      "intro_1",
+      "intro_2",
+      "intro_3",
+      "intro_4",
+      "intro_5",
+      "intro_6",
+      "intro_7",
+      "intro_8",
+      "intro_9",
+      "intro_10",
+      "intro_11",
+      "intro_12"
+    ],
+    "brief_sequence": [
+      "intro_1",
+      "intro_10",
+      "intro_12"
+    ],
+    "group_text_overrides": {},
+    "opening_text": "你們7位以上可以安排獨立成團，日期、住宿與景點可以依需求討論～先給您參考經典8天行程，再幫您確認訂製方案。",
+    "completed_text": "這是雲南經典8天的參考安排，獨立成團的需求和費用我幫您確認～",
+    "contact_text": "方便留下LINE、微信或WhatsApp的QR Code或ID嗎？我把適合你們的方案整理給您～",
+    "unknown_route_text": "你們7位以上可以討論獨立成團，想了解雲南哪個方向呢？",
+    "include_explicit_private": false,
+    "notify_then_followup": false,
+    "handoff_label": "高價值・雲南包團",
+    "explicit_private_label": "雲南訂製"
+  }
+}
