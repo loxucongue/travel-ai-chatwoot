@@ -22,9 +22,7 @@ snap=json.loads((ROOT/'releases/tibet-entry-evidence-20261125/before.json').read
 def snapshot(r):
  x=runs[r]['input_snapshot'];return json.loads(x) if isinstance(x,str) else copy.deepcopy(x)
 base=snapshot(10293);cases=[]
-for cid,c in snap['cases'].items():
- for run in c['runs']:
-  if cid=='1252' and '4月1日' in json.dumps(run['decision'],ensure_ascii=False) and '提前' in json.dumps(run['decision'],ensure_ascii=False):cases.append((f'replay_{run["id"]}',snapshot(run['id'])))
+for rid in [9999,10002]:cases.append((f'replay_{rid}',snapshot(rid)))
 cases.append(('replay_1291',copy.deepcopy(base)))
 def add(key,text,route='peach_11d_2027',profile=None,history=None,state=None):
  ctx=copy.deepcopy(base);ctx.update(route_variant=route,profile=profile or {},state=state or {'opening_started':True,'intake_status':'done','completed_introductions':[route]},now='2026-11-25T14:00:00+00:00')
@@ -34,8 +32,8 @@ add('chengdu','可以先到成都住一晚，隔天按團期飛林芝嗎？',pro
 add('four','我們4位，可以4月1日另開桃花團嗎？',profile={'party_size':4,'departure_window':'2027年4月1日'})
 add('direct_price','不用再介紹車和酒店了，只想知道大概價格。','tibet_overview_10d')
 add('already_seen','請問這個行程費用？','tibet_overview_10d',history=[{'id':'vehicle-done','direction':'outgoing','status':'delivered','content':'這條用9座VIP商務車，車上有供氧設備。'},{'id':'hotel-done','direction':'outgoing','status':'delivered','content':'酒店安排已介紹：本線住宿為希爾頓，波密和珠峰住宿例外，依實際行程配置。'}])
-add('winter','這條冬遊冰川8天大概多少錢？','tibet_winter_8d')
-add('ali','阿里15天費用多少？','tibet_ali_15d',profile={'party_size':4})
+add('winter','這條冬遊冰川8天大概多少錢？','tibet_winter_8d',state={'opening_started':True,'intake_status':'done'})
+add('ali','阿里15天費用多少？','tibet_ali_15d',profile={'party_size':4},state={'opening_started':True,'intake_status':'done'})
 add('yunnan','我們2位3月去雲南8天，費用多少？','yunnan_tw_8d',profile={'party_size':2,'departure_window':'2027年3月'})
 add('beijing','北京5天住什麼酒店？','beijing_micro_5d')
 result={'status':'running','outbound_requests':0,'cases':[]}
