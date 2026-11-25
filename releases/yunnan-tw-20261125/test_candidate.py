@@ -103,8 +103,9 @@ if __name__=='__main__':
    with sqlite3.connect('file:/opt/china2go-ai/backend/data/app.db?mode=ro',uri=True) as d:raw=d.execute('select input_snapshot from automation_runs where id=11117').fetchone()[0]
    template=json.loads(raw);results=[]
    for case in json.loads(Path(args.cases).read_text()):
-    ctx=copy.deepcopy(template);ctx.update(skills=bundle,available_materials=materials,route_variant=case.get('route',ROUTE),profile=case.get('profile',{}),state=case.get('state',{'opening_started':True,'introduction_complete':True}),now='2026-11-25T13:00:00+00:00',event=case.get('event','customer_message'))
-    q=dict(template['buffered_questions'][-1],content=case['text']);ctx['buffered_questions']=[q];ctx['messages']=[dict(q,direction='incoming',status='received')]
+    target=case.get('route',ROUTE)
+    ctx=copy.deepcopy(template);ctx.update(skills=bundle,available_materials=materials,route_variant=target,profile=case.get('profile',{}),state=case.get('state',{'opening_started':True,'completed_introductions':[target],'introduction_route':target,'intake_status':'done'}),now='2026-11-25T13:00:00+00:00',event=case.get('event','customer_message'))
+    q=dict(template['buffered_questions'][-1],content=case['text'],created_at=ctx['now']);ctx['buffered_questions']=[q];ctx['messages']=[dict(q,direction='incoming',status='received')]
     ctx['messages']=case.get('history',[])+ctx['messages']
     dec,logs,_=runtime.run_agent(ctx)
     record={'id':case['id'],'question':case['text'],'decision':dec,'errors':[l.get('error_code') for l in logs if l.get('error_code')]};results.append(record)
