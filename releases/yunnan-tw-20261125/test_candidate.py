@@ -58,7 +58,7 @@ def structural(db,bundle,materials,Registry,manifest,temp):
  for n in [1,2,3,4,5,6,7,8]:
   profile={'party_size':n}
   assert bool(policy_for(bundle,ROUTE,profile))==(n>=7)
-  row=AutomationSession(id=-n,owner_id=1,tenant_id=1,environment='playground',engine_version='v3',mode='journey',messages=[],memory=profile,controls={'route_variant':ROUTE,'v3':{'opening_started':True},'simulation':{'status':'running'}},virtual_now='2026-11-25T13:00:00+00:00')
+  row=AutomationSession(id=-n,owner_id=1,environment='playground',engine_version='v3',mode='journey',messages=[],memory=profile,controls={'route_variant':ROUTE,'v3':{'opening_started':True},'simulation':{'status':'running'}},virtual_now='2026-11-25T13:00:00+00:00')
   context={'route_variant':ROUTE,'profile':profile,'skills':bundle,'messages':[],'now':row.virtual_now,'state':row.controls['v3'],'available_materials':materials}
   run=SimpleNamespace(id=-n,input_snapshot=context,trace={'logs':[]})
   service.apply_decision(db,row,run,bundle,runtime.Decision(action='reply',route_variant=ROUTE,route_choice='selected',start_introduction=True).model_dump())

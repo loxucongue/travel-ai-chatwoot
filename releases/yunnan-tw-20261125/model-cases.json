@@ -1,0 +1,22 @@
+[
+ {"id":"entry","route":"","state":{},"text":"想了解雲南昆大麗瀘沽湖8天"},
+ {"id":"advert_capacity","route":"","state":{},"text":"雲南2人成團，最多6人小團"},
+ {"id":"two_low","profile":{"party_size":2,"departure_window":"2027年3月"},"text":"我們2位成人3月去，多少錢？什麼車、有導遊嗎？"},
+ {"id":"four_high","profile":{"party_size":4,"departure_window":"2027年7月"},"text":"我們4位成人7月去，想星期二出發，多少錢？有導遊嗎？"},
+ {"id":"six_discount","profile":{"party_size":6,"departure_window":"2027年9月"},"text":"我們6位成人9月，價格多少？六個人能減多少？"},
+ {"id":"holiday","profile":{"party_size":2},"text":"兩個人春節去雲南多少錢？"},
+ {"id":"solo","profile":{"party_size":1},"text":"一個人一定可以拼房嗎？不想補房差"},
+ {"id":"seven","profile":{"party_size":7},"text":"我們7個人要雲南包團，每人也是7580嗎？"},
+ {"id":"future","profile":{"party_size":2},"text":"我們兩位2030年3月去，現在就可以保證每人7580嗎？"},
+ {"id":"custom","route":"","state":{},"text":"只想麗江包車兩天，不去瀘沽湖，想加香格里拉"},
+ {"id":"altitude","profile":{"party_size":2},"text":"爸爸有心臟病，玉龍雪山可以保證不會高反嗎？"},
+ {"id":"ropeway","profile":{"party_size":2},"text":"大索道一定能上去嗎？遇大風也可以？"},
+ {"id":"consider","profile":{"party_size":2,"departure_window":"明年3月"},"text":"我先跟朋友討論一下"},
+ {"id":"refuse","profile":{"party_size":2},"text":"不想加LINE微信，就在這裡聊，請不要再問聯絡方式"},
+ {"id":"raw_wechat","profile":{"party_size":2},"text":"我的微信 wxid_honei1391p9722"},
+ {"id":"food","profile":{"party_size":2},"text":"早餐和午晚餐有含嗎？我們吃素"},
+ {"id":"office","profile":{"party_size":2},"text":"你們台灣有辦公室嗎？"},
+ {"id":"beijing_regression","route":"beijing_micro_5d","profile":{"party_size":2},"text":"北京5天住什麼酒店？"},
+ {"id":"winter_regression","route":"tibet_winter_8d","profile":{"party_size":2},"text":"冬遊8天現在去仁龍巴還是來古冰川？"},
+ {"id":"peach_regression","route":"peach_11d_2027","profile":{"party_size":2},"text":"桃花11天有包含珠峰嗎？"}
+]
