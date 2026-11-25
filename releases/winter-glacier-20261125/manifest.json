@@ -1,0 +1,22 @@
+{
+  "hostname": "iZt4n729nx7wezpcx0v6z1Z",
+  "root": "/opt/china2go-ai",
+  "package_before": "f3aa8b04a5633fe5d11a4c9d7d2d2e612766d50e705578ca2f2d367ebdd304c5",
+  "skill_before": "2e038c0e80c062bb4704bf944e34d5a32197d517b73ba5e499ae91a457107660",
+  "disabled_assets": [
+    {
+      "id": 118,
+      "asset_key": "tibet_winter_8d_map",
+      "file_hash": "facdd52ff726a526b8576dd83bc594ddc2cd5ab1a07f49e2ea7ca893c3203c27",
+      "available": 1
+    },
+    {
+      "id": 122,
+      "asset_key": "tibet_winter_8d_laigu",
+      "file_hash": "b9b4577068e99c1028d9b4e4a523fcb9aa74e8599f33bd4c15402c3802d68707",
+      "available": 1
+    }
+  ],
+  "package_after": "351d58e59ac1b398267cdac463d5aad606610139a93cf887734338a5c73588d3",
+  "skill_after": "e137f52194d5233f2e4a3ea1e2a1c0492ed7becdcf7ecbe4edc7593d84bba32e"
+}
