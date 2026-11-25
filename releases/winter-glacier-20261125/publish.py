@@ -1,4 +1,4 @@
-﻿"""Narrow data hot-publish from a pinned repository checkout; never restart services."""
+"""Narrow data hot-publish from a pinned repository checkout; never restart services."""
 import contextlib,fcntl,hashlib,json,os,shutil,socket,sqlite3,subprocess,sys,time
 from pathlib import Path
 ROOT=Path('/opt/china2go-ai'); HERE=Path(__file__).resolve().parent
@@ -63,7 +63,7 @@ with (ROOT/'deploy.lock').open('a') as lock:
   with Session(create_engine('sqlite:///file:'+str(ROOT/'backend/data/app.db')+'?mode=ro&uri=true')) as db:
    bundle=compile_skills(db);r=bundle['routes']['tibet_winter_8d']
    assert '仁龍巴' in r['groups']['laigu']['text'] and not r['groups']['laigu']['assets']
-   assert '仁龍巴' in SkillRegistry(bundle).load('tibet-winter-8d')
+   assert '仁龍巴' in SkillRegistry(bundle).load('tibet-winter-8d')['instructions']
    from app.material_library import candidate_materials
    tenants=query('select distinct tenant_id from knowledge_versions')
    for t in tenants:
