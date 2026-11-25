@@ -1,0 +1,101 @@
+{
+  "status": "published_and_verified",
+  "runtime_release_commit": "2b65ba90726a804d0d67239d827863445fbe8276",
+  "route": "yunnan_tw_8d",
+  "release_mode": "hot-loaded config and new material namespace; no restart",
+  "source": "Business Taiwan SOP ZIP and password-protected website matched",
+  "real_model_acceptance": {
+    "status": "passed",
+    "model_case_count": 20,
+    "case_ids": [
+      "entry",
+      "advert_capacity",
+      "two_low",
+      "four_high",
+      "six_discount",
+      "holiday",
+      "solo",
+      "seven",
+      "future",
+      "custom",
+      "altitude",
+      "ropeway",
+      "consider",
+      "refuse",
+      "raw_wechat",
+      "food",
+      "office",
+      "beijing_regression",
+      "winter_regression",
+      "peach_regression"
+    ],
+    "source_report": "/opt/china2go-ai/releases/yunnan-evidence-20261125/model-v2.json",
+    "package_hash": "d67644657dc1f0635f6e6d7916f742ebbaa70b35e769b1a58cf6ae9fc4bc9f7a",
+    "skill_hash": "e96a59bfbe18936621488ad08c4082ce624b598267a5e62466ad5c5ddce13d85",
+    "repaired_contract_cases": [
+      "four_high",
+      "ropeway",
+      "beijing_regression"
+    ],
+    "virtual_checks": [
+      "intake 29/30 seconds",
+      "intake persisted across JSON reload",
+      "known party not asked again",
+      "quote 299/300 seconds",
+      "material hash/text dedup"
+    ]
+  },
+  "public_api": {
+    "mode": "after",
+    "temporary_identity": 10,
+    "customer_messages_sent": 0,
+    "enabled_routes": [
+      "peach_11d_2027",
+      "peach_9d_2027",
+      "tibet_essence_8d",
+      "tibet_linzhi_8d",
+      "tibet_overview_10d",
+      "tibet_winter_8d",
+      "tibet_ali_15d",
+      "beijing_micro_5d",
+      "yunnan_tw_8d"
+    ],
+    "route_count": 9,
+    "asset_previews": 49,
+    "existing_catalog_unchanged": true,
+    "readiness": {
+      "knowledge_imported": true,
+      "assets_ready": 49,
+      "assets_total": 49,
+      "missing_assets": [],
+      "ai_reply_ready": true,
+      "sop_ready": true
+    },
+    "status": "passed",
+    "temporary_identity_disabled": true
+  },
+  "public_static_before_after_equal": true,
+  "protected_files_unchanged": 783,
+  "existing_routes_preserved": 8,
+  "baseline_repository_tests": {
+    "passed": 125,
+    "failed": 10,
+    "unchanged_backend_from": "c27c401",
+    "failures": [
+      "9 cases test_any_ordinary_answer_starts_intro_and_keeps_question",
+      "test_public_text_only_not_internal_handoff_reason"
+    ]
+  },
+  "limitations": [
+    "Business poster says maximum 10; Taiwan SOP says maximum 6. Poster excluded pending correction.",
+    "Existing Chatwoot labels POST 422 continues (45 error lines in last 5 minutes); not introduced or repaired by this route release.",
+    "No real customer messages sent; actual Facebook/Instagram delivery and future customer conversion unverified.",
+    "Price source has no explicit validity year; reference prices only, holidays/private/children require confirmation."
+  ],
+  "resource_check": {
+    "memory_available_mib": 2151,
+    "swap_used_mib": 0
+  },
+  "evidence_remote": "/opt/china2go-ai/releases/yunnan-evidence-20261125",
+  "backup_remote": "/opt/china2go-ai/backups/yunnan-tw-20261125"
+}
