@@ -31,7 +31,7 @@ assert candidate['route_variant']==R and len(active)==49 and len(manifest)==50
 assert all(sha(HERE/'media'/(a['sha256']+'.jpg'))==a['sha256'] for a in manifest)
 assert not any(R+'_yn_1' in g['asset_keys'] for g in candidate['content_groups'].values())
 assert shutil.disk_usage(ROOT).free>1024**3
-assert b'MemAvailable:' in Path('/proc/meminfo').read_bytes()
+assert int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:'))) > 512*1024,'less than 512 MiB available'
 mode=sys.argv[1]
 with (ROOT/'deploy.lock').open('a') as lock:
  fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
