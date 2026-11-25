@@ -24,6 +24,9 @@ from app.reception_v3.skills import compile_skills,SkillRegistry
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 candidate=json.loads((HERE/'route-package.json').read_text());rp._validate(candidate,HERE/'route-package.json')
+assert '???' not in (HERE/'route-package.json').read_text(), 'invalid text encoding'
+assert '仁龍巴冰川' in candidate['knowledge_facts'][0]['text'], 'destination not updated'
+assert '仁龍巴冰川' in (HERE/'SKILL.md').read_text(), 'skill destination not updated'
 old=json.loads(PKG.read_text())
 assert candidate['seasonal_pricing']==old['seasonal_pricing']
 assert candidate['content_sequence']==old['content_sequence']
