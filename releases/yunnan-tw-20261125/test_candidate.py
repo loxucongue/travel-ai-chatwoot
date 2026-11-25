@@ -72,7 +72,26 @@ def structural(db,bundle,materials,Registry,manifest,temp):
  repeated={'content':'已發文字','asset_key':'same','media_hash':'samehash'}
  row=SimpleNamespace(messages=[dict(repeated,status='delivered',direction='outgoing')])
  assert undelivered_parts(row,[repeated,{'content':'新文字'}])==[{'content':'新文字'}]
- return {'status':'passed','plans':results,'enabled_routes':list(bundle['routes']),'active_assets':len(materials),'all_existing_routes_unchanged':True,'outbound_requests':0}
+ now='2026-11-25T13:00:00+00:00'
+ def fresh(profile=None):
+  return AutomationSession(id=-90,owner_id=1,inbox_binding_id=1,environment='playground',messages=[],memory=profile or {},controls={'route_variant':ROUTE,'v3':{'opening_started':True},'simulation':{'status':'running','last_wall_at':now}},virtual_now=now)
+ row=fresh();value=service.state(row)
+ assert service.begin_intake(row,value,bundle,ROUTE)
+ service.save(row,value);part=row.messages[-1];service.complete_delivery(row,part['id'],'simulated_delivered')
+ service.advance(row,service.later(now,29));assert service.state(row)['intake_status']=='waiting'
+ row.controls=json.loads(json.dumps(row.controls));row.messages=json.loads(json.dumps(row.messages))
+ service.advance(row,service.later(now,30));assert service.state(row)['pending_event']=='intake_due'
+ known=fresh({'party_size':2});assert not service.begin_intake(known,service.state(known),bundle,ROUTE)
+ quote=fresh({'party_size':2,'departure_window':'2027年3月'})
+ run=SimpleNamespace(id=-90,input_snapshot={'event':'customer_message','profile':quote.memory,'skills':bundle,'messages':[],'now':now,'available_materials':materials},trace={'logs':[]})
+ dec=runtime.Decision(route_variant=ROUTE,messages=[{'text':'目前3月參考團費每人人民幣7,580，2人一間。','is_trip_quote':True}],followup_checkpoint='quote_wait',next_check_minutes=5).model_dump()
+ service.apply_decision(db,quote,run,bundle,dec)
+ for m in list(quote.messages):
+  if m.get('status')=='draft':service.complete_delivery(quote,m['id'],'simulated_delivered')
+ value=service.state(quote);assert value.get('post_quote_pending'),value
+ service.advance(quote,service.later(now,299));assert service.state(quote).get('pending_event')!='silence_due'
+ service.advance(quote,service.later(now,300));assert service.state(quote).get('pending_event')=='silence_due'
+ return {'status':'passed','plans':results,'enabled_routes':list(bundle['routes']),'active_assets':len(materials),'all_existing_routes_unchanged':True,'virtual_checks':['intake 29/30 seconds','intake persisted across JSON reload','known party not asked again','quote 299/300 seconds','material hash/text dedup'],'outbound_requests':0}
 
 if __name__=='__main__':
  parser=argparse.ArgumentParser();parser.add_argument('--cases');parser.add_argument('--output',required=True);args=parser.parse_args()
