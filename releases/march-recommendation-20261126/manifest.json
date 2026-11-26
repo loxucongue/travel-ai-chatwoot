@@ -3,48 +3,48 @@
     "target": "backend/app/reception_v3/skills/tibet-reception/SKILL.md",
     "payload": "payload/backend/app/reception_v3/skills/tibet-reception/SKILL.md",
     "before_sha256": "7ad7af6be323ef9ad3853caa068219a7aa9c19ee244b20156589287d2a2ad3e4",
-    "after_sha256": "d8a56d722fdd52e5efb9320c12aace56e65ff15d6e49c6a418f2b0b45d03c07e"
+    "after_sha256": "58a5ab44178d5c0c4b5bc2868182d2d26986f8e0aff3359b773065584624da9d"
   },
   {
     "target": "backend/app/reception_v3/skills/peach-11d-2027/SKILL.md",
     "payload": "payload/backend/app/reception_v3/skills/peach-11d-2027/SKILL.md",
     "before_sha256": "b4dcaf07245f83b940cb883410da91ca19dc9984fea156c42ec988bcd8544d4e",
-    "after_sha256": "f5eefac08ed3968d6615af14c037e0cb92030c6b28f85561f8d70c3f3d6eb166"
+    "after_sha256": "1de3f715d63f68f8841605bcf9810927db2e240ff3710aa977f524e5d0cb7b89"
   },
   {
     "target": "backend/app/reception_v3/skills/peach-9d-2027/SKILL.md",
     "payload": "payload/backend/app/reception_v3/skills/peach-9d-2027/SKILL.md",
     "before_sha256": "c1260e9ada8cd9de3f2049c0c5a988ca62fbaffcbb51b4a6f5ab2e335337a12f",
-    "after_sha256": "b80b66fcaf4ad1f9367e5611dce9ce0d0756a349eed999114e9eb1a17d03bb11"
+    "after_sha256": "1bf6d714f1395c7877fd23330b82bee57e42be3f53cb7c4546a7e380c83d7318"
   },
   {
     "target": "backend/app/reception_v3/skills/tibet-essence-8d/SKILL.md",
     "payload": "payload/backend/app/reception_v3/skills/tibet-essence-8d/SKILL.md",
     "before_sha256": "8e672aa1ead372d997beb9c83e512d43b7ddc49df463008bc043044f29e9f174",
-    "after_sha256": "261f9fe4b25bbe6f667832c6bd83e8df635bea4e7c97f93083a8e053dd608bec"
+    "after_sha256": "d48766edbb06df4c6bd66218ad4982c49297a43efb805943521c0a21eef4c66c"
   },
   {
     "target": "backend/app/reception_v3/skills/tibet-linzhi-8d/SKILL.md",
     "payload": "payload/backend/app/reception_v3/skills/tibet-linzhi-8d/SKILL.md",
     "before_sha256": "df2b5782fd8980e0402d4664e802c837166426b40018dc4e1a389272916ea206",
-    "after_sha256": "239d1fd9f1af9fec8ba240e8b3f7fc1a42fafc1c8b6c6a90c90c0f5d6aff8519"
+    "after_sha256": "a47e7478a03643dfab5e280f8d5c0edf8be56ede1dfdcc9371819a277329d8e1"
   },
   {
     "target": "backend/app/reception_v3/skills/tibet-overview-10d/SKILL.md",
     "payload": "payload/backend/app/reception_v3/skills/tibet-overview-10d/SKILL.md",
     "before_sha256": "183db4488df184fee81d96e4a2fc2a12ac22f42a306fb70e44a25bfee9315cb3",
-    "after_sha256": "e8b69ab0b2f34d651fb827925906081c70f7b3baa11c7ffd6577df44021b2559"
+    "after_sha256": "12e546f34fe5b7c19d4512803462b845e36ceb0fa502f4577f8a61b957db929e"
   },
   {
     "target": "backend/app/reception_v3/skills/tibet-winter-8d/SKILL.md",
     "payload": "payload/backend/app/reception_v3/skills/tibet-winter-8d/SKILL.md",
     "before_sha256": "65899d1bfac16737239e487681374e97877293bd07844fb40740ad844fbd5510",
-    "after_sha256": "6da3f3a1e08474f0a5cc01b2da28666f610dfa31aaed172056c7bd18beb60812"
+    "after_sha256": "5f4f370df8b56060d70026051b31ad24f44627ed15e3f0c3328078ef8a3b06b8"
   },
   {
     "target": "backend/app/reception_v3/runtime.py",
     "payload": "payload/backend/app/reception_v3/runtime.py",
     "before_sha256": "37656c450e0a7cb340fe05cef3c634ba52746c83516493cd9cf079179f0a2730",
-    "after_sha256": "75a5908fb2f46115ee90a925b0c0703366100d6f6983ca9db64423ebaaa840f7"
+    "after_sha256": "2303d6dee2d45b400680db1abbf70cb19210b31bf913206d2c3bcb40033d1d8b"
   }
 ]
