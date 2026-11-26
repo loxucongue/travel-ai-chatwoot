@@ -57,7 +57,7 @@ def main():
     assert cmd('git','-C',str(HERE),'rev-parse','HEAD')==expected
     assert not cmd('git','-C',str(HERE),'status','--porcelain','--untracked-files=no')
     assert len(M)==4 and all(sha(HERE/m['payload'])==m['after_sha256'] and sha(ROOT/m['target'])==m['before_sha256'] for m in M)
-    
+
     for m in M:compile((HERE/m['payload']).read_text(),m['target'],'exec')
     assert shutil.disk_usage(ROOT).free>1024**3
     assert int(next(x.split()[1] for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemAvailable:')))>1024*1024
