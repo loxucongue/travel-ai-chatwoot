@@ -5,10 +5,11 @@ spec=importlib.util.spec_from_file_location('bootstrap',Path(__file__).with_name
 def contender(path,event):
     with b.acquire_lock(Path(path),event.set):time.sleep(.1)
 def main():
+    context=multiprocessing.get_context('spawn')
     with tempfile.TemporaryDirectory() as folder:
-        event=multiprocessing.Event();path=Path(folder)/'lock'
+        event=context.Event();path=Path(folder)/'lock'
         with b.acquire_lock(path,lambda:None):
-            child=multiprocessing.Process(target=contender,args=(str(path),event));child.start()
+            child=context.Process(target=contender,args=(str(path),event));child.start()
             assert not event.wait(.5),'standby processed while old owner held lock'
         assert event.wait(3),'standby failed to take over after drain'
         child.join(3);assert child.exitcode==0
