@@ -1,0 +1,204 @@
+{
+  "deployment_status": "not_deployed",
+  "boundary_checks": [
+    "ad title",
+    "preserve customer: 3月",
+    "preserve customer: 我們3月出發",
+    "preserve customer: 3~4月｜西藏桃花節＋珠峰 11日，我們4月2日出發",
+    "preserve customer: 我們想去桃花11日，只有九天假期",
+    "no mutation",
+    "stale title date removed",
+    "route preserved",
+    "do not clear unrelated older date",
+    "later actual date preserved",
+    "title cannot become need",
+    "partial range explicit",
+    "partial has actual dates",
+    "examples stay inside open March segment",
+    "single day revalidated 2027-03-02",
+    "single day revalidated 2027-03-09",
+    "closed segment remains closed"
+  ],
+  "actual_model_acceptance": [
+    {
+      "historical_run": 10192,
+      "repeat": 0,
+      "passed": true
+    },
+    {
+      "historical_run": 10766,
+      "repeat": 0,
+      "passed": true
+    },
+    {
+      "historical_run": 11339,
+      "repeat": 0,
+      "passed": true
+    },
+    {
+      "historical_run": 11346,
+      "repeat": 0,
+      "passed": true
+    },
+    {
+      "historical_run": 10192,
+      "repeat": 1,
+      "passed": true
+    },
+    {
+      "historical_run": 10766,
+      "repeat": 1,
+      "passed": true
+    },
+    {
+      "historical_run": 11339,
+      "repeat": 1,
+      "passed": true
+    },
+    {
+      "historical_run": 11346,
+      "repeat": 1,
+      "passed": true
+    },
+    {
+      "historical_run": 10192,
+      "repeat": 2,
+      "passed": true
+    },
+    {
+      "historical_run": 10766,
+      "repeat": 2,
+      "passed": true
+    },
+    {
+      "historical_run": 11339,
+      "repeat": 2,
+      "passed": true
+    },
+    {
+      "historical_run": 11346,
+      "repeat": 2,
+      "passed": true
+    }
+  ],
+  "plan_acceptance": [
+    {
+      "run": 10192,
+      "status": "passed",
+      "draft_count": 19,
+      "quote_texts": []
+    },
+    {
+      "run": 10766,
+      "status": "passed",
+      "draft_count": 19,
+      "quote_texts": []
+    },
+    {
+      "run": 11339,
+      "status": "passed",
+      "draft_count": 4,
+      "quote_texts": [
+        "西藏桃花節9日遊\n拼團升級「4-6人小團」優惠價：人民幣¥ 10,780 /人\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費"
+      ]
+    },
+    {
+      "run": 11346,
+      "status": "passed",
+      "draft_count": 1,
+      "quote_texts": []
+    },
+    {
+      "run": 10192,
+      "status": "passed",
+      "draft_count": 1,
+      "quote_texts": []
+    },
+    {
+      "run": 10766,
+      "status": "passed",
+      "draft_count": 19,
+      "quote_texts": []
+    },
+    {
+      "run": 11339,
+      "status": "passed",
+      "draft_count": 4,
+      "quote_texts": [
+        "西藏桃花節9日遊\n拼團升級「4-6人小團」優惠價：人民幣¥ 10,780 /人\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費"
+      ]
+    },
+    {
+      "run": 11346,
+      "status": "passed",
+      "draft_count": 1,
+      "quote_texts": []
+    },
+    {
+      "run": 10192,
+      "status": "passed",
+      "draft_count": 19,
+      "quote_texts": []
+    },
+    {
+      "run": 10766,
+      "status": "passed",
+      "draft_count": 19,
+      "quote_texts": []
+    },
+    {
+      "run": 11339,
+      "status": "passed",
+      "draft_count": 3,
+      "quote_texts": [
+        "西藏桃花節9日遊\n拼團升級「4-6人小團」優惠價：人民幣¥ 10,780 /人\n\n包含：高原保障險、入藏文件、全程供氧住宿（含早餐）、9座VIP供氧車、導遊、門票\n\n不含：機票、午晚餐、小費、個人花費"
+      ]
+    },
+    {
+      "run": 11346,
+      "status": "passed",
+      "draft_count": 1,
+      "quote_texts": []
+    }
+  ],
+  "regression": {
+    "total": 155,
+    "passed": 129,
+    "existing_failed": 26,
+    "new_failed": 0,
+    "failure_ids": [
+      "tests/test_auto_advisor_followup_20261017.py::test_preference_wording_on_actual_outgoing_plan[\\u4f60\\u6bd4\\u8f83\\u559c\\u6b22\\u54ea\\u4e00\\u6761\\uff1f-\\u4f60\\u559c\\u6b22\\u54ea\\u4e00\\u6761\\uff1f]",
+      "tests/test_auto_advisor_followup_20261017.py::test_preference_wording_on_actual_outgoing_plan[\\u60a8\\u9019\\u6b21\\u6bd4\\u8f03\\u60f3\\u770b\\u51b0\\u5ddd\\u85cd\\u51b0\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f-\\u60a8\\u9019\\u6b21\\u60f3\\u770b\\u51b0\\u5ddd\\u85cd\\u51b0\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f]",
+      "tests/test_auto_advisor_followup_20261017.py::test_preference_wording_on_actual_outgoing_plan[\\u60a8\\u9019\\u8d9f\\u6bd4\\u8f03\\u671f\\u5f85\\u7684\\u662f\\u6843\\u82b1\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f-\\u60a8\\u9019\\u8d9f\\u671f\\u5f85\\u7684\\u662f\\u6843\\u82b1\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f]",
+      "tests/test_reception_v3_skills.py::test_dialogue_and_customer_preferences_remain_in_current_context",
+      "tests/test_reception_v3_skills.py::test_protocol_repair_follows_recurring_context_and_preserves_reply",
+      "tests/test_reception_v3_skills.py::test_switch_loads_new_route_without_losing_conversation",
+      "tests/test_reception_v3_skills.py::test_unselected_then_model_loads_both_for_comparison",
+      "tests/test_route_understanding_20261031.py::test_choice_repair_contains_rejected_candidate_and_authority_after_product_tools",
+      "tests/test_route_understanding_20261031.py::test_contract_failure_ends_once_while_transport_keeps_retry",
+      "tests/test_route_understanding_20261031.py::test_execution_reuses_verified_inference_and_rejects_stale_input",
+      "tests/test_route_understanding_20261031.py::test_inquiry_then_explicit_selection_are_separate_turns",
+      "tests/test_route_understanding_20261031.py::test_offer_set_and_choice_are_persisted_from_audited_node",
+      "tests/test_route_understanding_20261031.py::test_operator_retry_keeps_incident_and_does_not_notify_again",
+      "tests/test_route_understanding_20261031.py::test_optional_failed_outreach_waits_but_does_not_hide_customer_question[introduction_completed-True]",
+      "tests/test_route_understanding_20261031.py::test_schema_repair_is_bounded_and_classified_as_nonretryable",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[120-4\\uff5e6\\u4f4d-profile0]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[60-4\\uff5e6\\u4f4d-profile0]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[90-4\\uff5e6\\u4f4d-profile0]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[90-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[90-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests/test_visual_reception_20261106.py::test_package_migration_idempotent_and_preserves_facts",
+      "tests/test_visual_reception_20261106.py::test_semantic_truncation_retries_with_more_output"
+    ]
+  },
+  "observations": [
+    "最终候选4个场景各3次真实模型回放，12次符合本次业务验收；12份计划编译通过，无对客发送。",
+    "中间候选v2发生一次模型请求超时；最终候选12次未复现，没有将中间超时计作通过。",
+    "无批量历史资料清空；缺失历史本身不作为日期错误的证据。",
+    "有限回放不能证明全量会话零错误或转化率提升。"
+  ]
+}
