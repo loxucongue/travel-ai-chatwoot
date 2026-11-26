@@ -55,5 +55,33 @@ or business-quality issues are eliminated. Character reductions do not directly
 measure improved conversion or model attention. A model decision passing schema
 is not by itself full semantic acceptance of every historical date statement.
 
-Deployment status: pending preflight, applicable regression comparison and public
-acceptance. Record actual commit/worker IDs and final results after switching.
+Deployment status: switched and accepted on 2026-11-26.
+Installed source commit: f484a35ebeac32cd7e7091183f5dbc9f6ad00e73.
+Runtime SHA256: 4397948c1e970789a12ee8e584d661829e90a38fcbc4b0c76b54eaf9fdd4fc54.
+Worker PID 568977; playground PID 568746; API PID 544255 unchanged.
+785 protected files compared; only the four manifest files changed. Public
+homepage, automation deep link, health API and actual JS/CSS content hashes
+match before release. Temporary-identity login/logout, 9-product catalog,
+49 Yunnan asset hash/MIME checks passed; temporary identity disabled afterward.
+Worker heartbeats were fresh; disabled glacier assets 118/122 remain disabled.
+1437 is running with human=false and no pending/failed event; no replay created.
+
+Applicable baseline/candidate regression: 153 cases each, 127 passed and the
+same 26 failures. One intentional contract assertion was updated to require
+unrelated facts to be absent; the first candidate run had this additional
+expected failure, and the final run has no new failures. Existing failures
+include historical fixture paths and older protocol/intake/wording expectations;
+they are not declared resolved. New budget preflight and one-terminal-attempt
+integration tests: 2 passed. Standalone unit checks: 3 passed. Lock/handoff
+exclusion, takeover and released-lock reuse passed.
+
+Known operational observations: existing Chatwoot labels 422 and individual
+conversation reads 404 remain. Resource check: 2,374 MiB available memory,
+no swap used; disk 3.5 GiB free. Read-only inspection found a 5.8 GiB SQLite
+WAL; no WAL/data deletion or unrelated cleanup was attempted. This operational
+storage observation is separate from the model-input correction.
+
+Remote protected evidence:
+/opt/china2go-ai/releases/context-deploy-evidence-20261126/final.json
+/opt/china2go-ai/releases/context-evaluation-20261126/
+Rollback files: /opt/china2go-ai/backups/context-budget-20261126/

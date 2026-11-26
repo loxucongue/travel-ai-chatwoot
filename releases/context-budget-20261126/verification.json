@@ -1,0 +1,277 @@
+{
+  "audit_since": "2026-11-19",
+  "live_runs": 1973,
+  "conversations": 433,
+  "overflow_runs": 10,
+  "overflow_conversations": [
+    481,
+    1323,
+    1346,
+    1437
+  ],
+  "fixed_input_budget": {
+    "before": {
+      "10192": {
+        "characters": 250063,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027"
+        ]
+      },
+      "10680": {
+        "characters": 304290,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027",
+          "peach-9d-2027"
+        ]
+      },
+      "10766": {
+        "characters": 247827,
+        "loaded": [
+          "tibet-reception",
+          "tibet-overview-10d"
+        ]
+      },
+      "11339": {
+        "characters": 263683,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027"
+        ]
+      },
+      "11346": {
+        "characters": 320030,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027",
+          "peach-9d-2027"
+        ]
+      }
+    },
+    "after": {
+      "10192": {
+        "characters": 183099,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027"
+        ]
+      },
+      "10680": {
+        "characters": 237599,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027",
+          "peach-9d-2027"
+        ]
+      },
+      "10766": {
+        "characters": 180957,
+        "loaded": [
+          "tibet-reception",
+          "tibet-overview-10d"
+        ]
+      },
+      "11339": {
+        "characters": 180319,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027"
+        ]
+      },
+      "11346": {
+        "characters": 185901,
+        "loaded": [
+          "tibet-reception",
+          "peach-11d-2027",
+          "peach-9d-2027"
+        ]
+      }
+    }
+  },
+  "nine_route_two_event_matrix": {
+    "peach_11d_2027:customer_message": {
+      "characters": 178481,
+      "loaded": [
+        "tibet-reception",
+        "peach-11d-2027"
+      ]
+    },
+    "peach_11d_2027:silence_due": {
+      "characters": 155134,
+      "loaded": [
+        "tibet-reception",
+        "peach-11d-2027"
+      ]
+    },
+    "peach_9d_2027:customer_message": {
+      "characters": 173520,
+      "loaded": [
+        "tibet-reception",
+        "peach-9d-2027"
+      ]
+    },
+    "peach_9d_2027:silence_due": {
+      "characters": 153928,
+      "loaded": [
+        "tibet-reception",
+        "peach-9d-2027"
+      ]
+    },
+    "beijing_micro_5d:customer_message": {
+      "characters": 183099,
+      "loaded": [
+        "tibet-reception",
+        "beijing-micro-5d"
+      ]
+    },
+    "beijing_micro_5d:silence_due": {
+      "characters": 161023,
+      "loaded": [
+        "tibet-reception",
+        "beijing-micro-5d"
+      ]
+    },
+    "tibet_ali_15d:customer_message": {
+      "characters": 160118,
+      "loaded": [
+        "tibet-reception",
+        "tibet-ali-15d"
+      ]
+    },
+    "tibet_ali_15d:silence_due": {
+      "characters": 141024,
+      "loaded": [
+        "tibet-reception",
+        "tibet-ali-15d"
+      ]
+    },
+    "tibet_essence_8d:customer_message": {
+      "characters": 163904,
+      "loaded": [
+        "tibet-reception",
+        "tibet-essence-8d"
+      ]
+    },
+    "tibet_essence_8d:silence_due": {
+      "characters": 144080,
+      "loaded": [
+        "tibet-reception",
+        "tibet-essence-8d"
+      ]
+    },
+    "tibet_linzhi_8d:customer_message": {
+      "characters": 154692,
+      "loaded": [
+        "tibet-reception",
+        "tibet-linzhi-8d"
+      ]
+    },
+    "tibet_linzhi_8d:silence_due": {
+      "characters": 139422,
+      "loaded": [
+        "tibet-reception",
+        "tibet-linzhi-8d"
+      ]
+    },
+    "tibet_overview_10d:customer_message": {
+      "characters": 179081,
+      "loaded": [
+        "tibet-reception",
+        "tibet-overview-10d"
+      ]
+    },
+    "tibet_overview_10d:silence_due": {
+      "characters": 156851,
+      "loaded": [
+        "tibet-reception",
+        "tibet-overview-10d"
+      ]
+    },
+    "tibet_winter_8d:customer_message": {
+      "characters": 154788,
+      "loaded": [
+        "tibet-reception",
+        "tibet-winter-8d"
+      ]
+    },
+    "tibet_winter_8d:silence_due": {
+      "characters": 138647,
+      "loaded": [
+        "tibet-reception",
+        "tibet-winter-8d"
+      ]
+    },
+    "yunnan_tw_8d:customer_message": {
+      "characters": 171313,
+      "loaded": [
+        "tibet-reception",
+        "yunnan-tw-8d"
+      ]
+    },
+    "yunnan_tw_8d:silence_due": {
+      "characters": 143534,
+      "loaded": [
+        "tibet-reception",
+        "yunnan-tw-8d"
+      ]
+    }
+  },
+  "fact_preservation_routes": [
+    "peach_11d_2027",
+    "peach_9d_2027",
+    "beijing_micro_5d",
+    "tibet_ali_15d",
+    "tibet_essence_8d",
+    "tibet_linzhi_8d",
+    "tibet_overview_10d",
+    "tibet_winter_8d",
+    "yunnan_tw_8d"
+  ],
+  "model_replay_cases": 5,
+  "actual_model_route_smoke_cases": 9,
+  "isolated_delivery_plan_checks": [
+    {
+      "run": "11346",
+      "status": "passed",
+      "draft_count": 1
+    },
+    {
+      "run": "11339",
+      "status": "passed",
+      "draft_count": 4
+    },
+    {
+      "run": "10192",
+      "status": "passed",
+      "draft_count": 1
+    },
+    {
+      "run": "10680",
+      "status": "passed",
+      "draft_count": 1
+    },
+    {
+      "run": "10766",
+      "status": "passed",
+      "draft_count": 19
+    }
+  ],
+  "regression": {
+    "baseline_total": 153,
+    "baseline_failures": 26,
+    "candidate_total": 153,
+    "candidate_failures": 26,
+    "new_failures": [],
+    "fixed": []
+  },
+  "focused_integration_tests": 2,
+  "unit_tests": 3,
+  "customer_test_messages_sent": 0,
+  "limitations": [
+    "Existing 26 baseline failures are not fixed by this release.",
+    "Historical snapshots may contain older product facts; model smoke is not exhaustive semantic acceptance.",
+    "Full common rules and customer-turn scripts remain large; no proof of conversion/attention improvement.",
+    "No historical failed customer events are replayed."
+  ]
+}
