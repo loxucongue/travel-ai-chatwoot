@@ -1,0 +1,26 @@
+[
+  {
+    "target": "backend/app/reception_v3/consultation.py",
+    "before_sha256": "0bc2274a7df72cc0da37003eb2381dc99da1ab35f8a8f8442c30c81caeb7895a",
+    "payload": "payload/backend/app/reception_v3/consultation.py",
+    "after_sha256": "1970d2631c3af2a065f58811098bf0eb47593181ce27ad9e7f0c7e2f558a5c18"
+  },
+  {
+    "target": "backend/app/reception_v3/route_understanding.py",
+    "before_sha256": "092b9fbb2ae0f10aaff397aa5deb2fd783bfb613091d4c72c8b9329f5f991369",
+    "payload": "payload/backend/app/reception_v3/route_understanding.py",
+    "after_sha256": "9070143ab65efeaba686d201c7c055992620483d1eacdbb97cf43ae6001111a8"
+  },
+  {
+    "target": "backend/app/reception_v3/runtime.py",
+    "before_sha256": "4397948c1e970789a12ee8e584d661829e90a38fcbc4b0c76b54eaf9fdd4fc54",
+    "payload": "payload/backend/app/reception_v3/runtime.py",
+    "after_sha256": "0e88b09741cda26de633b9ef67ac5f13d46eead25f040c36582685c38040f723"
+  },
+  {
+    "target": "backend/app/reception_v3/seasonal_quotes.py",
+    "before_sha256": "8124cac2e333635d7615a03bb17a0be11efc91792f47e8b6522e9000ad14666b",
+    "payload": "payload/backend/app/reception_v3/seasonal_quotes.py",
+    "after_sha256": "b801a9f4311761f3ab7739c61abb8757c0d494a97b95c52726cee65ac3299f5c"
+  }
+]
