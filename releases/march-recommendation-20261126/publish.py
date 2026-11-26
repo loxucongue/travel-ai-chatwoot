@@ -69,8 +69,9 @@ def main():
         (BACK/'inventory.json').write_text(json.dumps(before));os.chmod(BACK/'inventory.json',0o600)
         for m in M:
             p=BACK/m['target'];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes((ROOT/m['target']).read_bytes())
-        # Snapshot is forensic only: rollback never restores it over new customer data.
-        with sqlite3.connect(ROOT/'backend/data/app.db') as db,sqlite3.connect(BACK/'app.db') as dest:db.backup(dest)
+        # No data migration: inventory already snapshots schema, settings and assets.
+        # Never copy the multi-GB live SQLite database while holding its read lock;
+        # rollback restores only release files and preserves all new customer writes.
         assert before['pids']==inventory()['pids'] and before['api_pid']==pid('china2go-api')
         try:
             for m in M:atomic(ROOT/m['target'],(HERE/m['payload']).read_bytes())
