@@ -62,7 +62,9 @@ def test_selected_route_preloads_only_its_complete_config(monkeypatch):
         assert marker in request
     for marker in ('PRICE_ONLY_11', 'INTRO_ONLY_11'):
         assert marker not in request
-    assert 'FACT_ONLY_11' in request
+    # Other products remain discoverable, but their facts are loaded on demand.
+    assert 'FACT_ONLY_11' not in request
+    assert 'peach-11d-2027' in request
     assert 'WEB_ONLY' in request
     assert set(logs[-1]['loaded_skills']) == {'tibet-reception', 'peach-9d-2027'}
     assert decision['messages'][0]['text'] == '回答原稿'
