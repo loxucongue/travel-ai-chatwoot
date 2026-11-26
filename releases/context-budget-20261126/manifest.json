@@ -1,0 +1,26 @@
+[
+  {
+    "target": "backend/app/reception_v3/prompt.py",
+    "before_sha256": "1c43780853baf581a1e5507935899d473dfd1ea49a67f86ef177985e7d002bd8",
+    "payload": "payload/backend/app/reception_v3/prompt.py",
+    "after_sha256": "6fa5a3a2cc3dc5defcda31eaf3c82046f78fdbbde902730193e9d9324247078a"
+  },
+  {
+    "target": "backend/app/reception_v3/runtime.py",
+    "before_sha256": "2303d6dee2d45b400680db1abbf70cb19210b31bf913206d2c3bcb40033d1d8b",
+    "payload": "payload/backend/app/reception_v3/runtime.py",
+    "after_sha256": "4397948c1e970789a12ee8e584d661829e90a38fcbc4b0c76b54eaf9fdd4fc54"
+  },
+  {
+    "target": "backend/app/reception_v3/service.py",
+    "before_sha256": "a670c96d6e400e61b992530e003ae4068928175411aa007206af0133e9778520",
+    "payload": "payload/backend/app/reception_v3/service.py",
+    "after_sha256": "a3e1446507e5bf84647861759242377ee69b34060e6cd79f8fc305570d1b5386"
+  },
+  {
+    "target": "backend/app/reception_v3/skills.py",
+    "before_sha256": "574be25be37c197a10196aca26092fdb606e66f6c16452c60c3b4a2e2f1b4a5b",
+    "payload": "payload/backend/app/reception_v3/skills.py",
+    "after_sha256": "c75737a5693a60a8f7c7bf58b95e0880a2129d0dbd4246368551d55d7e86c273"
+  }
+]

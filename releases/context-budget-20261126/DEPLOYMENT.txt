@@ -1,0 +1,59 @@
+Context budget correction, 2026-11-26
+
+Scope: four existing Python modules only. No database migration, route/product
+configuration changes, customer sends, historical job replay, or limit increase.
+Actual installed source is preserved under baseline; manifest pins before/after
+SHA256 independently of repository HEAD. Other published March/Yunnan/glacier
+and delivery fixes must remain untouched.
+
+Changes:
+- Remove duplicated all-product facts from each main reception task. Loaded
+  Skills retain authoritative facts; catalog and load_skill retain discovery.
+- Optional silence tasks preload route rules, scripts and facts, omitting full
+  introduction and the entire image library. Explicit load_skill upgrades a
+  partial view once; subsequent reads reuse already present content.
+- Record character budget and per-field sizes before every main generation,
+  including calls after tool use. Logs record lengths, not message contents.
+- An identical oversized request fails once instead of three identical retries.
+  Existing terminal handling remains; transport retries are unchanged.
+
+Evidence (read-only production audit since 2026-11-19): 1,973 live run records;
+10 context overflow failures across 4 conversations (481,1323,1346,1437),
+including repeated attempts. Successful main-model calls with recorded usage:
+1,843 calls, median input 123,320 tokens, P90 129,062, maximum 146,572;
+1,779 calls exceeded 100,000 input tokens. These are call-level provider usage,
+not unique conversations or proof of response quality degradation.
+
+Incident 1437 run 11346: identical captured input decreases from 320,030 to
+185,901 characters (41.91%). The 300,000-character guard remains unchanged.
+Actual model replay produces one contact invitation, without repeat quote or
+introduction. Historical run 11339 still offers shorter 9-day route and quote
+without silently selecting it for the customer. Three additional prior failed
+customer turns generate valid decisions. Nine product model smoke cases all
+return replies; deterministic 9 x 2 event matrix is below the input guard.
+Detailed private outputs remain in protected remote evaluation directory,
+not Git. No test outputs are delivered to customers.
+
+Verification scripts:
+test_unit.py: partial/full load upgrade, duplicate read, deterministic retry,
+  syntax checks.
+test_context.py: fixed-history before/after input budgets, preservation of every
+  product fact, 18 event/product combinations, optional actual model replay.
+test_routes.py: actual model smoke across 9 enabled products.
+test_regression.py: identical applicable test suite against baseline/candidate.
+prepare_release.py: reproducible manifest and reuse of validated rolling handoff.
+publish.py preflight|apply <commit>: protected inventory and sequential prepared
+  worker handoff under deploy.lock; no multi-GB live SQLite backup.
+rollback.py: pinned files only; no customer data rollback.
+
+Remaining limitations: large common rules and full customer-turn script catalogs
+are retained to avoid losing business safeguards. Route understanding uses 24
+recent messages plus current turn; advisor followup is separately bounded; the
+unselected-route task loads only discussion-route facts. Long free-text history
+and future catalog growth still need monitoring; do not claim all long-context
+or business-quality issues are eliminated. Character reductions do not directly
+measure improved conversion or model attention. A model decision passing schema
+is not by itself full semantic acceptance of every historical date statement.
+
+Deployment status: pending preflight, applicable regression comparison and public
+acceptance. Record actual commit/worker IDs and final results after switching.

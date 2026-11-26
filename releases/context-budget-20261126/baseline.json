@@ -1,0 +1,26 @@
+[
+  {
+    "target": "backend/app/reception_v3/runtime.py",
+    "before_sha256": "2303d6dee2d45b400680db1abbf70cb19210b31bf913206d2c3bcb40033d1d8b"
+  },
+  {
+    "target": "backend/app/reception_v3/service.py",
+    "before_sha256": "a670c96d6e400e61b992530e003ae4068928175411aa007206af0133e9778520"
+  },
+  {
+    "target": "backend/app/reception_v3/skills.py",
+    "before_sha256": "574be25be37c197a10196aca26092fdb606e66f6c16452c60c3b4a2e2f1b4a5b"
+  },
+  {
+    "target": "backend/app/reception_v3/route_understanding.py",
+    "before_sha256": "092b9fbb2ae0f10aaff397aa5deb2fd783bfb613091d4c72c8b9329f5f991369"
+  },
+  {
+    "target": "backend/app/reception_v3/worker.py",
+    "before_sha256": "d8f8827b24ee12841c31ad87f96ed55c7658ab88188a1f754b9cfa9bc7d3741e"
+  },
+  {
+    "target": "backend/app/reception_v3/prompt.py",
+    "before_sha256": "1c43780853baf581a1e5507935899d473dfd1ea49a67f86ef177985e7d002bd8"
+  }
+]
