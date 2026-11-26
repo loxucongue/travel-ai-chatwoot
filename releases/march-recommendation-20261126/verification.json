@@ -1,0 +1,87 @@
+{
+  "passed": 12,
+  "checks": [
+    {
+      "case": "march",
+      "passed": true,
+      "draft_parts": 22,
+      "contract_repairs": []
+    },
+    {
+      "case": "late_march",
+      "passed": true,
+      "draft_parts": 22,
+      "contract_repairs": []
+    },
+    {
+      "case": "early_fixed",
+      "passed": true,
+      "draft_parts": 1,
+      "contract_repairs": []
+    },
+    {
+      "case": "eight_days",
+      "passed": true,
+      "draft_parts": 1,
+      "contract_repairs": []
+    },
+    {
+      "case": "avoid_everest",
+      "passed": true,
+      "draft_parts": 17,
+      "contract_repairs": []
+    },
+    {
+      "case": "declined",
+      "passed": true,
+      "draft_parts": 1,
+      "contract_repairs": [
+        "本轮最多选择一个需求问题，不连问月份、人数、同行构成及顾虑。"
+      ]
+    },
+    {
+      "case": "future_year",
+      "passed": true,
+      "draft_parts": 2,
+      "contract_repairs": []
+    },
+    {
+      "case": "beijing",
+      "passed": true,
+      "draft_parts": 19,
+      "contract_repairs": []
+    },
+    {
+      "case": "yunnan",
+      "passed": true,
+      "draft_parts": 2,
+      "contract_repairs": [
+        "message_script_reference_invalid:yunnan_tw_8d.season_3_4"
+      ]
+    },
+    {
+      "case": "ali",
+      "passed": true,
+      "draft_parts": 2,
+      "contract_repairs": []
+    },
+    {
+      "case": "already_seen",
+      "passed": true,
+      "draft_parts": 1,
+      "contract_repairs": []
+    },
+    {
+      "case": "compare",
+      "passed": true,
+      "draft_parts": 22,
+      "contract_repairs": []
+    }
+  ],
+  "production_unchanged": true,
+  "deployed": false,
+  "unit_and_configuration_tests": 54,
+  "model_calls_final_candidate": 13,
+  "baseline_failure": "avoid_everest: v3_context_too_large",
+  "evidence_directory": "/opt/china2go-ai/releases/march-evaluation-20261126"
+}
