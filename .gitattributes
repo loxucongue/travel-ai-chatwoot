@@ -5,3 +5,5 @@
 # This source's SHA256 is recorded in the service-knowledge manifest.
 /data/knowledge/china2go/service-knowledge/sources/20261031/everest-availability.txt text eol=lf
 releases/date-evidence-20261126/** text eol=lf
+releases/intro-contract-20261126/** text eol=lf
+releases/traveler-permits-20261127/** text eol=lf

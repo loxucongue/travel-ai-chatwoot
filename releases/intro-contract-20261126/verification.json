@@ -1,0 +1,82 @@
+{
+  "incident": 1446,
+  "deployment": "not_deployed",
+  "unit_tests": 4,
+  "real_model_replays": 3,
+  "plans": [
+    {
+      "run": 11353,
+      "status": "passed",
+      "draft_count": 23,
+      "groups": [
+        "",
+        "accommodation_summary",
+        "hotel_reference",
+        "itinerary_overview",
+        "no_shopping",
+        "peach_culture",
+        "peach_highlights",
+        "rongbuk_reference",
+        "rongbuk_upgrade",
+        "vehicle_oxygen",
+        "vehicle_reference"
+      ],
+      "asset_count": 10,
+      "quote_texts": []
+    },
+    {
+      "run": 11353,
+      "status": "passed",
+      "draft_count": 23,
+      "groups": [
+        "",
+        "accommodation_summary",
+        "hotel_reference",
+        "itinerary_overview",
+        "no_shopping",
+        "peach_culture",
+        "peach_highlights",
+        "rongbuk_reference",
+        "rongbuk_upgrade",
+        "vehicle_oxygen",
+        "vehicle_reference"
+      ],
+      "asset_count": 10,
+      "quote_texts": []
+    },
+    {
+      "run": 11353,
+      "status": "passed",
+      "draft_count": 23,
+      "groups": [
+        "",
+        "accommodation_summary",
+        "hotel_reference",
+        "itinerary_overview",
+        "no_shopping",
+        "peach_culture",
+        "peach_highlights",
+        "rongbuk_reference",
+        "rongbuk_upgrade",
+        "vehicle_oxygen",
+        "vehicle_reference"
+      ],
+      "asset_count": 10,
+      "quote_texts": []
+    }
+  ],
+  "known_limitations": [
+    "广告泛文案月份仍可能被误作客户出行时间，未在本次修复",
+    "未执行真实渠道发送或历史会话补发",
+    "尚未执行完整发布回归与部署验收"
+  ],
+  "hashes": {
+    "test_apply.py": "f2c1b363174a53aad41e26060eeca6345b927db218c605fc00b7ce7e02592c43",
+    "test_contract.py": "e115ebace1a9598fd664949504e01f7b16c9b6c77be3234b3043475fd9929108",
+    "test_effect.py": "16203b7c05bb33683a55572b48f3965a50de0c4f85ce95d5f787c1a4cac630b6",
+    "baseline\\backend\\app\\reception_v3\\reference_introduction.py": "55642bf9650f2d06b35a0ce265b4e6b94d87648fd460ad5cf8e45eb8b01201f7",
+    "baseline\\backend\\app\\reception_v3\\runtime.py": "4397948c1e970789a12ee8e584d661829e90a38fcbc4b0c76b54eaf9fdd4fc54",
+    "payload\\backend\\app\\reception_v3\\reference_introduction.py": "b0ab062c737e29953103ee9945c0b8dcdf10afd07188460379b569be97780242",
+    "payload\\backend\\app\\reception_v3\\runtime.py": "f051036e8fab9057ab46903a31560dadc1f29db868ee9f92a83bc4212fecd875"
+  }
+}
