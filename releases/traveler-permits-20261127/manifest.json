@@ -1,0 +1,51 @@
+{
+  "status": "isolated_candidate_not_deployed",
+  "includes_prior_unpublished_fixes": [
+    "date-evidence-20261126",
+    "intro-contract-20261126"
+  ],
+  "files": [
+    {
+      "path": "backend/app/reception_v3/consultation.py",
+      "baseline_sha256": "0bc2274a7df72cc0da37003eb2381dc99da1ab35f8a8f8442c30c81caeb7895a",
+      "candidate_sha256": "1970d2631c3af2a065f58811098bf0eb47593181ce27ad9e7f0c7e2f558a5c18",
+      "normalized_sha256": "1970d2631c3af2a065f58811098bf0eb47593181ce27ad9e7f0c7e2f558a5c18"
+    },
+    {
+      "path": "backend/app/reception_v3/reference_introduction.py",
+      "baseline_sha256": "55642bf9650f2d06b35a0ce265b4e6b94d87648fd460ad5cf8e45eb8b01201f7",
+      "candidate_sha256": "b0ab062c737e29953103ee9945c0b8dcdf10afd07188460379b569be97780242",
+      "normalized_sha256": "b0ab062c737e29953103ee9945c0b8dcdf10afd07188460379b569be97780242"
+    },
+    {
+      "path": "backend/app/reception_v3/route_understanding.py",
+      "baseline_sha256": "092b9fbb2ae0f10aaff397aa5deb2fd783bfb613091d4c72c8b9329f5f991369",
+      "candidate_sha256": "6cdb783613ff8f7cb37258bd6177cd5aadfc27815e2bbf0fed0831ea11758718",
+      "normalized_sha256": "6cdb783613ff8f7cb37258bd6177cd5aadfc27815e2bbf0fed0831ea11758718"
+    },
+    {
+      "path": "backend/app/reception_v3/runtime.py",
+      "baseline_sha256": "4397948c1e970789a12ee8e584d661829e90a38fcbc4b0c76b54eaf9fdd4fc54",
+      "candidate_sha256": "52080548cdcd4739fc1867b0525c69091f042104a00b17333a5572d9febcd0ea",
+      "normalized_sha256": "52080548cdcd4739fc1867b0525c69091f042104a00b17333a5572d9febcd0ea"
+    },
+    {
+      "path": "backend/app/reception_v3/seasonal_quotes.py",
+      "baseline_sha256": "8124cac2e333635d7615a03bb17a0be11efc91792f47e8b6522e9000ad14666b",
+      "candidate_sha256": "8d701f337735f1a89d99555f878e369fae95b5a703539026f1b38b5433b71f01",
+      "normalized_sha256": "8d701f337735f1a89d99555f878e369fae95b5a703539026f1b38b5433b71f01"
+    },
+    {
+      "path": "backend/app/reception_v3/service.py",
+      "baseline_sha256": "a3e1446507e5bf84647861759242377ee69b34060e6cd79f8fc305570d1b5386",
+      "candidate_sha256": "a3af40b2ba2f45a4b52fcbddc44b4bf4bc87e5d04c31b70cce62e1fd627e56ff",
+      "normalized_sha256": "a3af40b2ba2f45a4b52fcbddc44b4bf4bc87e5d04c31b70cce62e1fd627e56ff"
+    },
+    {
+      "path": "backend/app/reception_v3/traveler_documents.py",
+      "baseline_sha256": null,
+      "candidate_sha256": "8d2fb8f32118d8e1e1df0b561ca3094b587ff8988570f5a4670c6060c1e83901",
+      "normalized_sha256": "8d2fb8f32118d8e1e1df0b561ca3094b587ff8988570f5a4670c6060c1e83901"
+    }
+  ]
+}

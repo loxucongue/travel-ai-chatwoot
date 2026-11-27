@@ -1,0 +1,272 @@
+{
+  "deployment": "not_deployed",
+  "targeted_checks": [
+    "HK ordinary home return exempt",
+    "Macao ordinary home return exempt",
+    "Taiwan permit required",
+    "mixed needs review",
+    "non-Chinese permit needs review",
+    "foreign passport needs review",
+    "residence alone insufficient",
+    "dialect only asks",
+    "known residence no repeated question",
+    "human asked no repeated question",
+    "failed question not counted",
+    "Beijing not given Tibet questions",
+    "assistant evidence rejected",
+    "no info preserves memory",
+    "new explicit correction replaces state",
+    "preserve inclusion list",
+    "preserve exemption answer",
+    "remove Chengdu clause only",
+    "unknown inclusion qualified",
+    "no automatic exemption from dialect",
+    "no proactive border explanation",
+    "border question answered",
+    "private border handoff reason allowed",
+    "bundle never mutated",
+    "other route preserved beijing_micro_5d",
+    "other route preserved yunnan_tw_8d",
+    "no permit deadline hk",
+    "no permit deadline macao",
+    "Taiwan deadline retained",
+    "unknown asks document"
+  ],
+  "model_cases": [
+    {
+      "case": "dialect",
+      "permit_status": "unknown",
+      "action": "reply",
+      "outgoing_plan_parts": 1,
+      "texts": [
+        "集合地點在林芝～第一天會安排林芝接機，導遊會在機場接您，再開始走行程。\n另外想請問一下，您們是香港或澳門旅客嗎？這次會用回鄉證嗎？"
+      ]
+    },
+    {
+      "case": "hk",
+      "permit_status": "exempt",
+      "action": "reply",
+      "outgoing_plan_parts": 1,
+      "texts": [
+        "集合地點是林芝喔～第一天會安排林芝接機，導遊會在機場接您們。\n另外，香港旅客用回鄉證進藏不需要入藏函，這部分不用擔心。\n請問您們大概計劃什麼時候出發呢？"
+      ]
+    },
+    {
+      "case": "macao",
+      "permit_status": "exempt",
+      "action": "reply",
+      "outgoing_plan_parts": 1,
+      "texts": [
+        "澳門居民持回鄉證進西藏，不需要辦理入藏函，所以也沒有領函的地點或時間要安排～"
+      ]
+    },
+    {
+      "case": "non_chinese",
+      "permit_status": "review",
+      "action": "handoff",
+      "outgoing_plan_parts": 0,
+      "texts": []
+    },
+    {
+      "case": "mixed",
+      "permit_status": "review",
+      "action": "reply",
+      "outgoing_plan_parts": 1,
+      "texts": [
+        "您用香港回鄉證進藏，不需要入藏函；同行朋友用台胞證，台灣旅客就需要辦理入藏函，這部分會由我們一起送件辦理。\n想請問您們大概計劃什麼時候出發呢？日期確認後我可以幫您核對辦理時間。"
+      ]
+    },
+    {
+      "case": "correction",
+      "permit_status": "review",
+      "action": "handoff",
+      "outgoing_plan_parts": 0,
+      "texts": []
+    },
+    {
+      "case": "known",
+      "permit_status": "exempt",
+      "action": "reply",
+      "outgoing_plan_parts": 2,
+      "texts": [
+        "集合地點在林芝喔～第一天會安排林芝機場接機，導遊會在機場接大家。",
+        "請問您大概計劃什麼時候出發呢？"
+      ]
+    },
+    {
+      "case": "border",
+      "permit_status": "exempt",
+      "action": "reply",
+      "outgoing_plan_parts": 1,
+      "texts": [
+        "持香港回鄉證進藏不需要辦入藏函，不過珠峰屬於邊境地區，還是要辦邊防證喔。這部分我們會協助您在西藏當地辦理，不用您自己跑流程。"
+      ]
+    },
+    {
+      "case": "taiwan_dialect",
+      "permit_status": "required",
+      "action": "reply",
+      "outgoing_plan_parts": 1,
+      "texts": [
+        "集合地點是林芝，第一天會安排林芝接機喔～"
+      ]
+    },
+    {
+      "case": "short_hk",
+      "permit_status": "exempt",
+      "action": "reply",
+      "outgoing_plan_parts": 2,
+      "texts": [
+        "可以喔～冬遊西藏冰川藍冰8天是每週四出發，2026年12月17日剛好是週四，這天有公布團期，實際名額還要幫您確認一下。",
+        "另外你們兩位用香港普通回鄉證進藏，不需要辦入藏函，這部分不用擔心；同行的其他人如果證件不同，再另外確認就好。"
+      ]
+    },
+    {
+      "case": "short_taiwan",
+      "permit_status": "required",
+      "action": "handoff",
+      "outgoing_plan_parts": 0,
+      "texts": []
+    },
+    {
+      "case": "original_1446",
+      "permit_status": "unknown",
+      "action": "reply",
+      "outgoing_plan_parts": 23,
+      "texts": [
+        "您好～我是China2Go的旅遊顧問～很高興認識你",
+        "我們三～四月的桃花行程有兩條：桃花＋珠峰11日，和桃花9日（不上珠峰）。先給您看11日的完整行程，最後再跟您說9日的差別～",
+        ""
+      ]
+    }
+  ],
+  "date_checks": {
+    "hk": {
+      "status": "quoted",
+      "route_variant": "tibet_winter_8d",
+      "script_id": "price_winter",
+      "departure_start": "2026-12-17",
+      "departure_end": "2026-12-17",
+      "departure_examples": [
+        "2026-12-17"
+      ],
+      "price_cny": 9280,
+      "single_supplement_cny": 1500,
+      "traveler_permit_status": "exempt",
+      "permit_note": "已確認港澳普通回鄉證旅客無需入藏函；不代表同行者也適用或名額、提前抵達已獲確認。"
+    },
+    "macao": {
+      "status": "quoted",
+      "route_variant": "tibet_winter_8d",
+      "script_id": "price_winter",
+      "departure_start": "2026-12-17",
+      "departure_end": "2026-12-17",
+      "departure_examples": [
+        "2026-12-17"
+      ],
+      "price_cny": 9280,
+      "single_supplement_cny": 1500,
+      "traveler_permit_status": "exempt",
+      "permit_note": "已確認港澳普通回鄉證旅客無需入藏函；不代表同行者也適用或名額、提前抵達已獲確認。"
+    },
+    "taiwan": {
+      "status": "advisor",
+      "reason": "不足30天辦理入藏函，需先由顧問確認",
+      "traveler_permit_status": "required"
+    },
+    "unknown": {
+      "status": "ask_document",
+      "reason": "先確認旅客身份及本次使用證件，再核對辦證期限；不能先認定需要入藏函。",
+      "traveler_permit_status": "unknown"
+    },
+    "mixed": {
+      "status": "advisor",
+      "reason": "不足30天辦理入藏函，需先由顧問確認",
+      "traveler_permit_status": "review"
+    }
+  },
+  "regression": {
+    "total": 155,
+    "passed": 129,
+    "baseline_failures": [
+      "tests/test_auto_advisor_followup_20261017.py::test_preference_wording_on_actual_outgoing_plan[\\u4f60\\u6bd4\\u8f83\\u559c\\u6b22\\u54ea\\u4e00\\u6761\\uff1f-\\u4f60\\u559c\\u6b22\\u54ea\\u4e00\\u6761\\uff1f]",
+      "tests/test_auto_advisor_followup_20261017.py::test_preference_wording_on_actual_outgoing_plan[\\u60a8\\u9019\\u6b21\\u6bd4\\u8f03\\u60f3\\u770b\\u51b0\\u5ddd\\u85cd\\u51b0\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f-\\u60a8\\u9019\\u6b21\\u60f3\\u770b\\u51b0\\u5ddd\\u85cd\\u51b0\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f]",
+      "tests/test_auto_advisor_followup_20261017.py::test_preference_wording_on_actual_outgoing_plan[\\u60a8\\u9019\\u8d9f\\u6bd4\\u8f03\\u671f\\u5f85\\u7684\\u662f\\u6843\\u82b1\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f-\\u60a8\\u9019\\u8d9f\\u671f\\u5f85\\u7684\\u662f\\u6843\\u82b1\\uff0c\\u9084\\u662f\\u73e0\\u5cf0\\u5462\\uff1f]",
+      "tests/test_reception_v3_skills.py::test_dialogue_and_customer_preferences_remain_in_current_context",
+      "tests/test_reception_v3_skills.py::test_protocol_repair_follows_recurring_context_and_preserves_reply",
+      "tests/test_reception_v3_skills.py::test_switch_loads_new_route_without_losing_conversation",
+      "tests/test_reception_v3_skills.py::test_unselected_then_model_loads_both_for_comparison",
+      "tests/test_route_understanding_20261031.py::test_choice_repair_contains_rejected_candidate_and_authority_after_product_tools",
+      "tests/test_route_understanding_20261031.py::test_contract_failure_ends_once_while_transport_keeps_retry",
+      "tests/test_route_understanding_20261031.py::test_execution_reuses_verified_inference_and_rejects_stale_input",
+      "tests/test_route_understanding_20261031.py::test_inquiry_then_explicit_selection_are_separate_turns",
+      "tests/test_route_understanding_20261031.py::test_offer_set_and_choice_are_persisted_from_audited_node",
+      "tests/test_route_understanding_20261031.py::test_operator_retry_keeps_incident_and_does_not_notify_again",
+      "tests/test_route_understanding_20261031.py::test_optional_failed_outreach_waits_but_does_not_hide_customer_question[introduction_completed-True]",
+      "tests/test_route_understanding_20261031.py::test_schema_repair_is_bounded_and_classified_as_nonretryable",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[120-4\\uff5e6\\u4f4d-profile0]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[120-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[60-4\\uff5e6\\u4f4d-profile0]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[60-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[90-4\\uff5e6\\u4f4d-profile0]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[90-\\u5148\\u4ecb\\u7d39\\u5427-profile1]",
+      "tests/test_v3_intake_followup.py::test_any_ordinary_answer_starts_intro_and_keeps_question[90-\\u5728\\u54ea\\u88e1\\u96c6\\u5408\\uff1f-profile2]",
+      "tests/test_visual_reception_20261106.py::test_package_migration_idempotent_and_preserves_facts",
+      "tests/test_visual_reception_20261106.py::test_semantic_truncation_retries_with_more_output"
+    ],
+    "new_failures": []
+  },
+  "source_manifest": {
+    "status": "isolated_candidate_not_deployed",
+    "includes_prior_unpublished_fixes": [
+      "date-evidence-20261126",
+      "intro-contract-20261126"
+    ],
+    "files": [
+      {
+        "path": "backend/app/reception_v3/consultation.py",
+        "baseline_sha256": "0bc2274a7df72cc0da37003eb2381dc99da1ab35f8a8f8442c30c81caeb7895a",
+        "candidate_sha256": "1970d2631c3af2a065f58811098bf0eb47593181ce27ad9e7f0c7e2f558a5c18",
+        "normalized_sha256": "1970d2631c3af2a065f58811098bf0eb47593181ce27ad9e7f0c7e2f558a5c18"
+      },
+      {
+        "path": "backend/app/reception_v3/reference_introduction.py",
+        "baseline_sha256": "55642bf9650f2d06b35a0ce265b4e6b94d87648fd460ad5cf8e45eb8b01201f7",
+        "candidate_sha256": "b0ab062c737e29953103ee9945c0b8dcdf10afd07188460379b569be97780242",
+        "normalized_sha256": "b0ab062c737e29953103ee9945c0b8dcdf10afd07188460379b569be97780242"
+      },
+      {
+        "path": "backend/app/reception_v3/route_understanding.py",
+        "baseline_sha256": "092b9fbb2ae0f10aaff397aa5deb2fd783bfb613091d4c72c8b9329f5f991369",
+        "candidate_sha256": "6cdb783613ff8f7cb37258bd6177cd5aadfc27815e2bbf0fed0831ea11758718",
+        "normalized_sha256": "6cdb783613ff8f7cb37258bd6177cd5aadfc27815e2bbf0fed0831ea11758718"
+      },
+      {
+        "path": "backend/app/reception_v3/runtime.py",
+        "baseline_sha256": "4397948c1e970789a12ee8e584d661829e90a38fcbc4b0c76b54eaf9fdd4fc54",
+        "candidate_sha256": "52080548cdcd4739fc1867b0525c69091f042104a00b17333a5572d9febcd0ea",
+        "normalized_sha256": "52080548cdcd4739fc1867b0525c69091f042104a00b17333a5572d9febcd0ea"
+      },
+      {
+        "path": "backend/app/reception_v3/seasonal_quotes.py",
+        "baseline_sha256": "8124cac2e333635d7615a03bb17a0be11efc91792f47e8b6522e9000ad14666b",
+        "candidate_sha256": "8d701f337735f1a89d99555f878e369fae95b5a703539026f1b38b5433b71f01",
+        "normalized_sha256": "8d701f337735f1a89d99555f878e369fae95b5a703539026f1b38b5433b71f01"
+      },
+      {
+        "path": "backend/app/reception_v3/service.py",
+        "baseline_sha256": "a3e1446507e5bf84647861759242377ee69b34060e6cd79f8fc305570d1b5386",
+        "candidate_sha256": "a3af40b2ba2f45a4b52fcbddc44b4bf4bc87e5d04c31b70cce62e1fd627e56ff",
+        "normalized_sha256": "a3af40b2ba2f45a4b52fcbddc44b4bf4bc87e5d04c31b70cce62e1fd627e56ff"
+      },
+      {
+        "path": "backend/app/reception_v3/traveler_documents.py",
+        "baseline_sha256": null,
+        "candidate_sha256": "8d2fb8f32118d8e1e1df0b561ca3094b587ff8988570f5a4670c6060c1e83901",
+        "normalized_sha256": "8d2fb8f32118d8e1e1df0b561ca3094b587ff8988570f5a4670c6060c1e83901"
+      }
+    ]
+  }
+}
