@@ -1,0 +1,14 @@
+[
+ {"name":"peach_late","text":"我們希望2027年4月15日左右出發。"},
+ {"name":"peach_fixed","text":"我們只有2027年4月15日能出發，不能提前，桃花看不到也沒關係。"},
+ {"name":"peach_boundary","text":"2027年4月10日出發還來得及參加嗎？"},
+ {"name":"peach_reschedule","text":"可以改期，那我們改2027年4月9日出發。"},
+ {"name":"winter_april","route":"tibet_winter_8d","text":"2027年4月15日去可以看到藍冰嗎？不能改時間。"},
+ {"name":"winter_may","route":"tibet_winter_8d","text":"我們想2027年5月11日出發，不一定要藍冰，想看經典西藏。"},
+ {"name":"been_tibet","text":"拉薩、林芝、珠峰這些我都去過了，還有沒有更深入的西藏行程？時間可以安排15天。"},
+ {"name":"been_short","profile":{"trip_days":8},"text":"拉薩、林芝、珠峰這些都去過了，但我們只有8天假。"},
+ {"name":"been_beijing","route":"beijing_micro_5d","text":"故宮長城都去過了，我只想在北京玩，不去西藏。"},
+ {"name":"no_everest","profile":{"trip_days":8},"text":"桃花4月15日太晚的話，我不能改時間，也不想去珠峰，只有8天。"},
+ {"name":"ali_already","text":"西藏拉薩林芝珠峰都去過了，阿里也去過了，不想再去了。"},
+ {"name":"peach_unknown","text":"我想了解桃花節11天行程。"}
+]
