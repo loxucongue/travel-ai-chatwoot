@@ -36,6 +36,12 @@ SEASONAL_INSTRUCTION += '''
 
 
 def validation_error(decision, context):
+    latest = next((m.get('content','') for m in reversed(context.get('messages',[])) if m.get('direction')=='incoming'), '')
+    if (decision.get('start_introduction') and decision.get('route_variant') == 'tibet_ali_15d'
+            and context.get('route_variant') != 'tibet_ali_15d'
+            and re.search(r'都去過|都去过|全去過|全去过', latest)
+            and '阿里' not in latest):
+        return '客户只说常规景点都去过，并未选择阿里。以recommend和reference_introduction_route提供阿里参考，保留原选线。'
     if promised_introduction_without_action(decision):
         return ACTION_INSTRUCTION + '尚未发送，请补齐对应动作；如不应介绍，请改为真实可执行的回复。'
     target = decision.get('reference_introduction_route')

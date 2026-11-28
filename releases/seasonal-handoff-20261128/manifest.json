@@ -3,7 +3,7 @@
     {
       "path": "backend/app/reception_v3/reference_introduction.py",
       "baseline_sha256": "b0ab062c737e29953103ee9945c0b8dcdf10afd07188460379b569be97780242",
-      "candidate_sha256": "58144e9d78e596e5364058abf8afe94cf1d904d1d349a1b898574b840f30f3df"
+      "candidate_sha256": "33dc4cea4c93682a5ebe35bbfeb5ff9262ba9ab25707569e3e7a53fdddeeba52"
     },
     {
       "path": "backend/app/reception_v3/runtime.py",
@@ -13,7 +13,7 @@
     {
       "path": "backend/app/reception_v3/service.py",
       "baseline_sha256": "a3af40b2ba2f45a4b52fcbddc44b4bf4bc87e5d04c31b70cce62e1fd627e56ff",
-      "candidate_sha256": "6f43de3c010550fe7320e5e65d7f784d9877f52bc8a9dd7fdeed603d097afc38"
+      "candidate_sha256": "4278b34f659c4c38cedcc3a1bb36c801652edfdf1e12dfed19bc75da369b32e5"
     }
   ]
 }

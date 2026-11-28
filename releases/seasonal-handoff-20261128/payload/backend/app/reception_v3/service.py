@@ -474,6 +474,8 @@ def parts_for(db, row, bundle, decision, *, followup=False):
     if (alternative_task or decision.get('reference_introduction_route')) and decision['action'] == 'reply':
         target = decision.get('reference_introduction_route') or alternative_task['route']
         spec = bundle['routes'][target]
+        if target in ('tibet_overview_10d', 'tibet_ali_15d') and decision.get('reference_introduction_route'):
+            add('以下先提供行程方向參考，尚未確認您原定日期能出發；如果喜歡這個安排，可以再一起協調日期或請顧問協助確認。', [])
         excluded = {'advisor_greeting','entry_question','read_check','contact_request','contact_transition',
                     'price_reference','price_deferral','party_question','departure_question','travel_companions'}
         for key in spec['introduction_sequence']:
